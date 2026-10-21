@@ -13,7 +13,7 @@
   try { localStorage.removeItem('sacrament-theme'); } catch (e) {}
 
   function build() {
-    if (document.body.hasAttribute('data-no-nav')) return;
+    if (document.body.hasAttribute('data-no-nav') || document.body.hasAttribute('data-focus')) return;
     var path = location.pathname.replace(/index\.html$/, '');
     var bar = document.createElement('nav');
     bar.className = 'sac-nav';
