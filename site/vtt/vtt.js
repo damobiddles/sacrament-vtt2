@@ -1045,10 +1045,10 @@
   function tablePoint(ev) { var r = $('table').getBoundingClientRect(); return [Math.max(0, Math.min(100, 100 * (ev.clientX - r.left) / r.width)), Math.max(0, Math.min(100, 100 * (ev.clientY - r.top) / r.height))]; }
   var lastPoint = 0;
   $('table').addEventListener('pointerdown', function (ev) {
-    if (!S || ev.button > 0) return;
+    if (!S || ev.button > 0 || UI.drag || UI.draw || UI.pointing) return;
     if (ev.target.closest('#toolbar') || ev.target.closest('#banner')) return;
-    if (UI.tool === 'draw') { UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
-    if (UI.tool === 'point') { var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
+    if (UI.tool === 'draw') { UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
+    if (UI.tool === 'point') { UI.gesturePointer = ev.pointerId; var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
     var cEl = ev.target.closest('.c');
     if (!cEl) { if (UI.sel) { UI.sel = null; render(); } return; }
     var id = cEl.dataset.id, c = S.cards[id]; pickCard(id); UI.confirmDel = null;
@@ -1056,13 +1056,17 @@
     else render();
   });
   $('table').addEventListener('pointermove', function (ev) {
-    if (UI.draw) { var p = tablePoint(ev), q = UI.draw[UI.draw.length - 1]; if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) > .4) { UI.draw.push(p); $('ink').innerHTML += ''; var pl = $('ink').querySelector('polyline.live'); if (!pl) { $('ink').insertAdjacentHTML('beforeend', '<polyline class="live" stroke="#e0b040"/>'); pl = $('ink').querySelector('polyline.live'); } pl.setAttribute('points', UI.draw.map(function (a) { return a[0] + ',' + a[1]; }).join(' ')); } return; }
-    if (UI.pointing && Date.now() - lastPoint > 250) { lastPoint = Date.now(); var pp = tablePoint(ev); sendPoint(pp[0], pp[1]); return; }
-    var d = UI.drag; if (!d) return; var r = $('table').getBoundingClientRect(), dx = ev.clientX - d.sx, dy = ev.clientY - d.sy;
+    if (UI.draw && ev.pointerId === UI.gesturePointer) { var p = tablePoint(ev), q = UI.draw[UI.draw.length - 1]; if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) > .4) { UI.draw.push(p); $('ink').innerHTML += ''; var pl = $('ink').querySelector('polyline.live'); if (!pl) { $('ink').insertAdjacentHTML('beforeend', '<polyline class="live" stroke="#e0b040"/>'); pl = $('ink').querySelector('polyline.live'); } pl.setAttribute('points', UI.draw.map(function (a) { return a[0] + ',' + a[1]; }).join(' ')); } return; }
+    if (UI.pointing && ev.pointerId === UI.gesturePointer && Date.now() - lastPoint > 250) { lastPoint = Date.now(); var pp = tablePoint(ev); sendPoint(pp[0], pp[1]); return; }
+    var d = UI.drag; if (!d || ev.pointerId !== d.pid) return; var r = $('table').getBoundingClientRect(), dx = ev.clientX - d.sx, dy = ev.clientY - d.sy;
     if (!d.moved && Math.abs(dx) + Math.abs(dy) < 5) return; d.moved = true; d.el.classList.add('drag');
     d.x = Math.max(0, Math.min(100, d.ox + 100 * dx / r.width)); d.y = Math.max(0, Math.min(100, d.oy + 100 * dy / r.height)); d.el.style.left = d.x + '%'; d.el.style.top = d.y + '%';
   });
   function endPointer(ev) {
+    // Ignore secondary pointers: they must never finish another finger's gesture.
+    if (UI.drag && ev.pointerId !== UI.drag.pid) return;
+    if ((UI.draw || UI.pointing) && ev.pointerId !== UI.gesturePointer) return;
+    UI.gesturePointer = null;
     // A cancelled pointer gesture (lost capture, interrupted touch, OS gesture)
     // must not commit a token move or a partially drawn line.
     if (ev && ev.type === 'pointercancel') {
