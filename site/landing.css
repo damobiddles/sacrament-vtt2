@@ -46,3 +46,10 @@ blockquote.todo::first-line{font-weight:700}
 }
 
 /* the playtest sign-up on the home page */
+
+/* Ko-fi support widget in the top-right of the site navigation. */
+.ic-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:1180px;margin:0 auto;padding-right:max(10px,env(safe-area-inset-right,0px))}
+.ic-nav-inner ul{flex:1 1 auto;min-width:0;margin:0;max-width:none}
+.ic-kofi{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;white-space:nowrap}
+.ic-kofi a{border-bottom:0;letter-spacing:normal;text-transform:none}
+@media(max-width:760px){.ic-nav-inner{flex-wrap:wrap;justify-content:center;padding:0 10px 9px}.ic-nav-inner ul{flex:1 1 100%;justify-content:center}.ic-kofi{margin-left:auto}}
