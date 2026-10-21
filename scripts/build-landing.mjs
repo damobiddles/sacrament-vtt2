@@ -1,5 +1,5 @@
 // Builds the Sacrament RPG home page and its pages from content/landing/ into site/: the home page (/), the game, the setting, how to play,
-// newsletter, support, privacy, terms of use, and the news (/news/).
+// newsletter, privacy, terms of use, and the news (/news/).
 // The text lives in content/landing/*.md (see content/landing/README.md); news posts are one file each in content/landing/blog/.
 // The output is not committed; Netlify runs this before publishing (see netlify.toml).
 // For tests, LANDING_CONTENT and LANDING_OUT can point somewhere else.
@@ -13,8 +13,6 @@ const OUT = dirUrl(process.env.LANDING_OUT, '../site/');
 const SITE = 'https://playsacrament.com';
 const cfg = existsSync(new URL('site.json', SRC)) ? JSON.parse(readFileSync(new URL('site.json', SRC), 'utf8')) : {};
 const NAME = cfg.name || 'Sacrament RPG Table';
-const httpsOnly = (u) => (/^https:\/\/[^\s"'<>]+$/.test(u || '') ? u : '');
-const DONATE = httpsOnly(cfg.donateUrl);
 
 /* the pages, in the order of the bar across the top (Privacy and Terms are in the footer) */
 const PAGES = [
@@ -24,7 +22,6 @@ const PAGES = [
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
   { slug: 'blog', path: '/news/', label: 'News' },
   { slug: 'newsletter', path: '/newsletter/', label: 'Newsletter' },
-  { slug: 'support', path: '/support/', label: 'Support' },
   { slug: 'privacy', path: '/privacy/', label: 'Privacy', footerOnly: true },
   { slug: 'terms', path: '/terms/', label: 'Terms of Use', footerOnly: true },
 ];
@@ -74,11 +71,6 @@ const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div 
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 
-const todoBox = (text) => `<blockquote class="todo">${text}</blockquote>`;
-const donateBlock = DONATE
-  ? `<p><a class="btn" href="${DONATE}" rel="noopener">Donate</a></p>`
-  : `<p><span class="btn disabled" aria-disabled="true" id="donate">Donate (coming soon)</span></p>` + todoBox('YOUR TEXT HERE: the address people should donate through (Ko-fi, Patreon, Buy Me a Coffee and so on). Put it in content/landing/site.json (the "donateUrl" line).');
-
 const newsletterForm = `<form id="newsletter" class="ic-form" novalidate>
 <label for="nl-email" class="label">Your email</label>
 <input id="nl-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
@@ -94,6 +86,7 @@ function build() {
   mkdirSync(OUT, { recursive: true });
   for (const p of PAGES) if (p.path !== '/') rmSync(new URL('.' + p.path, OUT), { recursive: true, force: true });
   rmSync(new URL('./news/', OUT), { recursive: true, force: true });
+  rmSync(new URL('./support/', OUT), { recursive: true, force: true });
   const write = (path, html) => { const dir = new URL('.' + path, OUT); mkdirSync(dir, { recursive: true }); writeFileSync(new URL('index.html', dir), html); };
 
   /* home */
@@ -119,7 +112,6 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('setting', NAME);
   text('how-to-play', NAME);
   text('newsletter', NAME, newsletterForm);
-  text('support', NAME, donateBlock);
   text('privacy', NAME);
   text('terms', NAME);
 
