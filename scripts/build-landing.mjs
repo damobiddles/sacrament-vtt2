@@ -100,7 +100,7 @@ function build() {
   const h = read('home');
   const cards = h.body.split(/^## /m).slice(1).map((c) => { const [t, ...rest] = c.split('\n'); return `<article class="card"><h2>${esc(t.trim())}</h2><p>${esc(rest.join(' ').trim())}</p></article>`; }).join('');
   write('/', page(h.title + ' | A shared table in your browser', h.summary, '/',
-    `<header class="bhead ic-hero"><div class="wrap"><div class="label">A tabletop roleplaying game</div><h1>${esc(h.title)}</h1><p class="lede">${esc(h.lede || h.summary)}</p>
+    `<header class="bhead ic-hero"><div class="wrap"><div class="label">A tabletop roleplaying game</div><div class="ic-hero-title"><h1>${esc(h.title)}</h1><img class="ic-hero-symbol" src="/favicon.svg" width="108" height="108" alt="" aria-hidden="true"></div><p class="lede">${esc(h.lede || h.summary)}</p>
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
 <p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share.</p>
 <p class="ic-try"><a class="btn" href="/vtt/?try">Try it now</a> <span class="small">A sample fight opens with you as the GM. Nothing to sign up for.</span></p>
