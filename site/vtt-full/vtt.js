@@ -292,7 +292,7 @@
     clearTimeout(UI.leaveTimer); UI.leaveAsk = false;
     try { localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch (e) {}
     sess = null; S = null; UI.sel = null; UI.roll = null; UI.aim = {}; UI.hpOps = {}; UI.reconcile = false; UI.working = null; UI.rolling = false; UI.rollChecked = false; UI.seenLog = null; clearTimeout(timer);
-    history.replaceState(null, '', '/vtt/'); $('app').hidden = true; $('entry').hidden = false; $('resume').hidden = true; $('joinCode').value = ''; $('makeMsg').textContent = '';
+    history.replaceState(null, '', '/vtt-full/'); $('app').hidden = true; $('entry').hidden = false; $('resume').hidden = true; $('joinCode').value = ''; $('makeMsg').textContent = '';
     listTables();
   }
 
@@ -1072,7 +1072,7 @@
   $('table').addEventListener('pointerup', endPointer); $('table').addEventListener('pointercancel', endPointer);
 
   /* ---------- starting: make, join, resume ---------- */
-  function enter(s, state) { sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); }
+  function enter(s, state) { sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt-full/?room=' + s.code); }
   $('makeForm').addEventListener('submit', function (e) {
     e.preventDefault(); var mb = this.querySelector('button[type=submit]'); if (mb.disabled) return; mb.disabled = true; $('makeMsg').textContent = '';
     call('POST', { op: 'create', key: $('makeKey').value, sample: $('makeSample').checked }).then(function (r) {

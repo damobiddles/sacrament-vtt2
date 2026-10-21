@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="vtt.css">
 <link rel="stylesheet" href="vtt2-theme.css">
+<link rel="stylesheet" href="workspace.css">
 <link rel="stylesheet" href="/sheet/sheet.css">
 <script src="/nav.js"></script>
 <meta name="theme-color" content="#12100d">
@@ -56,6 +57,17 @@
 
 <!-- the table -->
 <div id="app" hidden>
+  <nav id="worknav" aria-label="Workspace navigation">
+    <div class="wn-heading">WORKSPACE</div>
+    <button type="button" data-worktab="play" aria-label="Open encounter controls"><span>⚔</span><b>Encounter</b></button>
+    <button type="button" data-worktab="scene" aria-label="Open scene controls"><span>▧</span><b>Scenes & maps</b></button>
+    <button type="button" data-worktab="loot" aria-label="Open loot controls"><span>◇</span><b>Loot & items</b></button>
+    <button type="button" data-worktab="table" aria-label="Open table settings"><span>⚙</span><b>Table settings</b></button>
+    <div class="wn-heading wn-lower">VIEW</div>
+    <button type="button" id="workFeed" aria-pressed="true"><span>☷</span><b>Activity log</b></button>
+    <button type="button" id="workPanel" aria-pressed="true"><span>▤</span><b>Inspector</b></button>
+    <p class="wn-help">Select a token on the map to inspect it. Press Esc to return to the table.</p>
+  </nav>
   <header id="top" aria-label="Scene">
     <div class="grp" id="tTarget"></div>
     <div class="grp" id="tRound"></div>
@@ -92,5 +104,6 @@
 <script src="loot.js"></script>
 <script src="dice.js"></script>
 <script src="vtt.js"></script>
+<script src="workspace.js"></script>
 </body>
 </html>
