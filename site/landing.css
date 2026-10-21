@@ -63,5 +63,5 @@ blockquote.todo::first-line{font-weight:700}
 /* Existing Sacrament illustrated plates: one atmospheric image per homepage feature. */
 .ic-illustrated-card{overflow:hidden}
 .ic-card-art{display:block;margin:-1px -1px 16px;overflow:hidden;border-bottom:1px solid var(--line)}
-.ic-card-art img{display:block;width:100%;height:clamp(155px,17vw,230px);object-fit:cover;object-position:center 44%;filter:saturate(.85)}
-@media(max-width:640px){.ic-card-art img{height:190px}}
+.ic-card-art img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;background:#111713;filter:saturate(.9)}
+@media(max-width:640px){.ic-card-art img{aspect-ratio:3/2}}
