@@ -1,8 +1,8 @@
 # The public site is the "site" folder. Everything else in the repo is never published.
 [build]
   publish = "site"
-  # Packs private/builder.html into the password-gated builder function, and builds the blog from content/blog.
-  command = "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs"
+  # Packs private/builder.html into the password-gated builder function, and builds the canonical news blog from content/landing/blog.
+  command = "node scripts/build-private.mjs && node scripts/build-landing.mjs"
 
 [build.environment]
   # @netlify/blobs 11 (used by the builder, the node library and the Sacrament RPG table) needs Node 22.12 or later.
@@ -236,3 +236,22 @@
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+
+# Retire the legacy blog. Keep existing incoming links useful.
+[[redirects]]
+  from = "/blog/making-room-for-the-game/"
+  to = "/news/making-room-for-the-game/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog/*"
+  to = "/news/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog"
+  to = "/news/"
+  status = 301
+  force = true
