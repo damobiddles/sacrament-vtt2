@@ -53,3 +53,9 @@ blockquote.todo::first-line{font-weight:700}
 .ic-kofi{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;white-space:nowrap}
 .ic-kofi a{border-bottom:0;letter-spacing:normal;text-transform:none}
 @media(max-width:760px){.ic-nav-inner{flex-wrap:wrap;justify-content:center;padding:0 10px 9px}.ic-nav-inner ul{flex:1 1 100%;justify-content:center}.ic-kofi{margin-left:auto}}
+
+/* Move the Sacrament mark from the duplicate top bar into the home hero. */
+.ic-hero-title{display:flex;align-items:center;gap:clamp(14px,3vw,38px);max-width:100%}
+.ic-hero-title h1{min-width:0;margin:0}
+.ic-hero-symbol{display:block;flex:0 0 auto;width:clamp(55px,9vw,108px);height:auto;max-height:120px;object-fit:contain}
+@media(max-width:520px){.ic-hero-title{gap:12px}.ic-hero-symbol{width:clamp(42px,13vw,70px)}}
