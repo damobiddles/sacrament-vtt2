@@ -1,5 +1,5 @@
 // Using an item at the table (the strip asks what the hero is using, and the player rolls the damage as its own step), and the GM's d100 loot table. A GM and a player in separate windows.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, emptyPacks, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const hero = (page, name) => state(page).then((st) => Object.values(st.chars).find((c) => c.name === name));
@@ -21,13 +21,13 @@ test('Aiming at a foe: the strip asks what the hero is using; the hit rolls noth
   await ann.locator('#sheetOverlay [data-sh=close]').click();
   const ghoul = ann.locator('#cards .c', { hasText: 'Pit Ghoul' }); const id = await ghoul.getAttribute('data-id'); const hp0 = (await state(ann)).cards[id].hp.cur;
   await ghoul.click();
-  await expect(ann.locator('#strip .aim')).toContainText('What are you using on Pit Ghoul?');                   // the question comes up by itself
-  await expect(ann.locator('#strip .aim [data-do=useItem]')).toContainText("Penitent's Blade");
-  await ann.locator('.stat[data-stat=STR]').click();                                                           // a stat first: asked, not rolled
-  await expect(ann.locator('#strip .aim [data-noitem]')).toContainText('Roll STR with no item');
+  await expect(ann.locator('#strip .aim-prompt')).toContainText('How are you going to deal with');
+  await ann.locator('.stat[data-stat=STR]').click();
+  await expect(ann.locator('#strip [data-noitem]')).toContainText('Roll STR with no item');
   expect((await state(ann)).rolls.length).toBe(0);
-  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click(); await ann.locator('#strip input[data-phys]').fill('20');       // a natural 20: a sure success
-  await ann.locator('#strip .aim [data-do=useItem]').click();
+  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click(); await ann.locator('#strip input[data-phys]').fill('20');
+  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#sheetOverlay .sh-item', { hasText: "Penitent's Blade" }).locator('[data-sh=use]').click();
   await expect(ann.locator('#panel .calc.ok')).toContainText('Success');
   await expect(ann.locator('#panel')).toContainText("Penitent's Blade");
   await expect(ann.locator('#panel')).toContainText('A hit! Now roll the damage.');

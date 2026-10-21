@@ -1,6 +1,6 @@
 // The Rising Horror on the screen: the meter in the top bar for everyone, rising when a spell is cast, the GM's alert at a threshold, the arrival at 21 for
 // everyone, and the GM's controls (players have none). A GM and a player in separate windows. Set HORROR_SHOTS=<folder> to keep pictures of each step.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const SHOTS = process.env.HORROR_SHOTS || '';
@@ -17,8 +17,8 @@ async function setup(browser, viewport) {
   return { gm, ann };
 }
 async function castKindle(ann) {
-  if (!(await ann.locator('#strip [data-do=useItem]').count())) await ann.locator('[data-do=toggle][data-key=items]').click();
-  await ann.locator('#strip [data-do=useItem]', { hasText: 'Kindle' }).click(); await saved(ann);
+  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#sheetOverlay .sh-spells li', { hasText: 'Kindle' }).locator('[data-sh=use]').click(); await saved(ann);
 }
 async function gmSet(gm, n) {
   await gm.locator('[data-do=gmtab][data-t=table]').click();
@@ -33,7 +33,7 @@ test('The Horror: everyone sees one meter; a spell raises it; the GM is alerted 
 
   await castKindle(ann);   // Kindle: no roll, 1 Horror
   await expect(meter(ann)).toHaveAttribute('aria-valuenow', '1'); await expect(meter(gm)).toHaveAttribute('aria-valuenow', '1');
-  await expect(ann.locator('#strip [data-do=useItem]', { hasText: 'Kindle' })).toContainText('no roll · Horror 1');
+  await expect(ann.locator('#sheetOverlay')).toBeHidden();
   await ann.locator('[data-do=feed]').click();
   await expect(ann.locator('#feed li.horror')).toContainText('Thorne read from The Ashen Psalter. The Horror rises 1 (now 1).');
   await expect(ann.locator('#feed li.horror [data-do=undo]')).toHaveCount(0);   // a player cannot take the Horror back

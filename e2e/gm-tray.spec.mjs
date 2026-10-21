@@ -1,5 +1,5 @@
 // The GM's tray: four tabs (Play, Scene, Loot, Table) when nothing is selected, a toolbar of sections when a card is, and nothing of it for players.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero } from './helpers.mjs';
 
 const tab = (page, t) => page.locator(`#panel [data-do=gmtab][data-t=${t}]`);
@@ -85,7 +85,8 @@ test('a selected monster: one main button opens the attack form in place, Edit c
   await expect(gm.locator('#panel .btn.main')).toHaveCount(1); await expect(gm.locator('#panel [data-do=monsterAttack]')).toHaveCount(0);
   await gm.locator('#panel [data-do=attackToggle]').click(); await expect(gm.locator('#panel [data-do=monsterAttack]')).toBeVisible(); await expect(gm.locator('#atkHero')).toBeVisible();
   await gm.locator('#panel [data-do=cardEdit]').click(); await expect(gm.locator('#panel [data-edit=name]')).toHaveValue('Pit Ghoul');
-  for (const k of ['desc', 'gmNotes', 'img']) await expect(gm.locator(`#panel [data-edit=${k}]`), k).toBeVisible();
+  for (const k of ['desc', 'gmNotes']) await expect(gm.locator(`#panel [data-edit=${k}]`), k).toBeVisible();
+  await expect(gm.locator('#panel [data-edit=img],#panel input[data-upload=card]')).toHaveCount(0);
   await expect(gm.locator('#panel [data-do=dup]')).toBeVisible(); await expect(gm.locator('#panel [data-do=del]')).toBeVisible(); await expect(gm.locator('#panel [data-do=hideNumbers]')).toBeVisible();
   await gm.locator('#panel [data-do=cardEditDone]').click(); await expect(gm.locator('#panel .cardname')).toHaveText('Pit Ghoul');
   await gm.locator('#cards .c', { hasText: 'Sealed Gate' }).click(); await expect(gm.locator('#panel [data-do=attackToggle]')).toHaveCount(0);   /* a door has no HP: it does not attack */ await expect(gm.locator('#panel [data-edit=name]')).toHaveCount(0);

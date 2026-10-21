@@ -1,5 +1,5 @@
 // The private inventory page (/inventory/): the owner's list of everything on the site. These checks make sure it stays private, stays complete, and does what it says.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { newPage } from './helpers.mjs';

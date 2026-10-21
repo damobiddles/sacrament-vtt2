@@ -1,5 +1,5 @@
 // Characters made under the earlier rules are brought over on the hero page (/character/), in an "Earlier characters" section.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { newPage } from './helpers.mjs';

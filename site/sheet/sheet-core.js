@@ -101,6 +101,7 @@
       else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
       else if (it.cat || it.temptsHorror) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
     });
+    out.forEach(function (a) { a.gearKey = h.gear[a.index].key; });
     return out;
   }
   /* The details of a designed item as they are kept on a sheet: the item without its marks. */
@@ -151,10 +152,11 @@
   var full = function (h, set) { return 'Your ' + setName(set) + ' full (' + slotsUsed(h, set) + ' of ' + B.slots + ' used)'; };
   var room = function (h, set, it) { return slotsUsed(h, set) + it.slots <= B.slots; };
 
-  function hpDelta(hp, it, sign) { /* an item that gives Hearts while it is equipped: +10 each way, and the current total never passes the new maximum */
+  function hpDelta(hp, it, sign) { /* Changing capacity preserves wounds. Equipment never stands up a hero at zero HP. */
     if (!hp || !it || !it.hearts) return;
     var d = it.hearts * R.HEART * sign;
-    if (sign > 0) { hp.max += d; hp.cur += d; } else { hp.max = Math.max(R.HEART, hp.max + d); hp.cur = Math.min(hp.cur, hp.max); }
+    var before = hp.max; hp.max = Math.max(R.HEART, hp.max + d);
+    if (hp.cur > 0) hp.cur = clamp(hp.cur + hp.max - before, 0, hp.max);
   }
 
   /* ---------- the one entry point ---------- */
@@ -205,7 +207,7 @@
       if (g.eq) hpDelta(hp, it, 1);
       return { ok: true };
     }
-    var i = int(op.index, -1), cur = h.gear[i];
+    var i = op.gearKey ? h.gear.findIndex(function (g) { return g.key === op.gearKey; }) : int(op.index, -1), cur = h.gear[i];
     if (op.op === 'remove') {
       if (!cur) return no('There is nothing there to drop.');
       var ri = itemOf(cur); h.gear.splice(i, 1); if (isEq(cur)) hpDelta(hp, ri, -1);

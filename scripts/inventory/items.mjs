@@ -31,8 +31,8 @@ export const items = [
     what: 'The two buttons on the home page. Same screen as /vtt/, with the join form first or the make-a-table form first.',
     note: 'Works. They are the same page as /vtt/ with a different starting position.', from: 'home page, the how-to-play guide.', rec: 'keep', why: 'Needed by the landing page.' },
   { g: 'table', name: 'Try it now: /vtt/?try', url: null, status: 'works', display: '/vtt/?try',
-    what: 'The Try it now button on the home page. It makes a sample table with the visitor as the GM, in one click. Trying again in the same browser opens the same table.',
-    note: 'Tested locally (2026-10-21). Not linked here, because opening it makes a table.', from: 'home page.', rec: 'keep', why: 'Lets a visitor see the table before inviting anyone.' },
+    what: 'The existing sample-table address. It makes a sample table with the visitor as the GM, in one click. Trying again in the same browser opens the same table.',
+    note: 'Tested locally (2026-10-21). Not linked here, because opening it makes a table.', from: 'No longer linked from the home page.', rec: 'keep', why: 'Keeps existing sample-table addresses working.' },
   { g: 'table', name: 'GM links: /vtt/?room=CODE#key=…', url: null, status: 'works', display: '/vtt/?room=<code>#key=<GM key>',
     what: 'The link a GM copies from the Table tab to get back to their table on another device or after the browser forgets. It must be kept private: anyone with it can run the table.',
     note: 'Tested locally (2026-10-21).', from: 'Nothing on the site. GMs keep these themselves.', rec: 'keep', why: 'Without it a GM who loses their browser data loses their table. Never change the pattern.' },
@@ -106,6 +106,7 @@ export const items = [
   { g: 'leftovers', name: 'Test tables on the live storage', repo: null, url: null, status: 'works', display: 'Dozens of tables, saved on Netlify', what: 'Every disposable table made while testing, including uploaded pictures, is still stored. They are reachable only by their codes. The storage has no delete.', note: 'Cannot be removed with the current tools.', from: 'Nothing.', rec: 'keep', why: 'Kept. Harmless apart from storage; a deletion tool would be a separate piece of work if you ever want them gone.' },
   { g: 'leftovers', name: 'Empty folders: site/hearts/', repo: null, url: null, status: 'archived', display: 'site/hearts/character, site/hearts/play', what: 'Two empty folders left over on this computer from an earlier version. They were never in the project and never published.', note: 'REMOVED 2026-10-20: they held nothing, so there was nothing to archive; the empty folders were removed from this computer.', from: 'Nothing.', rec: 'archive', why: 'Done, as you decided.' },
   { g: 'leftovers', name: 'The example blog post and other placeholders', repo: null, url: null, status: 'works', display: 'Marked placeholders', what: 'Things on the new pages that are deliberately unfinished: "YOUR TEXT HERE" boxes, the contact email. (The donate link was filled in on 2026-10-20.)', note: 'Listed in content/landing/README.md.', from: 'The Sacrament RPG pages.', rec: 'keep', why: 'Waiting for you.' },
+  { g: 'site-pages', name: 'Published news post', url: '/news/making-room-for-the-game/', status: 'works', what: 'Published news article.', note: 'Generated from the landing news content.', from: 'The news list.', rec: 'keep', why: 'Current published content.' },
 ];
 
 /* problems noticed while looking (not fixed: stage 1 changes nothing) */

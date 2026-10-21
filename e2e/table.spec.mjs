@@ -1,5 +1,5 @@
 // The main flows of the Sacrament RPG Table, done in a real browser the way a GM and players do them.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 test('the first screen loads and a GM can make a table with the sample encounter', async ({ browser }) => {

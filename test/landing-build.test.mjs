@@ -20,7 +20,7 @@ test('every page is built, and a new blog post is just one new file', () => {
   const b = build((c) => { for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f)); writeFileSync(join(c, 'blog', '2020-01-01-an-older-post.md'), post('An older post', '2020-01-01')); writeFileSync(join(c, 'blog', '2030-01-02-a-brand-new-post.md'), post('A brand new post', '2030-01-02', '## Hello\nSome **bold** words and a [link](/how-to-play/).')); });
   try {
     assert.equal(b.r.status, 0, b.r.stderr);
-    for (const p of ['index.html', 'the-game/index.html', 'setting/index.html', 'how-to-play/index.html', 'newsletter/index.html', 'support/index.html', 'privacy/index.html', 'terms/index.html', 'news/index.html', 'news/a-brand-new-post/index.html'])
+    for (const p of ['index.html', 'the-game/index.html', 'setting/index.html', 'how-to-play/index.html', 'newsletter/index.html', 'privacy/index.html', 'terms/index.html', 'news/index.html', 'news/a-brand-new-post/index.html'])
       assert.ok(existsSync(join(b.out, p)), p + ' was not built');
     const list = readFileSync(join(b.out, 'news/index.html'), 'utf8');
     assert.match(list, /href="\/news\/a-brand-new-post\/"/);
@@ -54,23 +54,16 @@ test('"YOUR TEXT HERE" marks become bright boxes, and nothing typed in the text 
   } finally { b.cleanup(); }
 });
 
-test('the donate link: a placeholder while empty, a real button once set, and only https addresses are accepted', () => {
-  const real = build();
+test('support is retired and landing pages use the fixed donation widget without injecting settings', () => {
+  const b = build((c) => writeFileSync(join(c, 'site.json'), JSON.stringify({ name: 'Sacrament RPG Table', donateUrl: 'javascript:alert(1)' })));
   try {
-    assert.match(readFileSync(join(real.out, 'support/index.html'), 'utf8'), /<a class="btn" href="https:\/\/ko-fi\.com\/sacramentrpg" rel="noopener">Donate<\/a>/, 'the real donate address is a working button');
-  } finally { real.cleanup(); }
-  const empty = build((c) => writeFileSync(join(c, 'site.json'), JSON.stringify({ name: 'Sacrament RPG Table', donateUrl: '' })));
-  try {
-    assert.ok(!/Get the book|link not set yet/.test(readFileSync(join(empty.out, 'the-game/index.html'), 'utf8')), 'no link to buy anything is offered');
-    assert.match(readFileSync(join(empty.out, 'support/index.html'), 'utf8'), /Donate \(coming soon\)/);
-  } finally { empty.cleanup(); }
-  const set = build((c) => writeFileSync(join(c, 'site.json'), JSON.stringify({ name: 'Sacrament RPG Table', buyUrl: 'https://example.com/buy', donateUrl: 'javascript:alert(1)' })));
-  try {
-    const game = readFileSync(join(set.out, 'the-game/index.html'), 'utf8'), sup = readFileSync(join(set.out, 'support/index.html'), 'utf8');
-    assert.ok(!/example\.com\/buy/.test(game), 'a configured buy address is ignored: the page links to no one\'s products');
-    assert.match(sup, /coming soon/, 'an address that is not https is ignored');
-    assert.ok(!/javascript:/.test(sup));
-  } finally { set.cleanup(); }
+    assert.equal(b.r.status, 0, b.r.stderr);
+    assert.equal(existsSync(join(b.out, 'support/index.html')), false);
+    const html = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(html, /https:\/\/storage\.ko-fi\.com\/cdn\/widget\/Widget_2\.js/);
+    assert.match(html, /https:\/\/ko-fi\.com\/J4M02969C2/);
+    assert.ok(!html.includes('javascript:alert(1)'));
+  } finally { b.cleanup(); }
 });
 
 test('the home page has the two buttons and they point at the existing join and create flows', () => {
@@ -79,6 +72,7 @@ test('the home page has the two buttons and they point at the existing join and 
     const html = readFileSync(join(b.out, 'index.html'), 'utf8');
     assert.match(html, /<a class="btn" href="\/vtt\/\?join">Join a game<\/a>/);
     assert.match(html, /<a class="btn" href="\/vtt\/\?run">Run a game<\/a>/);
-    assert.match(html, /<a class="btn" href="\/vtt\/\?try">Try it now<\/a>/, 'Try it now opens a sample table with the visitor as the GM');
+    assert.doesNotMatch(html, /Try it now|A sample fight opens|class="ic-try"/);
+    assert.match(html, /The Church keeps the world/);
   } finally { b.cleanup(); }
 });

@@ -1,6 +1,6 @@
 // The improvements of 2026-10-21 (after the UX pass), in real browsers: Your tables and the GM link, the turn reaching a player in another tab,
 // trying the table from the home page, the session recap, the GM's monster library, the next session date, and installing the table on a phone.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const SHOTS = process.env.UX_SHOTS || '';   /* a folder for screenshots, when asked for */
@@ -53,12 +53,13 @@ test('the turn reaching a player in another tab marks the tab’s title and play
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });
 
-test('Try it now on the home page opens a sample table with you as the GM; trying again opens the same one', async ({ browser }) => {
+test('the home page has no sample-table button; the existing sample address still opens the same table', async ({ browser }) => {
   test.setTimeout(60000);
   const page = await newPage(browser);
   await page.goto('/');
   await shot(page, '3a-home-try');
-  await page.getByRole('link', { name: 'Try it now' }).click();
+  await expect(page.getByRole('link', { name: 'Try it now' })).toHaveCount(0);
+  await page.goto('/vtt/?try');
   await expect(page.locator('#app')).toBeVisible();
   const first = await state(page); expect(first.you.role).toBe('gm'); expect(first.table.scene.name).toBe('The Sealed Gate');
   await expect(page.locator('#toast')).toContainText('This is a sample table');

@@ -68,8 +68,29 @@ const cardOf = (s, id) => s.cards[id] || fail('not_found', 'No such card.');
 const ownsChar = (c, a) => isGM(a) || c.owner === a.pid;
 const ownsCard = (s, c, a) => isGM(a) || c.owner === a.pid || (c.charId && s.chars[c.charId] && s.chars[c.charId].owner === a.pid);
 
+/* Keys identify individual possessions, including identical items. Old saves gain keys
+   deterministically on read; commands persist the same keys before changing inventory. */
+function gearKeys(ch) {
+  ch.gear = ch.gear || []; ch.gearSeq = int(ch.gearSeq, 0);
+  const used = new Set();
+  for (const g of ch.gear) {
+    if (/^g[0-9]+$/.test(g.key || '')) ch.gearSeq = Math.max(ch.gearSeq, +g.key.slice(1));
+  }
+  for (const g of ch.gear) {
+    if (!/^g[0-9]+$/.test(g.key || '') || used.has(g.key)) g.key = 'g' + (++ch.gearSeq);
+    used.add(g.key);
+  }
+}
+function gearIndex(ch, key) {
+  if (!key) fail('conflict', 'Please refresh this page before changing or using equipment.');
+  const i = ch.gear.findIndex((g) => g.key === key);
+  if (i < 0) fail('conflict', 'That item has been removed. Your equipment has been refreshed.');
+  return i;
+}
+
 /* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
 function charView(c, whole) {
+  gearKeys(c);
   const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', appearance: c.appearance || '' };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
   if (whole) Object.assign(o, { vow: c.vow || '', background: c.background || '', notes: c.notes || '', gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
@@ -200,10 +221,12 @@ export function apply(s, cmd, a, ctx) {
   if (cl && n <= cl.last && (n <= cl.last - LIMITS.window || cl.recent.includes(n))) stale = true;
   if (stale) { if (cmd.type === 'point') return { result: { ignored: true }, changed: false }; fail('stale', 'That action was already handled, or it is out of date.'); }
   if (GM_ONLY.has(cmd.type) && !isGM(a)) fail('forbidden', 'Only the GM can do that.');
+  Object.values(s.chars).forEach(gearKeys);
   fixSupplies(s, ctx);
   const H = HANDLERS[cmd.type]; if (!H) fail('invalid', 'Unknown command: ' + str(cmd.type, 30));
   a = Object.assign({}, a, { name: isGM(a) ? 'GM' : (s.players[a.pid] || {}).name || 'Player' });
   const result = H(s, cmd, a, ctx) || {};
+  Object.values(s.chars).forEach(gearKeys);
   if (cmd.type === 'point') s.pv = (s.pv || 0) + 1; else s.v += 1;   /* a pointer is not a change to the table: it has its own number, so screens are sent only the pointers (see the service's GET) */
   const last = cl ? Math.max(cl.last, n) : n;
   s.clients[cid] = { by: who, last, at: ctx.now, recent: ((cl ? cl.recent : []).concat([n])).filter((k) => k > last - LIMITS.window) };
@@ -480,8 +503,12 @@ const HANDLERS = {
   },
   sheet(s, c, a, ctx) { /* a change on the character sheet: the hero's player, or the GM. The rules are the sheet's own (sheet-core.js), so what the screen allowed is what is allowed here. */
     const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your hero.');
-    const card = s.cards[ch.cardId], r = SC.edit(ch, c.op, { gm: isGM(a) }, card && card.hp);
+    const card = s.cards[ch.cardId], was = card && card.hp ? card.hp.cur : 0;
+    const op = Object.assign({}, c.op);
+    if (op.op === 'remove' || op.op === 'move') op.index = gearIndex(ch, op.gearKey);
+    const r = SC.edit(ch, op, { gm: isGM(a) }, card && card.hp);
     if (!r.ok) fail('limit', r.why);
+    if (card && card.hp) settleHero(s, card, was, null, ctx);
     if (card && c.op.op === 'text' && c.op.field === 'name') card.name = ch.name;   /* a hero and its token share a name */
     if (isGM(a) && c.op.op === 'add') {   /* the GM putting an item on a hero's sheet (a d100 find, say) is a gift: its player is told, as for a gift from the library */
       const it = SC.item(c.op.id), name = it ? it.name : 'an item', gmText = 'The GM gives ' + name + ' to ' + ch.name + '.'; listAdd(recapOf(s, ctx).found, ch.name + ': ' + name);
@@ -525,7 +552,8 @@ const HANDLERS = {
   useItem(s, c, a, ctx) { /* a hero uses an item: a check with the item's stat; on a success the player then rolls the item's own Effort die (see `effort`), plus their bonus in that kind. No Effort kind, no Effort roll;
      no stat either (a spell said without a check), no roll at all. Whatever it is, if it tempts the Horror the meter rises by its amount. */
     const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
-    let u = SC.useOf(ch, c.index, c.spellId); if (!u.ok) fail('invalid', u.why);
+    const index = gearIndex(ch, c.gearKey);
+    let u = SC.useOf(ch, index, c.spellId); if (!u.ok) fail('invalid', u.why);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal', manual = c.d20 != null && c.d20 !== '';
     if (manual && (int(c.d20, 0) < 1 || int(c.d20, 0) > 20)) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
@@ -539,7 +567,7 @@ const HANDLERS = {
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
       const chk = R.check({ d20, stat: ch.stats[u.stat], target: s.table.target, adj, settings: s.settings });
-      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, use: { index: c.index, spellId: c.spellId || null } };
+      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, use: { index, gearKey: c.gearKey, spellId: c.spellId || null } };
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, dice: diceOf(manual, 20, d20) });

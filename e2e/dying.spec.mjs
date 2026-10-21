@@ -1,5 +1,5 @@
 // Dying and the party's rest, in a real browser: a GM and a player in separate windows. The rules are tested in test/vtt-dying.test.mjs; this checks what people see and press.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const SHOTS = process.env.DYING_SHOTS || '';   /* a folder for screenshots, when asked for */

@@ -13,7 +13,16 @@ export async function table({ dice = null, store = memoryStore(), gear = false }
   const who = (token) => ({
     token,
     /* each call is, by default, a new client's first command; give { client, n } to send as one client in order */
-    cmd: (cmd, extra = {}) => svc.handle({ method: 'POST', body: { op: 'cmd', code, cmd: Object.assign({ actionId: (extra.client || 'k' + Math.random().toString(36).slice(2, 12)) + '.' + (extra.n || 1) }, cmd) }, token }),
+    cmd: async (cmd, extra = {}) => {
+      cmd = structuredClone(cmd);
+      const op = cmd.type === 'sheet' ? cmd.op : cmd.type === 'useItem' ? cmd : null;
+      if (op && (cmd.type === 'useItem' || op.op === 'remove' || op.op === 'move') && !op.gearKey) {
+        const snapshot = await svc.handle({ method: 'GET', query: { code }, token });
+        const ch = snapshot.body.state && snapshot.body.state.chars[cmd.charId];
+        op.gearKey = ch && ch.gear && ch.gear[op.index] ? ch.gear[op.index].key : 'missing';
+      }
+      return svc.handle({ method: 'POST', body: { op: 'cmd', code, cmd: Object.assign({ actionId: (extra.client || 'k' + Math.random().toString(36).slice(2, 12)) + '.' + (extra.n || 1) }, cmd) }, token });
+    },
     get: (since) => svc.handle({ method: 'GET', query: { code, since }, token })
   });
   const gm = who(made.body.token); const join = async (name) => { const j = await svc.handle({ method: 'POST', body: { op: 'join', code, name } }); const p = who(j.body.token); p.pid = j.body.pid; return p; };

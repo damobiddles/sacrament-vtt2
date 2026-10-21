@@ -139,7 +139,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
 
   console.log('--- 10. ' + (LIVE ? 'reloading both pages (the server is not restarted on a live site)' : 'the server restarts'));
   const snapshot = JSON.stringify((await st(gm)).cards);
-  if (srv) { await new Promise((r) => srv.server.close(r)); await T(300); srv = await startServer({ port, dir }); } await gm.reload(); await gm.waitForSelector('#app:not([hidden])');
+  if (srv) { await new Promise((r) => { srv.server.close(r); srv.server.closeAllConnections(); }); await T(300); srv = await startServer({ port, dir }); } await gm.reload(); await gm.waitForSelector('#app:not([hidden])');
   check('the GM reloads and finds the table as it was', JSON.stringify((await st(gm)).cards) === snapshot);
   await A.reload(); await A.waitForSelector('#app:not([hidden])'); check('and so does a player', /Thorne/.test(await txt(A, '#strip .me')));
 
@@ -158,6 +158,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('an unexpected enemy is two clicks, a name and Show: it has 1 Heart and is already in the turn order for everyone', rat && rat.hp.cur === 10 && (await st(A)).table.order.some((o) => o.id === rat.id), JSON.stringify(rat));
 
   await gm.click('#cards .c[data-id="' + rat.id + '"]'); await editCard(gm); await gm.click('[data-do=hideNumbers]'); await settle(A, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'Cellar Rat').hp.hidden === true);
+  await A.waitForFunction((id) => /HP \?/.test(document.querySelector('#cards .c[data-id="' + id + '"]').textContent), rat.id, { timeout: 8000 });
   check('the GM can show the rat but hide its numbers: the player is sent no HP, only that it has some', JSON.stringify((await card(A, 'Cellar Rat')).hp) === '{"hidden":true}' && /HP \?/.test(await txt(A, '#cards .c[data-id="' + rat.id + '"]')));
   await A.click('#cards .c[data-id="' + rat.id + '"]'); if (!(await A.$('#strip input[data-phys]'))) await diceOn(A); await A.fill('#strip input[data-phys]', '19'); await A.click('.stat[data-stat=STR]'); await A.waitForSelector('.calc'); await T(300);
   const succeeded = /Success/.test(await txt(A, '#panel .calc'));

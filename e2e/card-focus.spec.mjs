@@ -1,5 +1,5 @@
 // A card that has the keyboard's focus keeps it when the table updates. (The whole table used to be redrawn on every update, so the focus went back to the page.)
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, saved, state } from './helpers.mjs';
 
 test('a card focused with the keyboard keeps the focus while the GM changes something else, and while its own numbers change', async ({ browser }) => {

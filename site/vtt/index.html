@@ -81,6 +81,13 @@
   <section id="feed" aria-label="Activity"></section>
   <footer id="strip" aria-label="Your character"></footer>
 </div>
+<section id="recoveryWarning" class="recovery-warning" role="alert" hidden>
+  <p id="recoveryMessage"></p>
+  <label>Private recovery link<input id="recoveryLink" readonly aria-label="Private recovery link"></label>
+  <p>Keep this private. Save the file, or select and copy the whole link.</p>
+  <button id="recoveryDownload" type="button">Save recovery file</button>
+  <button id="recoveryClose" type="button">I have saved my link</button>
+</section>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="rules.js"></script>

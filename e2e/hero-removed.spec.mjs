@@ -1,6 +1,6 @@
 // A hero taken off the table while that hero's player has a roll open: the player's screen keeps working (it used to stop drawing, and after a reload the tray went blank).
 // The screen offers no Remove for a hero today, so the table is asked directly, as the GM, the way a future button (or an old save) could.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 test('a hero removed by the GM while its player has a roll waiting: the player is told, and the screen keeps working, before and after a reload', async ({ browser }) => {

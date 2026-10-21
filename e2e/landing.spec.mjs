@@ -1,9 +1,9 @@
 // The Sacrament RPG home page and its pages (/, /the-game/, /news/ and so on): every page loads, every link works, the two big buttons land in the right place in the table,
 // it works on a small phone, and the newsletter form sends nothing anywhere.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, claimHero } from './helpers.mjs';
 
-const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/newsletter/', '/support/', '/privacy/', '/terms/'];
+const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/newsletter/', '/privacy/', '/terms/'];
 
 test('every page loads, has a title and one heading, and nothing errors', async ({ browser }) => {
   const page = await newPage(browser);
@@ -108,7 +108,7 @@ test('the newsletter form asks for consent and sends nothing anywhere', async ({
   const page = await newPage(browser);
   const own = new URL(baseURL).origin;                                  // this site, whether on this computer or live
   const sent = [];
-  page.on('request', (r) => { if (/fonts\.(googleapis|gstatic)\.com/.test(r.url())) return;   /* the site's typefaces, loaded on every page */
+  page.on('request', (r) => { if (/fonts\.(googleapis|gstatic)\.com/.test(r.url()) || (r.method() === 'GET' && r.url() === 'https://storage.ko-fi.com/cdn/widget/Widget_2.js')) return;   /* the site's typefaces, loaded on every page */
     if (!r.url().startsWith(own) || r.method() !== 'GET' || /email/i.test(r.url())) sent.push(r.method() + ' ' + r.url()); });
   await page.goto('/newsletter/');
   await page.locator('#nl-email').fill('someone@example.com');
@@ -124,20 +124,17 @@ test('the newsletter form asks for consent and sends nothing anywhere', async ({
   expect(page.url()).not.toContain('email');
 });
 
-test('the support page has a working donate button that goes to the Ko-fi page, and says running costs money', async ({ browser }) => {
-  const page = await newPage(browser);
-  await page.goto('/support/');
-  await expect(page.locator('main')).toContainText('costs money');
-  await expect(page.locator('main a:has-text("Donate")')).toHaveAttribute('href', 'https://ko-fi.com/sacramentrpg');
-  await expect(page.locator('#donate')).toHaveCount(0);
-  await expect(page.locator('main')).not.toContainText('coming soon');
+test('the donation widget is on landing pages and support is retired', async ({ browser }) => {
+  const page = await newPage(browser); await page.goto('/');
+  await expect(page.locator('.ic-kofi script[src]')).toHaveAttribute('src', 'https://storage.ko-fi.com/cdn/widget/Widget_2.js');
+  await expect(page.locator('.ic-nav a[href="/support/"]')).toHaveCount(0);
 });
 
-test('placeholders for the owner are clearly marked on the setting page', async ({ browser }) => {
-  const page = await newPage(browser);
-  await page.goto('/setting/');
-  expect(await page.locator('blockquote.todo').count()).toBeGreaterThanOrEqual(6);
-  await expect(page.locator('blockquote.todo').first()).toContainText('YOUR TEXT HERE');
+test('the setting page has published content rather than owner placeholders', async ({ browser }) => {
+  const page = await newPage(browser); await page.goto('/setting/');
+  await expect(page.locator('h1')).not.toBeEmpty();
+  await expect(page.locator('main')).not.toContainText('YOUR TEXT HERE');
+  expect((await page.locator('main').innerText()).length).toBeGreaterThan(300);
 });
 
 for (const [w, h] of [[360, 640], [390, 780]]) {

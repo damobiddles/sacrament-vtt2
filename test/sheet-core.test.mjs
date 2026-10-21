@@ -109,12 +109,12 @@ test('armour feeds Defence: 10 + CON + armour, armour counting for at most +5, a
   assert.equal(C.defence(h), 12 + 5, 'capped at +5 of armour');
 });
 
-test('the Plate Harness adds a Heart while worn and takes it away when it comes off, and a lower hit point total follows the new maximum', () => {
+test('the Plate Harness adds a Heart while worn and takes it away when it comes off, and existing wounds survive every change', () => {
   const h = hero(), p = hp(); C.edit(h, { op: 'add', id: 'harness' }, player, p);
   assert.deepEqual(p, { cur: 20, max: 20 });
-  p.cur = 15; C.edit(h, { op: 'move', index: 0, eq: false }, player, p); assert.deepEqual(p, { cur: 10, max: 10 });
-  C.edit(h, { op: 'move', index: 0, eq: true }, player, p); assert.deepEqual(p, { cur: 20, max: 20 });
-  C.edit(h, { op: 'remove', index: 0 }, player, p); assert.deepEqual(p, { cur: 10, max: 10 }); assert.equal(h.gear.length, 0);
+  p.cur = 15; C.edit(h, { op: 'move', index: 0, eq: false }, player, p); assert.deepEqual(p, { cur: 5, max: 10 });
+  C.edit(h, { op: 'move', index: 0, eq: true }, player, p); assert.deepEqual(p, { cur: 15, max: 20 });
+  C.edit(h, { op: 'remove', index: 0 }, player, p); assert.deepEqual(p, { cur: 5, max: 10 }); assert.equal(h.gear.length, 0);
 });
 
 test('removing gear that is not there is refused; a supply keeps its uses', () => {

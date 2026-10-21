@@ -81,7 +81,7 @@
 :is(#sheetOverlay, #sheetHere) .sh-row { gap:10px 14px; }
 :is(#sheetOverlay, #sheetHere) .sh-f { gap:6px; margin-top:8px; font-size:.74rem; letter-spacing:.07em; color:#4e5b51; min-width:0; }
 :is(#sheetOverlay, #sheetHere) .sh-f :is(input,textarea,select) {
-  background:#fffefa; color:#262e28; border:1px solid #b6b6a8;
+  background:#fffefa; color:#262e28; border:1px solid #797d6c;
   border-radius:5px; min-height:42px; padding:9px 11px; line-height:1.45;
 }
 :is(#sheetOverlay, #sheetHere) .sh-f textarea { min-height:76px; resize:vertical; }
@@ -95,7 +95,7 @@
 :is(#sheetOverlay, #sheetHere) .sh-step { gap:5px; }
 :is(#sheetOverlay, #sheetHere) .sh-step button,
 :is(#sheetOverlay, #sheetHere) .sh-b {
-  background:#f8f6ef; color:#35433a; border:1px solid #aeb2a2;
+  background:#f8f6ef; color:#35433a; border:1px solid #797d6c;
   border-radius:5px; min-height:42px;
 }
 :is(#sheetOverlay, #sheetHere) .sh-b { padding:9px 12px; letter-spacing:.06em; line-height:1.3; }

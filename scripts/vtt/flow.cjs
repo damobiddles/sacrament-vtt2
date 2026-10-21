@@ -164,9 +164,15 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const bgUrl = (await st(A)).table.scene.bg; const fetched = await A.evaluate(async (u) => { const r = await fetch(u); return { status: r.status, type: r.headers.get('content-type'), n: (await r.arrayBuffer()).byteLength }; }, bgUrl);
   check('a background uploaded by the GM is on the players’ table and is served as an image', /^\/\.netlify\/functions\/vtt\/img\/[A-Z0-9]+\/[a-f0-9]{24}$/.test(bgUrl) && fetched.status === 200 && /^image\//.test(fetched.type) && fetched.n > 0, bgUrl + ' ' + JSON.stringify(fetched));
   check('the table’s background is drawn from it', /\/img\//.test(await A.evaluate(() => document.getElementById('bg').style.backgroundImage)));
-  await gm.click('#cards .c[data-id="' + ghoul.id + '"]'); await editCard(gm); await gm.setInputFiles('input[data-upload=card]', { name: 'ghoul.png', mimeType: 'image/png', buffer: PNG });
+  await gm.click('#cards .c[data-id="' + ghoul.id + '"]'); await editCard(gm); check('card and token upload controls remain retired', (await gm.$$('input[data-upload=card],input[data-edit=img]')).length === 0);
+  await gm.evaluate(async ({ id, url }) => {
+    const s = window.__vtt.state(), key = Object.keys(localStorage).find(k => k.endsWith(s.code));
+    const token = JSON.parse(localStorage.getItem(key)).token;
+    const res = await fetch('/.netlify/functions/vtt', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token }, body: JSON.stringify({ op: 'cmd', code: s.code, cmd: { actionId: 'legacyimage.1', type: 'cardUpdate', id, patch: { img: url } } }) });
+    if (!res.ok) throw new Error('Could not set existing card image');
+  }, { id: ghoul.id, url: bgUrl });
   await until(A, (id) => /\/img\//.test(window.__vtt.state().cards[id].img || ''), ghoul.id);
-  check('a card picture uploaded by the GM appears on the card for players', (await A.$$('#cards .c[data-id="' + ghoul.id + '"] .cimg')).length === 1);
+  check('existing card image addresses still display for players', (await A.$$('#cards .c[data-id="' + ghoul.id + '"] .cimg')).length === 1);
   const before = (await st(gm)).table.scene.bg;
   await gm.keyboard.press('Escape'); await sceneBg(gm);
   await gm.setInputFiles('input[data-upload=bg]', { name: 'x.png', mimeType: 'image/png', buffer: Buffer.from('this is not a picture') });

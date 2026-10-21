@@ -4,7 +4,7 @@
 // or the outline of a control that has no solid fill or label is under 3:1. See e2e/contrast-lib.mjs for how the colours are measured.
 //
 // To get a full list of what is wrong instead of a pass/fail, with pictures:   CONTRAST_AUDIT=1 CONTRAST_OUT=/some/folder npx playwright test e2e/contrast.spec.mjs
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { newPage, makeTable, joinTable, claimHero } from './helpers.mjs';
 import { setTheme, checkScreen, bounded } from './contrast-lib.mjs';
@@ -50,12 +50,16 @@ test.describe.configure({ mode: 'parallel' });
 
 for (const theme of ['dark']) {
   for (const vpName of ['laptop', 'phone']) {
-    test(`${theme} theme, ${vpName}${vpName === 'phone' ? ' @phone' : ''}: text and buttons are readable on every page and table screen`, async ({ browser }) => {
+    for (const group of QUICK ? ['all'] : ['pages', 'table']) {
+    test(`${theme} theme, ${vpName}${vpName === 'phone' ? ' @phone' : ''}: text and buttons are readable on every page and table screen (${group})`, async ({ browser }) => {
       test.setTimeout(AUDIT ? 480000 : 240000);   // a whole run is about 2 to 5 minutes; much longer means something is stuck
       const vp = VIEWPORTS[vpName], found = [], ctx = { theme, vp, vpName, found };
       const page = await newPage(browser, vp);
       await setTheme(page, theme);
 
+      // Keep each full scan bounded without extending its timeout. Both groups
+      // together retain every screen and every button state in the original scan.
+      if (group !== 'table') {
       // every ordinary page
       for (const path of PAGES) {
         await page.goto(path); await setTheme(page, theme);
@@ -67,6 +71,9 @@ for (const theme of ['dark']) {
       // the My heroes page with a hero on it (the sheet), and the same sheet over the table
       await page.goto('/character/'); await setTheme(page, theme); await press(page.locator('[data-ready=maren]')); await page.waitForTimeout(150); await openAll(page); await visit(ctx, 'My heroes: a hero sheet', page);
 
+      }
+
+      if (group !== 'pages') {
       // the table: a GM
       const gm = await newPage(browser, vp); await setTheme(gm, theme);
       const code = await makeTable(gm); await setTheme(gm, theme);
@@ -110,8 +117,11 @@ for (const theme of ['dark']) {
         await press(ann.locator('#panel [data-do=push]')); await ann.waitForTimeout(500); await visit(ctx, 'table player: pushed', ann);
       }
 
-      if (AUDIT) { mkdirSync(OUT, { recursive: true }); writeFileSync(`${OUT}/report-${theme}-${vpName}.json`, JSON.stringify(found, null, 1)); }
+      }
+
+      if (AUDIT) { mkdirSync(OUT, { recursive: true }); writeFileSync(`${OUT}/report-${theme}-${vpName}-${group}.json`, JSON.stringify(found, null, 1)); }
       else expect(found, `unreadable text or buttons (${theme}, ${vpName}):\n` + found.slice(0, 40).map((f) => `${f.screen} | ${f.where} | ${f.kind || 'text'} ${f.state || ''} ${f.ratio} < ${f.needed}`).join('\n')).toEqual([]);
     });
+    }
   }
 }

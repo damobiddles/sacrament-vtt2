@@ -101,7 +101,6 @@ function build() {
     `<header class="bhead ic-hero"><div class="wrap"><div class="label">A tabletop roleplaying game</div><div class="ic-hero-title"><h1>${esc(h.title)}</h1><img class="ic-hero-symbol" src="/favicon.svg" width="108" height="108" alt="" aria-hidden="true"></div><p class="lede">${esc(h.lede || h.summary)}</p>
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
 <p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share.</p>
-<p class="ic-try"><a class="btn" href="/vtt/?try">Try it now</a> <span class="small">A sample fight opens with you as the GM. Nothing to sign up for.</span></p>
 <p class="small ic-flavour"><em>The Church keeps the world. Someone has to go where it won't.</em></p></div></header>
 <main class="wrap blist ic-cards">${cards}<p class="ic-more"><a href="/how-to-play/">How to play here</a> &middot; <a href="/the-game/">About the game</a></p>
 ${notes('early', 'This is an early version, built in the open. The rules it follows are still being worked out, so some details may change.')}

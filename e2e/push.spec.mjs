@@ -1,6 +1,6 @@
 // Pushing on the screen: a failed roll offers the player a push; pressing it raises the Rising Horror by 1 for everyone and offers the same roll again;
 // a natural 1 raises it by itself. A GM and a player in separate windows. Set PUSH_SHOTS=<folder> to keep pictures of each step.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved } from './helpers.mjs';
 
 const SHOTS = process.env.PUSH_SHOTS || '';

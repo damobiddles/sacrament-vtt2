@@ -1,5 +1,15 @@
 // Small helpers shared by the browser tests: make a table as the GM, and join it as a player in a separate browser window.
-import { expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
+
+// These contexts are opened directly, so Playwright's page fixture does not close them.
+// Stop their polling and release their browsers before the next test starts.
+export const test = base.extend({
+  cleanupContexts: [async ({ browser }, use) => {
+    await use();
+    await Promise.all(browser.contexts().map((context) => context.close()));
+  }, { auto: true }],
+});
+export { expect };
 
 export async function newPage(browser, viewport) {
   const context = await browser.newContext({ viewport: viewport || { width: 1366, height: 800 } });
@@ -48,7 +58,7 @@ export async function emptyPacks(gm) {
     const token = JSON.parse(localStorage.getItem(key)).token, client = 'emptypk' + Math.random().toString(36).slice(2, 8); let n = 0;
     for (const ch of Object.values(s.chars)) for (let i = (ch.gear || []).length - 1; i >= 0; i--) {
       const r = await fetch('/.netlify/functions/vtt', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token },
-        body: JSON.stringify({ op: 'cmd', code: s.code, cmd: { actionId: client + '.' + (++n), type: 'sheet', charId: ch.id, op: { op: 'remove', index: i } } }) });
+        body: JSON.stringify({ op: 'cmd', code: s.code, cmd: { actionId: client + '.' + (++n), type: 'sheet', charId: ch.id, op: { op: 'remove', index: i, gearKey: ch.gear[i].key } } }) });
       if (r.status !== 200) throw new Error('could not empty ' + ch.name + '’s pack: ' + r.status);
     }
   }), 15000, 'emptying the sample heroes’ packs');

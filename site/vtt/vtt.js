@@ -5,6 +5,7 @@
   /* The saved-table keys in this browser keep their original prefix: renaming it would make every table, GM key and hero already saved on a device vanish. It is built in two pieces so the old product name does not appear in the file. */
   var KEY = 'ic' + 'rpg' + '-vtt-', R = window.SacramentRules, D = window.SacramentDice, API = '/.netlify/functions/vtt', $ = function (id) { return document.getElementById(id); };
   var S = null;                                   /* the last state the server sent this person */
+  var sessionVersion = 0;
   var sess = null;                                /* { code, token, role, pid } */
   var UI = { open: {}, phys: '', sel: null, tool: 'select', adj: 'normal', roll: null, feedOpen: false, view: null, actAs: null, status: 'ok', pending: 0, aim: {}, hpOps: {}, netlog: [], reconcile: false, maxTries: 12, working: null, pressing: false, draw: null, drag: null, seenPtr: {}, dirty: false };
   /* a player's short instructions are shown until they have made their first roll, then never again (on this browser) */
@@ -16,25 +17,36 @@
   var clientId = rid(12);
   var gm = function () { return S && S.you.role === 'gm'; };
   var toast = function (msg, ms) { var d = document.createElement('div'); d.textContent = msg; $('toast').appendChild(d); setTimeout(function () { d.remove(); }, ms || 4500); };
-  var save = function () { try { localStorage.setItem(KEY + sess.code, JSON.stringify(sess)); localStorage.setItem(KEY + 'last', sess.code); } catch (e) {} };
-  var load = function (code) { try { return JSON.parse(localStorage.getItem(KEY + code) || 'null'); } catch (e) { return null; } };
+  var memorySessions = {};
+  var save = function () {
+    if (!sess) return false;
+    memorySessions[sess.code] = Object.assign({}, sess);
+    try {
+      localStorage.setItem(KEY + sess.code, JSON.stringify(sess));
+      if (JSON.parse(localStorage.getItem(KEY + sess.code) || 'null').token !== sess.token) throw new Error('Not saved');
+      localStorage.setItem(KEY + 'last', sess.code); UI.storageProblem = false;
+    } catch (e) { UI.storageProblem = true; }
+    renderRecovery(); return !UI.storageProblem;
+  };
+  var load = function (code) { if (memorySessions[code]) return memorySessions[code]; try { return JSON.parse(localStorage.getItem(KEY + code) || 'null'); } catch (e) { return null; } };
   /* which of the GM's sections are open is remembered in this browser, so they stay as the GM left them between turns and after a reload */
 
   /* ---------- talking to the server ---------- */
   function call(method, body, query) {
+    var version = sessionVersion;
     var u = API + (query ? '?' + Object.keys(query).map(function (k) { return k + '=' + encodeURIComponent(query[k]); }).join('&') : '');
     var ac = typeof AbortController === 'function' ? new AbortController() : null, to = ac && setTimeout(function () { ac.abort(); }, 15000);
     var t0 = Date.now(), what = method + ' ' + (body && body.cmd ? body.cmd.type : body && body.op ? body.op : (query ? 'poll' : ''));
     var note = function (st, why) { UI.netlog.push({ at: new Date(t0).toISOString().slice(11, 23), what: what, status: st, ms: Date.now() - t0, why: why || '' }); if (UI.netlog.length > 60) UI.netlog.shift(); };
     return fetch(u, { signal: ac ? ac.signal : undefined, method: method, headers: Object.assign({ 'content-type': 'application/json' }, sess && sess.token ? { authorization: 'Bearer ' + sess.token } : {}), body: body ? JSON.stringify(body) : undefined, cache: 'no-store' })
-      .then(function (r) { clearTimeout(to); return r.json().catch(function () { return {}; }).then(function (j) { note(r.status, j && j.error && j.error.message); return { status: r.status, body: j }; }); }, function (e) { clearTimeout(to); note('no answer', e && e.name); throw e; });
+      .then(function (r) { clearTimeout(to); return r.json().catch(function () { return {}; }).then(function (j) { note(r.status, j && j.error && j.error.message); return { status: r.status, body: j, stale: version !== sessionVersion }; }); }, function (e) { clearTimeout(to); note('no answer', e && e.name); throw e; });
   }
   /* which drawing this screen has, so that the table need not send it again: none (send it) until one has come */
   /* only the pointers have moved: nothing else is drawn again */
   function takePointers(p, pv) { if (!S || !p || (S.pv || 0) > pv) return; S.pointers = p; S.pv = pv; renderPointers(); }
   function haveDraw() { return S && S.draw && !UI.drawStale ? S.drawV : ''; }
   function take(st) {
-    if (!sess) return;   /* after leaving a table a late reply must not bring it back */
+    if (!sess || (st && st.code !== sess.code)) return;   /* a late reply belongs to its original table */
     if (st && (!S || st.v >= S.v)) {
       /* The drawing comes only when it has changed: an answer without it means "the one you have". Should that not be the one it names, the table is read again whole. */
       if (!st.draw) { if (S && S.draw && S.drawV === st.drawV) st.draw = S.draw; else { st.draw = (S && S.draw) || []; UI.drawStale = true; setTimeout(function () { poll(true); }, 0); } }
@@ -83,8 +95,8 @@
   }
   /* A notice on the table for a few seconds. It waits for the dice to land, so it never tells the number before the die shows it. */
   function notice(kind, text) {
-    var tries = 0; chime(kind); flagTab(kind === 'turn' ? 'Your turn' : 'You are hit');
-    (function show() { if (D.busy() && tries++ < 20) { setTimeout(show, 150); return; }
+    var tries = 0, version = sessionVersion; chime(kind); flagTab(kind === 'turn' ? 'Your turn' : 'You are hit');
+    (function show() { if (version !== sessionVersion) return; if (D.busy() && tries++ < 20) { setTimeout(show, 150); return; }
       UI.notice = { kind: kind, text: text, until: Date.now() + 6000 }; if (S) renderTable();
       clearTimeout(UI.noticeTimer); UI.noticeTimer = setTimeout(function () { UI.notice = null; if (S) render(); }, 6000); })();
   }   /* the result panel and the activity line waited for the dice; they can show the result now */
@@ -118,21 +130,25 @@
      d, drawing: the same, but apart from gameplay, so a slow line cannot hold up a turn;
      t, the pointer: only its latest position matters, so it is never queued or resent. */
   var lanes = { g: mkLane('g'), d: mkLane('d') }, pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
-  function mkLane(l) { return { id: clientId + l, seq: 0, q: [], running: false, gameplay: l === 'g' }; }
+  function mkLane(l) { return { id: clientId + l, seq: 0, q: [], running: false, gameplay: l === 'g', version: sessionVersion }; }
   function send(cmd, done, lane) {
     if (UI.reconcile && (lane || 'g') === 'g') { toast('Checking what was saved. Try again in a moment.', 3000); if (done) done(null); return Promise.resolve(null); }   /* no fresh attempt until the table has been read again */
     var L = lanes[lane || 'g']; cmd.actionId = cmd.actionId || L.id + '.' + (++L.seq); if (L.gameplay) { UI.pending++; setStatus('busy'); }
     return new Promise(function (resolve) { L.q.push({ cmd: cmd, resolve: resolve, done: done, tries: 0 }); if (!L.running) pump(L); });
   }
   function sendPoint(x, y) {
+    var current = pointer;
+    if (!sess) return;
     if (pointer.busy) { pointer.next = { x: x, y: y }; return; }
     pointer.busy = true;
-    call('POST', { op: 'cmd', code: sess.code, dv: haveDraw(), cmd: { type: 'point', x: x, y: y, actionId: pointer.id + '.' + (++pointer.seq) } }).then(function (r) { if (r.status === 200 && r.body.ok) { var st = r.body.state; if (S && st && st.v === S.v) takePointers(st.pointers, st.pv); else take(st); } }, function () {})
-      .then(function () { pointer.busy = false; if (pointer.next) { var n = pointer.next; pointer.next = null; sendPoint(n.x, n.y); } });
+    call('POST', { op: 'cmd', code: sess.code, dv: haveDraw(), cmd: { type: 'point', x: x, y: y, actionId: pointer.id + '.' + (++pointer.seq) } }).then(function (r) { if (current !== pointer || r.stale) return; if (r.status === 200 && r.body.ok) { var st = r.body.state; if (S && st && st.v === S.v) takePointers(st.pointers, st.pv); else take(st); } }, function () {})
+      .then(function () { if (current !== pointer) return; pointer.busy = false; if (pointer.next) { var n = pointer.next; pointer.next = null; sendPoint(n.x, n.y); } });
   }
   function pump(L) {
+    if (L.version !== sessionVersion || !sess || (L.gameplay && UI.reconcile)) { L.running = false; return; }
     var job = L.q[0]; if (!job) { L.running = false; return; } L.running = true;
     call('POST', { op: 'cmd', code: sess.code, dv: haveDraw(), cmd: job.cmd }).then(function (r) {
+      if (L.version !== sessionVersion || r.stale) return;
       if (r.status === 200 && r.body.ok) { take(r.body.state); finish(L, job, r.body); }
       else if (r.status === 503 || r.status === 0) retry(L, job, 'the table answered ' + r.status + (r.body && r.body.error ? ': ' + r.body.error.message : ''));
       else if (r.status === 409 && r.body.error && r.body.error.code === 'stale') { finish(L, job, null); poll(true); } /* already handled: nothing to say */
@@ -141,6 +157,7 @@
     }, function (e) { retry(L, job, 'no answer (' + (e && e.name) + ')'); });
   }
   function retry(L, job, why) {
+    if (L.version !== sessionVersion) return;
     job.tries++;
     if (job.tries > UI.maxTries) {
       /* Giving up on this command: it may or may not have been saved. Nothing new can be sent until the table has been read again, and what it shows is then what counts. */
@@ -149,6 +166,7 @@
     setStatus('bad', 'Offline: retrying', 'Attempt ' + job.tries + ' of ' + UI.maxTries + ', same command resent each time (so it applies once). Last problem: ' + why); setTimeout(function () { pump(L); }, Math.min(4000, 400 * job.tries));
   }
   function finish(L, job, body) {
+    if (L.version !== sessionVersion) return;
     L.q.shift(); if (L.gameplay) { UI.pending--; if (!L.q.length) setStatus(UI.status === 'bad' && !body ? 'bad' : 'ok'); }
     if (job.done) job.done(body); job.resolve(body); pump(L);
   }
@@ -159,13 +177,30 @@
     clearTimeout(timer);
     if (!sess) return;
     if (polling) { again = true; return; }           /* one request at a time: a second loop must never start */
-    polling = true;
+    polling = true; var version = sessionVersion;
     call('GET', null, { code: sess.code, since: S ? S.v : '', dv: haveDraw(), pv: S ? S.pv : '' }).then(function (r) {
-      if (r.status === 200) { failures = 0; if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
+      if (version !== sessionVersion || r.stale) return;
+      if (r.status === 200) { failures = 0; if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; if (!lanes.g.running) pump(lanes.g); toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
       else if (r.status === 401 || r.status === 404) { setStatus('bad', r.status === 404 ? 'This table has gone' : 'You are no longer at this table'); return; }
       else fail();
-    }, fail).then(function () { polling = false; timer = setTimeout(poll, again ? 0 : pollGap()); again = false; });
-    function fail() { failures++; setStatus('bad', 'Offline: reconnecting'); }
+    }, fail).then(function () { if (version !== sessionVersion) return; polling = false; timer = setTimeout(poll, again ? 0 : pollGap()); again = false; });
+    function fail() { if (version !== sessionVersion) return; failures++; setStatus('bad', 'Offline: reconnecting'); }
+  }
+
+  function resetSession() {
+    sessionVersion++; clearTimeout(timer); clearTimeout(UI.nudge); clearTimeout(UI.leaveTimer); polling = false; again = false;
+    Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
+    clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
+    pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
+    UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
+    UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
+    UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
+    UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
+    if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
+    UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
+    UI.notice = null; clearTimeout(UI.noticeTimer); UI.arrivalSeen = false;
+    UI.storageProblem = false; UI.recoveryOpen = false; UI.recoveryDismissed = false;
+    if ($('recoveryWarning')) $('recoveryWarning').hidden = true;
   }
 
   /* How long to wait before asking again: a second while anything is happening; once nothing has changed and nobody here has touched the screen for a minute,
@@ -213,7 +248,7 @@
       var card = S.cards[ch.cardId], G = gm(), mine = ch.owner === S.you.pid, hasHp = !!(card && card.hp && !card.hp.hidden);
       return { hero: heroOf(ch), hp: hasHp ? { cur: shownHp(card), max: card.hp.max } : null, canEdit: G || mine, canHp: (G || mine) && hasHp, gm: G, live: true, dice: S.settings.dice, title: mine ? 'your hero' : G ? 'seen as the GM' : '' };
     },
-    use: function (index, spellId, done) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId); done(true); },
+    use: function (index, spellId, done, gearKey) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey); done(true); },
     act: function (op, done) { UI.lastError = ''; send({ type: 'sheet', charId: UI.sheet, op: op }, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); },
     hp: function (d) { var ch = S.chars[UI.sheet], card = ch && S.cards[ch.cardId]; if (card && card.hp) hpQueue(card.id, { d: d }, function (done) { send({ type: 'adjust', cardId: card.id, field: 'hp', delta: d }, done); }); },
     close: function () { closeSheet(); }
@@ -278,20 +313,33 @@
     return b;
   }
 
+  function renderRecovery() {
+    var box = $('recoveryWarning'); if (!box || !sess) return;
+    box.hidden = !(UI.recoveryOpen || (UI.storageProblem && !UI.recoveryDismissed));
+    if (box.hidden) return;
+    $('recoveryMessage').textContent = UI.storageProblem
+      ? 'This browser cannot remember your place at this table. Save the private recovery link below before closing this page.'
+      : 'Save this private recovery link somewhere safe. Anyone with it can return as you, so do not share it with players.';
+    var link = location.origin + '/vtt/?room=' + sess.code + '#key=' + sess.token;
+    if ($('recoveryLink').value !== link) $('recoveryLink').value = link;
+  }
   function renderStatus() {
+    renderRecovery();
     var el = $('tStatus'); if (!el || !S) return; el.dataset.role = gm() ? 'gm' : 'player';
     if (UI.pressing) { UI.renderLate = true; return; }
     var cls = UI.status, txt = UI.statusText || (cls === 'busy' ? 'Saving…' : 'Saved');
     el.innerHTML = '<span class="pill ' + (cls === 'bad' ? 'bad' : cls === 'busy' ? 'busy' : 'ok') + '" role="status"' + (UI.statusWhy ? ' title="' + esc(UI.statusWhy) + '"' : '') + '>' + esc(txt) + '</span>' + (gm() ? '' : '<span class="pill" title="The code of this table">' + esc(S.code) + '</span>' +
       '<button class="chip' + (UI.leaveAsk ? ' hot' : '') + '" data-do="leave" title="' + (gm() ? 'Leave this table. As the GM you can come back only with your GM link.' : 'Leave this table and go back to the start. You can join again with the code.') + '">' + (UI.leaveAsk ? 'Sure? Leave' : 'Leave') + '</button>');
+    if (UI.storageProblem) el.insertAdjacentHTML('beforeend', '<button class="chip" data-do="showRecovery">Save recovery link</button>');
   }
   /* Leaving: forget this table in this browser and return to the first screen, where a new table can be made or another joined. Two presses, because the GM's place cannot be got back. */
   function leaveTable() {
     if (UI.pending > 0) { toast('Wait for Saved, then leave.'); return; }
     if (!UI.leaveAsk) { UI.leaveAsk = true; renderStatus(); if (gm()) renderPanel(); clearTimeout(UI.leaveTimer); UI.leaveTimer = setTimeout(function () { UI.leaveAsk = false; if (S) { renderStatus(); if (gm()) renderPanel(); } }, 5000); return; }
     clearTimeout(UI.leaveTimer); UI.leaveAsk = false;
+    delete memorySessions[sess.code];
     try { localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch (e) {}
-    sess = null; S = null; UI.sel = null; UI.roll = null; UI.aim = {}; UI.hpOps = {}; UI.reconcile = false; UI.working = null; UI.rolling = false; UI.rollChecked = false; UI.seenLog = null; clearTimeout(timer);
+    resetSession(); sess = null; S = null; UI.sel = null; UI.roll = null; UI.aim = {}; UI.hpOps = {}; UI.reconcile = false; UI.working = null; UI.rolling = false; UI.rollChecked = false; UI.seenLog = null; clearTimeout(timer);
     history.replaceState(null, '', '/vtt/'); $('app').hidden = true; $('entry').hidden = false; $('resume').hidden = true; $('joinCode').value = ''; $('makeMsg').textContent = '';
     listTables();
   }
@@ -384,9 +432,9 @@
   /* The rebuild put off while someone types is made when focus leaves the panel's fields, not when it moves from one field to another: rebuilding then would destroy the field they have just clicked into, and with it what they type. */
   document.addEventListener('focusout', function (e) { var rt = e.relatedTarget; if (typing(rt)) return; setTimeout(function () { if (UI.panelLate && S && !UI.pressing) { UI.panelLate = false; renderPanel(); } }, 0); });
   /* While a control is held down nothing is redrawn; whatever arrived meanwhile is drawn as soon as it is released (after the click has been delivered). */
-  var pressTimer = null;
-  function release() { clearTimeout(pressTimer); if (!UI.pressing) return; setTimeout(function () { UI.pressing = false; if (UI.renderLate || UI.panelLate) { UI.renderLate = false; UI.panelLate = false; if (S) render(); } }, 0); }
-  document.addEventListener('pointerdown', function (e) { if (e.target.closest && e.target.closest('[data-do]')) { UI.pressing = true; clearTimeout(pressTimer); pressTimer = setTimeout(function () { release(); }, 4000); } }, true);
+  var pressTimer = null, releaseTimer = null;
+  function release() { clearTimeout(pressTimer); clearTimeout(releaseTimer); if (!UI.pressing) return; releaseTimer = setTimeout(function () { UI.pressing = false; if (UI.renderLate || UI.panelLate) { UI.renderLate = false; UI.panelLate = false; if (S) render(); } }, 0); }
+  document.addEventListener('pointerdown', function (e) { if (e.target.closest && e.target.closest('[data-do]')) { clearTimeout(releaseTimer); UI.pressing = true; clearTimeout(pressTimer); pressTimer = setTimeout(function () { release(); }, 4000); } }, true);
   document.addEventListener('pointerup', release, true); document.addEventListener('pointercancel', release, true);
 
   /* The GM's monster attack, in the same panel as a player's roll: the roll against Defence, then (on a hit) "Roll damage" rolls it and takes it off the hero. The die it uses can be changed and is remembered. */
@@ -471,7 +519,7 @@
   function rollAgain(r) {
     if (r.targetCardId && S.cards[r.targetCardId]) UI.sel = r.targetCardId; if (gm()) UI.actAs = r.charId;
     UI.adj = (r.check && r.check.adj) || 'normal';
-    if (r.use) doUseItem(r.charId, r.use.index, r.use.spellId); else doRoll(r.stat);
+    if (r.use) { if (!r.use.gearKey) { toast('Choose that item from your sheet again.'); return; } doUseItem(r.charId, r.use.index, r.use.spellId, r.use.gearKey); } else doRoll(r.stat);
   }
   var physical = function (id, label) { return '<div class="phys"><label>' + label + '<input id="' + id + '" type="number" min="1" max="20" inputmode="numeric" placeholder="optional"></label></div>'; };
 
@@ -700,6 +748,7 @@
     h += diceSwitch();
     h += '<h3>Your GM link</h3><div class="row"><button class="btn small" data-do="copyKey">Copy your GM link</button></div><p class="hint">Keep it somewhere private, such as your notes. It brings you back to this table as the GM on any device, or after this browser forgets. Anyone who has it can run the table, so do not send it to players.</p>';
     h += '<h3>More</h3><ul class="ol links"><li><button type="button" class="n" data-do="gmsub" data-s="rules">House rules</button></li><li><button type="button" class="n" data-do="gmsub" data-s="manual">Running things by hand</button></li><li><button type="button" class="n" data-do="gmsub" data-s="recap">Session recap</button></li></ul>';
+    h += '<div class="row"><button class="btn small" data-do="showRecovery">Save your recovery link</button></div>';
     h += '<div class="row"><button class="btn small danger" data-do="leave">' + (UI.leaveAsk ? 'Sure? Only your GM link brings you back' : 'Leave table') + '</button></div>';
     return h;
   }
@@ -804,16 +853,17 @@
     h += '<span class="def" title="A monster must roll this or more to hit you">Defence <b>' + ch.defence + '</b></span>';
     if (downMark(card)) h += downMark(card, true).replace('<b ', '<b role="status" ');
     h += '<div class="stats" role="group" aria-label="Roll a stat">' + R.STATS.map(function (k) { return '<button class="stat" data-do="roll" data-stat="' + k + '" aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
-    var foe = aimFoe();
-    if (foe) {
+    var foe = aimFoe(), choices = foe && window.SacramentSheetCore.actions(heroOf(ch)).some(function (a) { return a.ok; });
+    if (choices) {
       /* Keep the map visible when an enemy or obstacle is selected. */
       h += '<div class="aim-prompt" role="group" aria-label="Selected target">' +
         '<span class="q">How are you going to deal with <b>' + esc(foe.name) + '</b>?</span>' +
         '<button class="chip" data-do="sheet" data-id="' + ch.id + '" aria-label="Open your character sheet to choose an action">Open character sheet</button>' +
+        (UI.askItem && UI.askItem.card === foe.id ? '<button class="chip" data-do="roll" data-stat="' + UI.askItem.stat + '" data-noitem="1">Roll ' + UI.askItem.stat + ' with no item</button>' : '') +
         '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
-    h += '<div class="opt"><button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>' + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
+    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
       (UI.optMore ? '<div class="opt row2"><button class="chip" data-do="toggle" data-key="effort" aria-expanded="' + !!UI.optEffort + '">Effort</button><button class="chip" data-do="toggle" data-key="dice" aria-expanded="' + !!UI.optDice + '">My dice</button></div>' : '');
     var gear = cardList().filter(function (c) { return c.owner && (G ? false : c.owner === S.you.pid); });
     if (gear.length) h += '<div class="gear"><span class="note">Gear</span>' + gear.map(function (c) { return '<button class="chip" data-do="select" data-id="' + c.id + '">' + esc(c.name) + '</button>'; }).join('') + '</div>';
@@ -849,12 +899,14 @@
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
   /* Using an item: one click makes the check with the item's stat. On a success the panel offers "Roll damage" with the item's own die, then Apply. */
-  function doUseItem(charId, index, spellId) {
+  function doUseItem(charId, index, spellId, gearKey) {
     var ch = S.chars[charId]; if (!ch || UI.rolling) return;
+    gearKey = gearKey || (ch.gear[index] && ch.gear[index].key);
+    if (!gearKey) { toast('That item is no longer available. Open your sheet again.'); return; }
     UI.askItem = null; UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     renderPanel();
-    send({ type: 'useItem', charId: charId, index: index, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
+    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
   }
   function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', order: o }); }
   /* a place on the table where a new card of this size overlaps nothing, nearest the middle; units are those of the table's width (it is 100 wide and 62.5 high) */
@@ -947,7 +999,8 @@
         if (!UI.recapAsk) { UI.recapAsk = true; renderPanel(); UI.recapTimer = setTimeout(function () { UI.recapAsk = false; if (S) renderPanel(); }, 5000); break; }
         UI.recapAsk = false; send({ type: 'recapReset' }, function (b) { if (b) toast('A new session: the recap starts again.'); }); break;
       }
-      case 'copyKey': { if (!gm()) break; var kl = location.origin + '/vtt/?room=' + S.code + '#key=' + sess.token; if (navigator.clipboard) navigator.clipboard.writeText(kl).then(function () { toast('Your GM link is copied. Keep it private.'); }, function () { toast('Could not copy. Try again.'); }); else toast('Could not copy in this browser.'); break; }
+      case 'showRecovery': UI.recoveryOpen = true; renderRecovery(); break;
+      case 'copyKey': { if (!gm()) break; var kl = location.origin + '/vtt/?room=' + S.code + '#key=' + sess.token; if (navigator.clipboard) navigator.clipboard.writeText(kl).then(function () { toast('Your GM link is copied. Keep it private.'); }, function () { UI.recoveryOpen = true; renderRecovery(); }); else { UI.recoveryOpen = true; renderRecovery(); } break; }
       case 'horrorAck': send({ type: 'horrorAck' }); break;
       case 'arrivalSeen': UI.arrivalSeen = true; renderTable(); break;
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
@@ -1001,13 +1054,14 @@
     });
   }
   function uploadPicture(input) {
-    var file = input.files && input.files[0]; if (!file) return; var kind = input.dataset.upload, scene = viewScene();
+    var file = input.files && input.files[0]; if (!file) return; var version = sessionVersion, code = sess.code, scene = viewScene();
     toast('Uploading…', 3000);
-    prepareImage(file, 1920).then(function (data) { return call('POST', { op: 'upload', code: sess.code, data: data }); }).then(function (r) {
+    prepareImage(file, 1920).then(function (data) { if (version !== sessionVersion) return null; return call('POST', { op: 'upload', code: code, data: data }); }).then(function (r) {
+      if (!r || r.stale || version !== sessionVersion) return;
       if (r.status !== 200 || !r.body.ok) throw new Error((r.body.error && r.body.error.message) || 'The upload did not work.');
       send({ type: 'sceneUpdate', id: scene, bg: r.body.url });
       toast('Image added.'); input.value = ''; if (document.activeElement === input) input.blur();
-    }).catch(function (e) { toast((e && e.message || 'The upload did not work.') + ' Nothing was changed.', 8000); input.value = ''; });
+    }).catch(function (e) { if (version !== sessionVersion) return; toast((e && e.message || 'The upload did not work.') + ' Nothing was changed.', 8000); input.value = ''; });
   }
   document.addEventListener('change', function (e) {
     var t = e.target; if (!S || !t.dataset) return;
@@ -1087,31 +1141,40 @@
   }
   $('table').addEventListener('pointerup', endPointer); $('table').addEventListener('pointercancel', endPointer);
 
+  $('recoveryDownload').addEventListener('click', function () {
+    var link = $('recoveryLink').value, blob = new Blob(['Private Sacrament table recovery link. Keep this safe; do not share it.\n\n' + link + '\n'], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url;
+    a.download = 'sacrament-table-' + sess.code + '-recovery.txt'; a.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+  $('recoveryClose').addEventListener('click', function () { UI.recoveryOpen = false; UI.recoveryDismissed = true; renderRecovery(); });
+
   /* ---------- starting: make, join, resume ---------- */
-  function enter(s, state) { sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); }
+  function enter(s, state) { resetSession(); sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); }
   $('makeForm').addEventListener('submit', function (e) {
-    e.preventDefault(); var mb = this.querySelector('button[type=submit]'); if (mb.disabled) return; mb.disabled = true; $('makeMsg').textContent = '';
+    e.preventDefault(); var version = sessionVersion, mb = this.querySelector('button[type=submit]'); if (mb.disabled) return; mb.disabled = true; $('makeMsg').textContent = '';
     call('POST', { op: 'create', key: $('makeKey').value, sample: $('makeSample').checked }).then(function (r) {
+      if (version !== sessionVersion || r.stale) return;
       if (r.status === 200) { enter({ code: r.body.code, token: r.body.token, role: 'gm' }, r.body.state); if (UI.trying) { try { localStorage.setItem(KEY + 'try', r.body.code); } catch {} toast('This is a sample table and you are the GM. Click a hero to roll for them, or copy the invite link to bring a friend.', 9000); } }
       else { $('makeMsg').textContent = (r.body.error && r.body.error.message) || 'Could not make a table.'; if (r.status === 403) $('keyRow').hidden = false; }
-    }, function () { $('makeMsg').textContent = 'Could not reach the server.'; }).then(function () { mb.disabled = false; });
+    }, function () { if (version !== sessionVersion) return; $('makeMsg').textContent = 'Could not reach the server.'; }).then(function () { mb.disabled = false; });
   });
   /* Joining is one person however many times the button is pressed: the attempt has a key that is kept for the tab, and a place already held is resumed, not joined again. */
   var joinKeyFor = function (code) { var k = KEY + 'join-' + code; try { var v = sessionStorage.getItem(k); if (!v) { v = rid(16); sessionStorage.setItem(k, v); } return v; } catch (e) { return rid(16); } };
   $('joinForm').addEventListener('submit', function (e) {
-    e.preventDefault(); var btn = this.querySelector('button[type=submit]'); if (btn.disabled) return; $('joinMsg').textContent = '';
+    e.preventDefault(); var version = sessionVersion, btn = this.querySelector('button[type=submit]'); if (btn.disabled) return; $('joinMsg').textContent = '';
     var code = $('joinCode').value.trim().toUpperCase(), prev = load(code);
     if (prev && resume(code)) return;
     btn.disabled = true;
     call('POST', { op: 'join', code: code, name: $('joinName').value.trim(), joinKey: joinKeyFor(code) }).then(function (r) {
+      if (version !== sessionVersion || r.stale) return;
       if (r.status === 200) enter({ code: code, token: r.body.token, role: 'player', pid: r.body.pid }, r.body.state);
       else $('joinMsg').textContent = (r.body.error && r.body.error.message) || 'Could not join.';
-    }, function () { $('joinMsg').textContent = 'Could not reach the server.'; }).then(function () { btn.disabled = false; });
+    }, function () { if (version !== sessionVersion) return; $('joinMsg').textContent = 'Could not reach the server.'; }).then(function () { btn.disabled = false; });
   });
   function resume(code) {
-    var s = load(code); if (!s) return false; sess = s;
-    call('GET', null, { code: code }).then(function (r) { if (r.status === 200) { S = null; take(r.body.state); poll(); } else { sess = null; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = r.status === 404 ? 'That table has gone.' : 'Your place at that table was not recognised.'; } },
-      function () { sess = s; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = 'Could not reach the server.'; });
+    var s = load(code); if (!s) return false; resetSession(); sess = s; var version = sessionVersion;
+    call('GET', null, { code: code }).then(function (r) { if (version !== sessionVersion || r.stale) return; if (r.status === 200) { S = null; take(r.body.state); poll(); } else { sess = null; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = r.status === 404 ? 'That table has gone.' : 'Your place at that table was not recognised.'; } },
+      function () { if (version !== sessionVersion) return; sess = s; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = 'Could not reach the server.'; });
     return true;
   }
   /* Your tables: every table this browser holds a place at, newest first, to open again or forget. Forgetting a GM's place asks twice. */
@@ -1132,14 +1195,15 @@
     var b = e.target.closest('[data-forget]'); if (!b) return; var code = b.dataset.forget;
     clearTimeout(UI.forgetTimer);
     if (UI.forgetAsk !== code) { UI.forgetAsk = code; listTables(); UI.forgetTimer = setTimeout(function () { UI.forgetAsk = null; listTables(); }, 5000); return; }
-    UI.forgetAsk = null; try { localStorage.removeItem(KEY + code); if (localStorage.getItem(KEY + 'last') === code) localStorage.removeItem(KEY + 'last'); } catch {}
+    UI.forgetAsk = null; delete memorySessions[code]; try { localStorage.removeItem(KEY + code); if (localStorage.getItem(KEY + 'last') === code) localStorage.removeItem(KEY + 'last'); } catch {}
     listTables();
   });
   /* A GM link (/vtt/?room=CODE#key=…): the key is kept in this browser like any table's, and taken out of the address at once. The part after # is never sent to the server by the browser. */
   (function () {
     var m = /^#key=([A-Za-z0-9_-]{20,80})$/.exec(location.hash || ''), r = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
     if (!m || !/^[A-Z0-9]{4,10}$/.test(r)) return;
-    try { localStorage.setItem(KEY + r, JSON.stringify({ code: r, token: m[1], role: 'gm' })); } catch {}
+    memorySessions[r] = { code: r, token: m[1], role: 'gm' };
+    try { localStorage.setItem(KEY + r, JSON.stringify(memorySessions[r])); } catch {}
     history.replaceState(null, '', '/vtt/?room=' + r);
   })();
   listTables();

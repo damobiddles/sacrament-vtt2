@@ -1,6 +1,6 @@
 // Dice tumbling on screen: a player rolls, the die tumbles on their screen and on the GM's, and both land on the number the server rolled.
 // The roller's result waits until their die has landed. Anyone can switch the dice off for their own screen, and less-motion devices never see them.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const SHOTS = process.env.DICE_OUT || '';   /* a folder for pictures of the dice, when wanted (git-ignored) */

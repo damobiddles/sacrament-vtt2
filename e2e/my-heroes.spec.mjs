@@ -1,5 +1,5 @@
 // The My heroes page: the same sheet, away from the table, for building and editing heroes in this browser.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage } from './helpers.mjs';
 
 const stored = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('sacrament-heroes-v2') || 'null'));

@@ -21,7 +21,7 @@ test('every old address of the table\'s website redirects permanently to its new
   const expected = {
     '/': '/', '/the-game': '/the-game/', '/the-game/': '/the-game/', '/setting': '/setting/', '/setting/': '/setting/',
     '/how-to-play': '/how-to-play/', '/how-to-play/': '/how-to-play/', '/newsletter': '/newsletter/', '/newsletter/': '/newsletter/',
-    '/support': '/support/', '/support/': '/support/', '/privacy': '/privacy/', '/privacy/': '/privacy/', '/blog': '/news/', '/blog/': '/news/',
+    '/support': 'https://ko-fi.com/J4M02969C2', '/support/': 'https://ko-fi.com/J4M02969C2', '/privacy': '/privacy/', '/privacy/': '/privacy/', '/blog': '/news/', '/blog/': '/news/',
   };
   for (const [oldTail, to] of Object.entries(expected)) {
     for (const p of oldTail === '/' ? [OLD, OLD + '/'] : [OLD + oldTail]) {

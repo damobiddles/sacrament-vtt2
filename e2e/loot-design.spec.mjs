@@ -1,5 +1,5 @@
 // The GM's loot designer: design, edit and delete in a library; put an item on the table as a hidden card, reveal it, give it from the card or the library; players see none of the library or unrevealed cards.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, emptyPacks, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 test.setTimeout(120000);

@@ -47,7 +47,7 @@
 
   /* the line saying what happens when it is used: only an item with an Effort kind rolls */
   function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')</b> for damage.</p>' : ''; }
-  function useBtn(a, spellId, word) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="use" data-i="' + a.index + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
+  function useBtn(a, spellId, word) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="use" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
   function plainLine(src) { return src.cat || !src.temptsHorror ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
   function gearItem(g, i, edit, acts, dice) {
@@ -58,7 +58,7 @@
       (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + it.pick + ': you cast whichever of its first ' + it.pick + ' spells comes up.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
       (it.kind === 'grimoire' && !spells.length ? '<p class="sh-note">No spells are written in it yet.</p>' : '') +
       (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b>: ' + esc(s.does) + ' <span class="sh-pill tempt">Tempts the Horror · +' + esc(R.sayHorrorAmount(s.horror)) + '</span>' + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
-      '<div class="sh-btns">' + (it.kind === 'grimoire' && !it.pick ? '' : useBtn(act(''), '', it.pick ? 'Read' : '')) + (edit ? (C.canEquip(it) ? '<button type="button" class="sh-b" data-sh="move" data-i="' + i + '" data-eq="' + (g.eq ? '0' : '1') + '">' + (g.eq ? 'To the pack' : 'Equip') + '</button>' : '<span class="sh-supply" title="' + (it.kind === 'supply' ? 'A supply works from the pack, so it is never equipped.' : 'This works from the pack, so it is never equipped.') + '">' + (it.kind === 'supply' ? 'Supply' : 'Pack only') + '</span>') + '<button type="button" class="sh-b" data-sh="remove" data-i="' + i + '">Drop</button>' : '') + '</div></div>';
+      '<div class="sh-btns">' + (it.kind === 'grimoire' && !it.pick ? '' : useBtn(act(''), '', it.pick ? 'Read' : '')) + (edit ? (C.canEquip(it) ? '<button type="button" class="sh-b" data-sh="move" data-i="' + i + '" data-gear="' + esc(g.key || '') + '" data-eq="' + (g.eq ? '0' : '1') + '">' + (g.eq ? 'To the pack' : 'Equip') + '</button>' : '<span class="sh-supply" title="' + (it.kind === 'supply' ? 'A supply works from the pack, so it is never equipped.' : 'This works from the pack, so it is never equipped.') + '">' + (it.kind === 'supply' ? 'Supply' : 'Pack only') + '</span>') + '<button type="button" class="sh-b" data-sh="remove" data-i="' + i + '" data-gear="' + esc(g.key || '') + '">Drop</button>' : '') + '</div></div>';
   }
 
   function render(d, msg, host, pick) {
@@ -124,13 +124,14 @@
       if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, value: (d.hero.stats[b.dataset.k] || 0) + (+b.dataset.d) });
       else if (k === 'effort') attempt({ op: 'effort', cat: b.dataset.k, value: (d.hero.effort[b.dataset.k] || 0) + (+b.dataset.d) });
       else if (k === 'add') { var sel = el.querySelector('#shAdd'); if (sel) attempt({ op: 'add', id: sel.value }); }
-      else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i });
-      else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, eq: b.dataset.eq === '1' });
+      else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });
+      else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, gearKey: b.dataset.gear || undefined, eq: b.dataset.eq === '1' });
       else if (k === 'hp' && d.canHp && host.hp) { host.hp(+b.dataset.d); }
       else if (k === 'use' && host.use && d.canEdit) {
-        var u = C.useOf(d.hero, +b.dataset.i, b.dataset.spell || '');
+        var useIndex = b.dataset.gear ? d.hero.gear.findIndex(function (g) { return g.key === b.dataset.gear; }) : +b.dataset.i;
+        var u = C.useOf(d.hero, useIndex, b.dataset.spell || '');
         if (!u.ok) { msg = u.why; draw(true); return; }
-        msg = ''; host.use(+b.dataset.i, b.dataset.spell || '', function (ok, why) { if (!ok) { msg = why || 'That could not be done. Try again.'; draw(true); } });
+        msg = ''; host.use(useIndex, b.dataset.spell || '', function (ok, why) { if (!ok) { msg = why || 'That could not be done. Try again.'; draw(true); } }, b.dataset.gear || undefined);
       }
     });
     el.addEventListener('change', function (e) {

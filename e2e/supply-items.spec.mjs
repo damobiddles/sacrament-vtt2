@@ -1,5 +1,5 @@
 // Supplies cannot be equipped: no Equip button anywhere, a small "Supply" label instead, and Equip still works on everything else.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, emptyPacks, joinTable, claimHero, saved } from './helpers.mjs';
 
 const item = (page, name) => page.locator('#sheetOverlay .sh-item, #sheetHere .sh-item').filter({ hasText: name });
@@ -28,7 +28,7 @@ test('at the table: a supply on the sheet has a Supply label and no Equip button
 test('nowhere else at the table offers Equip for a supply: the hero strip, its Items row, the side panel, and the GM\'s own sheet and panels', async ({ browser }) => {
   const { gm, ann } = await setup(browser); await ann.locator('#strip [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword', 'lantern');
   await ann.locator('#sheetOverlay [data-sh=close]').click(); await saved(ann);
-  await ann.locator('[data-do=toggle][data-key=items]').click();
+  await expect(ann.locator('[data-do=toggle][data-key=items]')).toHaveCount(0);
   await expect(ann.locator('#strip').getByText(/\bEquip\b/)).toHaveCount(0);
   await ann.locator('#cards .c', { hasText: 'Thorne' }).click(); await expect(ann.locator('#panel').getByText(/\bEquip\b/)).toHaveCount(0);
   await expect.poll(async () => gm.evaluate(() => Object.values(window.__vtt.state().chars).find((c) => c.name === 'Thorne').gear.length)).toBe(3);

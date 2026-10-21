@@ -1,6 +1,6 @@
 // The 2026-10-21 UX pass, in real browsers: a new GM is shown how to invite players, a player is told whose turn it is, when their hero is hit and what dying means,
 // a GM's d100 gift reaches the player, finished rolls are put away when the turn moves on, and the GM's cards lead with the right button.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const SHOTS = process.env.UX_SHOTS || '';   /* a folder for screenshots, when asked for */
@@ -88,7 +88,8 @@ test('the GM\'s d100 gift reaches the player; damage is called damage; the Effor
   /* the hatchet at the ghoul: the result says damage */
   await ann.locator('[data-do=dismissRoll]').click(); await card(ann, 'Pit Ghoul').click();
   await ann.locator('#strip input[data-phys]').fill('19');
-  await ann.locator('#strip .aim [data-do=useItem]').first().click();
+  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#sheetOverlay .sh-item [data-sh=use]').first().click();
   await ann.locator('#panel [data-do=effort]').first().click();
   await expect(ann.locator('#panel .calc').last()).toContainText(/= \d+ damage\./);
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);

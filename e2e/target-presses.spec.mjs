@@ -1,6 +1,6 @@
 // Quick presses on the Target's + and −, on a slow connection: each press counts. (Each used to say "the number on screen, plus one", so presses made before
 // the screen caught up were lost: three quick presses from 12 gave 13.)
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, saved, state } from './helpers.mjs';
 
 test('three quick presses of the Target + on a slow connection raise it by three; two of − then lower it by two', async ({ browser }) => {

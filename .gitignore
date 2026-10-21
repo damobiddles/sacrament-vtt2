@@ -1,0 +1,6 @@
+node_modules/
+.vtt-data*/
+test-results/
+playwright-report/
+docs/**/*.png
+docs/**/*.mp4

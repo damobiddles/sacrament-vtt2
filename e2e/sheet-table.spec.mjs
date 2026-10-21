@@ -1,5 +1,5 @@
 // The character sheet at the table: a full-screen panel over a table that keeps running, with a GM and players in separate windows.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, emptyPacks, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 const hero = (page, name) => state(page).then((st) => Object.values(st.chars).find((c) => c.name === name));

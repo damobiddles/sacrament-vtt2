@@ -1,5 +1,5 @@
 // The GM's monster attacks, in a real browser: a GM and a player in separate windows.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, joinTable, claimHero, saved, state } from './helpers.mjs';
 
 async function startTable(browser) {
