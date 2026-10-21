@@ -92,11 +92,11 @@ function build() {
   /* home */
   const h = read('home');
   const homeArt = [
-    { file: 'plate-looming-horror', alt: 'An illustrated plate of the Looming Horror' },
+    { file: 'ghoul-graveyard', alt: 'A terrifying ghoul prowls a moonlit graveyard, lit in green and magenta' },
     { file: 'plate-wounds', alt: 'An illustrated plate of wounds a body may bear' },
     { file: 'plate-chapel', alt: 'An illustrated plate of the Chapel and its plague' },
   ];
-  const cards = h.body.split(/^## /m).slice(1).map((c, i) => { const [t, ...rest] = c.split('\n'); const art = homeArt[i]; const picture = art ? `<picture class="ic-card-art"><source media="(max-width: 640px)" srcset="/art/${art.file}-640.webp"><img src="/art/${art.file}-1100.webp" alt="${esc(art.alt)}" loading="lazy" decoding="async" width="1100" height="1100"></picture>` : ''; return `<article class="card ic-illustrated-card">${picture}<h2>${esc(t.trim())}</h2><p>${esc(rest.join(' ').trim())}</p></article>`; }).join('');
+  const cards = h.body.split(/^## /m).slice(1).map((c, i) => { const [t, ...rest] = c.split('\n'); const art = homeArt[i]; const picture = art ? `<picture class="ic-card-art">${art.file === 'ghoul-graveyard' ? '' : `<source media="(max-width: 640px)" srcset="/art/${art.file}-640.webp">`}<img src="/art/${art.file}${art.file === 'ghoul-graveyard' ? '' : '-1100'}.webp" alt="${esc(art.alt)}" loading="lazy" decoding="async" width="1100" height="733"></picture>` : ''; return `<article class="card ic-illustrated-card">${picture}<h2>${esc(t.trim())}</h2><p>${esc(rest.join(' ').trim())}</p></article>`; }).join('');
   write('/', page(h.title + ' | A shared table in your browser', h.summary, '/',
     `<header class="bhead ic-hero"><div class="wrap"><div class="label">A tabletop roleplaying game</div><div class="ic-hero-title"><h1>${esc(h.title)}</h1><img class="ic-hero-symbol" src="/favicon.svg" width="108" height="108" alt="" aria-hidden="true"></div><p class="lede">${esc(h.lede || h.summary)}</p>
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
