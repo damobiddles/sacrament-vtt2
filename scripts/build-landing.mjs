@@ -34,7 +34,7 @@ const todo = (html) => html
   .replace(/<blockquote>(YOUR TEXT HERE)/g, '<blockquote class="todo">$1')
   .replace(/\[\[(.*?)\]\]/g, '<mark class="todo-inline">$1</mark>');
 
-const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><ul>${PAGES.filter((p) => !p.footerOnly).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul></nav>`;
+const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><ul>${PAGES.filter((p) => !p.footerOnly).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul><div class="ic-kofi" aria-label="Support Sacrament on Ko-fi"><script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script><script>if (window.kofiwidget2) { kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'J4M02969C2'); kofiwidget2.draw(); }</script><noscript><a href="https://ko-fi.com/J4M02969C2" rel="noopener noreferrer">Support me on Ko-fi</a></noscript></div></div></nav>`;
 const footer = () => `<footer class="ic-foot"><div class="wrap"><p><b>${esc(NAME)}</b>. Keep to the consecrated roads.</p><p><a href="/privacy/">Privacy Policy</a> &middot; <a href="/terms/">Terms of Use</a></p><p>&copy; ${new Date().getFullYear()} Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>`;
 
 const page = (title, desc, path, inner, extraHead = '') => `<!doctype html>
