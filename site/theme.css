@@ -1,0 +1,98 @@
+/* Sacrament shared theme: colours, fonts, buttons and the printed-book ornaments.
+   The website, character builder and VTT all load this one file.
+   Link it with: <link rel="stylesheet" href="https://playsacrament.com/theme.css">
+
+   Visual language: a forbidden 1603 demonology book. Parchment, soot black and faded ink, with oxblood, indigo,
+   verdigris and ochre used sparingly. Roboto Slab and Libre Baskerville stay for usability; the early-printed-book
+   feel comes from layout: oversized capitals, double rules, fleurons and framed plates. */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Roboto+Slab:wght@400;600;700&display=swap');
+
+:root{
+  /* Low-glare dark palette: text about 11:1 and secondary text about 6.7:1 on the ground, accents softened so red and gold do not hum
+     against it. Soot ground, parchment ink. --blood is oxblood, --candle is ochre; the names are kept so every page follows. */
+  --bg:#12100d; --bg2:#1b1814; --fg:#cfc4ab; --dim:#a39880; --line:#4a4030;
+  /* --line is for dividers. --edge is for the outline of anything you press or type in: 3:1 or better against the ground, as accessibility rules ask. */
+  --edge:#7a6f5a;
+  --blood:#6d2420; --blood-hi:#c4786a; --candle:#b8955a;
+  --indigo:#9aa8d0; --indigo-deep:#2b3560; --verdigris:#86b3a1; --verdigris-deep:#2f5a4d; --on-blood:#efe5cc;
+  --display:'Roboto Slab',Georgia,'Times New Roman',serif; --body:'Libre Baskerville',Georgia,'Times New Roman',serif; --label:'Roboto Slab',Georgia,serif;
+  /* Printed ornaments, drawn in the current ink: a fleuron, a corner flourish and a cross-hatch for empty plates */
+  --fleuron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24' fill='none' stroke='%23b8955a' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M2 12h38M80 12h38'/%3E%3Cpath d='M60 3c4 4 4 14 0 18-4-4-4-14 0-18zM52 12c3-5 5-5 8 0-3 5-5 5-8 0zM60 12c3-5 5-5 8 0-3 5-5 5-8 0z' fill='%23b8955a' stroke='none'/%3E%3Cpath d='M42 12l5-3M42 12l5 3M78 12l-5-3M78 12l-5 3'/%3E%3C/svg%3E");
+  --hatch:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,var(--fg) 14%,transparent) 5px 6px),repeating-linear-gradient(-45deg,transparent 0 5px,color-mix(in srgb,var(--fg) 8%,transparent) 5px 6px);
+  color-scheme:dark;
+  /* How far content sits below the top bar: page headers, ordinary pages, and tool pages (character builder, node builder, VTT) */
+  --gap-hero:72px; --gap-page:48px; --gap-app:28px;
+}
+@media (max-width:600px){:root{--gap-hero:44px; --gap-page:32px; --gap-app:20px}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:18px/1.68 var(--body);margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.005em}
+.label{font-family:var(--label);font-weight:600;letter-spacing:.2em;text-transform:uppercase;font-size:0.8rem;color:var(--candle)}
+a{color:var(--blood-hi)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--candle);outline-offset:3px}
+
+/* Buttons: a ruled label on an oxblood ground, like a stamped title-page device */
+.btn{font-family:var(--label);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:0.82rem;padding:13px 24px;text-decoration:none;color:var(--on-blood);background:var(--blood);
+  display:inline-block;border:0;cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--on-blood) 35%,transparent),inset 0 0 0 4px var(--blood),inset 0 0 0 5px color-mix(in srgb,var(--on-blood) 28%,transparent)}
+.btn:hover{background:color-mix(in srgb,var(--blood) 82%,var(--blood-hi))}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 1px var(--edge);color:var(--dim)}
+.btn.ghost:hover{background:transparent;color:var(--candle)}
+
+/* Printed-book furniture. .rule is a double rule with a fleuron; .plate is a framed slot for an engraving;
+   .initial is an oversized capital for the first letter of a section. */
+.rule{height:24px;background:var(--fleuron) center/120px 24px no-repeat;position:relative}
+.rule::before,.rule::after{content:"";position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.rule::before{top:7px}.rule::after{top:11px;border-top-width:3px;border-top-style:double}
+.plate{margin:0;position:relative;padding:10px;background:var(--bg2);box-shadow:0 0 0 1px var(--line),inset 0 0 0 1px var(--line)}
+.plate::before{content:"";position:absolute;inset:4px;border:1px solid var(--line);pointer-events:none}
+.plate .art{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--hatch),var(--bg);filter:grayscale(1) contrast(1.15) sepia(.35)}
+/* An empty plate shows cross-hatching until an engraving is dropped in: put an <img class="art"> in its place */
+div.plate-slot,.plate .art:not(img){display:block;width:100%;aspect-ratio:4/3;background:var(--hatch),var(--bg);filter:none}
+.plates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:22px;margin:34px 0 8px}
+.sigils{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 22px;margin:6px 0 0;padding:10px 0;font:1.5rem/1 var(--display);color:var(--candle);opacity:.8;letter-spacing:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.plate figcaption{font:italic .86rem/1.4 var(--body);color:var(--dim);text-align:center;padding:8px 6px 2px}
+.plate figcaption b{font:600 .72rem var(--label);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--candle);display:block;margin-bottom:2px}
+.initial::first-letter,.dropcap::first-letter{font-family:var(--display);font-weight:700;font-size:4.2rem;float:left;line-height:.82;padding:6px 12px 2px 0;margin-right:2px;color:var(--blood-hi)}
+.marginalia{font:italic .9rem/1.5 var(--body);color:var(--dim);border-left:1px solid var(--line);padding-left:12px}
+.sigil{display:inline-block;width:1em;height:1em;vertical-align:-.12em}
+
+/* Shared top bar, injected by nav.js on every page */
+.sac-nav{display:flex;align-items:center;gap:6px 22px;flex-wrap:wrap;padding:6px max(16px,env(safe-area-inset-left,0px));background:var(--bg2);border-bottom:1px solid var(--line);position:relative;z-index:50}
+.sac-mark{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:1.25rem;line-height:1;color:var(--fg);text-decoration:none;letter-spacing:.02em}
+.sac-links{display:flex;gap:18px;flex-wrap:wrap;margin-right:auto;font-family:var(--label);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:0.76rem}
+.sac-links a{color:var(--dim);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+.sac-links a:hover{color:var(--blood-hi)}
+.sac-links{align-items:center}
+.sac-links a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--blood-hi)}
+
+/* Nothing in a page should override the hidden attribute */
+[hidden]{display:none!important}
+
+/* Phones and touch screens: comfortable tap targets, and buttons that fill the width in a row of two */
+@media (pointer:coarse){
+  .btn{min-height:46px}
+  .sac-links a{display:inline-block;padding:11px 4px}
+    .sac-mark{padding:8px 0}
+}
+@media (max-width:600px){
+  .btn{padding:14px 22px}
+  .meta{display:flex;flex-wrap:wrap}
+  .meta .btn{flex:1 1 100%;text-align:center}
+  .sac-nav{gap:0 14px}
+  .sac-mark{order:1}
+    .sac-links{order:3;flex-basis:100%;margin-right:0}
+  #sacNet{order:4;flex-basis:100%}
+}
+
+/* Copyright line at the foot of every page except the table and the node builder (added by nav.js) */
+.sac-foot{margin-top:56px;padding:26px max(16px,env(safe-area-inset-left,0px)) 34px;text-align:center;border-top:1px solid var(--line);background:var(--bg2);color:var(--dim);font-size:.98rem}
+.sac-foot b{font-family:var(--display);font-weight:700;font-size:1.15rem;color:var(--fg);letter-spacing:.04em}
+.sac-foot p{margin:6px auto 0;max-width:none}
+
+/* Page heads and the foot: a plain ruled edge in place of the old torn paper */
+.hero,.rhead,.bhead,.sac-foot,body>footer{position:relative;isolation:isolate}
+.rhead,.bhead{padding-bottom:56px;border-bottom:3px double var(--line)}
+.sac-foot,body>footer{padding-top:48px;border-top:3px double var(--line)}
+body>footer{background:var(--bg2)}
+#join{padding-block:64px}

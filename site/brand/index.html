@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brand kit | Sacrament</title>
+<meta name="description" content="Logo, colour, type and voice for Sacrament, a tabletop roleplaying game of plague, penance and permitted evil.">
+<meta name="theme-color" content="#12100d">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="../theme.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="../nav.js"></script>
+<style>
+/* Layout: one column of sections, each a label, a heading and a grid of specimens. All colours and fonts are read from theme.css,
+   so this page always shows what the site is really using. */
+:root{--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+.wrap{padding-block:var(--gap-page) 90px}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+h1{font-size:clamp(3rem,10vw,6rem);margin:10px 0 16px}
+h2{font-size:clamp(2rem,6vw,3rem);margin:8px 0 16px}
+h3{font-size:1.5rem;color:var(--blood-hi);margin:0 0 6px}
+p{max-width:62ch;margin:0 0 1em}
+.mono{font-family:var(--mono);font-size:14px;letter-spacing:.04em;color:var(--dim)}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));margin-top:22px}
+.tile{border:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.tile .stage{display:grid;place-items:center;padding:34px 20px;min-height:170px}
+.tile .stage img{max-width:100%;height:auto}
+.tile .cap{border-top:1px solid var(--line);padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:1.05rem}
+.tile .cap a{font-family:var(--label);letter-spacing:.12em;text-transform:uppercase;font-size:0.88rem}
+.on-dark{background:#12100d}.on-light{background:#dedee0}.on-blood{background:var(--blood)}
+.sw{height:96px;display:flex;align-items:flex-end;padding:10px 12px;font-family:var(--mono);font-size:14px}
+.sw b{font-weight:500}
+.rules{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.rules li{border-left:2px solid var(--blood);padding-left:14px}
+.rules li.no{border-left-color:#b5553f}
+.rules b{font-family:var(--label);font-weight:400;letter-spacing:.08em}
+.spec{border-top:1px solid var(--line);padding:18px 0;display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr);gap:8px 28px}
+@media(max-width:560px){.spec{grid-template-columns:1fr}}
+.coin{width:56px;height:56px;border-radius:50%;background:#e9e4d6;border:3px solid var(--candle);display:inline-block}
+.coin.spent{background:transparent;border-color:color-mix(in srgb,var(--candle) 45%,var(--bg))}
+.hexes{display:flex;gap:10px;flex-wrap:wrap}
+.hexes i{width:54px;height:62px;display:block;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.small-clear{display:inline-block;padding:16px;outline:1px dashed var(--dim);outline-offset:0;position:relative}
+.dl{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+</style>
+<link rel="canonical" href="https://playsacrament.com/brand/">
+<meta property="og:title" content="Brand kit | Sacrament">
+<meta property="og:description" content="Logo, colour, type and voice for Sacrament, a tabletop roleplaying game of plague, penance and permitted evil.">
+<meta property="og:url" content="https://playsacrament.com/brand/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://playsacrament.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<main class="wrap">
+  <div class="label"><a href="/resources/" style="text-decoration:none">&larr; Resources</a> &nbsp;·&nbsp; Brand kit</div>
+  <h1>Sacrament</h1>
+  <p>The logo, the colours and the typefaces. Everything on this page is read from the same files the site uses (<span class="mono">theme.css</span>), so it cannot drift out of date.</p>
+  <div class="dl"><a class="btn" href="assets/logo-horizontal.svg" download>Download the logo</a><a class="btn ghost" href="#downloads">All files</a></div>
+
+  <section id="logo">
+    <div class="label">Logo</div>
+    <h2>The mark and the wordmark</h2>
+    <p>Use the horizontal logo by default and the stacked one where space is square. Use the mark alone for avatars, icons and stamps. The wordmark is set in Pirata One and drawn as outlines, so the files need no font.</p>
+    <div class="grid">
+      <div class="tile"><div class="stage on-dark"><img src="assets/logo-horizontal.svg" alt="Sacrament horizontal logo on dark" width="300"></div><div class="cap"><span>Horizontal, on dark</span><a href="assets/logo-horizontal.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-light"><img src="assets/logo-horizontal-light.svg" alt="Sacrament horizontal logo on light" width="300"></div><div class="cap"><span>Horizontal, on light</span><a href="assets/logo-horizontal-light.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-dark"><img src="assets/logo-stacked.svg" alt="Sacrament stacked logo on dark" width="200"></div><div class="cap"><span>Stacked, on dark</span><a href="assets/logo-stacked.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-light"><img src="assets/logo-stacked-light.svg" alt="Sacrament stacked logo on light" width="200"></div><div class="cap"><span>Stacked, on light</span><a href="assets/logo-stacked-light.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-dark"><img src="assets/mark.svg" alt="Sacrament mark" width="110"></div><div class="cap"><span>Mark, on dark</span><a href="assets/mark.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-light"><img src="assets/mark-light.svg" alt="Sacrament mark for light backgrounds" width="110"></div><div class="cap"><span>Mark, on light</span><a href="assets/mark-light.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-blood"><img src="assets/mark-mono.svg" alt="Sacrament one-colour mark" width="110" style="filter:brightness(0) invert(.9)"></div><div class="cap"><span>One colour (stamp, emboss, single-ink print)</span><a href="assets/mark-mono.svg" download>SVG</a></div></div>
+      <div class="tile"><div class="stage on-dark"><div style="display:flex;gap:22px;align-items:end"><img src="/favicon.svg" alt="" width="64"><img src="/favicon.svg" alt="" width="32"><img src="/favicon.svg" alt="" width="16"></div></div><div class="cap"><span>Favicon (heavier cross for small sizes)</span><a href="/favicon.svg" download>SVG</a></div></div>
+    </div>
+    <div class="spec" style="margin-top:28px"><h3>Clear space</h3><p>Leave room around the logo equal to the width of the rune&rsquo;s stave. Nothing else sits inside it.</p></div>
+    <div class="spec"><h3>Smallest size</h3><p>Horizontal logo: 120 px wide. Mark: 16 px, using the favicon version below 32 px.</p></div>
+    <div class="spec"><h3>Do</h3><ul class="rules"><li>Use the dark version on near-black and the light version on light grey.</li><li>Keep the mark upright. The fork points up.</li><li>Use the one-colour mark when you can only print one ink.</li></ul></div>
+    <div class="spec"><h3>Don&rsquo;t</h3><ul class="rules"><li class="no">Recolour the rune, or swap the purple for another colour.</li><li class="no">Stretch, rotate, outline or add shadows or glows.</li><li class="no">Place the logo on a busy picture without a dark panel behind it.</li><li class="no">Retype the wordmark in another font. Use the file.</li></ul></div>
+  </section>
+
+  <section id="colour">
+    <div class="label">Colour</div>
+    <h2>Plague violet, candle green, bone</h2>
+    <p>Near-black ground, cool grey text, one violet for the Chapel and one green for the light that is left. Change a colour once in <span class="mono">theme.css</span> and the site follows. The values below are read live from the page. Contrast is measured against the page background: aim for 4.5 or more for body text, 3 or more for large headings.</p>
+    <div class="grid" id="swatches"></div>
+  </section>
+
+  <section id="type">
+    <div class="label">Type</div>
+    <h2>Four typefaces</h2>
+    <div class="spec"><div><h3>Display</h3><span class="mono">Roboto Slab</span></div><div style="font-family:var(--display);font-weight:700;font-size:3rem;line-height:1">Sacra<span style="color:var(--blood-hi)">ment</span><div class="mono" style="font-family:var(--mono);font-size:14px;margin-top:8px">Titles, the wordmark, character and ability names. One line, never below 24 px.</div></div></div>
+    <div class="spec"><div><h3>Body</h3><span class="mono">Libre Baskerville</span></div><div><p style="font-size:1.25rem;margin:0 0 6px">The Chapel does not claim to be good. It claims to be necessary.</p><p style="font-style:italic;margin:0 0 6px">Italic is for the Chapel&rsquo;s own words and for quotations.</p><span class="mono">Rules text and everything you read at length. 16 to 19 px, line height 1.5 to 1.65.</span></div></div>
+    <div class="spec"><div><h3>Label</h3><span class="mono">Roboto Slab, small capitals</span></div><div><div style="font-family:var(--label);letter-spacing:.18em;text-transform:uppercase;color:var(--candle);margin-bottom:6px">The Rites</div><span class="mono">Small caps in capitals, tracked wide: section labels, buttons, navigation.</span></div></div>
+    <div class="spec"><div><h3>Mono</h3><span class="mono">IBM Plex Mono</span></div><div><div style="font-family:var(--mono);margin-bottom:6px">2d6 [3, 5] = 8 damage</div><span class="mono">Numbers, dice, coordinates and anything a player reads off a screen. Tools only, never the website body.</span></div></div>
+  </section>
+
+  <section id="downloads">
+    <div class="label">Downloads</div>
+    <h2>Every file</h2>
+    <div class="grid">
+      <div class="tile"><div class="cap" style="border:0;flex-direction:column;align-items:flex-start;gap:8px"><b>Logos (SVG)</b><a href="assets/logo-horizontal.svg" download>Horizontal, dark</a><a href="assets/logo-horizontal-light.svg" download>Horizontal, light</a><a href="assets/logo-stacked.svg" download>Stacked, dark</a><a href="assets/logo-stacked-light.svg" download>Stacked, light</a></div></div>
+      <div class="tile"><div class="cap" style="border:0;flex-direction:column;align-items:flex-start;gap:8px"><b>Marks (SVG)</b><a href="assets/mark.svg" download>Mark, dark</a><a href="assets/mark-light.svg" download>Mark, light</a><a href="assets/mark-mono.svg" download>Mark, one colour</a><a href="/favicon.svg" download>Favicon</a></div></div>
+      <div class="tile"><div class="cap" style="border:0;flex-direction:column;align-items:flex-start;gap:8px"><b>Icons (PNG, ICO)</b><a href="/favicon.ico" download>favicon.ico</a><a href="/apple-touch-icon.png" download>Apple touch icon, 180</a><a href="/icon-192.png" download>App icon, 192</a><a href="/icon-512.png" download>App icon, 512</a></div></div>
+      <div class="tile"><div class="cap" style="border:0;flex-direction:column;align-items:flex-start;gap:8px"><b>Sharing</b><a href="/og-image.png" download>Share image, 1200 by 630</a><span class="mono">Used when the site is linked on social media and chat.</span></div></div>
+      <div class="tile"><div class="cap" style="border:0;flex-direction:column;align-items:flex-start;gap:8px"><b>Fonts (TTF)</b><a href="/fonts/PirataOne-Regular.ttf" download>Pirata One</a><a href="/fonts/IMFeENrm28P.ttf" download>IM Fell English</a><a href="/fonts/IMFeENit28P.ttf" download>IM Fell English Italic</a><a href="/fonts/IMFeENsc28P.ttf" download>IM Fell English SC</a></div></div>
+    </div>
+    <p class="mono" style="margin-top:22px">Fonts are free from Google Fonts under the SIL Open Font Licence: Roboto Slab, Libre Baskerville and IBM Plex Mono on screen; Pirata One and IM Fell English in the logo outlines and the character PDF.</p>
+  </section>
+</main>
+<script>
+(function () {
+  var names = [['--bg', 'Ground', 'Page background'], ['--bg2', 'Panel', 'Cards, panels, bars'], ['--fg', 'Text', 'Body text'], ['--dim', 'Dim', 'Secondary text, borders'],
+    ['--blood', 'Plague violet', 'Buttons, the Chapel'], ['--blood-hi', 'Violet, lifted', 'Links, accents, highlights'], ['--candle', 'Candle green', 'Labels, tokens, small lights'], ['--line', 'Line', 'Dividers and outlines'], ['#e9e4d6', 'Bone', 'The coin and the cross']];
+  var rgb = function (s) { var m = s.match(/\d+(\.\d+)?/g); return m ? m.slice(0, 3).map(Number) : [0, 0, 0]; };
+  var lum = function (c) { var a = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
+  var ratio = function (a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  function paint() {
+    var probe = document.createElement('i'); document.body.appendChild(probe);
+    var get = function (v) { probe.style.color = v.charAt(0) === '#' ? v : 'var(' + v + ')'; return getComputedStyle(probe).color; };
+    var bg = rgb(get('--bg')), h = '';
+    names.forEach(function (n) {
+      var col = get(n[0]), c = rgb(col), hex = '#' + c.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('');
+      var onSw = ratio(c, [255, 255, 255]) > ratio(c, [0, 0, 0]) ? '#fff' : '#000';
+      h += '<div class="tile"><div class="sw" style="background:' + col + ';color:' + onSw + '"><b>' + hex.toUpperCase() + '</b></div><div class="cap"><span><b>' + n[1] + '</b><br><span class="mono">' + n[2] + '</span></span><span class="mono">' + ratio(c, bg).toFixed(1) + ':1</span></div></div>';
+    });
+    probe.remove(); document.getElementById('swatches').innerHTML = h;
+  }
+  paint();
+  new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>
+</body>
+</html>

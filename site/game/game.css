@@ -1,0 +1,72 @@
+/* Sacrament, Hearts prototype. Colours, fonts and buttons come from ../theme.css; this adds what the three pages need. */
+body{background:var(--bg);color:var(--fg)}
+.hwrap{max-width:1180px;margin:0 auto;padding:var(--gap-app) max(16px,env(safe-area-inset-left,0px)) 64px}
+.proto{border:1px dashed var(--line);padding:8px 12px;margin:0 0 18px;font:0.9rem/1.5 var(--body);color:var(--dim)}
+.proto b{color:var(--candle);font-family:var(--label);letter-spacing:.12em;text-transform:uppercase;font-size:.75rem}
+h1{font-size:clamp(2rem,6vw,3.2rem);margin:6px 0 10px}
+h2{font-size:1.5rem;margin:28px 0 10px;color:var(--fg)}
+h3{font-size:1.1rem;margin:16px 0 6px;color:var(--candle)}
+h4{font:700 1rem var(--display);margin:0 0 2px}
+p{max-width:68ch}
+table.ref{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:.95rem}
+table.ref th,table.ref td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.ref th{font:600 .75rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--candle)}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.panel{background:var(--bg2);box-shadow:0 0 0 1px var(--line);padding:14px 16px;margin:0 0 16px}
+.panel>h3:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.row>label{display:flex;flex-direction:column;gap:2px;font:600 .72rem var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+input,select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:inherit;font-size:16px;padding:8px 10px;min-height:42px;max-width:100%}
+input[type=checkbox]{min-height:0;width:20px;height:20px}
+button.btn{min-height:44px}
+.btn.small{padding:8px 14px;font-size:.74rem;min-height:40px}
+.btn:disabled{opacity:.62;cursor:not-allowed}
+.btn.ghost:disabled{opacity:.8}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media(min-width:900px){.grid2{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+/* Hearts: ten points each, filling from the bottom */
+.hearts{display:inline-flex;gap:6px;vertical-align:middle}
+.heart{position:relative;width:26px;height:26px;border:2px solid var(--blood-hi);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;overflow:hidden;background:transparent;transform:rotate(-45deg) scale(.8)}
+.heart i{position:absolute;left:0;right:0;bottom:0;background:var(--blood-hi);display:block}
+.hpnum{font:700 1.2rem var(--display);margin-left:8px}
+.dying{color:var(--blood-hi);font-weight:700}
+.stable{color:var(--verdigris);font-weight:700}
+/* The Looming Horror: 21 cells, the thresholds ringed */
+.track ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(21,minmax(0,1fr));gap:2px}
+.track li{aspect-ratio:1/1.1;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font:600 .62rem var(--label);color:var(--dim);min-width:0}
+.track li.on{background:color-mix(in srgb,var(--blood) 80%,var(--bg));color:var(--on-blood);border-color:var(--blood-hi)}
+.track li.thr{box-shadow:0 0 0 2px var(--candle);position:relative;z-index:1}
+.trackname{margin:8px 0 0;font:.95rem var(--body)}
+@media(max-width:600px){.track ol{grid-template-columns:repeat(11,minmax(0,1fr))}.track li{font-size:.7rem}}
+.die{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;border:1px solid var(--line);background:var(--bg);font:700 1rem var(--display);margin:0 3px 0 0}
+.die.max{border-color:var(--candle);color:var(--candle)}.die.min{border-color:var(--blood-hi);color:var(--blood-hi)}
+.eq{color:var(--dim);margin-right:8px}
+.icard{border:1px solid var(--line);padding:10px 12px;background:var(--bg);margin:0 0 8px}
+.icard .meta{margin:0 0 4px;font:.8rem var(--label);letter-spacing:.06em;color:var(--dim)}
+.icard p{margin:0 0 6px;font-size:.95rem;line-height:1.5}
+.icard .hz,.hz{color:var(--blood-hi)}
+.k-relic{border-left:3px solid var(--blood-hi)}.k-grimoire{border-left:3px solid var(--indigo)}.k-weapon{border-left:3px solid var(--candle)}.k-armour{border-left:3px solid var(--verdigris)}
+.meter{height:14px;border:1px solid var(--line);background:var(--bg);margin:4px 0}
+.meter i{display:block;height:100%;background:var(--candle)}
+.meter.full i{background:var(--blood-hi)}
+.log{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.log li{padding:6px 0;border-bottom:1px solid var(--line);font-size:.95rem;line-height:1.45}
+.log li.bad{color:var(--blood-hi)}.log li.good{color:var(--verdigris)}.log li.hz{color:var(--candle)}
+.tnbig{font:700 3.2rem/1 var(--display);color:var(--candle)}
+.seg{display:inline-flex;gap:0}.seg button{background:transparent;color:var(--dim);border:1px solid var(--edge);padding:8px 14px;min-height:42px;font:600 .8rem var(--label);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi)}
+.who{border:1px solid var(--line);padding:10px 12px;margin:0 0 10px;background:var(--bg)}
+.who.now{border-color:var(--candle);box-shadow:0 0 0 1px var(--candle)}
+.who.down{opacity:.85;border-color:var(--blood-hi)}
+.who h4{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.pips{display:inline-flex;gap:4px}.pip{padding:2px 8px;border:1px solid var(--line);font:600 .7rem var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}.pip.used{opacity:.4;text-decoration:line-through}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:300}
+.dlg[hidden]{display:none}
+.dlg>div{background:var(--bg2);box-shadow:0 0 0 1px var(--line);padding:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto}
+.note{color:var(--dim);font-size:.9rem}
+.aft{border:1px solid var(--candle);padding:10px 12px;margin:0 0 12px;background:var(--bg)}
+.aft ol{margin:6px 0;padding-left:22px}.aft li.hit{color:var(--candle);font-weight:700}
+/* On the rules page a wide table scrolls inside itself rather than pushing the page sideways */
+.rules table.ref{max-width:100%}
+@media(max-width:700px){.rules table.ref.wide{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}.rules table.ref.wide td,.rules table.ref.wide th{min-width:0}.rules .grid2{grid-template-columns:minmax(0,1fr)}.rules .panel,.rules .icard{min-width:0}}

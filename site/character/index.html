@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My heroes | Sacrament RPG</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/game/game.css">
+<link rel="stylesheet" href="/sheet/sheet.css">
+<script src="/nav.js"></script>
+<meta name="theme-color" content="#12100d">
+</head>
+<body>
+<div class="hwrap">
+<p class="proto">Heroes are kept in this browser, on this device. To play one at a table, open the table and press <b>Bring a hero</b>: it is checked against the rules and becomes yours there. Made a character under the earlier rules? If it is saved in this browser it is listed at the bottom of this page, where you can bring it over. <a href="/rules/">Rules</a> &middot; <a href="/vtt/?join">Join a game</a></p>
+<div class="label">Sacrament RPG</div>
+<h1>My heroes</h1>
+
+<div class="panel" id="pick">
+  <h3>Your heroes</h3>
+  <div class="row"><label>Hero<select id="heroSel" aria-label="Choose a hero"></select></label>
+    <button class="btn small" id="newHero" type="button">New hero</button><button class="btn small ghost" id="delHero" type="button">Delete</button></div>
+  <h3>Ready to play</h3>
+  <p class="note">A ready-made hero is a copy you can change however the rules allow.</p>
+  <div class="row" id="ready"></div>
+</div>
+
+<div id="sheetHere"></div>
+</div>
+<script src="/vtt/rules.js"></script>
+<script src="/sheet/gear.js"></script>
+<script src="/sheet/sheet-core.js"></script>
+<script src="/sheet/sheet.js"></script>
+<script src="/sheet/heroes.js"></script>
+<script src="/game/data.js"></script>
+<script src="/game/fx.js"></script>
+<script src="/game/engine.js"></script>
+<script>
+(function () {
+  var H = window.SacramentHeroes, C = window.SacramentSheetCore, D = window.HEARTS_DATA, E = window.HeartsEngine(D), $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var sgn = function (n) { return n < 0 ? '\u2212' + Math.abs(n) : '+' + n; };
+  var S = H.read(E.upgrade);
+  /* heroes saved before supplies were kept to the pack: say which were put right (they are saved that way now, so this shows once) */
+  if (S.moved && S.moved.length) { var note = document.createElement('div'); note.className = 'panel'; note.setAttribute('role', 'status'); note.innerHTML = '<p><b>Supply items cannot be equipped</b>, so these were moved to your pack: ' + esc(S.moved.join('; ')) + '.</p>'; $('pick').parentNode.insertBefore(note, $('pick')); }
+  var cur = function () { return S.heroes.filter(function (h) { return h.id === S.current; })[0] || null; };
+  function save() { H.save(S); }
+
+  var view = window.SacramentSheet.mount($('sheetHere'), {
+    get: function () { var h = cur(); return h ? { hero: h, hp: h.hp, canEdit: true, canHp: true, gm: false, live: false, title: 'saved in this browser' } : null; },
+    act: function (op, done) { var h = cur(); if (!h) return done(false, 'There is no hero to change.'); var r = C.edit(h, op, { gm: false }, h.hp); if (r.ok) { save(); renderPick(); } done(r.ok, r.why); },
+    hp: function (d) { var h = cur(); if (!h) return; h.hp.cur = Math.max(0, Math.min(h.hp.max, h.hp.cur + d)); save(); view.draw(true); }
+  });
+
+  function renderPick() {
+    $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + '</option>'; }).join('') || '<option value="">(none yet)</option>';
+    $('ready').innerHTML = D.CHARACTERS.map(function (c) { return '<button class="btn small" data-ready="' + c.id + '" type="button">' + esc(c.name) + ' \u00b7 ' + esc(c.calling) + '</button>'; }).join('');
+    $('delHero').disabled = !cur();
+  }
+  function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), or take a ready-made hero below and change it.</p></div>'; }
+  function add(h) { S.heroes.push(h); S.current = h.id; save(); render(); }
+  $('heroSel').onchange = function () { S.current = this.value; save(); render(); };
+  $('newHero').onclick = function () { add(H.blank('New hero')); };
+  $('delHero').onclick = function () { var c = cur(); if (!c || !confirm('Delete ' + c.name + '? This cannot be undone.')) return; S.heroes = S.heroes.filter(function (h) { return h !== c; }); S.current = S.heroes.length ? S.heroes[0].id : ''; save(); render(); };
+  $('ready').onclick = function (e) { var b = e.target.closest('[data-ready]'); if (!b) return; var def = D.CHARACTERS.filter(function (c) { return c.id === b.dataset.ready; })[0]; var h = H.fromEngine(E.newCharacter(def)); h.id = H.uid(); h.from = def.id; add(h); };
+  if (!cur() && S.heroes.length) S.current = S.heroes[0].id;
+  /* what the earlier-characters section below needs */
+  window.HeroesPage = { esc: esc, sgn: sgn, D: D, S: S,
+    addEngineHero: function (c, key) { var h = H.fromEngine(c); h.id = H.uid(); h.from = c.from || ''; S.heroes.push(h); S.current = h.id; S.converted[key] = h.id; save(); render(); return h; } };
+  render();
+})();
+</script>
+<div class="hwrap" id="earlierWrap" hidden>
+<div class="panel" id="earlier">
+<h3>Earlier characters</h3>
+<p>Sacrament changed its rules: one Target Number a scene, Hearts, an Effort die, and gear in place of ability trees. Any character you made before that is still in this browser, <b>exactly as you left it</b>. Nothing here changes or deletes it. You can read it, download it as a file, and, when you choose, make a <b>new hero</b> from it. The new hero is a separate character; the old one stays.</p>
+<div id="earlierList"></div>
+</div>
+</div>
+<script>
+/* Earlier-rules characters: the old rules files are fetched only when this browser holds such a character. */
+(function () {
+  var has = false;
+  try { has = !!(localStorage.getItem('sacrament-builder-v1') || localStorage.getItem('sacrament-sheet-v2')); } catch (e) { return; }
+  if (!has) return;
+  var files = ['/legacy/data.js', '/legacy/rules.js', '/legacy/migrate.js'], i = 0;
+  function next() {
+    if (i === files.length) return start();
+    var sc = document.createElement('script'); sc.src = files[i++]; sc.async = false; sc.onload = next; sc.onerror = function () {}; document.body.appendChild(sc);
+  }
+  function start() {
+    if (!window.HeartsMigrate) return;
+    var U = window.HeroesPage, esc = U.esc, sgn = U.sgn, S = U.S;
+    var M = window.HeartsMigrate(window.SAC_DATA, window.SacRules, U.D, window.HeartsEngine);
+    var found = M.readOld(localStorage), $ = function (id) { return document.getElementById(id); };
+    if (!found.length) return;
+    var open = null; // the proposal being edited: { key, raw, spread, skip }
+
+    function sheet(f) {
+      var d = M.describe(f.raw);
+      var harm = d.harm ? ' · harm ' + d.harm + ' of 12' : '';
+      return '<details class="panel" data-k="' + esc(f.id) + '"><summary><b>' + esc(d.name) + '</b> · level ' + d.level + ' · saved in ' + esc(f.source) + (S.converted[f.id] ? ' · <span class="stable">a new hero has been made from it</span>' : '') + '</summary>' +
+        '<p class="note">Read only. This is the character as it was saved.</p>' +
+        '<p><b>Body ' + sgn(d.scores.Body) + ' · Mind ' + sgn(d.scores.Mind) + ' · Spirit ' + sgn(d.scores.Spirit) + '</b>' + harm + (d.practice ? ' · ' + esc(d.practice) : '') + '</p>' +
+        (d.vow ? '<p><i>' + esc(d.vow) + '</i></p>' : '') +
+        '<h3>Abilities</h3><p>' + (d.abilities.length ? d.abilities.map(esc).join(', ') : 'None.') + '</p>' +
+        '<h3>Gear</h3><p>' + (d.gear.length ? d.gear.map(function (g) { return esc(g.name) + (g.equipped ? ' (in hand or worn)' : ''); }).join(', ') : 'Nothing.') + '</p>' +
+        (d.notes ? '<h3>Notes</h3><p style="white-space:pre-wrap">' + esc(d.notes) + '</p>' : '') +
+        '<p class="row"><button class="btn small ghost" data-dl="' + esc(f.id) + '" type="button">Download the old character</button><button class="btn small" data-bring="' + esc(f.id) + '" type="button">' + (S.converted[f.id] ? 'Make another new hero from it…' : 'Make a new hero from it…') + '</button></p>' +
+        '<div data-prop="' + esc(f.id) + '"></div></details>';
+    }
+    function render() {
+      $('earlierList').innerHTML = found.map(sheet).join('');
+      if (open) { var d = document.querySelector('[data-k="' + open.key + '"]'); if (d) d.open = true; drawProposal(); }
+    }
+    function E_SIX(sp) { return ['STR ' + sgn(sp.Body), 'DEX ' + sgn(sp.Mind), 'CON ' + sgn(sp.Body), 'INT ' + sgn(sp.Mind), 'WIS ' + sgn(sp.Spirit), 'CHA ' + sgn(sp.Spirit)].join(', '); }
+    function proposal(key) { var f = found.filter(function (x) { return x.id === key; })[0]; return f && M.convert(f.raw, { spread: open && open.key === key ? open.spread : undefined, skip: open && open.key === key ? open.skip : [] }); }
+    function drawProposal() {
+      if (!open) return; var r = proposal(open.key), box = document.querySelector('[data-prop="' + open.key + '"]'); if (!box || !r) return;
+      var sp = open.spread || M.spread(r.old.scores), d = r.old;
+      box.innerHTML = '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">A new hero from ' + esc(d.name) + '</h3>' +
+        '<p class="note">Your best old score becomes +2, the next +1 and the last +0. Change them if you like: the other swaps. Each then covers two of the six new scores: Body gives STR and CON, Mind gives INT and DEX, Spirit gives WIS and CHA. The new hero begins as ' + E_SIX(sp) + '. The sheet lets you move the points afterwards.</p>' +
+        '<div class="row" data-scores>' + ['Body', 'Mind', 'Spirit'].map(function (k) { return '<label>' + k + ' (was ' + sgn(d.scores[k]) + ')<select data-score="' + k + '">' + [2, 1, 0].map(function (v) { return '<option value="' + v + '"' + (sp[k] === v ? ' selected' : '') + '>' + sgn(v) + '</option>'; }).join('') + '</select></label>'; }).join('') + '</div>' +
+        '<p>Health starts at 1 Heart (10 points), full, and Effort points go to what you carry.</p>' +
+        '<h3>Gear</h3><div class="tablewrap"><table class="ref"><thead><tr><th>Include</th><th>You had</th><th>Becomes</th></tr></thead><tbody>' + r.items.map(function (i) {
+          var cell = i.kept ? esc(i.toName) + (i.note ? ' <span class="note">(' + esc(i.note) + ')</span>' : '') : '<span class="note">left behind: ' + esc(i.why) + '</span>';
+          var tick = i.to && i.why !== 'you chose to leave it' && (i.kept || i.why === 'you chose to leave it') ? '' : '';
+          var canTick = i.from !== 'the spells you knew' && i.to;
+          return '<tr><td>' + (canTick ? '<input type="checkbox" data-it="' + esc(i.from) + '"' + (i.kept || (open.skip.indexOf(i.from) < 0 && i.why !== 'you chose to leave it') ? ' checked' : '') + ' aria-label="Include ' + esc(i.name) + '">' : '') + '</td><td>' + esc(i.name) + '</td><td>' + cell + '</td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        '<h3>Notes the new hero will carry</h3><p class="note" style="white-space:pre-wrap">' + esc(r.notes) + '</p>' +
+        '<p class="row"><button class="btn" data-make type="button">Make the hero</button><button class="btn small ghost" data-cancel type="button">Cancel</button></p><p id="made" class="stable" aria-live="polite"></p></div>';
+    }
+    $('earlierList').onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.bring) { var f = found.filter(function (x) { return x.id === b.dataset.bring; })[0]; open = { key: b.dataset.bring, spread: M.spread(M.describe(f.raw).scores), skip: [] }; render(); return; }
+      if (b.dataset.dl) { var g = found.filter(function (x) { return x.id === b.dataset.dl; })[0]; var url = URL.createObjectURL(new Blob([JSON.stringify(g.raw, null, 1)], { type: 'application/json' })); var a = document.createElement('a'); a.href = url; a.download = (String(g.raw.name || 'character').replace(/[^\w-]+/g, '-').slice(0, 40) || 'character') + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 500); return; }
+      if (b.hasAttribute('data-cancel')) { open = null; render(); return; }
+      if (b.hasAttribute('data-make') && open) {
+        var r = proposal(open.key), h = U.addEngineHero(r.hero, open.key);
+        $('made').innerHTML = esc(h.name) + ' is ready. It is selected at the top of the page. The old character is untouched.'; b.disabled = true; render2();
+      }
+    };
+    function render2() { /* keep the confirmation on screen while the list redraws the "made" label */ var msg = $('made') && $('made').innerHTML; render(); if (msg && $('made')) $('made').innerHTML = msg; }
+    $('earlierList').onchange = function (e) {
+      if (!open) return; var s = e.target.closest('[data-score]'), it = e.target.closest('[data-it]');
+      if (s) { var k = s.dataset.score, v = +s.value, sc = open.spread, other = ['Body', 'Mind', 'Spirit'].filter(function (x) { return x !== k && sc[x] === v; })[0]; if (other) sc[other] = sc[k]; sc[k] = v; drawProposal(); }
+      if (it) { var u = it.dataset.it, i = open.skip.indexOf(u); if (it.checked && i >= 0) open.skip.splice(i, 1); if (!it.checked && i < 0) open.skip.push(u); drawProposal(); }
+    };
+
+    render();
+    if ($('earlierList').innerHTML) { $('earlierWrap').hidden = false; if (location.hash === '#earlier') $('earlier').scrollIntoView(); }
+  }
+  next();
+})();
+</script>
+</body>
+</html>

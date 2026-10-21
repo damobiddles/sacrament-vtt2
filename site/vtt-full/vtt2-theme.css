@@ -1,0 +1,17 @@
+
+/* Sacrament VTT 2.0: non-destructive visual layer over the complete original client.
+   Server authority, rules, saved-table keys and command protocol remain unchanged. */
+:root { --v2-bg:#14171b; --v2-panel:#20252a; --v2-edge:#3a4146; --v2-gold:#c9a76c; }
+body.sacrament-vtt2 { background:var(--v2-bg); }
+.vtt2-brand {display:flex;align-items:center;gap:12px;padding:10px 20px;background:#171b1f;color:#eee7dc;border-bottom:1px solid #41403c;font-family:system-ui,sans-serif;letter-spacing:.08em}
+.vtt2-brand .vtt2-mark {font-size:27px;color:var(--v2-gold)}
+.vtt2-brand strong {display:block;font-size:14px;letter-spacing:.16em}
+.vtt2-brand small {display:block;font-size:9px;color:#b6b5ad;margin-top:3px}
+.vtt2-brand a {margin-left:auto;color:#d9c6a5;font-size:12px;text-decoration:none}
+body.sacrament-vtt2 #top {background:#22272b;border-color:var(--v2-edge)}
+body.sacrament-vtt2 #panel {background:#20252a;border-color:var(--v2-edge)}
+body.sacrament-vtt2 #feed {background:#1b2024;border-color:var(--v2-edge)}
+body.sacrament-vtt2 #strip {background:#22272b;border-color:var(--v2-edge)}
+body.sacrament-vtt2 #tablewrap {background:#101317}
+body.sacrament-vtt2 button:focus-visible,body.sacrament-vtt2 a:focus-visible,body.sacrament-vtt2 input:focus-visible {outline:2px solid var(--v2-gold);outline-offset:2px}
+@media(max-width:700px){.vtt2-brand{padding:7px 10px}.vtt2-brand a{font-size:10px}}

@@ -1,0 +1,48 @@
+/* The rules page. Shared colours, fonts and buttons come from theme.css. */
+.rhead{padding:var(--gap-hero) 0 40px;background:radial-gradient(ellipse at 70% 0%,color-mix(in srgb,var(--blood) 45%,transparent),transparent 60%),var(--bg2);border-bottom:1px solid var(--line)}
+.rhead h1{font-size:clamp(3rem,10vw,6rem);margin:10px 0 14px}
+.lede{font-size:1.2rem;max-width:56ch;color:var(--fg)}
+.rhead .meta{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding-block:var(--gap-page) 72px;align-items:start}
+.toc{position:sticky;top:20px}
+.toc ol{list-style:none;margin:10px 0 0;padding:0;border-left:1px solid var(--line)}
+.toc a{display:block;padding:6px 0 6px 14px;color:var(--dim);text-decoration:none;font-family:var(--label);letter-spacing:.06em;font-size:1rem}
+.toc a:hover{color:var(--blood-hi)}
+.rules section{padding:0 0 56px;scroll-margin-top:24px}
+.rules h2{font-size:clamp(2rem,5vw,2.8rem);margin:0 0 18px;display:flex;align-items:baseline;gap:14px}
+.rules h2 span{font-family:var(--label);font-size:1.15rem;color:var(--candle);letter-spacing:.1em}
+.rules h3{font-size:1.5rem;color:var(--blood-hi);margin:28px 0 8px}
+.rules p{max-width:64ch}
+.rules b{color:var(--fg);font-weight:600;font-family:var(--label);letter-spacing:.03em}
+.tip{border-left:3px solid var(--blood);padding:4px 0 4px 16px;color:var(--dim)}
+.ref{border-collapse:collapse;margin:14px 0 18px}
+.ref th,.ref td{text-align:left;padding:9px 20px 9px 0;border-top:1px solid var(--line);vertical-align:top}
+.ref tr:last-child th,.ref tr:last-child td{border-bottom:1px solid var(--line)}
+.ref th{font-family:var(--label);font-weight:600;font-size:.85rem;letter-spacing:.08em;white-space:nowrap}
+.ref.wide{width:100%}
+.acts{list-style:none;margin:6px 0 16px;padding:0;display:grid;gap:10px;max-width:64ch}
+.acts li{padding:10px 14px;background:var(--bg2);border-left:2px solid var(--blood)}
+.acts i{font-family:var(--label);font-style:normal;font-size:0.92rem;letter-spacing:.12em;text-transform:uppercase;color:var(--candle);margin:0 10px}
+/* The worked example */
+.example{padding:36px 32px 24px!important;margin:0 -32px 56px;background:var(--bg2);border:1px solid var(--line)}
+.example .intro{color:var(--dim);font-style:italic}
+.cast{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:20px;margin:22px 0 8px}
+.cast div{border-left:2px solid var(--blood);padding-left:14px}
+.cast b{font-family:var(--display);font-weight:700;font-size:1.3rem;display:block}
+.cast span{color:var(--dim);font-size:1.05rem;line-height:1.5;display:block}
+.example .story{font-size:1.06rem}
+.example .rl{font-size:1rem;color:var(--dim);background:var(--bg);border-left:3px solid var(--candle);padding:10px 14px;margin:0 0 1.2em;max-width:64ch}
+.example .rl b:first-child{color:var(--candle)}
+.rfoot{padding:30px 0 40px;color:var(--dim);font-size:1.02rem;border-top:1px solid var(--line)}
+@media(max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:28px 56px}
+  .toc{position:sticky;top:0;z-index:5;margin:0 -16px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .toc .label{display:none}
+  .toc ol{display:flex;gap:8px;overflow-x:auto;border-left:0;margin:0;padding:2px 0 4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .toc li{flex:none}
+  .toc a{padding:10px 14px;border:1px solid var(--line);border-radius:4px;white-space:nowrap;font-size:0.95rem}
+  .rules section{scroll-margin-top:64px}
+  .example{margin-inline:0;padding-inline:16px!important}
+  .rhead{padding-block:44px 28px}
+}
+@media(max-width:600px){.ref th{white-space:normal}.ref th,.ref td{padding-right:12px}}

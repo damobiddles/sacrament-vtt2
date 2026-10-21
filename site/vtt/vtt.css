@@ -1,0 +1,414 @@
+/* Sacrament RPG Table. Colours and fonts come from ../theme.css. Restrained on purpose: the table is the picture, the controls are plain. */
+:root{--navh:48px;--tap:44px}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);overflow:hidden}
+[hidden]{display:none!important}
+button{font:inherit}
+.btn{min-height:var(--tap)}
+.btn.small{min-height:36px;padding:6px 12px;font-size:.74rem}
+.btn.on,.seg button[aria-pressed=true]{background:var(--candle);color:var(--bg);border-color:var(--candle)}
+input,select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:inherit;font-size:16px;padding:6px 8px;min-height:38px;max-width:100%;box-sizing:border-box}
+textarea{width:100%;resize:vertical}
+input[type=number]{width:4.2em}
+label{display:flex;flex-direction:column;gap:2px;font:600 .68rem var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+label.check{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font:.95rem var(--body)}
+input[type=checkbox]{min-height:0;width:20px;height:20px}
+.note,.msg{font:.88rem/1.4 var(--body);color:var(--dim);margin:6px 0}
+.msg{color:var(--blood-hi);min-height:1.2em}
+
+/* before a table */
+#entry{max-width:880px;margin:0 auto;padding:24px 16px;height:calc(100% - var(--navh));overflow:auto}
+#entry h1{margin:0 0 6px}
+.lead{max-width:60ch;color:var(--dim)}
+.entry-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media(min-width:700px){.entry-grid{grid-template-columns:1fr 1fr}}
+.card-box{background:var(--bg2);box-shadow:0 0 0 1px var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+.card-box h2{margin:0;font-size:1.25rem}
+
+/* the screen: a top strip, the table beside a panel, a feed, the player strip */
+#app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;height:calc(100% - var(--navh))}
+#top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--line);font:600 .8rem var(--label);letter-spacing:.06em}
+#top .grp{display:flex;align-items:center;gap:6px;min-height:var(--tap)}
+#top .grow{flex:1 1 220px}
+#top .lbl{color:var(--dim);text-transform:uppercase;font-size:.66rem;letter-spacing:.12em}
+#top .big{font:700 1.5rem var(--display);color:var(--candle);min-width:1.6em;text-align:center}
+#top .who{font:700 1.05rem var(--display);color:var(--fg)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--edge);background:var(--bg);color:var(--fg);padding:4px 10px;min-height:36px;cursor:pointer;font:600 .76rem var(--label);letter-spacing:.04em}
+.chip b{font:700 1.05rem var(--display);color:var(--candle)}
+.chip.hot{border-color:var(--blood-hi);color:var(--blood-hi)}
+.chip.hot b{color:var(--blood-hi)}
+.chip.hid{border-style:dashed;opacity:.85}
+.pill{font:600 .72rem var(--label);letter-spacing:.08em;padding:3px 9px;border:1px solid var(--line);color:var(--dim)}
+.pill.ok{color:var(--verdigris);border-color:var(--verdigris)}
+.pill.bad{color:var(--blood-hi);border-color:var(--blood-hi)}
+.pill.busy{color:var(--candle);border-color:var(--candle)}
+
+#stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;min-height:0}
+@media(max-width:900px){#stage{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#panel{border-left:0;border-top:2px solid var(--candle);max-height:34vh}#panel.empty{display:none}}
+@media(max-width:600px){#top{gap:0 10px;padding:2px 8px}#top .grp{min-height:34px}#top .grow{flex:1 1 100%;order:5}#tTimers{overflow-x:auto;flex-wrap:nowrap;max-width:100%;order:6;flex:1 1 100%}#top .big{font-size:1.25rem}}
+#tablewrap{container-type:size;display:grid;place-items:center;min-height:0;min-width:0;background:#0a0908;overflow:hidden}
+#table{position:relative;width:min(100cqw,160cqh);aspect-ratio:16/10;container-type:size;background:#1a1612;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.9}
+#ink{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#ink polyline{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#cards{position:absolute;inset:0}
+#table.t-draw,#table.t-point{cursor:crosshair}
+#table.t-draw #cards,#table.t-point #cards{pointer-events:none}
+#pointers{position:absolute;inset:0;pointer-events:none}
+.ptr{position:absolute;width:3.2cqw;height:3.2cqw;margin:-1.6cqw 0 0 -1.6cqw;border-radius:50%;border:.4cqw solid var(--candle);box-shadow:0 0 1.5cqw var(--candle);color:var(--candle);font:600 1.3cqw var(--label);white-space:nowrap}
+.ptr span{position:absolute;left:3.6cqw;top:0}
+#toolbar{position:absolute;left:.8cqw;top:.8cqw;display:flex;gap:.5cqw;flex-wrap:wrap;z-index:5000;max-width:60%}
+/* The tools sit on top of the table's picture, which can be any colour, so they carry their own dark colours in both themes: light text on near-black glass. */
+#toolbar{--fg:#cfc4ab;--dim:#a39880;--candle:#b8955a;--blood-hi:#c4786a;--bg:#12100d;--line:#4a4030;--edge:#7a6f5a}
+#toolbar .chip{min-height:34px;background:#12100df0;backdrop-filter:blur(2px)}
+/* At the bottom, not the top: along the top it sat over the toolbar's buttons (+ Enemy, + Card, Point, Draw), which could then not be pressed while a scene was being prepared. It is only a label and does not take clicks; an alert's own buttons do. */
+#banner{position:absolute;left:50%;bottom:.8cqw;transform:translateX(-50%);z-index:5001;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;max-width:90%}
+#banner .alert{pointer-events:auto}
+.alert{background:var(--blood);color:var(--on-blood,#fff);border:1px solid var(--blood-hi);padding:8px 14px;font:700 .9rem var(--label);letter-spacing:.05em;display:flex;gap:10px;align-items:center}
+.preview{background:var(--candle);color:var(--bg);padding:4px 12px;font:700 .75rem var(--label);letter-spacing:.1em;text-transform:uppercase}
+/* A notice for a few seconds: the turn has reached you (gold), or your hero was hit (red). Drawn over the picture, so it carries its own colours. */
+.notice{padding:10px 18px;font:700 1rem var(--label);letter-spacing:.04em;box-shadow:0 2px 10px #000a}
+.notice.turn{background:#b8955a;color:#12100d;border:1px solid #e0c48c}
+.notice.hit{background:#6d2420;color:#fff;border:1px solid #c4786a}
+
+/* cards and tokens */
+.c{position:absolute;transform:translate(-50%,-50%);box-sizing:border-box;background:var(--bg2);border:1px solid var(--line);box-shadow:0 .3cqw 1cqw #0008;color:var(--fg);cursor:pointer;overflow:hidden;display:flex;flex-direction:column;font:1.25cqw/1.3 var(--body);touch-action:none}
+.c:focus-visible,.c.sel{outline:.4cqw solid var(--candle);outline-offset:.2cqw}
+.c.mine{border-color:var(--verdigris)}
+.c.turn{box-shadow:0 0 0 .35cqw var(--candle),0 0 2.5cqw var(--candle)}
+.c.hid{opacity:.72;border-style:dashed}
+.c.drag{cursor:grabbing;opacity:.9}
+.c .cimg{flex:0 0 40%;background-size:cover;background-position:center;background-color:#0003}
+.c .ct{font:700 1.5cqw/1.2 var(--display);padding:.5cqw .8cqw 0}
+.c .cd{padding:.2cqw .8cqw;color:var(--dim);overflow:hidden;flex:1 1 auto;min-height:0}
+.c .bars{padding:.4cqw .8cqw .6cqw;display:flex;flex-direction:column;gap:.4cqw}
+.bar{position:relative;height:2cqw;background:#0006;border:1px solid var(--line)}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--blood-hi);display:block}
+.bar.pr i{background:var(--candle)}
+.bar span{position:relative;display:block;text-align:center;font:700 1.2cqw/2cqw var(--label);color:#fff;text-shadow:0 0 .4cqw #000}
+.tm{font:700 1.25cqw var(--label);letter-spacing:.05em;color:var(--candle)}
+.tm.hot{color:var(--blood-hi)}
+.c.tok{border-radius:50%;align-items:center;justify-content:flex-start;background:var(--bg2)}
+.c.tok .cimg{flex:1 1 auto;width:100%;border-radius:50%}
+.c.tok .init{flex:1 1 auto;display:flex;align-items:center;justify-content:center;font:700 3cqw var(--display);color:var(--candle)}
+.tag{position:absolute;left:50%;bottom:-3.4cqw;transform:translateX(-50%);white-space:nowrap;font:700 max(1.2cqw,10px) var(--label);background:#000a;color:#fff;padding:.2cqw .7cqw}
+.tokwrap{overflow:visible}
+
+/* the contextual panel */
+#panel{background:var(--bg2);border-left:1px solid var(--line);overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:12px;min-height:0}
+#panel h3{margin:0 0 6px;font:700 1rem var(--display);color:var(--candle)}
+#panel h4{margin:8px 0 4px;font:600 .72rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+#panel .sec{border-bottom:1px solid var(--line);padding-bottom:10px}
+#panel .sec:last-child{border-bottom:0}
+#panel p{margin:4px 0;font:.95rem/1.45 var(--body);max-width:none}
+.row{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.row.col{align-items:stretch}
+.calc{font:700 1.15rem/1.4 var(--display);margin:4px 0}
+.calc.ok{color:var(--verdigris)}.calc.bad{color:var(--blood-hi)}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px}
+.cats button{min-height:var(--tap);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--edge);background:var(--bg);color:var(--fg);cursor:pointer;padding:4px;font:600 .72rem var(--label);letter-spacing:.06em}
+.cats button b{font:700 1.05rem var(--display);color:var(--candle)}
+.cats button.hint{border-color:var(--candle);box-shadow:0 0 0 1px var(--candle)}
+.stepper{display:inline-flex;align-items:center;gap:4px}
+.stepper button{min-width:38px;min-height:38px;border:1px solid var(--edge);background:var(--bg);color:var(--fg);cursor:pointer;font:700 1rem var(--label)}
+.stepper input{width:3.6em;text-align:center}
+.ol{list-style:none;margin:0;padding:0}
+.ol li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--line)}
+.ol li.cur{color:var(--candle);font-weight:700}
+.ol li span.n{flex:1 1 auto;cursor:pointer;min-height:32px;display:flex;align-items:center}
+.danger{color:var(--blood-hi);border-color:var(--blood-hi)}
+.btn.danger{background:transparent;box-shadow:inset 0 0 0 1px var(--blood-hi);color:var(--blood-hi)}
+.btn.danger:hover{background:color-mix(in srgb,var(--blood-hi) 8%,transparent)}
+details.rules summary{cursor:pointer;font:600 .74rem var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);min-height:36px;display:flex;align-items:center}
+.unv{font-size:.82rem;color:var(--dim);margin:2px 0 8px}
+
+/* the feed */
+#feed{background:var(--bg2);border-top:1px solid var(--line);font:.88rem/1.4 var(--body)}
+#feed .bar1{display:flex;align-items:center;gap:8px;padding:2px 12px;min-height:36px}
+#feed .last{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#feed ol{list-style:none;margin:0;padding:4px 12px;max-height:22vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+#feed li{display:flex;gap:8px;align-items:baseline}
+#feed li .tx{flex:1 1 auto}
+#feed li.undone .tx{text-decoration:line-through;color:var(--dim)}
+#feed li.roll .tx{color:var(--fg)}
+#feed li.alert .tx{color:var(--blood-hi);font-weight:700}
+#feed .w{color:var(--dim);font-size:.78rem}
+
+/* the player strip */
+#strip{background:var(--bg2);border-top:2px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+#strip .me{display:flex;flex-direction:column;min-width:130px}
+#strip .me b{font:700 1.05rem var(--display)}
+#strip .hp{display:flex;align-items:center;gap:4px}
+#strip .hp .v{font:700 1.15rem var(--display);min-width:3.4em;text-align:center}
+.stats{display:flex;gap:6px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:56px;min-height:var(--tap);border:1px solid var(--edge);background:var(--bg);color:var(--fg);cursor:pointer;padding:2px 8px;font:600 .68rem var(--label);letter-spacing:.1em}
+.stat b{font:700 1.15rem var(--display);color:var(--candle)}
+.stat:hover,.stat:focus-visible{border-color:var(--candle)}
+.efs{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.ef{border:1px dashed var(--edge);background:transparent;color:var(--dim);min-height:36px;padding:2px 8px;font:600 .68rem var(--label);cursor:pointer}
+.ef b{color:var(--fg)}
+.aim{border-top:1px solid var(--candle)}
+.aim .q{font:600 .75rem var(--label);color:var(--fg)}
+.aim .q b{color:var(--candle)}
+.aim .ef{border-style:solid;color:var(--fg)}
+.aim .ef:hover,.aim .ef:focus-visible{border-color:var(--candle)}
+.gear{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex}
+.seg button{min-height:36px;padding:2px 10px;border:1px solid var(--edge);background:var(--bg);color:var(--fg);cursor:pointer;font:600 .7rem var(--label);letter-spacing:.06em;margin-left:-1px}
+.phys{display:flex;align-items:center;gap:4px}
+.phys input{width:6.4em;min-height:36px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:7000;max-width:90vw;pointer-events:none}
+#toast div{background:var(--blood);color:var(--on-blood,#fff);padding:8px 14px;margin-top:6px;font:.95rem var(--body);box-shadow:0 4px 16px #0009}
+@media(max-width:600px){#strip{gap:6px 8px}.stat{min-width:48px;padding:2px 4px}}
+
+/* folded sections, the hero chooser, the target mark, the strip's optional rows */
+/* the GM's sections: a strong heading each (icon, coloured edge, arrow; the whole bar opens it) */
+.hero{border:1px solid var(--line);background:var(--bg);padding:8px 10px;margin:8px 0}
+.hero p{margin:3px 0}
+.c.aim{outline-color:#fff;outline-style:dashed}
+.c.aim::after{content:'TARGET';position:absolute;right:0;top:0;background:var(--candle);color:var(--bg);font:700 1.1cqw var(--label);letter-spacing:.1em;padding:.2cqw .6cqw;z-index:2}
+.c.tok.aim::after{right:auto;left:50%;top:-1.8cqw;transform:translateX(-50%)}
+.opt{display:flex;gap:4px}
+.row2{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;border-top:1px dashed var(--line);padding-top:6px}
+#strip input#physF{width:6em;min-height:36px}
+@media(max-width:1150px){#strip{gap:6px 8px;padding-left:8px;padding-right:8px}#strip .me{min-width:0}#strip .me b,#strip .me select{font-size:.95rem}.stat{min-width:44px;padding:2px 4px}.stats{gap:4px}.seg button{padding:2px 6px}.opt .chip{padding:4px 8px}}
+@media(min-width:901px) and (max-width:1150px){#stage{grid-template-columns:minmax(0,1fr) 300px}}
+.stepper .v.pend{color:var(--candle)}
+button[disabled][aria-busy=true]{opacity:.7;cursor:progress}
+/* HP as hearts: 10 points a Heart, filled in order; the last one is smaller if the maximum is not a multiple of 10 */
+.hearts{display:inline-flex;flex-wrap:wrap;align-items:flex-end;gap:2px;vertical-align:middle;--hs:20px}
+.hearts.sm{--hs:max(1.9cqw,11px);gap:.25cqw}
+.hearts.md{--hs:22px}
+.ht{position:relative;display:inline-block;width:calc(var(--hs) * var(--k));height:calc(var(--hs) * .92 * var(--k))}
+.ht svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ht .bg path{fill:#0007;stroke:var(--blood-hi);stroke-width:1.4;stroke-linejoin:round}
+.ht .fg path{fill:var(--blood-hi);stroke:var(--blood-hi);stroke-width:1.4;stroke-linejoin:round}
+.hearts.pend .ht .fg path{fill:var(--candle);stroke:var(--candle)}
+.ht.e .bg path{stroke:var(--dim);opacity:.8}
+.hpbar{padding:.2cqw 0;text-align:center}
+.hpn{margin-left:4px}
+#strip .hp .hearts{margin:0 4px}
+.tag .hearts{vertical-align:-.2cqw}
+.tag .hearts{flex-wrap:nowrap}
+.ptr.me{border-style:dashed;opacity:.8}
+#toolbar .tip{align-self:center;background:#000a;color:#fff;padding:.3cqw .8cqw;font:600 1.2cqw var(--label)}
+.actas{display:flex;align-items:center;gap:6px}
+.actas .note{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.queued{font:700 .72rem var(--label);color:var(--candle);border:1px solid var(--candle);padding:2px 7px;letter-spacing:.04em;white-space:nowrap}
+.hp .queued{margin-left:6px}
+/* an invitation link: join first, make-a-table quieter */
+#entry .invite{font-size:1.05rem;color:var(--candle);margin:0 0 12px}
+#entry.invited .entry-grid{display:flex;flex-direction:column;gap:14px}
+#entry.invited #joinForm{order:1}
+#entry.invited #makeForm{order:2}
+#entry.invited #makeForm .btn,#entry.mode-join #makeForm .btn,#entry.mode-run #joinForm .btn{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px var(--edge)}
+/* folded sections show that they open */
+.note.hint{border-left:2px solid var(--candle);padding-left:8px}
+
+/* Phones and narrow windows: the panel can be put away, the table keeps at least a full-width scene, the toolbar is one row, and names and hearts stay readable */
+@media(max-width:900px){
+  #panel{max-height:30vh}
+  #stage{grid-template-rows:minmax(min(62.5vw,46vh),1fr) auto}
+  #tablewrap{min-height:min(62.5vw,46vh)}
+}
+@media(max-width:600px){
+  #toolbar{flex-wrap:nowrap;overflow-x:auto;max-width:calc(100% - 1.6cqw);scrollbar-width:none}
+  #toolbar .chip{flex:0 0 auto;min-height:40px}
+  #toolbar .tip{display:none}
+  .c .ct{font-size:max(1.5cqw,10px)}
+  .bar span{font-size:max(1.2cqw,9px)}
+  #top{padding:2px 8px;gap:0 8px}
+  #top .grp{min-height:32px}
+  #top .big{font-size:1.1rem}
+  #top .chip,#tStatus .chip{min-height:30px;padding:2px 8px}
+  #tStatus{margin-left:auto}
+  #tStatus .pill{padding:2px 6px}
+}
+@media(max-width:600px){
+  .cats{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .cats button{padding:2px;font-size:.62rem;letter-spacing:0;min-height:48px}
+  .cats button b{font-size:.95rem}
+}
+/* Phones: one screen that does not scroll as a page. The top bar and the table keep their size, the tray takes what is left and scrolls inside itself, and the roll strip sits under it. */
+@media(max-width:600px){
+  html{height:100%;overflow:hidden}
+  body{height:100%;overflow:hidden}
+  #app{display:flex;flex-direction:column;height:calc(100dvh - var(--navh,0px));min-height:0}
+  #top,#feed,#strip{flex:none}
+  #stage{flex:1;display:flex;flex-direction:column;min-height:0}
+  #tablewrap{flex:0 1 min(34dvh,62.5vw);height:auto;min-height:170px}   /* the scene gives up some height before the tray is squeezed */
+  #panel{flex:1 1 0;min-height:100px;max-height:none;overflow:auto}
+  #strip{position:static;padding:4px 8px calc(4px + env(safe-area-inset-bottom));gap:4px 6px}
+  #strip .me{flex-direction:row;align-items:center;flex-wrap:wrap;gap:4px 8px;min-width:0}
+  #strip .def{padding:0 4px;margin-left:auto}
+  #strip .stats{flex:1 1 100%;flex-wrap:nowrap;gap:4px}
+  #strip .stat{flex:1 1 0;min-width:0;min-height:40px;padding:0 2px}
+  #strip .opt{gap:4px}
+  #strip .seg button{min-height:34px}
+  #strip .opt .chip,#strip>.chip{min-height:34px}
+  #feed .bar1{min-height:32px;padding:0 8px}
+  #top{gap:0 6px}
+  #top .grow{flex:0 1 auto;order:5;min-width:0}
+  #tStatus{order:4;margin-left:auto}   /* beside the Horror meter, for the GM and players alike: the top bar stays three rows */
+  #tStatus[data-role=player] .pill:nth-child(2){display:none}
+  #tTimers{order:7;flex:1 1 0;min-width:110px}#tTimers .chip{white-space:nowrap;flex:none}   /* the timers share the Turn row and scroll sideways inside it when there are many */
+  #strip .row2>.note{display:none}
+  #strip .row2{padding-top:4px;gap:4px 6px}
+  #strip .actas{flex:1 1 0;flex-direction:row;align-items:center;min-width:0}
+  #strip .actas .note{display:none}
+  #strip .actas select{min-height:36px;padding:2px 6px}
+  /* My dice: the switch and the physical d20 each on one short line, so the scene keeps its width with a roll open */
+  #strip .phys label.check input{width:24px;height:24px;min-height:0;margin:0;flex:none}
+  #strip .phys label:not(.check){flex-direction:row;align-items:center;gap:8px}
+  #strip .phys input[data-phys]{width:72px;min-height:36px}
+}
+/* arriving from the landing page: the form that matches what they came to do comes first */
+#entry.mode-join .entry-grid,#entry.mode-run .entry-grid{display:flex;flex-direction:column;gap:14px}
+#entry.mode-join #joinForm{order:1}#entry.mode-join #makeForm{order:2}
+#entry.mode-run #makeForm{order:1}#entry.mode-run #joinForm{order:2}
+
+/* a hero at 0 hit points is plain to everyone: a red outline and a mark on the token, and a note on the strip and in the panel */
+.c.down{outline:.4cqw solid #d9534f;outline-offset:.2cqw}
+.c.down .cimg,.c.down .init{filter:grayscale(.7) brightness(.8)}
+.atzero{color:#fff;background:#b23b38;padding:0 .5em;font-family:var(--label);letter-spacing:.08em}
+#strip .def{align-self:center;font:700 .85rem var(--label);letter-spacing:.06em;color:var(--dim,#ccc);padding:0 8px}
+#strip .def b{color:var(--candle)}
+
+/* the GM toolbar: one button per section at the top of the tray, always in view; on a phone it scrolls sideways in a single row */
+
+/* The GM's loot designer (site/vtt/loot.js): it reuses the sheet's overlay and form look */
+.lt-cols{display:grid;grid-template-columns:300px minmax(0,1fr);gap:0 20px;margin-top:8px}
+.lt-lib h3,.lt-form h3{margin:6px 0 4px;font-size:1.05rem}
+.lt-item{border:1px solid var(--line);background:#0000002a;margin:8px 0;padding:8px 10px}
+.lt-item.cur{border-color:var(--candle)}
+.lt-item h4{margin:0 0 4px;font:700 .95rem var(--display);color:var(--fg)}
+.lt-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.lt-actions{margin-top:14px;padding-top:12px;border-top:1px dashed var(--edge)}
+.lt-seg{display:flex}.lt-seg button{flex:1;min-height:42px;padding:6px;background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:700 .72rem var(--label);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.lt-seg button.on{background:var(--candle);color:#12100d;border-color:var(--candle)}
+.lt-prev{border:1px dashed var(--edge);padding:10px 12px;margin-top:12px;background:var(--bg);color:var(--fg)}
+.lt-tabs{display:none;gap:6px;margin:8px 0}
+.lt-tabs button{flex:1;min-height:44px;background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:700 .72rem var(--label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.lt-tabs button[aria-pressed=true]{background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi)}
+.sh-b.danger{color:#e08a80;border-color:#7a3a35}
+.sh-b.wide{width:100%;margin-top:8px}
+@media(max-width:800px){.lt-tabs{display:flex}.lt-cols{grid-template-columns:minmax(0,1fr)}.lt-show-design .lt-lib,.lt-show-lib .lt-form{display:none}}
+
+/* The tray: no icons, sentence case, quiet buttons with one main action per area */
+#panel .btn,#panel .chip,#panel button.chip{text-transform:none;letter-spacing:0;font:600 .92rem var(--body);background:transparent;color:var(--fg);box-shadow:none;border:1px solid var(--edge)}
+#panel .btn:hover{background:#ffffff0d}
+#panel .btn.on{background:transparent;color:var(--candle);border-color:var(--candle)}
+#panel .btn.main{background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi)}
+#panel .btn.main:hover{background:color-mix(in srgb,var(--blood) 82%,var(--blood-hi))}
+#panel .btn.danger{color:var(--blood-hi);border-color:var(--blood-hi);background:transparent}
+#panel label{text-transform:none;letter-spacing:0;font:600 .85rem var(--body);color:var(--dim)}
+#panel label.check{font:.95rem var(--body);color:var(--fg)}
+#panel h4{text-transform:none;letter-spacing:0;font:700 .95rem var(--body);color:var(--dim)}
+
+/* The GM's tray: four tabs, and plain lists inside them */
+.tabs{flex:none;display:flex;position:sticky;top:-10px;z-index:4;background:var(--bg2);margin:-10px -12px 0;padding:0 12px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1 1 0;min-height:44px;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--dim);font:600 .98rem var(--body);cursor:pointer;padding:0 4px}
+.tabs button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--candle)}
+.tabs button:hover{color:var(--fg)}
+.tabbody{display:flex;flex-direction:column;gap:8px}
+.tabbody h3{margin:14px 0 0;font:700 1.02rem var(--display);color:var(--fg)}
+.tabbody h3:first-child{margin-top:0}
+.row.between{justify-content:space-between;flex-wrap:nowrap}
+.row .grow{flex:1 1 auto}
+.link{background:none;border:0;color:var(--candle);text-decoration:underline;font:600 .95rem var(--body);min-height:36px;cursor:pointer;padding:0 2px}
+.code{font:700 1.3rem var(--display);color:var(--candle);letter-spacing:.08em}
+.hint{color:var(--dim);font-size:.9rem;margin:0}
+.ol .n{flex:1 1 auto;min-width:0;min-height:40px;display:flex;align-items:center;gap:8px;background:none;border:0;color:inherit;font:inherit;line-height:1.25;overflow-wrap:break-word;text-align:left;cursor:pointer;padding:4px 2px}
+.ol li.cur .n{color:var(--candle);font-weight:700}
+.ol li span.n{cursor:default}
+.ol.links .n{width:100%}
+
+/* The Rising Horror: a quiet meter in the top bar. 21 ticks, filled as it rises; the thresholds are taller. Blood only where it has risen, never as a fill behind text. */
+#tHorror{gap:6px}
+.hz-meter{display:inline-flex;align-items:center;gap:1px;height:16px}
+.hz-meter i{display:block;width:3px;height:10px;background:var(--line)}
+.hz-meter i.th{height:16px;background:var(--edge)}
+.hz-meter i.on{background:var(--blood-hi)}
+.hz-n{font:600 .8rem var(--label);color:var(--dim)}
+.hz-n b{font:700 1.05rem var(--display);color:var(--fg)}
+.hz-meter.arrived i.on{background:var(--blood-hi)}
+.hz-gm{align-items:center;flex-wrap:wrap}
+.hz-gm .n{min-width:4.5em}
+.hz-set{display:flex;align-items:center;gap:6px}
+.hz-set label{flex-direction:row;align-items:center;gap:6px}
+.hz-set input{width:4.5em}
+#feed li.horror .tx{color:var(--fg)}
+@media(max-width:600px){.hz-meter i{width:2px}.hz-meter{gap:1px}#top .lbl{font-size:.6rem}}
+
+/* Tray spacing: controls that share a row are the same height and line up, and nothing is pushed off the edge of a narrow tray */
+#panel .tabbody h3{margin-top:14px}
+#panel .tabbody h3:first-child,#panel .tabbody .row h3{margin-top:0}
+#panel .btn.small,#panel .chip{min-height:38px}
+#panel .row input,#panel .row select,#panel .phys input{height:38px;min-height:38px;padding-top:0;padding-bottom:0}
+.ol li>:not(.n){flex:none}
+#panel .ol .chip{padding:4px 7px;font-size:.86rem}
+.ol .n .pill{white-space:nowrap}
+label.phys{align-items:flex-start}
+#panel .cats+.phys{margin-top:6px}
+.actas{flex-direction:row}
+#strip .me.gm{flex-direction:row;align-items:center;gap:8px}
+#strip input#physF{height:36px;padding-top:0;padding-bottom:0}
+
+/* Dice tumbling on screen (dice.js): a picture of a roll the server has already made. It never takes a click, and it carries its own dark colours because it is drawn over the table. */
+#dice{position:fixed;left:50%;top:30%;transform:translateX(-50%);z-index:6500;display:flex;gap:18px;pointer-events:none;max-width:92vw;flex-wrap:wrap;justify-content:center}
+.dice-roll{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;max-width:220px;transition:opacity .3s}
+.dice-roll .who{flex-basis:100%;text-align:center;font:600 .85rem var(--label);color:#efe5cc;background:#12100dd9;padding:2px 8px;border-radius:4px}
+.dice-roll.gone{opacity:0}
+.die{position:relative;width:96px;height:96px;animation:dice-tumble .9s cubic-bezier(.2,.7,.3,1) both}
+.die svg{position:absolute;inset:0;width:100%;height:100%;fill:#1b1814;stroke:#b8955a;stroke-width:3;stroke-linejoin:round;filter:drop-shadow(0 0 3px #000) drop-shadow(0 8px 14px #000e)}
+.die svg :not(:first-child){fill:none;stroke-width:1.5;opacity:.55}
+.die b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 1.9rem var(--display);color:#efe5cc}
+.die.d4 b{padding-top:26px;font-size:1.5rem}
+.die.d100 b{font-size:1.5rem}
+.die.landed{animation:dice-land .35s ease-out both}
+.die.landed.top svg{stroke:#e0c27a;filter:drop-shadow(0 0 12px #b8955acc)}
+.die.landed.low svg{stroke:#c4786a}
+@keyframes dice-tumble{0%{transform:translate(-120px,-60px) rotate(-540deg) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(20px,8px) rotate(-60deg) scale(1.05)}75%{transform:translate(-6px,-4px) rotate(18deg)}100%{transform:translate(0,0) rotate(0) scale(1)}}
+@keyframes dice-land{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#dice{display:none}}
+/* The offer to push after a failed roll: a little light in the dark, and a button that breathes. Still for anyone who asks for less motion. */
+#panel .push{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--blood-hi);border-radius:6px;background:color-mix(in srgb,var(--blood) 22%,var(--bg2))}
+#panel .push .lure{margin:0 0 8px;font-style:italic;color:var(--fg)}
+#panel .push .note{margin:8px 0 0}
+#panel .push.done p{margin:0 0 8px}
+#panel .btn.push-go{width:100%;background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi);animation:push-breathe 2.4s ease-in-out infinite}
+#panel .btn.push-go:hover{background:color-mix(in srgb,var(--blood) 80%,var(--blood-hi))}
+#panel .btn.push-go span{margin-left:8px;font-weight:400}
+@keyframes push-breathe{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 14px 2px color-mix(in srgb,var(--blood-hi) 55%,transparent)}}
+@media (prefers-reduced-motion:reduce){#panel .btn.push-go{animation:none}}
+
+/* the player's own panel: whose turn it is, and what a fallen hero can do */
+.turnline{margin:.4em 0}
+.turnline.mine{border-left:3px solid var(--candle);padding-left:8px}
+.down-help{border:1px solid #c4786a;border-left:4px solid #b23b38;padding:8px 10px;margin:.5em 0}
+.down-help p{margin:0}
+/* the GM's first steps on a new table, and their own note on a card */
+.sec.start{border:1px solid var(--edge);padding:10px 12px;margin-bottom:12px}
+.gmnote{border-left:3px solid var(--edge);padding-left:8px}
+/* the turn is yours: the strip is lit along its top */
+#strip.myturn{border-top-color:var(--candle);box-shadow:inset 0 2px 0 var(--candle)}
+
+/* Your tables, on the first screen */
+.my-tables{margin-top:22px}
+.my-tables h2{margin:0 0 4px;font-size:1.25rem}
+.my-tables .ol li{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.my-tables .n{flex:1 1 12em;min-width:0}
+
+/* the session recap */
+.recap{background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);padding:10px 12px;margin:6px 0 10px;user-select:text}
+.recap p{margin:0 0 6px}
+.recap p:last-child{margin:0}
+
+/* the next session */
+.row.cal{flex-wrap:wrap}
+.row.cal a.btn{text-decoration:none}
+#panel label.grow{flex:1 1 12em}
+
+/* putting the table on the home screen */
+#entry .install{margin-top:18px}
+.my-tables .btn:not(.main):not(.danger){background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px var(--edge)}

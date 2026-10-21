@@ -1,0 +1,9 @@
+{
+  "//": "Type checking reads the JavaScript and warns where a value is used in a way that cannot work (a missing property, the wrong kind of value). It does not change the code and nothing is compiled.",
+  "compilerOptions": {
+    "allowJs": true, "checkJs": true, "noEmit": true, "strict": false,
+    "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext", "skipLibCheck": true,
+    "lib": ["ES2023", "DOM"], "types": ["node"]
+  },
+  "include": ["netlify/functions/_shared/vtt-*.mjs", "netlify/functions/vtt.mjs", "site/vtt/rules.js", "scripts/vtt/server.mjs"]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "sacrament-site",
+  "private": true,
+  "type": "module",
+  "description": "Sacrament website, VTT, character builder and the password-gated node builder, for Netlify.",
+  "scripts": {
+    "build": "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs",
+    "test": "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs && node scripts/with-timeout.mjs 300 node --test --test-timeout=60000 'test/*.test.mjs'",
+    "lint": "node scripts/with-timeout.mjs 120 eslint .",
+    "typecheck": "node scripts/with-timeout.mjs 180 tsc -p .",
+    "test:e2e": "node scripts/with-timeout.mjs 600 playwright test --workers=2 --grep-invert \"@phone|text and buttons are readable\" && node scripts/with-timeout.mjs 300 playwright test e2e/contrast.spec.mjs --workers=1 --grep-invert @phone",
+    "test:browser-suites": "node scripts/with-timeout.mjs 900 node scripts/vtt/e2e.cjs && node scripts/with-timeout.mjs 900 node scripts/vtt/flow.cjs && node scripts/with-timeout.mjs 300 node scripts/hearts/ui-test.cjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run test:contrast",
+    "check:full": "npm run check && npm run test:e2e && npm run test:browser-suites && npm run phone-check",
+    "hearts-ui": "node scripts/with-timeout.mjs 300 node scripts/hearts/ui-test.cjs",
+    "hearts-validate": "node scripts/with-timeout.mjs 120 node scripts/hearts/validate.mjs && node scripts/with-timeout.mjs 120 node scripts/hearts/docs.mjs",
+    "stress": "echo retired: see archive/old-scripts",
+    "vtt": "node scripts/vtt/server.mjs",
+    "vtt-e2e": "node scripts/with-timeout.mjs 900 node scripts/vtt/e2e.cjs",
+    "vtt-latency": "node scripts/with-timeout.mjs 300 node scripts/vtt/latency.cjs",
+    "vtt-flow": "node scripts/with-timeout.mjs 900 node scripts/vtt/flow.cjs",
+    "inventory": "node scripts/with-timeout.mjs 60 node scripts/inventory/build.mjs",
+    "live-check": "node scripts/with-timeout.mjs 180 node scripts/vtt/live-check.mjs https://playsacrament.com",
+    "test:contrast": "node scripts/with-timeout.mjs 240 CONTRAST_SET=quick playwright test e2e/contrast.spec.mjs --workers=2 --grep-invert @phone",
+    "phone-check": "node scripts/with-timeout.mjs 60 playwright test e2e/phone-check.spec.mjs --grep @phonecheck",
+    "phone-suite": "npm run phone-check && node scripts/with-timeout.mjs 600 playwright test --workers=2 --grep @phone --grep-invert \"text and buttons\" && node scripts/with-timeout.mjs 300 CONTRAST_SET=quick playwright test e2e/contrast.spec.mjs --grep @phone && node scripts/with-timeout.mjs 900 PHONE=1 node scripts/vtt/e2e.cjs && node scripts/with-timeout.mjs 900 PHONE=1 node scripts/vtt/flow.cjs && node scripts/with-timeout.mjs 300 PHONE=1 node scripts/hearts/ui-test.cjs",
+    "check:live": "npm run live-check && node scripts/with-timeout.mjs 600 VTT_BASE=https://playsacrament.com playwright test --workers=2 --grep-invert @phone && node scripts/with-timeout.mjs 600 VTT_BASE=https://playsacrament.com node scripts/vtt/flow.cjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^26.6.5",
+    "axe-core": "^4.14.0",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "typescript": "^7.0.2"
+  }
+}

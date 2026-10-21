@@ -1,0 +1,238 @@
+# The public site is the "site" folder. Everything else in the repo is never published.
+[build]
+  publish = "site"
+  # Packs private/builder.html into the password-gated builder function, and builds the blog from content/blog.
+  command = "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs"
+
+[build.environment]
+  # @netlify/blobs 11 (used by the builder, the node library and the Sacrament RPG table) needs Node 22.12 or later.
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+
+# The Netlify address and www go to the real address. This is a fallback for when the primary-domain setting does not do it.
+[[redirects]]
+  from = "https://sacramentrpg.netlify.app/*"
+  to = "https://playsacrament.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.playsacrament.com/*"
+  to = "https://playsacrament.com/:splat"
+  status = 301
+  force = true
+
+# Old addresses. The earlier "Looming Horror" table (/play/) and its older addresses (/table, /tools) were retired: they all go to the home page.
+# The first rule keeps the stone picture that earlier saved tables use as their background working (it moved to /vtt/).
+[[redirects]]
+  from = "/play/tiles/stone.webp"
+  to = "/vtt/stone.webp"
+  status = 301
+
+[[redirects]]
+  from = "/play"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/play/"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/play/*"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/table"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/table/*"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/tools"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/tools/*"
+  to = "/"
+  status = 301
+
+# The private inventory page (/inventory/) is for the owner only: it is not linked, not in the sitemap, and search engines are told to keep it out.
+[[headers]]
+  for = "/inventory/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/inventory"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+# The playtest sign-up was removed from the home page; its thank-you page goes to the home page.
+[[redirects]]
+  from = "/thanks"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/thanks/"
+  to = "/"
+  status = 301
+
+# Archived (moved out of public reach, kept in the archive/ folder). The old addresses go somewhere sensible.
+# The earlier-characters page now lives on the hero page. (The old-rules script files in /legacy/ stay: the builder and the library function use them.)
+[[redirects]]
+  from = "/legacy"
+  to = "/character/#earlier"
+  status = 301
+
+[[redirects]]
+  from = "/legacy/"
+  to = "/character/#earlier"
+  status = 301
+
+[[redirects]]
+  from = "/legacy/rules"
+  to = "/rules/"
+  status = 301
+
+[[redirects]]
+  from = "/legacy/rules/*"
+  to = "/rules/"
+  status = 301
+
+# The table's website used to live under /icrpg/. Every old address (and any old link to it) goes to its new address.
+# The first four are the archived example post (at its old and its new address); then each page; the last one catches anything else under the old name.
+[[redirects]]
+  from = "/news/example-post-delete-me"
+  to = "/news/"
+  status = 301
+
+[[redirects]]
+  from = "/news/example-post-delete-me/"
+  to = "/news/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/blog/example-post-delete-me"
+  to = "/news/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/blog/example-post-delete-me/*"
+  to = "/news/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/the-game"
+  to = "/the-game/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/the-game/"
+  to = "/the-game/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/setting"
+  to = "/setting/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/setting/"
+  to = "/setting/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/how-to-play"
+  to = "/how-to-play/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/how-to-play/"
+  to = "/how-to-play/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/newsletter"
+  to = "/newsletter/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/newsletter/"
+  to = "/newsletter/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/support"
+  to = "/support/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/support/"
+  to = "/support/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/privacy"
+  to = "/privacy/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/privacy/"
+  to = "/privacy/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/blog"
+  to = "/news/"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/blog/*"
+  to = "/news/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg.css"
+  to = "/landing.css"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg.js"
+  to = "/landing.js"
+  status = 301
+
+[[redirects]]
+  from = "/icrpg/*"
+  to = "/"
+  status = 301
+
+# Headers for every page. No Content-Security-Policy yet: the pages use inline scripts and styles, so a policy that
+# helps needs them moved out first.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

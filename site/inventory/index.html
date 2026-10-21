@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventory | Sacrament</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="description" content="A private list of everything on the site, for the owner.">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/theme.css">
+<script src="/nav.js"></script>
+<style>
+.inv{max-width:1100px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-left)) 80px}
+.inv h1{font-size:clamp(2.2rem,7vw,3.6rem);margin:6px 0 10px}
+.inv .lede{font-size:1.1rem;max-width:70ch;color:var(--fg)}
+.inv .box{background:var(--bg2);border-left:3px solid var(--candle);padding:14px 18px;margin:18px 0;max-width:80ch}
+.inv .box h2{font-size:1.25rem;margin:0 0 6px}
+.inv .box ul{margin:6px 0 0;padding-left:1.2em}.inv .box li{margin:.35em 0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+.toc a{font-family:var(--label);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--line);text-decoration:none;color:var(--dim)}
+.toc a:hover{color:var(--fg)}
+.sum{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.sum span{padding:6px 12px;background:var(--bg2);border:1px solid var(--line);font-size:.95rem}
+.grp{margin-top:38px}.grp h2{font-size:1.8rem;border-bottom:1px solid var(--line);padding-bottom:6px}
+.grp .n{font:600 .8rem var(--label);color:var(--dim);vertical-align:middle;margin-left:6px}
+.intro{color:var(--dim);max-width:75ch}
+.it{background:var(--bg2);border:1px solid var(--line);padding:14px 16px;margin:14px 0}
+.it h3{font-size:1.25rem;margin:0}
+.addr{margin:4px 0 10px;word-break:break-all;font-size:.95rem}
+.addr .u{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem}
+.addr .plain{color:var(--dim)}
+.small{font-size:.82rem;color:var(--dim)}
+.cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.cols h4{margin:0 0 4px;font:600 .72rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--candle)}
+.cols p{margin:0;font-size:.95rem;line-height:1.5}
+.badge{display:inline-block;font:700 .72rem var(--label);letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;margin-right:4px;border:1px solid var(--line)}
+.badge.ok{color:var(--verdigris);border-color:var(--verdigris)}.badge.bad{color:#fff;background:var(--blood);border-color:var(--blood-hi)}.badge.warn{color:var(--candle);border-color:var(--candle)}.badge.dim{color:var(--dim)}
+.badge.rec-keep{color:var(--verdigris);border-color:var(--verdigris)}.badge.rec-merge{color:var(--candle);border-color:var(--candle)}.badge.rec-archive{color:#fff;background:var(--blood);border-color:var(--blood-hi)}.badge.rec-decide{color:var(--fg);border-style:dashed}
+.pick{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.85rem;color:var(--dim)}
+.pick select{font:inherit;padding:6px 8px;background:var(--bg);color:var(--fg);border:1px solid var(--edge);min-height:36px}
+.it.changed{border-left:4px solid var(--candle)}
+.bar{position:sticky;bottom:0;z-index:20;background:var(--bg2);border-top:2px solid var(--candle);padding:10px max(16px,env(safe-area-inset-left));display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bar .btn{cursor:pointer;border:0}
+.out{width:100%;min-height:160px;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--fg);border:1px solid var(--line);padding:10px}
+@media(max-width:900px){.cols{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.cols{grid-template-columns:1fr}.it h3{font-size:1.15rem}}
+</style>
+</head>
+<body>
+<main class="inv">
+<div class="label">Private. For the owner only.</div>
+<h1>Inventory</h1>
+<p class="lede">Everything a person can reach on playsacrament.com, plus what is left over in the project. Nothing has been deleted: anything archived is moved to the archive folder and its old address redirects. This page is for you to go through and tell me what to keep, merge or archive.</p>
+
+<div class="box"><h2>How to read it</h2>
+<ul>
+<li><b>Archive</b> means moving something out of public reach, with its old address redirecting somewhere sensible. It does not mean deleting.</li>
+<li><b>Merge</b> means folding it into something else that does the same job.</li>
+<li>Each item has a "Your decision" box, already set to my recommendation. Change the ones you disagree with, then press <b>Copy my decisions</b> at the bottom and paste the result to me.</li>
+<li>Your choices stay in this browser only. Nothing is sent anywhere.</li>
+</ul></div>
+
+<div class="box"><h2>How this was checked (2026-10-20)</h2>
+<ul>
+<li>Every address was opened in a real browser against the live site, and every link on every page was followed. I also read all the project files.</li>
+<li>"Works" means it loaded without errors, and (where the project has tests for it) the tests pass. It does not mean I used every feature.</li>
+<li><b>I could not verify:</b> the Sacrament table (it needs Google's servers, which my setup cannot reach), the designer sign-in (needs your passphrase), and the playtest signup (submitting would add a real entry).</li>
+<li>I can see what links to a page from inside the site. I cannot see links in other people's messages, other websites or search results, and I cannot see what Google has indexed.</li>
+</ul></div>
+
+<div class="sum"><span><b>55</b> items</span><span><b>0</b> broken</span><span><b>1</b> I could not fully verify</span><span><b>49</b> keep</span><span><b>1</b> merge</span><span><b>4</b> archive</span><span><b>1</b> your call</span></div>
+
+<div class="box"><h2>Decisions so far</h2><ul><li><b>2026-10-20</b> Character sheet built: one sheet over the table and on My heroes, with a gear list file (site/sheet/gear.js) you can edit. The old hero sheet was replaced by it.</li><li><b>2026-10-20</b> Removed the playtest sign-up form from the home page, its thank-you page (/thanks/ now redirects home) and the link to it in the Welcome post. The Newsletter page stays.</li><li><b>2026-10-20</b> Keep: accepted for all 43 items marked Keep. Nothing to do.</li><li><b>2026-10-20</b> Archive: done for the three Archive items (the example blog post, the earlier Basic Rules page, the empty folders). Their old addresses redirect; nothing was deleted.</li><li><b>2026-10-20</b> Your call: kept as they are, on my suggestion: the Sexton's Ledger page, the designer builder, the published library, and the test tables. One item is still open: tidying the 50 branches on GitHub that are already part of the main site (waiting for permission to delete them).</li></ul></div>
+
+<div class="box"><h2>Problems I noticed (not fixed)</h2><ul><li><b>The sitemap is incomplete.</b> It leaves out the Sacrament RPG table (/vtt/), the &quot;A rules check&quot; post and the news posts except the example. It includes the &quot;delete me&quot; example post.</li><li><b>The published ability library is not used by anything.</b> /api/nodes serves a library, but no page reads it (a code comment says two tools do).</li><li><b>The home page footer shows a &quot;Designer&quot; link.</b> It leads to the passphrase page (hidden from search engines, but visible to visitors).</li><li><b>Two old addresses were never pages.</b> /game/ and /hearts/ show &quot;Not found&quot;.</li></ul></div>
+
+<nav class="toc" aria-label="Sections"><a href="#table">The Sacrament RPG Table itself</a><a href="#site-pages">The Sacrament RPG home page and its pages</a><a href="#sacrament">Sacrament, the other game on this site</a><a href="#old-addresses">Old addresses and redirects</a><a href="#designer">Designer tools and data</a><a href="#plumbing">Site plumbing: files that browsers and search engines fetch</a><a href="#repo">In the project files, not on the website</a><a href="#leftovers">Leftovers</a></nav>
+<section class="grp" id="table"><h2>The Sacrament RPG Table itself <span class="n">8</span></h2><p class="intro">The shared table where a GM and players actually play. Anyone who has ever been invited holds a link into this part, so it must keep working at exactly these addresses.</p><article class="it" id="i1" data-id="i1" data-name="The table: make or join a game" data-rec="keep" data-where="/vtt/">
+<h3>The table: make or join a game</h3>
+<p class="addr"><a class="u" href="/vtt/">playsacrament.com/vtt/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The Sacrament RPG Table. The first screen has &quot;Run a table&quot; (for a GM) and &quot;Join a table&quot; (for a player). After that it is the table itself: map, cards, tokens, dice, hearts, turns, scenes.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Tested many times today on the live site, including in phone-sized windows. 24 + 83 + 65 live checks passed.</p></div>
+<div><h4>What links to it</h4><p>The home page buttons and guide. Every invitation link and bookmark people already hold.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> This is the product. It must stay at /vtt/ so existing invitation links and bookmarks keep working.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The table: make or join a game"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i2" data-id="i2" data-name="Invitation links: /vtt/?room=CODE" data-rec="keep" data-where="/vtt/?room=&lt;code&gt;">
+<h3>Invitation links: /vtt/?room=CODE</h3>
+<p class="addr"><a class="u" href="/vtt/?room=ABCDEF">/vtt/?room=&lt;code&gt;</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The link a GM sends a player. It opens the join screen with the table code already filled in. (The example link is a made-up code.)</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Also, any table made during testing is still reachable by its code.</p></div>
+<div><h4>What links to it</h4><p>Nothing on the site. These links live in people's messages and browsers, so there is no way to know how many exist.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Breaking these would strand anyone mid-game. Never change the pattern.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Invitation links: /vtt/?room=CODE"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i3" data-id="i3" data-name="The landing-page buttons: /vtt/?join and /vtt/?run" data-rec="keep" data-where="/vtt/?join and /vtt/?run">
+<h3>The landing-page buttons: /vtt/?join and /vtt/?run</h3>
+<p class="addr"><a class="u" href="/vtt/?join">/vtt/?join and /vtt/?run</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The two buttons on the home page. Same screen as /vtt/, with the join form first or the make-a-table form first.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. They are the same page as /vtt/ with a different starting position.</p></div>
+<div><h4>What links to it</h4><p>home page, the how-to-play guide.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed by the landing page.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The landing-page buttons: /vtt/?join and /vtt/?run"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i4" data-id="i4" data-name="Try it now: /vtt/?try" data-rec="keep" data-where="/vtt/?try">
+<h3>Try it now: /vtt/?try</h3>
+<p class="addr"><span class="u plain">/vtt/?try</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The Try it now button on the home page. It makes a sample table with the visitor as the GM, in one click. Trying again in the same browser opens the same table.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Tested locally (2026-10-21). Not linked here, because opening it makes a table.</p></div>
+<div><h4>What links to it</h4><p>home page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Lets a visitor see the table before inviting anyone.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Try it now: /vtt/?try"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i5" data-id="i5" data-name="GM links: /vtt/?room=CODE#key=…" data-rec="keep" data-where="/vtt/?room=&lt;code&gt;#key=&lt;GM key&gt;">
+<h3>GM links: /vtt/?room=CODE#key=…</h3>
+<p class="addr"><span class="u plain">/vtt/?room=&lt;code&gt;#key=&lt;GM key&gt;</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The link a GM copies from the Table tab to get back to their table on another device or after the browser forgets. It must be kept private: anyone with it can run the table.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Tested locally (2026-10-21).</p></div>
+<div><h4>What links to it</h4><p>Nothing on the site. GMs keep these themselves.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Without it a GM who loses their browser data loses their table. Never change the pattern.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for GM links: /vtt/?room=CODE#key=…"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i6" data-id="i6" data-name="The table's home-screen file: /vtt/manifest.webmanifest" data-rec="keep" data-where="/vtt/manifest.webmanifest">
+<h3>The table's home-screen file: /vtt/manifest.webmanifest</h3>
+<p class="addr"><a class="u" href="/vtt/manifest.webmanifest">/vtt/manifest.webmanifest</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Not a page. It tells a phone how to put the table on its home screen (name, icon, opens at /vtt/).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Tested locally (2026-10-21). Not tried on a real phone.</p></div>
+<div><h4>What links to it</h4><p>The table's page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Lets players keep the table on their phone like an app.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The table's home-screen file: /vtt/manifest.webmanifest"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i7" data-id="i7" data-name="The table's behind-the-scenes service" data-rec="keep" data-where="/.netlify/functions/vtt">
+<h3>The table's behind-the-scenes service</h3>
+<p class="addr"><a class="u" href="/.netlify/functions/vtt">/.netlify/functions/vtt</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Not a page. The table's server: every roll, move and save goes through it. Opening it in a browser shows a short error, which is normal.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works (the table cannot run without it).</p></div>
+<div><h4>What links to it</h4><p>The table's own code.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The table cannot work without it.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The table's behind-the-scenes service"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i8" data-id="i8" data-name="Pictures uploaded to tables: /.netlify/functions/vtt/img/…" data-rec="keep" data-where="/.netlify/functions/vtt/img/&lt;table&gt;/&lt;id&gt;">
+<h3>Pictures uploaded to tables: /.netlify/functions/vtt/img/…</h3>
+<p class="addr"><span class="u plain">/.netlify/functions/vtt/img/&lt;table&gt;/&lt;id&gt;</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Backgrounds and card pictures a GM uploads. Each has a long random address and is stored with its table.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works (tested with uploads on the live site). There is no way to delete a picture.</p></div>
+<div><h4>What links to it</h4><p>Saved tables that use them.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Tables that use a picture would lose it if these went.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Pictures uploaded to tables: /.netlify/functions/vtt/img/…"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="site-pages"><h2>The Sacrament RPG home page and its pages <span class="n">11</span></h2><p class="intro">The landing pages built this week: what it is, how to use it, the blog, newsletter, support and privacy.</p><article class="it" id="i9" data-id="i9" data-name="The game" data-rec="keep" data-where="/the-game/">
+<h3>The game</h3>
+<p class="addr"><a class="u" href="/the-game/">playsacrament.com/the-game/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>What the game is, in a few plain paragraphs.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Waiting for a read-through.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Part of the landing site; needs your text.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The game"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i10" data-id="i10" data-name="The setting" data-rec="keep" data-where="/setting/">
+<h3>The setting</h3>
+<p class="addr"><a class="u" href="/setting/">playsacrament.com/setting/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>An empty page with marked boxes for your setting text.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Entirely placeholders until you write it.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Waiting for you.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The setting"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i11" data-id="i11" data-name="How to play here" data-rec="keep" data-where="/how-to-play/">
+<h3>How to play here</h3>
+<p class="addr"><a class="u" href="/how-to-play/">playsacrament.com/how-to-play/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A plain-English guide to the table for players and GMs.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Written from how the app works today; needs your read-through.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar and home page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Core help page.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for How to play here"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i12" data-id="i12" data-name="News (Sacrament RPG Table)" data-rec="keep" data-where="/news/">
+<h3>News (Sacrament RPG Table)</h3>
+<p class="addr"><a class="u" href="/news/">playsacrament.com/news/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>List of Sacrament RPG Table posts. A new post is one new file.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Your separate blog, as agreed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for News (Sacrament RPG Table)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i13" data-id="i13" data-name="News post: Notes from the Undervaults" data-rec="keep" data-where="/news/notes-from-the-undervaults/">
+<h3>News post: Notes from the Undervaults</h3>
+<p class="addr"><a class="u" href="/news/notes-from-the-undervaults/">playsacrament.com/news/notes-from-the-undervaults/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A first post: a page from the Order of the Vault's ledger, and a word about the table. A placeholder you can keep, change or delete.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>The news list.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Gives the news page something to show, in the world's voice.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for News post: Notes from the Undervaults"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i14" data-id="i14" data-name="News post: The table is open" data-rec="keep" data-where="/news/the-table-is-open/">
+<h3>News post: The table is open</h3>
+<p class="addr"><a class="u" href="/news/the-table-is-open/">playsacrament.com/news/the-table-is-open/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The playtest launch post: the table is in alpha, why it was built (less friction), a thank-you to the game Sacrament is built on, and how to send feedback (email for now).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Published 2026-10-21. The only page allowed to name that game, by your decision.</p></div>
+<div><h4>What links to it</h4><p>The news list.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Calls for playtesters.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for News post: The table is open"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i15" data-id="i15" data-name="Example blog post (delete me)" data-rec="archive" data-where="/news/example-post-delete-me/">
+<h3>Example blog post (delete me)</h3>
+<p class="addr"><a class="u" href="/news/example-post-delete-me/">playsacrament.com/news/example-post-delete-me/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A sample post that explained how to write a post. It said &quot;delete me&quot;.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: moved to archive/old-content/news-example-post.md (nothing deleted). The old address now redirects to the blog list, and it is out of the sitemap.</p></div>
+<div><h4>What links to it</h4><p>Used to be linked from the news list. Nothing links to it now.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Example blog post (delete me)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i16" data-id="i16" data-name="Newsletter signup" data-rec="keep" data-where="/newsletter/">
+<h3>Newsletter signup</h3>
+<p class="addr"><a class="u" href="/newsletter/">playsacrament.com/newsletter/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The signup form with a consent line. It is not connected to anything: it sends nothing.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works as designed (does nothing yet). Tested: sends no data anywhere.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar, footer, privacy page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Stage 2 will connect it.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Newsletter signup"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i17" data-id="i17" data-name="Support" data-rec="keep" data-where="/support/">
+<h3>Support</h3>
+<p class="addr"><a class="u" href="/support/">playsacrament.com/support/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A Donate button that goes to the Ko-fi page (ko-fi.com/sacramentrpg) and a line that running the table costs money.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Donations are handled by Ko-fi; the site only links there.</p></div>
+<div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Donate link added 2026-10-20.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Support"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i18" data-id="i18" data-name="Privacy Policy" data-rec="keep" data-where="/privacy/">
+<h3>Privacy Policy</h3>
+<p class="addr"><a class="u" href="/privacy/">playsacrament.com/privacy/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The privacy policy for the newsletter, the table and donations. Published 2026-10-20 with no gaps left.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. A draft, not yet reviewed. It covers only the Sacrament RPG side of the site.</p></div>
+<div><h4>What links to it</h4><p>Footer of every page, the newsletter form, the Terms of Use.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed before the newsletter goes live.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Privacy Policy"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i19" data-id="i19" data-name="Terms of Use" data-rec="keep" data-where="/terms/">
+<h3>Terms of Use</h3>
+<p class="addr"><a class="u" href="/terms/">playsacrament.com/terms/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The terms of use for the site and the table, in plain English. Published 2026-10-20.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Not reviewed by a lawyer.</p></div>
+<div><h4>What links to it</h4><p>Footer of every page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Every public site should have one.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Terms of Use"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="sacrament"><h2>Sacrament, the other game on this site <span class="n">14</span></h2><p class="intro">The original site: the home page, the Basic Rules, the hero builder, the Sacrament table, the blog and older material.</p><article class="it" id="i20" data-id="i20" data-name="Home page (Sacrament RPG)" data-rec="keep" data-where="/">
+<h3>Home page (Sacrament RPG)</h3>
+<p class="addr"><a class="u" href="/">playsacrament.com/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The front door: &quot;Join a game&quot; and &quot;Run a game&quot;, three short boxes, and a footer with only the Privacy Policy and Terms of Use links (the other footer links were removed on 2026-10-20 while you decide what goes there). It replaced the earlier Sacrament home page on 2026-10-20; that page is kept in archive/old-site/home/ (nothing deleted).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works on laptop and phone. Built from content/landing/.</p></div>
+<div><h4>What links to it</h4><p>Everywhere (the site's logo links here).</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The site's front door.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Home page (Sacrament RPG)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i21" data-id="i21" data-name="&quot;You are counted&quot; (after signup)" data-rec="archive" data-where="/thanks/">
+<h3>&quot;You are counted&quot; (after signup)</h3>
+<p class="addr"><a class="u" href="/thanks/">playsacrament.com/thanks/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The thank-you page after the playtest signup. Removed with the form.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> REMOVED 2026-10-20 at your request, together with the playtest signup form on the home page. The old address redirects to the home page. Earlier submissions stay in Netlify (Forms).</p></div>
+<div><h4>What links to it</h4><p>Nothing.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for &quot;You are counted&quot; (after signup)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i22" data-id="i22" data-name="The Basic Rules" data-rec="keep" data-where="/rules/">
+<h3>The Basic Rules</h3>
+<p class="addr"><a class="u" href="/rules/">playsacrament.com/rules/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The current Sacrament rules (the Hearts version), with a worked example of play.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>Home page, navigation bar on most pages, blog posts, Resources.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Core Sacrament page.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The Basic Rules"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i23" data-id="i23" data-name="Resources" data-rec="keep" data-where="/resources/">
+<h3>Resources</h3>
+<p class="addr"><a class="u" href="/resources/">playsacrament.com/resources/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Downloads and links: the Sacrament RPG Table, brand kit, the Sexton's Ledger adventure, and &quot;coming soon&quot; items.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>Navigation bar, home page footer.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Index of extras.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Resources"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i24" data-id="i24" data-name="Brand kit" data-rec="keep" data-where="/brand/">
+<h3>Brand kit</h3>
+<p class="addr"><a class="u" href="/brand/">playsacrament.com/brand/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Logo, colours, typefaces and downloads for Sacrament.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>Resources page only.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Useful for anyone writing about the game.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Brand kit"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i25" data-id="i25" data-name="The Sexton's Ledger: a playtest" data-rec="keep" data-where="/adventure/">
+<h3>The Sexton's Ledger: a playtest</h3>
+<p class="addr"><a class="u" href="/adventure/">playsacrament.com/adventure/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A written-up playtest of a short adventure, played with the earlier rules, with what broke and how the rules changed.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Describes the earlier rules, not the current ones.</p></div>
+<div><h4>What links to it</h4><p>Resources page and one blog post.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept as a story. Its text describes the earlier rules, not the current ones.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The Sexton's Ledger: a playtest"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i26" data-id="i26" data-name="Updates (the Sacrament blog)" data-rec="keep" data-where="/blog/">
+<h3>Updates (the Sacrament blog)</h3>
+<p class="addr"><a class="u" href="/blog/">playsacrament.com/blog/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The list of Sacrament updates, plus a page per post: Welcome, The rules after the first playtest, and A rules check.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. One post (&quot;A rules check&quot;) is missing from the sitemap, so search engines may not find it.</p></div>
+<div><h4>What links to it</h4><p>Navigation bar, home page footer, every blog page.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Your Sacrament blog.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Updates (the Sacrament blog)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i27" data-id="i27" data-name="Blog post: Welcome" data-rec="keep" data-where="/blog/welcome/">
+<h3>Blog post: Welcome</h3>
+<p class="addr"><a class="u" href="/blog/welcome/">playsacrament.com/blog/welcome/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The first update. Mentions the old VTT features.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Some of what it says may be out of date.</p></div>
+<div><h4>What links to it</h4><p>The blog list and other posts.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: Welcome"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i28" data-id="i28" data-name="Blog post: The rules after the first playtest" data-rec="keep" data-where="/blog/rules-after-the-first-playtest/">
+<h3>Blog post: The rules after the first playtest</h3>
+<p class="addr"><a class="u" href="/blog/rules-after-the-first-playtest/">playsacrament.com/blog/rules-after-the-first-playtest/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>An update on rule changes after the Sexton's Ledger playtest.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>The blog list, other posts.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: The rules after the first playtest"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i29" data-id="i29" data-name="Blog post: A rules check" data-rec="keep" data-where="/blog/a-rules-check/">
+<h3>Blog post: A rules check</h3>
+<p class="addr"><a class="u" href="/blog/a-rules-check/">playsacrament.com/blog/a-rules-check/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>An update about running one adventure 1,500 times in a simulator.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Missing from the sitemap.</p></div>
+<div><h4>What links to it</h4><p>The blog list, other posts.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: A rules check"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i30" data-id="i30" data-name="My heroes (hero builder and character sheet)" data-rec="keep" data-where="/character/">
+<h3>My heroes (hero builder and character sheet)</h3>
+<p class="addr"><a class="u" href="/character/">playsacrament.com/character/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Builds and keeps heroes in this browser using the same character sheet that opens over the table: scores, Effort, gear from the gear list, grimoires, and free text. Heroes can be brought to a table.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> REBUILT 2026-10-20 on the new sheet. The old sheet, its item-use panel and its solo dying and Horror controls were retired; the heroes people had saved are copied in the first time the page opens (the old copy is left alone).</p></div>
+<div><h4>What links to it</h4><p>Home page (footer), Rules, Resources, the table (Bring a hero), the Welcome post.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Core Sacrament tool.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for My heroes (hero builder and character sheet)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i31" data-id="i31" data-name="Characters from the earlier rules" data-rec="merge" data-where="/legacy/">
+<h3>Characters from the earlier rules</h3>
+<p class="addr"><a class="u" href="/legacy/">playsacrament.com/legacy/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Used to be its own page for bringing an old-rules Sacrament character over. It is now a section at the bottom of the hero builder (/character/), shown only when this browser holds an old character.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> MERGED 2026-10-20: the old page was moved to archive/old-site/legacy/ (nothing deleted) and /legacy/ now redirects to the hero builder. The old rules' script files stay in /legacy/ because the designer's builder and the library function still use them.</p></div>
+<div><h4>What links to it</h4><p>Nothing links to the old address any more; the hero builder and the Basic Rules page link to the new section.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-merge">Merge</span> Done, as you decided.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Characters from the earlier rules"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i32" data-id="i32" data-name="The earlier Basic Rules" data-rec="archive" data-where="/legacy/rules/">
+<h3>The earlier Basic Rules</h3>
+<p class="addr"><a class="u" href="/legacy/rules/">playsacrament.com/legacy/rules/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A copy of the Basic Rules from before the Hearts rewrite (ability trees and twelve boxes). It was broken: its styling and navigation files used the wrong relative address.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: moved to archive/old-site/legacy-rules/ (nothing deleted). The old address now redirects to /rules/. The two links to it (the Basic Rules footer and the earlier-characters page) were reworded.</p></div>
+<div><h4>What links to it</h4><p>Used to be linked from the Basic Rules footer and the earlier-characters page. Nothing links to it now.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The earlier Basic Rules"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i33" data-id="i33" data-name="Page not found (404)" data-rec="keep" data-where="/404.html">
+<h3>Page not found (404)</h3>
+<p class="addr"><a class="u" href="/404.html">playsacrament.com/404.html</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>What people see for an address that does not exist. Hidden from search engines.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Also readable directly at this address.</p></div>
+<div><h4>What links to it</h4><p>Automatic.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Page not found (404)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="old-addresses"><h2>Old addresses and redirects <span class="n">3</span></h2><p class="intro">Addresses that exist only to send people somewhere else, or that people might guess.</p><article class="it" id="i34" data-id="i34" data-name="/table and /tools (and anything under them)" data-rec="keep" data-where="/table, /table/…, /tools, /tools/…">
+<h3>/table and /tools (and anything under them)</h3>
+<p class="addr"><a class="u" href="/table">/table, /table/…, /tools, /tools/…</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Old addresses from an earlier version of the site. They send visitors to the home page (the table they used to lead to was retired).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> Work (they land on the home page).</p></div>
+<div><h4>What links to it</h4><p>Nothing on the site. Old bookmarks or posts elsewhere may use them.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Costs nothing and protects old links.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for /table and /tools (and anything under them)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i35" data-id="i35" data-name="sacramentrpg.netlify.app and www.playsacrament.com" data-rec="keep" data-where="sacramentrpg.netlify.app/…  and  www.playsacrament.com/…">
+<h3>sacramentrpg.netlify.app and www.playsacrament.com</h3>
+<p class="addr"><span class="u plain">sacramentrpg.netlify.app/…  and  www.playsacrament.com/…</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Alternative web addresses of the same site. They redirect to playsacrament.com.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> Set up in the site's settings file (not tested from here, because my test setup cannot reach the Netlify address).</p></div>
+<div><h4>What links to it</h4><p>Nothing. People may have used them.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Protects old links.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for sacramentrpg.netlify.app and www.playsacrament.com"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i36" data-id="i36" data-name="/game/ and /hearts/" data-rec="keep" data-where="/game/ and /hearts/">
+<h3>/game/ and /hearts/</h3>
+<p class="addr"><a class="u" href="/game/">/game/ and /hearts/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>/game/ is a folder of code files used by the Sacrament table and hero builder, with no page of its own. /hearts/ is nothing (empty folders only on this computer).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge dim">Nothing there</span> Both show &quot;Not found&quot;, which is right.</p></div>
+<div><h4>What links to it</h4><p>Nothing links to them as pages.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The code in /game/ is needed; there is nothing to do about the empty address.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for /game/ and /hearts/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="designer"><h2>Designer tools and data <span class="n">2</span></h2><p class="intro">Behind-the-scenes tools for the people writing the rules.</p><article class="it" id="i37" data-id="i37" data-name="Node builder (designers only)" data-rec="keep" data-where="/builder/">
+<h3>Node builder (designers only)</h3>
+<p class="addr"><a class="u" href="/builder/">playsacrament.com/builder/</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A passphrase-protected tool where the rules designers edit the ability library and publish it.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge warn">Locked</span> Shows the sign-in page as it should. I did not sign in (that needs your passphrase, and publishing overwrites the live library), so I could not test the tool itself.</p></div>
+<div><h4>What links to it</h4><p>A small &quot;Designer&quot; link in the home page footer (marked &quot;nofollow&quot;, and blocked in robots.txt).</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept: you still use it for the ability library. Its publish step is still untested.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Node builder (designers only)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i38" data-id="i38" data-name="Published ability library: /api/nodes" data-rec="keep" data-where="/api/nodes">
+<h3>Published ability library: /api/nodes</h3>
+<p class="addr"><a class="u" href="/api/nodes">playsacrament.com/api/nodes</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The data the node builder last published, as raw text. A library is currently published.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works, but nothing on the site reads it any more: the hero builder and tables use their built-in data.</p></div>
+<div><h4>What links to it</h4><p>Nothing (the code comment says the hero builder and VTT read it; they do not).</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept as it is. Nothing reads it today; it only matters if the builder is used again.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Published ability library: /api/nodes"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="plumbing"><h2>Site plumbing: files that browsers and search engines fetch <span class="n">8</span></h2><p class="intro">Not pages anyone visits on purpose, but they are public and other things depend on them.</p><article class="it" id="i39" data-id="i39" data-name="Sitemap" data-rec="keep" data-where="/sitemap.xml">
+<h3>Sitemap</h3>
+<p class="addr"><a class="u" href="/sitemap.xml">playsacrament.com/sitemap.xml</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The list of pages offered to search engines.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works but incomplete: it leaves out /vtt/, the &quot;A rules check&quot; post and the news posts other than the example.</p></div>
+<div><h4>What links to it</h4><p>robots.txt.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needs updating when pages are archived.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Sitemap"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i40" data-id="i40" data-name="robots.txt" data-rec="keep" data-where="/robots.txt">
+<h3>robots.txt</h3>
+<p class="addr"><a class="u" href="/robots.txt">playsacrament.com/robots.txt</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Tells search engines to stay out of /builder/ and points to the sitemap.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>What links to it</h4><p>Search engines.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for robots.txt"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i41" data-id="i41" data-name="Sacrament updates feed (RSS)" data-rec="keep" data-where="/blog/feed.xml">
+<h3>Sacrament updates feed (RSS)</h3>
+<p class="addr"><a class="u" href="/blog/feed.xml">playsacrament.com/blog/feed.xml</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>A feed people can subscribe to for new Sacrament posts.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. The news has no feed yet.</p></div>
+<div><h4>What links to it</h4><p>Blog pages.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed by subscribers.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Sacrament updates feed (RSS)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i42" data-id="i42" data-name="Web app manifest, icons and sharing image" data-rec="keep" data-where="/site.webmanifest, /favicon.ico, /favicon.svg, /icon-192.png, /icon-512.png, /apple-touch-icon.png, /og-image.png">
+<h3>Web app manifest, icons and sharing image</h3>
+<p class="addr"><a class="u" href="/site.webmanifest">/site.webmanifest, /favicon.ico, /favicon.svg, /icon-192.png, /icon-512.png, /apple-touch-icon.png, /og-image.png</a></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The site's icons, the &quot;add to home screen&quot; description and the image shown when a link is shared.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> All of these load and work.</p></div>
+<div><h4>What links to it</h4><p>Every page's header.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Web app manifest, icons and sharing image"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i43" data-id="i43" data-name="Shared styling and scripts" data-rec="keep" data-where="/theme.css, /site.css, /blog.css, /landing.css, /nav.js, /app.js, /cards.js, /landing.js">
+<h3>Shared styling and scripts</h3>
+<p class="addr"><span class="u plain">/theme.css, /site.css, /blog.css, /landing.css, /nav.js, /app.js, /cards.js, /landing.js</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The look and the top navigation bar used by the pages, the home-page signup script, the item-card drawing, the (currently empty) donate switch, and the Sacrament RPG newsletter form script.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> All of these load and work.</p></div>
+<div><h4>What links to it</h4><p>Pages.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Shared styling and scripts"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i44" data-id="i44" data-name="Hero-sheet and rules-page code" data-rec="keep" data-where="/game/*.js, /legacy/*.js, /character/jspdf.umd.min.js">
+<h3>Hero-sheet and rules-page code</h3>
+<p class="addr"><span class="u plain">/game/*.js, /legacy/*.js, /character/jspdf.umd.min.js</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The rules engine and screens for the Sacrament table, the hero builder and the old-character page, plus a PDF-making library.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> All of these load and work.</p></div>
+<div><h4>What links to it</h4><p>The Sacrament pages.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Hero-sheet and rules-page code"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i45" data-id="i45" data-name="Sacrament RPG Table screen and rules code" data-rec="keep" data-where="/vtt/vtt.js, /vtt/vtt.css, /vtt/rules.js">
+<h3>Sacrament RPG Table screen and rules code</h3>
+<p class="addr"><span class="u plain">/vtt/vtt.js, /vtt/vtt.css, /vtt/rules.js</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The files that make the Sacrament RPG Table run in the browser.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> All of these load and work.</p></div>
+<div><h4>What links to it</h4><p>The table.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Sacrament RPG Table screen and rules code"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i46" data-id="i46" data-name="Artwork, fonts and brand downloads" data-rec="keep" data-where="/art/*, /fonts/*, /brand/assets/*, /vtt/stone.webp">
+<h3>Artwork, fonts and brand downloads</h3>
+<p class="addr"><span class="u plain">/art/*, /fonts/*, /brand/assets/*, /vtt/stone.webp</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Pictures on the home page, the typefaces, the logo files people can download, and the default stone map background used by the sample tables.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> All of these load and work.</p></div>
+<div><h4>What links to it</h4><p>Home page, Brand kit, tables.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Artwork, fonts and brand downloads"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="repo"><h2>In the project files, not on the website <span class="n">5</span></h2><p class="intro">These are not reachable by website visitors (only the &quot;site&quot; folder is published). They are listed because you asked for anything left over. If the project on GitHub is public, anyone can read these.</p><article class="it" id="i47" data-id="i47" data-name="Table notes: docs/vtt/" data-rec="keep" data-where="docs/vtt">
+<h3>Table notes: docs/vtt/</h3>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/docs/vtt">docs/vtt</a> <span class="small">(project files; opens on GitHub)</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>How the Sacrament RPG Table works (README), and the record of what was tested live.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current and accurate as of this week.</p></div>
+<div><h4>What links to it</h4><p>Mentioned by CLAUDE.md and the project README.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The project's memory.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Table notes: docs/vtt/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i48" data-id="i48" data-name="Sacrament Hearts design notes: docs/hearts/" data-rec="keep" data-where="docs/hearts">
+<h3>Sacrament Hearts design notes: docs/hearts/</h3>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/docs/hearts">docs/hearts</a> <span class="small">(project files; opens on GitHub)</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Notes behind the Sacrament Hearts rules: audit, rules, item library, adventure, validation.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Not public on the website.</p></div>
+<div><h4>What links to it</h4><p>Project README.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Design history for Sacrament.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Sacrament Hearts design notes: docs/hearts/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i49" data-id="i49" data-name="Website text: content/" data-rec="keep" data-where="content">
+<h3>Website text: content/</h3>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/content">content</a> <span class="small">(project files; opens on GitHub)</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The text of the Sacrament blog (content/blog) and of the Sacrament RPG landing pages and blog (content/landing). Edited by hand; built into pages.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current.</p></div>
+<div><h4>What links to it</h4><p>The build.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Where you write.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Website text: content/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i50" data-id="i50" data-name="Designer tool source: private/builder.html" data-rec="keep" data-where="private/builder.html">
+<h3>Designer tool source: private/builder.html</h3>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/private/builder.html">private/builder.html</a> <span class="small">(project files; opens on GitHub)</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>The source of the node builder, packed into the protected builder at build time.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current.</p></div>
+<div><h4>What links to it</h4><p>The build.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed while the builder exists.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Designer tool source: private/builder.html"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i51" data-id="i51" data-name="Check and test tools: test/, e2e/, scripts/" data-rec="keep" data-where="scripts">
+<h3>Check and test tools: test/, e2e/, scripts/</h3>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/scripts">scripts</a> <span class="small">(project files; opens on GitHub)</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Unit tests, browser tests and scripts (build, live check, latency, screenshots, simulators).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current. A few scripts (screenshots, latency) are one-off tools.</p></div>
+<div><h4>What links to it</h4><p>CLAUDE.md.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Keeps the project honest.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Check and test tools: test/, e2e/, scripts/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+<section class="grp" id="leftovers"><h2>Leftovers <span class="n">4</span></h2><p class="intro">Things left behind by testing and by earlier work.</p><article class="it" id="i52" data-id="i52" data-name="GitHub branches" data-rec="decide" data-where="62 branches on GitHub">
+<h3>GitHub branches</h3>
+<p class="addr"><span class="u plain">62 branches on GitHub</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>62 working branches. 50 are already part of the main site. 12 hold work that is not in the main site (7 are single changes made by earlier sessions, the rest are older feature branches).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> None affect the live site.</p></div>
+<div><h4>What links to it</h4><p>GitHub only.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-decide">Your call</span> Safe to tidy later: delete the 50 merged ones, and look at the 12 before deciding.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for GitHub branches"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i53" data-id="i53" data-name="Test tables on the live storage" data-rec="keep" data-where="Dozens of tables, saved on Netlify">
+<h3>Test tables on the live storage</h3>
+<p class="addr"><span class="u plain">Dozens of tables, saved on Netlify</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Every disposable table made while testing, including uploaded pictures, is still stored. They are reachable only by their codes. The storage has no delete.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Cannot be removed with the current tools.</p></div>
+<div><h4>What links to it</h4><p>Nothing.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept. Harmless apart from storage; a deletion tool would be a separate piece of work if you ever want them gone.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Test tables on the live storage"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i54" data-id="i54" data-name="Empty folders: site/hearts/" data-rec="archive" data-where="site/hearts/character, site/hearts/play">
+<h3>Empty folders: site/hearts/</h3>
+<p class="addr"><span class="u plain">site/hearts/character, site/hearts/play</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Two empty folders left over on this computer from an earlier version. They were never in the project and never published.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> REMOVED 2026-10-20: they held nothing, so there was nothing to archive; the empty folders were removed from this computer.</p></div>
+<div><h4>What links to it</h4><p>Nothing.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for Empty folders: site/hearts/"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article>
+<article class="it" id="i55" data-id="i55" data-name="The example blog post and other placeholders" data-rec="keep" data-where="Marked placeholders">
+<h3>The example blog post and other placeholders</h3>
+<p class="addr"><span class="u plain">Marked placeholders</span></p>
+<div class="cols">
+<div><h4>What it is</h4><p>Things on the new pages that are deliberately unfinished: &quot;YOUR TEXT HERE&quot; boxes, the contact email. (The donate link was filled in on 2026-10-20.)</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Listed in content/landing/README.md.</p></div>
+<div><h4>What links to it</h4><p>The Sacrament RPG pages.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Waiting for you.</p>
+<label class="pick">Your decision <select class="decide" aria-label="Your decision for The example blog post and other placeholders"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
+</div>
+</article></section>
+</main>
+<div class="bar" id="bar"><button class="btn" id="copy" type="button">Copy my decisions</button><span class="small" id="copied" role="status"></span><span class="small" id="changes"></span></div>
+<script>
+(function () {
+  var KEY = 'inventory-decisions-v1', saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  var cards = [].slice.call(document.querySelectorAll('.it'));
+  function note() { var n = cards.filter(function (c) { return c.classList.contains('changed'); }).length; document.getElementById('changes').textContent = n ? n + ' changed from my recommendation' : 'all set to my recommendations'; }
+  cards.forEach(function (c) {
+    var sel = c.querySelector('select'), rec = c.getAttribute('data-rec'), def = rec === 'decide' ? 'later' : rec;
+    sel.value = saved[c.id] || def;
+    function mark() { c.classList.toggle('changed', sel.value !== def); }
+    mark();
+    sel.addEventListener('change', function () { saved[c.id] = sel.value; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} mark(); note(); });
+  });
+  note();
+  function text() {
+    var by = { keep: [], merge: [], archive: [], later: [] };
+    cards.forEach(function (c) { by[c.querySelector('select').value].push('- ' + c.getAttribute('data-name') + (c.getAttribute('data-where') ? '  (' + c.getAttribute('data-where') + ')' : '')); });
+    return ['KEEP', 'MERGE', 'ARCHIVE', 'DECIDE LATER'].map(function (h, i) { var k = ['keep', 'merge', 'archive', 'later'][i]; return h + ' (' + by[k].length + ')\n' + by[k].join('\n'); }).join('\n\n');
+  }
+  document.getElementById('copy').addEventListener('click', function () {
+    var t = text(), msg = document.getElementById('copied');
+    function fallback() { var ta = document.createElement('textarea'); ta.className = 'out'; ta.value = t; ta.setAttribute('aria-label', 'Your decisions'); document.querySelector('.inv').appendChild(ta); ta.select(); msg.textContent = 'Select all of the text in the box at the bottom of the page and copy it.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { msg.textContent = 'Copied. Paste it into your reply.'; }, fallback); else fallback();
+  });
+})();
+</script>
+</body>
+</html>
