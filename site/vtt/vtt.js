@@ -1062,7 +1062,18 @@
     if (!d.moved && Math.abs(dx) + Math.abs(dy) < 5) return; d.moved = true; d.el.classList.add('drag');
     d.x = Math.max(0, Math.min(100, d.ox + 100 * dx / r.width)); d.y = Math.max(0, Math.min(100, d.oy + 100 * dy / r.height)); d.el.style.left = d.x + '%'; d.el.style.top = d.y + '%';
   });
-  function endPointer() {
+  function endPointer(ev) {
+    // A cancelled pointer gesture (lost capture, interrupted touch, OS gesture)
+    // must not commit a token move or a partially drawn line.
+    if (ev && ev.type === 'pointercancel') {
+      UI.draw = null; UI.pointing = false;
+      var cancelled = UI.drag; UI.drag = null;
+      if (cancelled) { cancelled.el.classList.remove('drag'); cancelled.el._h = null; }
+      var live = $('ink').querySelector('polyline.live'); if (live) live.remove();
+      $('ink')._h = null;
+      render();
+      return;
+    }
     if (UI.draw) { var pts = UI.draw; UI.draw = null; if (pts.length > 1) { var step = Math.ceil(pts.length / 150); pts = pts.filter(function (p, i) { return i % step === 0 || i === pts.length - 1; }); send({ type: 'draw', pts: pts, color: '#e0b040' }, null, 'd'); } var pl = $('ink').querySelector('polyline.live'); if (pl) pl.remove(); return; }
     $('ink')._h = null;   /* the line being drawn was added by hand: the next drawing of the ink replaces it */
     UI.pointing = false; var d = UI.drag; if (!d) return; UI.drag = null; d.el.classList.remove('drag'); d.el._h = null;
