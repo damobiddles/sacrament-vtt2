@@ -47,3 +47,89 @@
 .sh-ht{position:relative;display:inline-block;width:calc(var(--hs) * var(--k));height:calc(var(--hs) * .92 * var(--k))}
 .sh-ht svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .sh-ht .bg path{fill:#0007;stroke:var(--blood-hi);stroke-width:1.4;stroke-linejoin:round}.sh-ht .fg path{fill:var(--blood-hi);stroke:var(--blood-hi);stroke-width:1.4;stroke-linejoin:round}
+
+
+/* LIGHT CHARACTER SHEET — parchment and botanical ink.
+   Scoped to the hero sheet only; VTT, loot designer and website retain their dark theme. */
+:is(#sheetOverlay, #sheetHere) {
+  --bg:#f5f0e5; --bg2:#fffcf5; --fg:#292d29; --dim:#596258;
+  --line:#d9d0bf; --edge:#9a9e8c;
+  --blood:#783c44; --blood-hi:#9b4c59; --on-blood:#fff9ee;
+  --candle:#635334; --verdigris:#286b60; --verdigris-deep:#b9d3c9;
+  --indigo:#414f78; --indigo-deep:#d9e0ed;
+  color:var(--fg); color-scheme:light;
+}
+#sheetOverlay { background:var(--bg); }
+:is(#sheetOverlay, #sheetHere) .sheet-body { max-width:1200px; padding:16px clamp(12px,2.5vw,28px) 48px; font-size:16px; line-height:1.5; }
+#sheetOverlay .sheet-body { padding-top:0; }
+:is(#sheetOverlay, #sheetHere) .sh-head {
+  background:var(--bg); border-bottom:2px solid #bdb19d;
+  padding:14px 2px 12px; gap:8px 16px; margin-bottom:12px;
+}
+:is(#sheetOverlay, #sheetHere) .sh-head h2 { font-size:clamp(1.35rem,2.4vw,1.85rem); line-height:1.25; color:#263b35; }
+:is(#sheetOverlay, #sheetHere) .sh-sub { display:inline-block; font-size:.78rem; font-weight:400; color:var(--dim); }
+:is(#sheetOverlay, #sheetHere) .sh-live { background:#e4f0e8; color:#255c4c; border-color:#9abbaa; border-radius:3px; padding:5px 9px; }
+:is(#sheetOverlay, #sheetHere) .sh-msg:not(:empty) { background:#f8e8e1; color:#6b302e; border-left-color:#a84e46; border-radius:0 4px 4px 0; }
+:is(#sheetOverlay, #sheetHere) .sh-cols { gap:0 clamp(14px,2.3vw,26px); grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; }
+:is(#sheetOverlay, #sheetHere) .sh-sec {
+  background:var(--bg2); border:1px solid var(--line); border-radius:7px;
+  box-shadow:0 2px 8px #382c1809; padding:clamp(14px,1.7vw,20px);
+  margin:0 0 16px;
+}
+:is(#sheetOverlay, #sheetHere) .sh-sec h3 { color:#354c42; border-bottom-color:#ded7c9; font-size:1.13rem; padding-bottom:10px; margin-bottom:12px; line-height:1.3; }
+:is(#sheetOverlay, #sheetHere) .sh-sec h4 { color:#4e584d; margin:16px 0 7px; }
+:is(#sheetOverlay, #sheetHere) .sh-row { gap:10px 14px; }
+:is(#sheetOverlay, #sheetHere) .sh-f { gap:6px; margin-top:8px; font-size:.74rem; letter-spacing:.07em; color:#4e5b51; min-width:0; }
+:is(#sheetOverlay, #sheetHere) .sh-f :is(input,textarea,select) {
+  background:#fffefa; color:#262e28; border:1px solid #b6b6a8;
+  border-radius:5px; min-height:42px; padding:9px 11px; line-height:1.45;
+}
+:is(#sheetOverlay, #sheetHere) .sh-f textarea { min-height:76px; resize:vertical; }
+:is(#sheetOverlay, #sheetHere) .sh-f :is(input,textarea,select):hover { border-color:#697e6d; }
+:is(#sheetOverlay, #sheetHere) :is(button,input,select,textarea):focus-visible {
+  outline:3px solid #37796b; outline-offset:2px;
+}
+:is(#sheetOverlay, #sheetHere) .sh-stat { background:#f2eee4; border:1px solid #d3cbbb; border-radius:5px; box-shadow:none; padding:9px 11px; min-width:74px; }
+:is(#sheetOverlay, #sheetHere) .sh-stat b { color:#354d42; }
+:is(#sheetOverlay, #sheetHere) .sh-stat small { color:#526153; }
+:is(#sheetOverlay, #sheetHere) .sh-step { gap:5px; }
+:is(#sheetOverlay, #sheetHere) .sh-step button,
+:is(#sheetOverlay, #sheetHere) .sh-b {
+  background:#f8f6ef; color:#35433a; border:1px solid #aeb2a2;
+  border-radius:5px; min-height:42px;
+}
+:is(#sheetOverlay, #sheetHere) .sh-b { padding:9px 12px; letter-spacing:.06em; line-height:1.3; }
+:is(#sheetOverlay, #sheetHere) :is(.sh-step button,.sh-b):hover:not(:disabled) { background:#e8eee7; border-color:#557d6e; }
+:is(#sheetOverlay, #sheetHere) .sh-b.go,
+:is(#sheetOverlay, #sheetHere) .sh-b.use:not(.dim) { background:#783c44; border-color:#783c44; color:#fff9ee; }
+:is(#sheetOverlay, #sheetHere) :is(.sh-b.go,.sh-b.use:not(.dim)):hover:not(:disabled) { background:#65313b; border-color:#65313b; }
+:is(#sheetOverlay, #sheetHere) .sh-b.use.dim { background:#eeeae1; color:#5e655d; }
+:is(#sheetOverlay, #sheetHere) .sh-def { color:#525d52; margin-left:auto; }
+:is(#sheetOverlay, #sheetHere) .sh-def b { color:#354d42; }
+:is(#sheetOverlay, #sheetHere) .sh-ht .bg path { fill:#f0dcd6; stroke:#b77c77; }
+:is(#sheetOverlay, #sheetHere) .sh-ht .fg path { fill:#9b4c59; stroke:#9b4c59; }
+:is(#sheetOverlay, #sheetHere) .sh-item { gap:14px; padding:12px 0; border-color:#e1d9cb; align-items:flex-start; }
+:is(#sheetOverlay, #sheetHere) .sh-item > :first-child { min-width:0; }
+:is(#sheetOverlay, #sheetHere) .sh-does,
+:is(#sheetOverlay, #sheetHere) .sh-note,
+:is(#sheetOverlay, #sheetHere) .sh-eff,
+:is(#sheetOverlay, #sheetHere) .sh-flav { color:#596258; line-height:1.5; }
+:is(#sheetOverlay, #sheetHere) .sh-pill { background:#f1eee6; color:#525b51; border-color:#cbc8bb; border-radius:3px; padding:3px 6px; line-height:1.3; }
+:is(#sheetOverlay, #sheetHere) .sh-pill.tempt { background:#f3e9f1; border-color:#a97e9d; color:#70436b; }
+:is(#sheetOverlay, #sheetHere) .sh-supply { color:#596258; border-color:#b6b6a8; border-radius:4px; }
+:is(#sheetOverlay, #sheetHere) .sh-add { padding-top:8px; }
+@media(max-width:850px) {
+  :is(#sheetOverlay, #sheetHere) .sh-cols { grid-template-columns:minmax(0,1fr); }
+  :is(#sheetOverlay, #sheetHere) .sh-sec { margin-bottom:12px; }
+}
+@media(max-width:500px) {
+  :is(#sheetOverlay, #sheetHere) .sheet-body { padding:10px 10px 34px; }
+  #sheetOverlay .sheet-body { padding-top:0; }
+  :is(#sheetOverlay, #sheetHere) .sh-head { padding:12px 2px; }
+  :is(#sheetOverlay, #sheetHere) .sh-head h2 { flex-basis:100%; }
+  :is(#sheetOverlay, #sheetHere) .sh-sec { padding:13px 12px; }
+  :is(#sheetOverlay, #sheetHere) .sh-f { flex-basis:100%; }
+  :is(#sheetOverlay, #sheetHere) .sh-stat { min-width:65px; padding:8px; }
+  :is(#sheetOverlay, #sheetHere) .sh-item { flex-wrap:wrap; }
+  :is(#sheetOverlay, #sheetHere) .sh-btns { flex-direction:row; flex-wrap:wrap; }
+}

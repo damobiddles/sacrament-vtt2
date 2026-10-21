@@ -70,3 +70,11 @@
 @media(prefers-reduced-motion:reduce) {
   #app button, #entry button, #app select, #app input, #entry input { transition:none; }
 }
+
+/* Always-available, unobtrusive route back to the main website. */
+.vtt-home-link { display:inline-flex; align-items:center; justify-content:center; gap:5px; min-height:36px; padding:5px 10px; border:1px solid var(--line); border-radius:5px; color:var(--fg); background:var(--bg2); font:600 .76rem var(--label, sans-serif); letter-spacing:.025em; text-decoration:none; white-space:nowrap; }
+.vtt-home-link:hover { color:var(--candle); border-color:var(--candle); background:var(--bg); }
+.vtt-home-link:focus-visible { outline:2px solid var(--candle); outline-offset:2px; }
+#top .vtt-home-table { margin-left:auto; flex-shrink:0; }
+#entry .vtt-home-entry { margin-bottom:14px; }
+@media(max-width:600px) { #top .vtt-home-table { min-height:32px; padding:4px 7px; font-size:.7rem; } }

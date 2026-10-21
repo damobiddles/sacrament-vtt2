@@ -591,7 +591,7 @@
     h += '<label>Name<input data-edit="name" data-id="' + id + '" value="' + esc(c.name) + '" maxlength="60"></label>' +
       '<label>Description (players see this)<textarea rows="3" data-edit="desc" data-id="' + id + '" maxlength="2000">' + esc(c.desc) + '</textarea></label>' +
       '<label>Private notes (only you see these)<textarea rows="3" data-edit="gmNotes" data-id="' + id + '" maxlength="4000">' + esc(c.gmNotes || '') + '</textarea></label>' +
-      '<label>Picture address (optional)<input data-edit="img" data-id="' + id + '" value="' + esc(c.img) + '" placeholder="https://…"></label><label>Or upload a picture<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="card" data-id="' + id + '"></label>';
+      '<label>Picture address (optional)<input data-edit="img" data-id="' + id + '" value="' + esc(c.img) + '" placeholder="https://…"></label>';
     h += '<h4>Numbers</h4>' + numbersBlock(c) + '<div class="row">' + (!c.hp ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="hp">Add HP</button>' : '') + (!c.progress ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="progress">Add an Effort bar</button>' : '') + (!c.timer ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="timer">Add a timer</button>' : '') +
       (!pc && (c.hp || c.progress || c.timer) ? '<button class="btn small ' + (c.hideNumbers ? 'on' : '') + '" data-do="hideNumbers" data-id="' + id + '" aria-pressed="' + !!c.hideNumbers + '" title="Players see the card but not its numbers">' + (c.hideNumbers ? 'Numbers hidden from players' : 'Hide the numbers from players') + '</button>' : '') + '</div>';
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId];
@@ -811,11 +811,10 @@
         (ask ? '<span class="q" role="status">No item? <button class="chip" data-do="roll" data-stat="' + ask + '" data-noitem="1">Roll ' + ask + ' with no item</button></span>' : '<span class="note">No item? Roll a stat.</span>') + '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
-    h += '<div class="opt"><button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>' + (usable.length ? '<button class="chip" data-do="toggle" data-key="items" aria-expanded="' + !!UI.optItems + '" title="Use a weapon, spell or tool">Items</button>' : '') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
+    h += '<div class="opt"><button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>' + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
       (UI.optMore ? '<div class="opt row2"><button class="chip" data-do="toggle" data-key="effort" aria-expanded="' + !!UI.optEffort + '">Effort</button><button class="chip" data-do="toggle" data-key="dice" aria-expanded="' + !!UI.optDice + '">My dice</button></div>' : '');
     var gear = cardList().filter(function (c) { return c.owner && (G ? false : c.owner === S.you.pid); });
     if (gear.length) h += '<div class="gear"><span class="note">Gear</span>' + gear.map(function (c) { return '<button class="chip" data-do="select" data-id="' + c.id + '">' + esc(c.name) + '</button>'; }).join('') + '</div>';
-    if (UI.optItems && usable.length && !foe) h += '<div class="efs row2" role="group" aria-label="Use an item"><span class="note">Use an item (click the thing you are aiming at first):</span>' + itemButtons(usable) + '</div>';
     if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Effort bonuses"><span class="note">Roll Effort on its own:</span><input id="physF" type="number" min="1" max="20" inputmode="numeric" placeholder="own die" aria-label="Result of your own physical die, optional">' + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '" title="Roll ' + R.CAT_NAMES[k] + ' Effort on its own">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
     if (UI.optDice) h += '<div class="phys row2">' + diceSwitch() + '</div>';
     if (UI.optDice) h += '<div class="phys row2"><label>Physical d20 for the next roll<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="—" value="' + esc(keep) + '"></label><span class="note">Type what your own die shows, then click a stat. Effort has its own box when you roll it.</span></div>';
@@ -1000,17 +999,17 @@
     });
   }
   function uploadPicture(input) {
-    var file = input.files && input.files[0]; if (!file) return; var kind = input.dataset.upload, id = input.dataset.id, scene = viewScene();
+    var file = input.files && input.files[0]; if (!file) return; var kind = input.dataset.upload, scene = viewScene();
     toast('Uploading…', 3000);
-    prepareImage(file, kind === 'bg' ? 1920 : 800).then(function (data) { return call('POST', { op: 'upload', code: sess.code, data: data }); }).then(function (r) {
+    prepareImage(file, 1920).then(function (data) { return call('POST', { op: 'upload', code: sess.code, data: data }); }).then(function (r) {
       if (r.status !== 200 || !r.body.ok) throw new Error((r.body.error && r.body.error.message) || 'The upload did not work.');
-      if (kind === 'bg') send({ type: 'sceneUpdate', id: scene, bg: r.body.url }); else send({ type: 'cardUpdate', id: id, patch: { img: r.body.url } });
+      send({ type: 'sceneUpdate', id: scene, bg: r.body.url });
       toast('Image added.'); input.value = ''; if (document.activeElement === input) input.blur();
     }).catch(function (e) { toast((e && e.message || 'The upload did not work.') + ' Nothing was changed.', 8000); input.value = ''; });
   }
   document.addEventListener('change', function (e) {
     var t = e.target; if (!S || !t.dataset) return;
-    if (t.dataset.upload) return uploadPicture(t);
+    if (t.dataset.upload === 'bg') return uploadPicture(t);
     if (t.dataset.edit) { var patch = {}; patch[t.dataset.edit] = t.value; send({ type: 'cardUpdate', id: t.dataset.id, patch: patch }); }
     else if (t.dataset.set) { var cc = S.cards[t.dataset.id]; if (t.dataset.set === 'hp' && cc && cc.hp) hpQueue(t.dataset.id, { set: +t.value }, function (done) { send({ type: 'track', id: t.dataset.id, field: 'hp', value: +t.value }, done); }); else send({ type: 'track', id: t.dataset.id, field: t.dataset.set, value: +t.value }); }
     else if (t.dataset.max) send({ type: 'track', id: t.dataset.id, field: t.dataset.max, what: 'max', value: +t.value });
