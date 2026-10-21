@@ -133,3 +133,7 @@
   :is(#sheetOverlay, #sheetHere) .sh-item { flex-wrap:wrap; }
   :is(#sheetOverlay, #sheetHere) .sh-btns { flex-direction:row; flex-wrap:wrap; }
 }
+
+/* Character sheets: keep data entry and small labels immediately readable. */
+:is(#sheetOverlay,#sheetHere) :is(input,select,textarea,button,.sh-f,.sh-pill,.sh-stat small){font-family:var(--label);}
+:is(#sheetOverlay,#sheetHere) :is(h2,h3,h4){font-family:var(--display);letter-spacing:0;}
