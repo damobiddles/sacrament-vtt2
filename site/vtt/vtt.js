@@ -591,7 +591,7 @@
     h += '<label>Name<input data-edit="name" data-id="' + id + '" value="' + esc(c.name) + '" maxlength="60"></label>' +
       '<label>Description (players see this)<textarea rows="3" data-edit="desc" data-id="' + id + '" maxlength="2000">' + esc(c.desc) + '</textarea></label>' +
       '<label>Private notes (only you see these)<textarea rows="3" data-edit="gmNotes" data-id="' + id + '" maxlength="4000">' + esc(c.gmNotes || '') + '</textarea></label>' +
-      '<label>Picture address (optional)<input data-edit="img" data-id="' + id + '" value="' + esc(c.img) + '" placeholder="https://…"></label>';
+      '';
     h += '<h4>Numbers</h4>' + numbersBlock(c) + '<div class="row">' + (!c.hp ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="hp">Add HP</button>' : '') + (!c.progress ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="progress">Add an Effort bar</button>' : '') + (!c.timer ? '<button class="btn small" data-do="trackerAdd" data-id="' + id + '" data-field="timer">Add a timer</button>' : '') +
       (!pc && (c.hp || c.progress || c.timer) ? '<button class="btn small ' + (c.hideNumbers ? 'on' : '') + '" data-do="hideNumbers" data-id="' + id + '" aria-pressed="' + !!c.hideNumbers + '" title="Players see the card but not its numbers">' + (c.hideNumbers ? 'Numbers hidden from players' : 'Hide the numbers from players') + '</button>' : '') + '</div>';
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId];
