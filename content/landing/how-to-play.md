@@ -17,11 +17,13 @@ Press **Sheet** on your strip (or **Open your sheet** when you select your own t
 
 You can also build heroes between sessions on the [My heroes](/character/) page, which saves them in your browser. At a table with no hero yet, press **Bring a hero** to copy one from there: the table checks it against the rules and makes it yours.
 
-### Using an item
-When you click an enemy or obstacle, your strip asks **What are you using?** and lists your weapons, spells and tools. Choose one (or press **Use** beside an item on your sheet). The table makes the check with the item's stat. If you succeed, press **Roll damage** (**Roll Effort** against an obstacle): it rolls that item's own kind of **Effort**, adding your bonus in that kind. Then press **Apply** as usual. If you click a stat while aiming at something, the strip checks that you meant to use no item first. A weapon, relic or grimoire must be equipped first (a grimoire is used through one of its spells). A flask is used up when you use it. Items with no Effort kind, such as a cloak or a rope, never roll.
+### Using equipment
+Your weapons, armour, spells and other equipment are managed on your **Sheet**, rather than as items on the bottom strip. Open your sheet to see what your hero carries and what is equipped. Your GM can help with equipment, supplies and loot during play.
+
+When you attempt an action, select the relevant target if there is one and make the appropriate roll using the table controls. The GM decides when a weapon, spell or tool applies, and what happens as a result. Equipment that tempts the Horror can still raise the Horror meter when used.
 
 ### Your strip
-The bar along the bottom is yours. It shows your hero's hearts, with **−** and **+** to change your own hit points, and a button for each of your six stats. Under them you can choose **easy**, **normal** or **hard** for your next roll, open your **Sheet** or **Items**, or press **More** for **Effort** and **My dice**.
+The bar along the bottom gives you quick access to your hero's status and core actions. **Equipment is not displayed on the strip**: open your **Sheet** to view and manage your weapons, spells, gear and supplies.
 
 ### Rolling
 1. Click the thing you are trying to hit or beat, if there is one (an enemy or an obstacle).
