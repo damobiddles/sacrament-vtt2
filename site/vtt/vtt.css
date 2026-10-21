@@ -1,5 +1,5 @@
 /* Sacrament RPG Table. Colours and fonts come from ../theme.css. Restrained on purpose: the table is the picture, the controls are plain. */
-:root{--navh:48px;--tap:44px}
+:root{--navh:0px;--tap:44px}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);overflow:hidden}
 [hidden]{display:none!important}
