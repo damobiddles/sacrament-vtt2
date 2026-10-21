@@ -3,9 +3,9 @@
    Link it with: <link rel="stylesheet" href="https://playsacrament.com/theme.css">
 
    Visual language: a forbidden 1603 demonology book. Parchment, soot black and faded ink, with oxblood, indigo,
-   verdigris and ochre used sparingly. Roboto Slab and Libre Baskerville stay for usability; the early-printed-book
+   verdigris and ochre used sparingly. Cormorant Garamond and Source Sans 3 balance atmosphere and legibility; the early-printed-book
    feel comes from layout: oversized capitals, double rules, fleurons and framed plates. */
-@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Roboto+Slab:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 :root{
   /* Low-glare dark palette: text about 11:1 and secondary text about 6.7:1 on the ground, accents softened so red and gold do not hum
@@ -15,7 +15,7 @@
   --edge:#7a6f5a;
   --blood:#6d2420; --blood-hi:#c4786a; --candle:#b8955a;
   --indigo:#9aa8d0; --indigo-deep:#2b3560; --verdigris:#86b3a1; --verdigris-deep:#2f5a4d; --on-blood:#efe5cc;
-  --display:'Roboto Slab',Georgia,'Times New Roman',serif; --body:'Libre Baskerville',Georgia,'Times New Roman',serif; --label:'Roboto Slab',Georgia,serif;
+  --display:'Cormorant Garamond',Georgia,'Times New Roman',serif; --body:'Source Sans 3',Arial,sans-serif; --label:'Source Sans 3',Arial,sans-serif;
   /* Printed ornaments, drawn in the current ink: a fleuron, a corner flourish and a cross-hatch for empty plates */
   --fleuron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24' fill='none' stroke='%23b8955a' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M2 12h38M80 12h38'/%3E%3Cpath d='M60 3c4 4 4 14 0 18-4-4-4-14 0-18zM52 12c3-5 5-5 8 0-3 5-5 5-8 0zM60 12c3-5 5-5 8 0-3 5-5 5-8 0z' fill='%23b8955a' stroke='none'/%3E%3Cpath d='M42 12l5-3M42 12l5 3M78 12l-5-3M78 12l-5 3'/%3E%3C/svg%3E");
   --hatch:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,var(--fg) 14%,transparent) 5px 6px),repeating-linear-gradient(-45deg,transparent 0 5px,color-mix(in srgb,var(--fg) 8%,transparent) 5px 6px);
@@ -96,3 +96,9 @@ div.plate-slot,.plate .art:not(img){display:block;width:100%;aspect-ratio:4/3;ba
 .sac-foot,body>footer{padding-top:48px;border-top:3px double var(--line)}
 body>footer{background:var(--bg2)}
 #join{padding-block:64px}
+
+/* Sacrament typography pass: legible UI, expressive headings. */
+:where(button,input,select,textarea){font-family:var(--label);}
+:where(input,select,textarea){letter-spacing:normal;}
+:where(h1,h2,h3){letter-spacing:.005em;}
+:where(.btn,.label){letter-spacing:.08em;}

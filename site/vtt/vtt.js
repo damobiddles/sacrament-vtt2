@@ -798,17 +798,19 @@
       el.innerHTML = h; return;
     }
     if (G && !UI.gmStrip) { el.innerHTML = '<button class="chip" data-do="gmstrip" aria-expanded="false" title="Roll for a hero">Roll as ' + esc(ch.name) + '…</button>'; return; }
-    var card = S.cards[ch.cardId], hp = card && card.hp, keep = UI.phys || '', usable = window.SacramentSheetCore.actions(heroOf(ch));
+    var card = S.cards[ch.cardId], hp = card && card.hp, keep = UI.phys || '';
     h += '<div class="me' + (G ? ' gm' : '') + '">' + (G ? '<button class="chip" data-do="gmstrip" aria-expanded="true">Hide</button><label class="actas"><span class="note">Acting as</span><select id="actAs" aria-label="Acting as (the hero the strip below controls)">' + Object.keys(S.chars).map(function (k) { return '<option value="' + k + '"' + (k === ch.id ? ' selected' : '') + '>' + esc(S.chars[k].name) + '</option>'; }).join('') + '</select></label>' : '<b title="Your hero">' + esc(ch.name) + '</b>') + '</div>';
     if (hp) h += '<div class="hp"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md' + (hpQueued(card.id) ? ' pend' : ''), true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '" aria-label="' + shownHp(card) + ' of ' + hp.max + ' hit points' + (hpQueued(card.id) ? ' (saving)' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + '</div>';
     h += '<span class="def" title="A monster must roll this or more to hit you">Defence <b>' + ch.defence + '</b></span>';
     if (downMark(card)) h += downMark(card, true).replace('<b ', '<b role="status" ');
     h += '<div class="stats" role="group" aria-label="Roll a stat">' + R.STATS.map(function (k) { return '<button class="stat" data-do="roll" data-stat="' + k + '" aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
     var foe = aimFoe();
-    if (foe && usable.length) {   /* a foe or obstacle is selected: the first question is what the hero uses on it */
-      var ask = UI.askItem && UI.askItem.card === foe.id ? UI.askItem.stat : null;
-      h += '<div class="aim row2" role="group" aria-label="What are you using"><span class="q">What are you using on <b>' + esc(foe.name) + '</b>?</span>' + itemButtons(usable) +
-        (ask ? '<span class="q" role="status">No item? <button class="chip" data-do="roll" data-stat="' + ask + '" data-noitem="1">Roll ' + ask + ' with no item</button></span>' : '<span class="note">No item? Roll a stat.</span>') + '</div>';
+    if (foe) {
+      /* Keep the map visible when an enemy or obstacle is selected. */
+      h += '<div class="aim-prompt" role="group" aria-label="Selected target">' +
+        '<span class="q">How are you going to deal with <b>' + esc(foe.name) + '</b>?</span>' +
+        '<button class="chip" data-do="sheet" data-id="' + ch.id + '" aria-label="Open your character sheet to choose an action">Open character sheet</button>' +
+        '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
     h += '<div class="opt"><button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>' + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
