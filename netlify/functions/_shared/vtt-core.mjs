@@ -99,6 +99,22 @@ function charView(c, whole) {
 
 /* What one viewer is sent. Nothing the viewer may not see is in the result, so nothing has to be hidden again on the screen.
    opt.dv: the drawing the viewer already has (its drawV). If it is the current one, the drawing is left out of the answer: it can be large and rarely changes. */
+export function projectPointers(s, a) {
+  return Object.fromEntries(Object.entries(s.pointers || {}).filter(([, p]) => isGM(a) || (p.sceneId || s.table.scene) === s.table.scene));
+}
+function annotationScene(s, c, a) {
+  // Older pages do not say which scene the GM is preparing. Refuse an
+  // ambiguous annotation rather than accidentally putting private ink live.
+  if (c.sceneId == null && isGM(a) && Object.keys(s.scenes).length > 1) fail('conflict', 'Please refresh this page before pointing or drawing on a table with multiple scenes.');
+  var id = c.sceneId == null ? s.table.scene : String(c.sceneId);
+  if (!isGM(a) && id !== s.table.scene) fail('forbidden', 'That scene is not on your table.');
+  if (!s.scenes[id]) fail('not_found', 'No such scene.');
+  return id;
+}
+function migrateAnnotations(s) {
+  (s.draw || []).forEach((line) => { if (!line.sceneId) line.sceneId = s.table.scene; });
+  Object.values(s.pointers || {}).forEach((point) => { if (!point.sceneId) point.sceneId = s.table.scene; });
+}
 export function project(s, a, opt = {}) {
   const gm = isGM(a), cards = {}, layout = {};
   for (const id of Object.keys(s.cards)) {
@@ -130,12 +146,12 @@ export function project(s, a, opt = {}) {
     settings: s.settings, cards, layout,
     chars: Object.fromEntries(Object.entries(s.chars).map(([id, c]) => [id, charView(c, gm || (!!a.pid && c.owner === a.pid))])),
     players: Object.values(s.players).map((p) => ({ id: p.id, name: p.name })),
-    drawV: s.drawV || 0, pv: s.pv || 0, pointers: s.pointers, rolls, nextSession: s.next || null,
+    drawV: s.drawV || 0, pv: s.pv || 0, pointers: projectPointers(s, a), rolls, nextSession: s.next || null,
     log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
     horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds }, gm ? { alert: horrorOf(s).alert } : {})
   };
-  if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = s.draw;
+  if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = (s.draw || []).filter((line) => gm || (line.sceneId || s.table.scene) === s.table.scene);
   if (gm) {
     out.scenes = Object.values(s.scenes).map((x) => ({ id: x.id, name: x.name, bg: x.bg }));
     out.lootLib = s.lootLib || [];
@@ -192,7 +208,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -222,6 +238,7 @@ export function apply(s, cmd, a, ctx) {
   if (stale) { if (cmd.type === 'point') return { result: { ignored: true }, changed: false }; fail('stale', 'That action was already handled, or it is out of date.'); }
   if (GM_ONLY.has(cmd.type) && !isGM(a)) fail('forbidden', 'Only the GM can do that.');
   Object.values(s.chars).forEach(gearKeys);
+  migrateAnnotations(s);
   fixSupplies(s, ctx);
   const H = HANDLERS[cmd.type]; if (!H) fail('invalid', 'Unknown command: ' + str(cmd.type, 30));
   a = Object.assign({}, a, { name: isGM(a) ? 'GM' : (s.players[a.pid] || {}).name || 'Player' });
@@ -400,6 +417,16 @@ function recapBlow(s, ctx, roll, card, amount) {
 const recapDeath = (s, ctx, card) => { const R0 = recapOf(s, ctx); if (card.dying && card.dying.dead && !R0.died.includes(card.name)) listAdd(R0.died, card.name); };
 
 const HANDLERS = {
+  playerRemove(s, c, a, ctx) {
+    const player = s.players[c.pid] || fail('not_found', 'No such player.');
+    Object.values(s.chars).forEach((ch) => { if (ch.owner === player.id) ch.owner = null; });
+    Object.values(s.cards).forEach((card) => { if (card.owner === player.id) { card.owner = null; card.visible = false; } });
+    for (const key of Object.keys(s.joins || {})) if (s.joins[key] === player.id) delete s.joins[key];
+    for (const key of Object.keys(s.clients || {})) if (s.clients[key].by === player.id) delete s.clients[key];
+    delete s.pointers[player.id]; s.pv = (s.pv || 0) + 1; delete s.players[player.id];
+    L(s, a, ctx, 'Removed ' + player.name + ' from the table. Their hero is available to claim.', { private: true });
+    return {};
+  },
   setTarget(s, c, a, ctx) { /* to a number, or (from the + and − buttons) by an amount, so that quick presses each count */ const v = c.delta != null ? s.table.target + int(c.delta, 0) : int(c.value, NaN); if (!Number.isFinite(v)) fail('invalid', 'The Target is a number.'); const was = s.table.target; s.table.target = clamp(v, 1, 40); L(s, a, ctx, 'Target ' + was + ' → ' + s.table.target + '.'); return { target: s.table.target }; },
   settings(s, c, a, ctx) { const m = Object.assign({}, s.settings, c.patch || {}); if (c.patch && c.patch.dice) m.dice = Object.assign({}, s.settings.dice, c.patch.dice); s.settings = R.settingsOf(m); L(s, a, ctx, 'House rules changed.'); return {}; },
 
@@ -476,7 +503,7 @@ const HANDLERS = {
 
   sceneCreate(s, c, a, ctx) { if (Object.keys(s.scenes).length >= LIMITS.scenes) fail('limit', 'Too many scenes.'); const id = nid(s, 'sc'); s.scenes[id] = { id, name: str(c.name, LIMITS.name, 'Unmarked Ground') || 'Unmarked Ground', bg: url(c.bg) }; L(s, a, ctx, 'Prepared scene ' + s.scenes[id].name + '.', { private: true }); return { id }; },
   sceneUpdate(s, c) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (own(c, 'name')) sc.name = str(c.name, LIMITS.name, sc.name) || sc.name; if (own(c, 'bg')) sc.bg = url(c.bg); return {}; },
-  sceneReveal(s, c, a, ctx) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); s.table.scene = sc.id; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {}; },
+  sceneReveal(s, c, a, ctx) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {}; },
 
   orderSet(s, c) {
     if (!Array.isArray(c.order)) fail('invalid', 'The order is a list.');
@@ -769,14 +796,15 @@ const HANDLERS = {
   },
 
   draw(s, c, a) {
+    const sceneId = annotationScene(s, c, a);
     if (!Array.isArray(c.pts) || c.pts.length < 2) fail('invalid', 'A line needs two points.');
     const pts = c.pts.slice(0, LIMITS.points).map((p) => [clamp(+p[0], 0, 100), clamp(+p[1], 0, 100)]).filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
-    s.draw.push({ id: nid(s, 'd'), by: isGM(a) ? 'gm' : a.pid, color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#e0b040', pts });
-    while (s.draw.length > LIMITS.strokes) s.draw.shift(); drew(s); return {};
+    s.draw.push({ id: nid(s, 'd'), sceneId, by: isGM(a) ? 'gm' : a.pid, color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#e0b040', pts });
+    while (s.draw.length > LIMITS.strokes) { const first = s.draw.findIndex((line) => line.sceneId === sceneId); if (first === s.draw.length - 1) fail('limit', 'The table drawing is full. Clear some lines before drawing in another scene.'); s.draw.splice(first, 1); } drew(s); return {};
   },
-  drawUndo(s, c, a) { const who = isGM(a) ? 'gm' : a.pid; for (let i = s.draw.length - 1; i >= 0; i--) if (s.draw[i].by === who) { s.draw.splice(i, 1); drew(s); break; } return {}; },
-  drawClear(s) { s.draw = []; drew(s); return {}; },
-  point(s, c, a, ctx) { s.pointers[isGM(a) ? 'gm' : a.pid] = { x: clamp(+c.x || 0, 0, 100), y: clamp(+c.y || 0, 0, 100), at: ctx.now, name: a.name }; return {}; }
+  drawUndo(s, c, a) { const sceneId = annotationScene(s, c, a); const who = isGM(a) ? 'gm' : a.pid; for (let i = s.draw.length - 1; i >= 0; i--) if (s.draw[i].by === who && s.draw[i].sceneId === sceneId) { s.draw.splice(i, 1); drew(s); break; } return {}; },
+  drawClear(s, c, a) { const id = annotationScene(s, c, a); s.draw = s.draw.filter((line) => line.sceneId !== id); drew(s); return {}; },
+  point(s, c, a, ctx) { const sceneId = annotationScene(s, c, a); s.pointers[isGM(a) ? 'gm' : a.pid] = { sceneId, x: clamp(+c.x || 0, 0, 100), y: clamp(+c.y || 0, 0, 100), at: ctx.now, name: a.name }; return {}; }
 };
 
 /* A command that moves the turn says which turn the person was looking at. If it has moved since (someone else pressed first), nothing happens, so two clicks on

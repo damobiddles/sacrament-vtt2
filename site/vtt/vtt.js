@@ -136,13 +136,14 @@
     var L = lanes[lane || 'g']; cmd.actionId = cmd.actionId || L.id + '.' + (++L.seq); if (L.gameplay) { UI.pending++; setStatus('busy'); }
     return new Promise(function (resolve) { L.q.push({ cmd: cmd, resolve: resolve, done: done, tries: 0 }); if (!L.running) pump(L); });
   }
-  function sendPoint(x, y) {
+  function sendPoint(x, y, sceneId) {
+    sceneId = sceneId || UI.pointScene || viewScene();
     var current = pointer;
     if (!sess) return;
-    if (pointer.busy) { pointer.next = { x: x, y: y }; return; }
+    if (pointer.busy) { pointer.next = { x: x, y: y, sceneId: sceneId }; return; }
     pointer.busy = true;
-    call('POST', { op: 'cmd', code: sess.code, dv: haveDraw(), cmd: { type: 'point', x: x, y: y, actionId: pointer.id + '.' + (++pointer.seq) } }).then(function (r) { if (current !== pointer || r.stale) return; if (r.status === 200 && r.body.ok) { var st = r.body.state; if (S && st && st.v === S.v) takePointers(st.pointers, st.pv); else take(st); } }, function () {})
-      .then(function () { if (current !== pointer) return; pointer.busy = false; if (pointer.next) { var n = pointer.next; pointer.next = null; sendPoint(n.x, n.y); } });
+    call('POST', { op: 'cmd', code: sess.code, dv: haveDraw(), cmd: { type: 'point', sceneId: sceneId, x: x, y: y, actionId: pointer.id + '.' + (++pointer.seq) } }).then(function (r) { if (current !== pointer || r.stale) return; if (r.status === 200 && r.body.ok) { var st = r.body.state; if (S && st && st.v === S.v) takePointers(st.pointers, st.pv); else take(st); } }, function () {})
+      .then(function () { if (current !== pointer) return; pointer.busy = false; if (pointer.next) { var n = pointer.next; pointer.next = null; sendPoint(n.x, n.y, n.sceneId); } });
   }
   function pump(L) {
     if (L.version !== sessionVersion || !sess || (L.gameplay && UI.reconcile)) { L.running = false; return; }
@@ -195,6 +196,7 @@
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
+    UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
     UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
@@ -361,6 +363,11 @@
     if (UI.drag) { UI.dirty = true; return; }
     var G = gm(), view = viewScene(), tbl = $('table');
     tbl.className = 't-' + UI.tool;
+    $('mapViewport').classList.toggle('wide', !!UI.mapWide);
+    $('mapWidthHint').hidden = !UI.mapWide || tbl.offsetHeight <= $('mapViewport').clientHeight + 1;
+    $('mapWidthToggle').textContent = UI.mapWide ? 'Fit map' : 'Fill width';
+    $('mapWidthToggle').setAttribute('aria-pressed', String(!!UI.mapWide));
+    $('mapWidthToggle').title = UI.mapWide ? 'Show the whole map' : 'Use the available width; scroll to see the rest of the map';
     var sc = (S.scenes || []).filter(function (x) { return x.id === view; })[0] || S.table.scene;
     $('bg').style.backgroundImage = bgUrl(sc.bg);
     var html = '', want = [], turnId = turnCardId(), aim = aimId();
@@ -386,7 +393,7 @@
     });
     putCards(want);
     /* drawing */
-    put($('ink'), (S.draw || []).map(function (s) { return '<polyline points="' + s.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" stroke="' + esc(s.color) + '"/>'; }).join(''));
+    put($('ink'), (S.draw || []).filter(function (s) { return (s.sceneId || S.table.scene.id) === view; }).map(function (s) { return '<polyline points="' + s.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" stroke="' + esc(s.color) + '"/>'; }).join(''));
     /* the toolbar and the banner */
     put($('toolbar'), ['select:Select', 'point:Point', 'draw:Draw'].map(function (t) { var k = t.split(':'); return '<button class="chip' + (UI.tool === k[0] ? ' hot' : '') + '" data-do="tool" data-tool="' + k[0] + '" aria-pressed="' + (UI.tool === k[0]) + '">' + k[1] + '</button>'; }).join('') +
       (UI.tool === 'point' ? '<span class="note tip">Press and hold on the table, then move: everyone sees where you point.</span>' : UI.tool === 'draw' ? '<span class="note tip">Press and drag on the table to draw.</span>' : '') +
@@ -417,7 +424,7 @@
     clearTimeout(UI.ptrTimer); if (!S) return;
     var now = Date.now(), ph = '', soonest = 0, G = gm(), mine = G ? 'gm' : S.you.pid;
     Object.keys(S.pointers || {}).forEach(function (k) {
-      var p = S.pointers[k], seen = UI.seenPtr[k]; if (!seen || seen.at !== p.at) UI.seenPtr[k] = seen = { at: p.at, when: now };
+      var p = S.pointers[k], seen = UI.seenPtr[k]; if ((p.sceneId || S.table.scene.id) !== viewScene()) return; if (!seen || seen.at !== p.at) UI.seenPtr[k] = seen = { at: p.at, when: now };
       var left = 4000 - (now - seen.when); if (left <= 0) return;
       soonest = soonest ? Math.min(soonest, left) : left;
       ph += '<div class="ptr' + (k === mine ? ' me' : '') + '" style="left:' + p.x + '%;top:' + p.y + '%"><span>' + (k === mine ? 'You' : esc(p.name || '')) + '</span></div>';
@@ -743,7 +750,7 @@
     if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Healing from items and prayers (and their once-per-rest limits), the scene-danger bonus on monster attacks (put it in the monster’s attack bonus), and anything the rules baseline does not list are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
     var h = '<h3>Invite players</h3><div class="row"><b class="code">' + esc(S.code) + '</b><button class="btn main grow" data-do="copy">Copy invite link</button></div>';
     h += horrorControls();
-    h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
+    h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li class="player-row"><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small danger" data-do="removePlayer" data-pid="' + p.id + '"' + (UI.removeBusy === p.id ? ' disabled' : '') + ' aria-label="' + (UI.removePlayerAsk === p.id ? 'Confirm removal of ' : 'Remove ') + esc(p.name) + '">' + (UI.removeBusy === p.id ? 'Removing…' : UI.removePlayerAsk === p.id ? 'Confirm removal' : 'Remove') + '</button>' + (UI.removePlayerAsk === p.id ? '<p class="hint player-warning">Their current access will stop and their hero becomes available. Private possessions return hidden to the GM. They can join again with the invitation code.</p><button class="btn small" data-do="cancelRemovePlayer">Cancel</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
     h += '<div class="row"><button class="btn small" data-do="addHero" title="A blank hero: name it, then fill in its numbers by hand">Add a blank hero</button></div>';
     h += diceSwitch();
     h += '<h3>Your GM link</h3><div class="row"><button class="btn small" data-do="copyKey">Copy your GM link</button></div><p class="hint">Keep it somewhere private, such as your notes. It brings you back to this table as the GM on any device, or after this browser forgets. Anyone who has it can run the table, so do not send it to players.</p>';
@@ -930,6 +937,7 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-do]'); if (!b || !S) return; var d = b.dataset, c = S.cards[d.id];
     switch (d.do) {
+      case 'mapWidth': UI.mapWide = !UI.mapWide; renderTable(); break;
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
@@ -1035,8 +1043,14 @@
       case 'up': reorder(+d.i, -1); break; case 'down': reorder(+d.i, 1); break;
       case 'outOrder': send({ type: 'orderSet', order: S.table.order.map(function (x) { return x.id; }).filter(function (x, i) { return i !== +d.i; }) }); break;
       case 'addOrder': { var v2 = $('addOrder').value; if (v2) send({ type: 'orderSet', order: S.table.order.map(function (x) { return x.id; }).concat([v2]) }); break; }
-      case 'drawUndo': send({ type: 'drawUndo' }, null, 'd'); break;
-      case 'drawClear': send({ type: 'drawClear' }, null, 'd'); break;
+      case 'cancelRemovePlayer': UI.removePlayerAsk = null; renderPanel(); break;
+      case 'removePlayer':
+        if (!gm() || UI.removeBusy) break;
+        if (UI.removePlayerAsk !== d.pid) { UI.removePlayerAsk = d.pid; renderPanel(); break; }
+        UI.removeBusy = d.pid; renderPanel();
+        send({ type: 'playerRemove', pid: d.pid }, function () { UI.removeBusy = null; UI.removePlayerAsk = null; render(); }); break;
+      case 'drawUndo': send({ type: 'drawUndo', sceneId: viewScene() }, null, 'd'); break;
+      case 'drawClear': send({ type: 'drawClear', sceneId: viewScene() }, null, 'd'); break;
     }
   });
   /* edits made in the panel are sent when the field is left */
@@ -1102,8 +1116,8 @@
   $('table').addEventListener('pointerdown', function (ev) {
     if (!S || ev.button > 0 || UI.drag || UI.draw || UI.pointing) return;
     if (ev.target.closest('#toolbar') || ev.target.closest('#banner')) return;
-    if (UI.tool === 'draw') { UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
-    if (UI.tool === 'point') { UI.gesturePointer = ev.pointerId; var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
+    if (UI.tool === 'draw') { UI.drawScene = viewScene(); UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
+    if (UI.tool === 'point') { UI.pointScene = viewScene(); UI.gesturePointer = ev.pointerId; var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
     var cEl = ev.target.closest('.c');
     if (!cEl) { if (UI.sel) { UI.sel = null; render(); } return; }
     var id = cEl.dataset.id, c = S.cards[id]; pickCard(id); UI.confirmDel = null;
@@ -1133,7 +1147,7 @@
       render();
       return;
     }
-    if (UI.draw) { var pts = UI.draw; UI.draw = null; if (pts.length > 1) { var step = Math.ceil(pts.length / 150); pts = pts.filter(function (p, i) { return i % step === 0 || i === pts.length - 1; }); send({ type: 'draw', pts: pts, color: '#e0b040' }, null, 'd'); } var pl = $('ink').querySelector('polyline.live'); if (pl) pl.remove(); return; }
+    if (UI.draw) { var pts = UI.draw; UI.draw = null; if (pts.length > 1) { var step = Math.ceil(pts.length / 150); pts = pts.filter(function (p, i) { return i % step === 0 || i === pts.length - 1; }); send({ type: 'draw', sceneId: UI.drawScene, pts: pts, color: '#e0b040' }, null, 'd'); } var pl = $('ink').querySelector('polyline.live'); if (pl) pl.remove(); return; }
     $('ink')._h = null;   /* the line being drawn was added by hand: the next drawing of the ink replaces it */
     UI.pointing = false; var d = UI.drag; if (!d) return; UI.drag = null; d.el.classList.remove('drag'); d.el._h = null;
     if (d.moved) { var l = S.layout[d.id]; l.x = d.x; l.y = d.y; send({ type: 'move', id: d.id, x: d.x, y: d.y }); }

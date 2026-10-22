@@ -64,7 +64,7 @@ console.log('--- the runtime');
   check('a damage edit sent three times is taken once', dmg.every((r) => r.status === 200) && find(await state(gm), 'Pit Ghoul').hp.cur === hpBefore - 3);
   const bFirst = await raw(gm, cid + 'o', 2, { type: 'track', id: ghoul.id, field: 'hp', mode: 'delta', value: -2 }); const bSecond = await raw(gm, cid + 'o', 1, { type: 'track', id: ghoul.id, field: 'hp', mode: 'delta', value: -1 });
   check('two commands that arrive in the wrong order are both applied, once', bFirst.status === 200 && bSecond.status === 200 && find(await state(gm), 'Pit Ghoul').hp.cur === hpBefore - 6);
-  check('a pointer, however late, does not disturb gameplay', (await raw(gm, cid + 't', 90, { type: 'point', x: 5, y: 5 })).status === 200 && (await raw(gm, cid + 'z', 1, { type: 'track', id: ghoul.id, field: 'hp', mode: 'delta', value: -1 })).status === 200);
+  check('a pointer, however late, does not disturb gameplay', (await raw(gm, cid + 't', 90, { type: 'point', sceneId: (await state(gm)).table.scene.id, x: 5, y: 5 })).status === 200 && (await raw(gm, cid + 'z', 1, { type: 'track', id: ghoul.id, field: 'hp', mode: 'delta', value: -1 })).status === 200);
 
   console.log('--- hidden information (over the real service)');
   const secret = await cmd(gm, { type: 'cardCreate', card: { name: 'Hidden Hexagon', visible: false, gmNotes: 'PRIVATE-NOTE-XYZ', timer: { cur: 1, max: 1, auto: true, label: 'Hex ritual' } } });

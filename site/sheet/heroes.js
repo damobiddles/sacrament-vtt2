@@ -29,20 +29,46 @@
     var list = Array.isArray(raw.gear) ? raw.gear : Array.isArray(raw.pack) ? raw.pack : [];
     return list.filter(function (g) { var it = g && C.item(g.id); return g && g.eq === true && it && !C.canEquip(it); }).map(function (g) { return C.item(g.id).name; });
   }
+  var LIMIT = 30;
   function read(upgrade) {
-    var st = { heroes: [], current: '', converted: {}, moved: [] }, raw = null;
-    try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-    if (raw && Array.isArray(raw.heroes)) { st.heroes = raw.heroes.filter(function (h) { return h && h.stats; }).slice(0, 30).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); return tidy(h); }); if (st.moved.length) save(st); st.current = String(raw.current || ''); st.converted = raw.converted && typeof raw.converted === 'object' ? raw.converted : {}; return st; }
+    var st = { heroes: [], current: '', converted: {}, moved: [], saveError: '', readOnly: false }, raw = null, text;
     try {
-      var old = JSON.parse(localStorage.getItem(OLD) || 'null');
+      text = localStorage.getItem(KEY);
+      if (text) { raw = JSON.parse(text); if (!raw || !Array.isArray(raw.heroes)) throw new Error('Invalid heroes'); }
+    } catch (e) {
+      st.readOnly = true; st.unreadableOriginal = text || '';
+      st.saveError = 'Saved heroes could not be read. Their existing data has not been replaced. Download a backup before closing this page.';
+      return st;
+    }
+    if (raw) {
+      st.heroes = raw.heroes.filter(function (h) { return h && h.stats; }).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); return tidy(h); });
+      st.current = String(raw.current || ''); st.converted = raw.converted && typeof raw.converted === 'object' ? raw.converted : {};
+      if (st.moved.length) save(st);
+      return st;
+    }
+    try {
+      var oldText = localStorage.getItem(OLD), old = oldText && JSON.parse(oldText);
       if (old && Array.isArray(old.heroes)) {
-        st.heroes = old.heroes.filter(function (h) { return h && h.id && h.scores && Array.isArray(h.pack); }).slice(0, 30).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); return fromEngine(upgrade ? upgrade(h) : h); });
+        st.heroes = old.heroes.filter(function (h) { return h && h.id && h.scores && Array.isArray(h.pack); }).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); return fromEngine(upgrade ? upgrade(h) : h); });
         st.current = String(old.current || ''); st.converted = old.converted && typeof old.converted === 'object' ? old.converted : {};
         if (st.heroes.length) save(st);
       }
-    } catch (e) {}
+    } catch (e) { st.readOnly = true; st.unreadableOriginal = oldText || ''; st.saveError = 'Earlier heroes could not be read. Download a backup; their existing data has not been replaced.'; }
     return st;
   }
-  function save(st) { try { localStorage.setItem(KEY, JSON.stringify({ heroes: st.heroes, current: st.current, converted: st.converted })); } catch (e) {} }
-  root.SacramentHeroes = { read: read, save: save, blank: blank, fromEngine: fromEngine, uid: uid, KEY: KEY };
+  function backup(st) {
+    var out = { format: 'sacrament-heroes-backup', version: 1, heroes: st.heroes, current: st.current, converted: st.converted };
+    if (st.unreadableOriginal) out.unreadableOriginal = st.unreadableOriginal;
+    return out;
+  }
+  function save(st) {
+    if (st.readOnly) return false;
+    try {
+      var data = JSON.stringify({ heroes: st.heroes, current: st.current, converted: st.converted });
+      localStorage.setItem(KEY, data);
+      if (localStorage.getItem(KEY) !== data) throw new Error('Not saved');
+      st.saveError = ''; return true;
+    } catch (e) { st.saveError = 'Your latest changes could not be saved in this browser. Keep this page open and download a backup, or try saving again.'; return false; }
+  }
+  root.SacramentHeroes = { read: read, save: save, blank: blank, fromEngine: fromEngine, uid: uid, KEY: KEY, LIMIT: LIMIT, canAdd: function (st) { return st.heroes.length < LIMIT; }, backup: backup };
 })(typeof window !== 'undefined' ? window : globalThis);

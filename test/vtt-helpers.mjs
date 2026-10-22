@@ -15,6 +15,12 @@ export async function table({ dice = null, store = memoryStore(), gear = false }
     /* each call is, by default, a new client's first command; give { client, n } to send as one client in order */
     cmd: async (cmd, extra = {}) => {
       cmd = structuredClone(cmd);
+      // Match current pages: annotation commands name the scene they are acting on.
+      // An explicit null still exercises the older-page refresh guard.
+      if (['point', 'draw', 'drawUndo', 'drawClear'].includes(cmd.type) && !Object.hasOwn(cmd, 'sceneId')) {
+        const snapshot = await svc.handle({ method: 'GET', query: { code }, token });
+        cmd.sceneId = snapshot.body.state && snapshot.body.state.table.scene.id;
+      }
       const op = cmd.type === 'sheet' ? cmd.op : cmd.type === 'useItem' ? cmd : null;
       if (op && (cmd.type === 'useItem' || op.op === 'remove' || op.op === 'move') && !op.gearKey) {
         const snapshot = await svc.handle({ method: 'GET', query: { code }, token });

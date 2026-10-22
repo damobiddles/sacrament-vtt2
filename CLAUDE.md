@@ -91,6 +91,8 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 
 * Since that full phone pass: table recovery warning and downloadable private link; the combat choice now includes an explicit roll without an item, with one Sheet button. Check these in the next requested phone suite.
 
+* Since that full phone pass: hero save warnings and backup downloads; player removal controls; scene-specific drawing and pointers; quick actions at the top of live sheets; optional Fill width map viewport.
+
 ## Known open issues (do not claim they are fixed)
 
 * **Unexplained 7-second delay:** once, three HP presses on the GM page showed "Saving…" for about 7 s, then "Offline: retrying"; all applied exactly once. Not reproduced. In the browser console `__vtt.net()` shows the last 60 requests; read that before guessing. Details: `docs/vtt/live-check-results.md`.

@@ -1,7 +1,7 @@
 // The session service: the same code answers on Netlify (backed by Blobs) and in the local server used for tests (backed by a file or memory).
 // It checks who is asking, loads the room, hands the command to the core, and saves the result only if nobody else saved first.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { apply, addLog, emptyState, project, seededRng, Fail, LIMITS } from './vtt-core.mjs';
+import { apply, addLog, emptyState, project, projectPointers, seededRng, Fail, LIMITS } from './vtt-core.mjs';
 import { addSample } from './vtt-sample.mjs';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -73,7 +73,7 @@ export function makeService({ store, rng = null, now = Date.now, createKey = '' 
           if (query.diag) { if (a.role !== 'gm') return err(403, 'forbidden', 'Only the GM can ask.'); return out(200, { node: process.version, store: store.kind || 'unknown', ...(store.diagnose ? await store.diagnose(code) : {}) }); }
           if (query.since != null && query.since !== '' && +query.since === cur.data.v) {
             /* nothing has changed on the table; if only the pointers have moved, they are sent alone (they are the same for everyone) */
-            const pv = cur.data.pv || 0; return out(200, query.pv == null || query.pv === '' || +query.pv === pv ? { unchanged: true, v: cur.data.v } : { unchanged: true, v: cur.data.v, pv, pointers: cur.data.pointers });
+            const pv = cur.data.pv || 0; return out(200, query.pv == null || query.pv === '' || +query.pv === pv ? { unchanged: true, v: cur.data.v } : { unchanged: true, v: cur.data.v, pv, pointers: projectPointers(cur.data, a) });
           }
           return out(200, { v: cur.data.v, state: project(cur.data, a, { dv: query.dv }) });
         }
@@ -100,12 +100,13 @@ export function makeService({ store, rng = null, now = Date.now, createKey = '' 
             const state = clone(cur.data);
             const known = body.token && who(state, body.token);
             if (known && known.role === 'player') return out(200, { ok: true, pid: known.pid, token: body.token, rejoined: true, state: project(state, known) });
-            const tokenFor = () => createHmac('sha256', state.secret).update('join:' + joinKey).digest('base64url');
+            const tokenFor = (salt = '') => createHmac('sha256', state.secret).update('join:' + joinKey + (salt ? ':' + salt : '')).digest('base64url');
             const jk = joinKey && hash(joinKey);
-            if (jk && own(state.joins, jk) && state.players[state.joins[jk]]) { const pid = state.joins[jk]; return out(200, { ok: true, pid, token: tokenFor(), rejoined: true, state: project(state, { role: 'player', pid }) }); }
+            if (jk && own(state.joins, jk) && state.players[state.joins[jk]]) { const pid = state.joins[jk]; return out(200, { ok: true, pid, token: tokenFor(state.players[pid].joinSalt || ''), rejoined: true, state: project(state, { role: 'player', pid }) }); }
             if (Object.keys(state.players).length >= LIMITS.players) return err(403, 'limit', 'The table is full.');
-            const token = joinKey ? tokenFor() : newToken(), pid = 'p' + (state.seq++).toString(36);
-            state.players[pid] = { id: pid, name, hash: hash(token), joinedAt: now() }; state.v += 1;
+            const joinSalt = randomBytes(12).toString('hex');
+            const token = joinKey ? tokenFor(joinSalt) : newToken(), pid = 'p' + (state.seq++).toString(36);
+            state.players[pid] = { id: pid, name, joinSalt, hash: hash(token), joinedAt: now() }; state.v += 1;
             addLog(state, { role: 'player', pid, name }, 'Joined the table.', { now: now() });   /* the GM learns someone has arrived before they pick a hero */
             if (jk) { state.joins[jk] = pid; const ks = Object.keys(state.joins); if (ks.length > LIMITS.joins) delete state.joins[ks[0]]; }
             if (await store.put(code, state, cur.etag)) return out(200, { ok: true, pid, token, state: project(state, { role: 'player', pid }) });

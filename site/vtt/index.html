@@ -67,14 +67,16 @@
   </header>
   <div id="stage">
     <section id="tablewrap" aria-label="The table">
-      <div id="table">
+      <div id="mapViewport"><div id="table">
         <div id="bg"></div>
         <svg id="ink" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="cards"></div>
         <div id="pointers" aria-hidden="true"></div>
         <div id="toolbar" role="toolbar" aria-label="Table tools"></div>
         <div id="banner" role="status"></div>
-      </div>
+      </div></div>
+      <p id="mapWidthHint" hidden>Scroll the map to see the rest.</p>
+      <button type="button" class="chip" id="mapWidthToggle" data-do="mapWidth" aria-pressed="false" title="Use the available width; scroll to see the rest of the map">Fill width</button>
     </section>
     <aside id="panel" aria-label="Selected"></aside>
   </div>

@@ -26,6 +26,12 @@
   <div class="row" id="ready"></div>
 </div>
 
+<div class="panel" id="heroStorage" role="status" aria-live="polite">
+  <p id="heroSaveStatus"></p>
+  <p id="heroLimitStatus"></p>
+  <div class="row"><button class="btn small" type="button" id="downloadHeroes">Download heroes backup</button><button class="btn small" type="button" id="retryHeroSave" hidden>Try saving again</button></div>
+  <p class="note">Keep the backup private: it includes your heroes and their notes.</p>
+</div>
 <div id="sheetHere"></div>
 </div>
 <script src="/vtt/rules.js"></script>
@@ -45,11 +51,25 @@
   /* heroes saved before supplies were kept to the pack: say which were put right (they are saved that way now, so this shows once) */
   if (S.moved && S.moved.length) { var note = document.createElement('div'); note.className = 'panel'; note.setAttribute('role', 'status'); note.innerHTML = '<p><b>Supply items cannot be equipped</b>, so these were moved to your pack: ' + esc(S.moved.join('; ')) + '.</p>'; $('pick').parentNode.insertBefore(note, $('pick')); }
   var cur = function () { return S.heroes.filter(function (h) { return h.id === S.current; })[0] || null; };
-  function save() { H.save(S); }
+  function renderStorage() {
+    $('heroSaveStatus').textContent = S.saveError || 'Your heroes are saved in this browser.';
+    $('heroSaveStatus').className = S.saveError ? 'msg' : 'note';
+    $('heroLimitStatus').textContent = S.heroes.length + ' heroes saved. ' + (H.canAdd(S) ? 'You can keep up to ' + H.LIMIT + ' here.' : 'The limit is ' + H.LIMIT + '. Existing heroes are kept; download a backup before deleting one to make room.');
+    $('retryHeroSave').hidden = !S.saveError || S.readOnly;
+    $('downloadHeroes').disabled = !S.heroes.length && !S.unreadableOriginal;
+  }
+  function save() { var ok = H.save(S); S.unsaved = !ok; renderStorage(); return ok; }
+  $('retryHeroSave').onclick = save;
+  $('downloadHeroes').onclick = function () {
+    var url = URL.createObjectURL(new Blob([JSON.stringify(H.backup(S), null, 2)], { type: 'application/json' }));
+    var a = document.createElement('a'); a.href = url; a.download = 'sacrament-heroes-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  };
+  window.addEventListener('beforeunload', function (e) { if (S.unsaved) { e.preventDefault(); e.returnValue = ''; } });
 
   var view = window.SacramentSheet.mount($('sheetHere'), {
-    get: function () { var h = cur(); return h ? { hero: h, hp: h.hp, canEdit: true, canHp: true, gm: false, live: false, title: 'saved in this browser' } : null; },
-    act: function (op, done) { var h = cur(); if (!h) return done(false, 'There is no hero to change.'); var r = C.edit(h, op, { gm: false }, h.hp); if (r.ok) { save(); renderPick(); } done(r.ok, r.why); },
+    get: function () { var h = cur(); return h ? { hero: h, hp: h.hp, canEdit: true, canHp: true, gm: false, live: false, title: S.saveError ? 'not saved in this browser' : 'saved in this browser' } : null; },
+    act: function (op, done) { var h = cur(); if (!h) return done(false, 'There is no hero to change.'); var r = C.edit(h, op, { gm: false }, h.hp); if (r.ok) { var stored = save(); renderPick(); done(stored, stored ? '' : S.saveError); } else done(false, r.why); },
     hp: function (d) { var h = cur(); if (!h) return; h.hp.cur = Math.max(0, Math.min(h.hp.max, h.hp.cur + d)); save(); view.draw(true); }
   });
 
@@ -57,9 +77,12 @@
     $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + '</option>'; }).join('') || '<option value="">(none yet)</option>';
     $('ready').innerHTML = D.CHARACTERS.map(function (c) { return '<button class="btn small" data-ready="' + c.id + '" type="button">' + esc(c.name) + ' \u00b7 ' + esc(c.calling) + '</button>'; }).join('');
     $('delHero').disabled = !cur();
+    $('newHero').disabled = !H.canAdd(S);
+    $('ready').querySelectorAll('button').forEach(function (b) { b.disabled = !H.canAdd(S); });
+    renderStorage();
   }
-  function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), or take a ready-made hero below and change it.</p></div>'; }
-  function add(h) { S.heroes.push(h); S.current = h.id; save(); render(); }
+  function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = S.readOnly ? '<div class="panel"><p>Saved heroes could not be read. See the backup notice above. You can make a temporary hero here without replacing the existing saved data.</p></div>' : '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), or take a ready-made hero below and change it.</p></div>'; }
+  function add(h) { if (!H.canAdd(S)) { renderStorage(); return null; } S.heroes.push(h); S.current = h.id; save(); render(); return h; }
   $('heroSel').onchange = function () { S.current = this.value; save(); render(); };
   $('newHero').onclick = function () { add(H.blank('New hero')); };
   $('delHero').onclick = function () { var c = cur(); if (!c || !confirm('Delete ' + c.name + '? This cannot be undone.')) return; S.heroes = S.heroes.filter(function (h) { return h !== c; }); S.current = S.heroes.length ? S.heroes[0].id : ''; save(); render(); };
@@ -67,7 +90,7 @@
   if (!cur() && S.heroes.length) S.current = S.heroes[0].id;
   /* what the earlier-characters section below needs */
   window.HeroesPage = { esc: esc, sgn: sgn, D: D, S: S,
-    addEngineHero: function (c, key) { var h = H.fromEngine(c); h.id = H.uid(); h.from = c.from || ''; S.heroes.push(h); S.current = h.id; S.converted[key] = h.id; save(); render(); return h; } };
+    addEngineHero: function (c, key) { if (!H.canAdd(S)) { renderStorage(); return null; } var h = H.fromEngine(c); h.id = H.uid(); h.from = c.from || ''; S.heroes.push(h); S.current = h.id; S.converted[key] = h.id; save(); render(); return h; } };
   render();
 })();
 </script>
@@ -139,6 +162,7 @@
       if (b.hasAttribute('data-cancel')) { open = null; render(); return; }
       if (b.hasAttribute('data-make') && open) {
         var r = proposal(open.key), h = U.addEngineHero(r.hero, open.key);
+        if (!h) { $('made').textContent = 'The hero limit has been reached. Download a backup, then delete a hero to make room.'; return; }
         $('made').innerHTML = esc(h.name) + ' is ready. It is selected at the top of the page. The old character is untouched.'; b.disabled = true; render2();
       }
     };

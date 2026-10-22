@@ -137,3 +137,7 @@
 /* Character sheets: keep data entry and small labels immediately readable. */
 :is(#sheetOverlay,#sheetHere) :is(input,select,textarea,button,.sh-f,.sh-pill,.sh-stat small){font-family:var(--label);}
 :is(#sheetOverlay,#sheetHere) :is(h2,h3,h4){font-family:var(--display);letter-spacing:0;}
+
+/* The play actions stay above the character-building fields. */
+.sh-quick{display:flex;flex-wrap:wrap;gap:8px;max-height:16rem;overflow:auto;padding:3px}
+.sh-quick .sh-b{min-height:44px;max-width:100%;white-space:normal;text-align:left}

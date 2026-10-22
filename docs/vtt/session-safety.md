@@ -14,3 +14,15 @@ Regression checks:
 - `CHROMIUM=/usr/bin/chromium npx playwright test e2e/session-recovery.spec.mjs --workers=1`
 
 Run browser/build checks in a disposable validation copy: the current landing-page generator rewrites tracked HTML. Before publishing, run `npm run check:full`, which includes the fast phone check. The wider audit contains additional improvements beyond these safety fixes.
+
+## Safer play and map controls
+
+Local hero reads retain every existing valid hero, including lists above 30. Creation and conversion stop at 30; existing heroes can still be selected, edited and downloaded. Failed writes are visible, retain the latest in-memory changes and offer retry plus a JSON download. Unreadable stored JSON is not overwritten; the download includes it for recovery. The download currently preserves data for recovery; a file-import screen is not part of this change.
+
+The GM's Table tab removes a player only after a second confirmation. Their credential is revoked, their heroes become unowned, private possessions return hidden, and their place is freed. Rejoining with the same invitation is allowed but receives a fresh credential, including when the browser reuses its previous join-attempt key. Old saved join credentials remain compatible until removed.
+
+Drawings and pointers carry a scene ID. Players receive only the live scene's annotations, including on pointer-only polls; the GM can prepare annotations privately. Existing unscoped annotations attach to the previously live scene before any scene change. Undo and Clear affect the selected scene only; drawing at capacity does not evict another scene's ink. Older GM pages without a scene ID must refresh before annotating a multi-scene table. Test requests and the HTTP checker send the current scene explicitly.
+
+Live sheets offer Ready to use above the build fields. These buttons use the same stable possession keys and authoritative item actions as the existing equipment controls.
+
+Fill width changes only the local viewport. The board remains 16:10 and keeps its normalized coordinates; the viewport scrolls vertically when necessary. Fit map restores the whole-board view. The map controls remain outside the scrolling content.

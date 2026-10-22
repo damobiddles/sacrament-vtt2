@@ -47,7 +47,7 @@
 
   /* the line saying what happens when it is used: only an item with an Effort kind rolls */
   function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')</b> for damage.</p>' : ''; }
-  function useBtn(a, spellId, word) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="use" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
+  function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
   function plainLine(src) { return src.cat || !src.temptsHorror ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
   function gearItem(g, i, edit, acts, dice) {
@@ -62,16 +62,20 @@
   }
 
   function render(d, msg, host, pick) {
-    var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h);
+    var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h), acts = host.use && edit ? C.actions(h) : [];
     var out = '<div class="sh-head"><h2>' + esc(h.name) + ' <span class="sh-sub">' + (d.title || '') + '</span></h2>' + (d.live ? '<span class="sh-live" role="status">At the table · changes show for everyone</span>' : '') + (host.close ? '<button type="button" class="sh-b close" data-sh="close">Close sheet</button>' : '') + '</div>';
     out += '<div class="sh-msg" role="status" aria-live="polite">' + (msg ? '<b>' + esc(msg) + '</b>' : '') + '</div>';
+    if (d.live && host.use && edit) {
+      var ready = acts.filter(function (a) { return a.ok; });
+      out += '<section class="sh-sec sh-actions" aria-label="Quick actions"><h3>Ready to use</h3><div class="sh-quick">' + (ready.map(function (a) { return useBtn(a, a.spellId, a.name, true); }).join('') || '<p class="sh-note">No equipped actions are ready. Manage your equipment below.</p>') + '</div></section>';
+    }
     var left1 = '<section class="sh-sec"><h3>Who</h3><div class="sh-row">' + field('Name', 'name', h.name, edit, false, C.TEXT_LIMITS.name) + field('Calling', 'calling', h.calling, edit, false, C.TEXT_LIMITS.calling) + '</div>' + field('Vow', 'vow', h.vow, edit, false, C.TEXT_LIMITS.vow) + '</section>';
     left1 += '<section class="sh-sec"><h3>Health and Defence</h3><div class="sh-row sh-hpline">' + (hp ? hearts(hp.cur, hp.max) + '<b class="sh-hpn">' + hp.cur + ' / ' + hp.max + '</b>' + (d.canHp ? '<span class="sh-step"><button type="button" data-sh="hp" data-d="-1" aria-label="Lose 1 hit point">−</button><button type="button" data-sh="hp" data-d="1" aria-label="Gain 1 hit point">+</button></span>' : '') + (hp.cur === 0 ? '<b class="sh-zero">AT 0</b>' : '') : '<span class="sh-note">No hit points yet.</span>') +
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
     left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + B.points + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
       (edit ? '<p class="sh-note">' + B.points + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
     left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + R.DEFAULT_DICE[k]; return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
-    var acts = host.use && edit ? C.actions(h) : [], eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, acts, d.dice)); });
+    var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, acts, d.dice)); });
     var option = function (it) { return '<option value="' + it.id + '"' + (pick === it.id ? ' selected' : '') + '>' + esc(optionText(it)) + '</option>'; };
     var group = function (label, list) { return list.length ? '<optgroup label="' + label + '">' + list.map(option).join('') + '</optgroup>' : ''; };
     /* a player is offered the starter list and one grimoire; finds (the loot table and relics) are the GM's to give, so only the GM sees them here */
@@ -127,7 +131,7 @@
       else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });
       else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, gearKey: b.dataset.gear || undefined, eq: b.dataset.eq === '1' });
       else if (k === 'hp' && d.canHp && host.hp) { host.hp(+b.dataset.d); }
-      else if (k === 'use' && host.use && d.canEdit) {
+      else if ((k === 'use' || k === 'quickUse') && host.use && d.canEdit) {
         var useIndex = b.dataset.gear ? d.hero.gear.findIndex(function (g) { return g.key === b.dataset.gear; }) : +b.dataset.i;
         var u = C.useOf(d.hero, useIndex, b.dataset.spell || '');
         if (!u.ok) { msg = u.why; draw(true); return; }

@@ -9,7 +9,7 @@ const line = { type: 'draw', pts: [[10, 10], [20, 20], [30, 15]], color: '#e0b04
 test('DRAWING: an answer to a screen that already has this drawing leaves it out; a changed drawing is sent again', async () => {
   const t = await table(); const p = await t.join('Ann');
   const get = (dv, token = p.token) => t.svc.handle({ method: 'GET', query: { code: t.code, dv }, token });
-  let r = await get(''); assert.ok(Array.isArray(r.body.state.draw)); const dv0 = r.body.state.drawV; assert.equal(typeof dv0, 'number');
+  let r = await get(''); assert.ok(Array.isArray(r.body.state.draw)); const dv0 = r.body.state.drawV, sceneId = r.body.state.table.scene.id; assert.equal(typeof dv0, 'number');
   r = await get(String(dv0)); assert.equal(r.body.state.draw, undefined, 'the same drawing is not sent again');
 
   await t.gm.cmd(line);
@@ -20,7 +20,7 @@ test('DRAWING: an answer to a screen that already has this drawing leaves it out
   /* a command's answer works the same way, when the screen says which drawing it has */
   const c = await t.svc.handle({ method: 'POST', body: { op: 'cmd', code: t.code, dv: dv1, cmd: { type: 'setTarget', delta: 1, actionId: 'drawtest.1' } }, token: t.gm.token });
   assert.equal(c.status, 200); assert.equal(c.body.state.draw, undefined);
-  const u = await t.svc.handle({ method: 'POST', body: { op: 'cmd', code: t.code, dv: dv1, cmd: { type: 'drawUndo', actionId: 'drawtest.2' } }, token: t.gm.token });
+  const u = await t.svc.handle({ method: 'POST', body: { op: 'cmd', code: t.code, dv: dv1, cmd: { type: 'drawUndo', sceneId, actionId: 'drawtest.2' } }, token: t.gm.token });
   assert.deepEqual(u.body.state.draw, []); assert.ok(u.body.state.drawV > dv1);
   await t.gm.cmd({ type: 'drawClear' }); r = await get(String(u.body.state.drawV)); assert.deepEqual(r.body.state.draw, [], 'clearing is a change too');
 });

@@ -15,10 +15,10 @@ After you join, the panel on the side shows the heroes nobody has taken yet. Pre
 ### Your sheet
 Press **Sheet** on your strip (or **Open your sheet** when you select your own token) to open your hero full-screen over the table. The table keeps running underneath, and closing the sheet puts you straight back. On it you can change your scores (6 points to share, no more than 6 in one), your Effort (4 points), your gear (ten slots equipped, ten in the pack) and write your appearance, background and notes. If a rule says no, the sheet tells you why in plain words. You can choose one grimoire yourself; relics and further books are finds your GM gives you. Spells and magic items are marked **Tempts the Horror**. Supplies (rope, bandages, candles, loot such as a signet ring) work from the pack: they show a **Supply** label instead of an Equip button. Only you and the GM can read your background and notes. The GM can open and change any hero's sheet.
 
-You can also build heroes between sessions on the [My heroes](/character/) page, which saves them in your browser. At a table with no hero yet, press **Bring a hero** to copy one from there: the table checks it against the rules and makes it yours.
+You can also build heroes between sessions on the [My heroes](/character/) page, which saves them in your browser. You can keep up to 30 heroes here; older lists above that limit remain available. **Download heroes backup** saves a private file containing all your heroes and notes. If browser saving fails, keep the page open and download the latest changes before closing it. At a table with no hero yet, press **Bring a hero** to copy one from there: the table checks it against the rules and makes it yours.
 
 ### Using equipment
-Your weapons, armour, spells and other equipment are managed on your **Sheet**, rather than as items on the bottom strip. Open your sheet to see what your hero carries and what is equipped. Your GM can help with equipment, supplies and loot during play.
+Your weapons, armour, spells and other equipment are managed on your **Sheet**, rather than as items on the bottom strip. At a table, **Ready to use** puts your equipped weapons and available spells at the top of the sheet. Press an action there to use that specific item. Open your sheet to see what your hero carries and what is equipped. Your GM can help with equipment, supplies and loot during play.
 
 When you attempt an action, select the relevant target if there is one and make the appropriate roll using the table controls. The GM decides when a weapon, spell or tool applies, and what happens as a result. Equipment that tempts the Horror can still raise the Horror meter when used.
 
@@ -59,6 +59,12 @@ A card that is **Hidden from players** does not exist for them: nothing about it
 ### The tray
 With nothing selected, the tray has four tabs: **Play** (the turn order), **Scene** (scenes and what you can add to the table), **Loot** and **Table** (the invite link, players, house rules). Click a card and the tray shows that card instead, with a **Back** link. Players never see any of this.
 
+### Managing players
+In the **Table** tab, press **Remove** beside a player, read the warning, then confirm. Their current access stops, their hero becomes available to claim, and privately held cards return hidden to the GM. They can join again using the invitation code; removal is not a permanent ban.
+
+### Map size
+Press **Fill width** at the top right of the map to use the available horizontal space. Scroll inside the map if it extends below the visible area. **Fit map** shows the whole map again. This changes only your view; it does not move tokens or change anyone else's view.
+
 ### Scenes
 Open the **Scene** tab. Type a name and press **Add**, then **Open** the new scene: you are now working in a scene your players cannot see, with a banner saying so. Add cards, move things, set a picture (**Change the picture for this scene**). When it is ready, press **Show to players** and everyone moves to it. You can go back to an earlier scene the same way, and everything in it is as you left it.
 
@@ -80,7 +86,7 @@ The **Horror** meter in the top bar runs from 0 to 21 and is the same for everyo
 The **Grimoire with no title** has one button, **Read**: the table rolls a d4 and you cast whichever of its four spells comes up.
 
 ### Pointing and drawing
-**Point** (top left of the table, then press and hold) shows everyone where you mean. **Draw** lets you sketch on the table; **Clear drawing** wipes it.
+**Point** (top left of the table, then press and hold) shows people viewing the same scene where you mean. **Draw** lets you sketch on that scene. Drawings and pointers on a prepared scene remain private until you show that scene to players. **Undo line** and **Clear drawing** affect only the scene you are viewing. Existing drawings stay with the scene that was live when this feature was introduced.
 
 ## On a phone
 The table works on a phone: the tray sits under the table and scrolls by itself.
