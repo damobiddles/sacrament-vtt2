@@ -431,3 +431,8 @@ label.phys{align-items:flex-start}
 #mapViewport.wide #table.t-select{touch-action:pan-y}
 
 #mapWidthHint{position:absolute;right:8px;bottom:6px;z-index:5500;max-width:75%;margin:0;padding:4px 8px;background:#12100d;color:#cfc4ab;font:.85rem/1.3 var(--body);pointer-events:none}
+
+/* Scene names can wrap without pushing the GM controls off-screen. */
+.scene-list li{flex-wrap:wrap}
+.scene-list li .n{flex:1 1 8em;min-width:0;overflow-wrap:anywhere}
+.scene-rename input{width:100%;min-width:0}

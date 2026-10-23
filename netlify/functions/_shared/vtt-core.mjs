@@ -525,7 +525,7 @@ const HANDLERS = {
   },
 
   sceneCreate(s, c, a, ctx) { if (Object.keys(s.scenes).length >= LIMITS.scenes) fail('limit', 'Too many scenes.'); const id = nid(s, 'sc'); s.scenes[id] = { id, name: str(c.name, LIMITS.name, 'Unmarked Ground') || 'Unmarked Ground', bg: url(c.bg) }; L(s, a, ctx, 'Prepared scene ' + s.scenes[id].name + '.', { private: true }); return { id }; },
-  sceneUpdate(s, c) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (own(c, 'name')) sc.name = str(c.name, LIMITS.name, sc.name) || sc.name; if (own(c, 'bg')) sc.bg = url(c.bg); return {}; },
+  sceneUpdate(s, c) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (own(c, 'name')) { const name = str(c.name, LIMITS.name).trim(); if (!name) fail('invalid', 'Enter a scene name.'); sc.name = name; } if (own(c, 'bg')) sc.bg = url(c.bg); return {}; },
   sceneReveal(s, c, a, ctx) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {}; },
 
   orderSet(s, c) {

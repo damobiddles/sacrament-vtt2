@@ -714,13 +714,16 @@
   }
   function tabScene() {
     var live = S.table.scene.id, view = viewScene(), bg = (S.scenes.filter(function (x) { return x.id === view; })[0] || {}).bg || '';
-    var h = '<h3>Scenes</h3><ul class="ol">' + S.scenes.map(function (x) {
+    var h = '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
       var isLive = x.id === live, isView = x.id === view;
       var right = isLive ? '<span class="pill">Live</span>' : '';
       if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '">Open</button>';
       else if (!isLive) right += '<span class="pill">Preparing</span><button class="btn small main" data-do="reveal" data-scene="' + x.id + '">Show to players</button>';
+      right += '<button type="button" class="btn small" data-do="renameScene" data-scene="' + x.id + '" aria-label="Rename scene: ' + esc(x.name) + '">Rename</button>';
       return '<li class="' + (isView ? 'cur' : '') + '"><span class="n">' + esc(x.name) + '</span>' + right + '</li>';
     }).join('') + '</ul>';
+    var renaming = S.scenes.filter(function (x) { return x.id === UI.sceneRename; })[0];
+    if (renaming) h += '<div class="sec scene-rename"><h4>Rename ' + esc(renaming.name) + '</h4><label>Scene name<input id="sceneName" maxlength="60" required value="' + esc(UI.sceneName || '') + '"' + (UI.sceneRenameSaving ? ' disabled' : '') + '></label><div class="row"><button type="button" class="btn small main" data-do="saveSceneName"' + (UI.sceneRenameSaving ? ' disabled aria-busy="true"' : '') + '>' + (UI.sceneRenameSaving ? 'Saving…' : 'Save name') + '</button><button type="button" class="btn small" data-do="cancelSceneName"' + (UI.sceneRenameSaving ? ' disabled' : '') + '>Cancel</button></div></div>';
     h += '<div class="row"><input id="newScene" placeholder="New scene name" maxlength="60" aria-label="New scene name"><button class="btn small" data-do="newScene">Add</button></div>';
     h += '<div class="row"><button type="button" class="link" data-do="sceneBg" aria-expanded="' + !!UI.sceneBg + '">' + (UI.sceneBg ? 'Hide picture settings' : 'Change the picture for this scene') + '</button></div>';
     if (UI.sceneBg) h += '<label>Picture address<input id="bgUrl" value="' + esc(bg) + '" placeholder="https://…"></label><label>Or upload one<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="bg"></label>';
@@ -949,10 +952,10 @@
       case 'adj': UI.adj = d.adj; renderStrip(); break;
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
-      case 'leave': leaveTable(); break;
+      case 'leave': UI.sceneRename = null; leaveTable(); break;
       case 'gmtab': UI.tab = d.t; UI.sub = null; UI.editOrder = false; renderPanel(); { var tb = $('panel'); if (tb) tb.scrollTop = 0; } break;
       case 'editOrder': UI.editOrder = !UI.editOrder; renderPanel(); break;
-      case 'openScene': UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
+      case 'openScene': UI.sceneRename = null; UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
       case 'sceneBg': UI.sceneBg = !UI.sceneBg; renderPanel(); break;
       case 'gmsub': UI.sub = d.s || null; renderPanel(); break;
       case 'roll': doRoll(d.stat, !!d.noitem); break;
@@ -1039,6 +1042,27 @@
       case 'give': send({ type: 'giveCard', id: d.id, pid: $('giveTo').value }); break;
       case 'take': send({ type: 'giveCard', id: d.id, pid: null }); break;
       case 'reveal': send({ type: 'sceneReveal', id: d.scene || viewScene() }, function () { UI.view = null; }); break;
+      case 'renameScene': {
+        if (!gm() || UI.sceneRenameSaving) break;
+        var sceneToName = S.scenes.filter(function (x) { return x.id === d.scene; })[0]; if (!sceneToName) break;
+        UI.sceneRename = sceneToName.id; UI.sceneName = sceneToName.name; renderPanel();
+        var sceneInput = $('sceneName'); if (sceneInput) { sceneInput.focus(); sceneInput.select(); } break;
+      }
+      case 'cancelSceneName': {
+        if (UI.sceneRenameSaving) break;
+        var cancelledScene = UI.sceneRename; UI.sceneRename = null; renderPanel();
+        var cancelReturn = document.querySelector('[data-do="renameScene"][data-scene="' + cancelledScene + '"]'); if (cancelReturn) cancelReturn.focus(); break;
+      }
+      case 'saveSceneName': {
+        if (!gm() || !UI.sceneRename || UI.sceneRenameSaving) break;
+        var nameInput = $('sceneName'), sceneName = nameInput && nameInput.value.trim();
+        if (!sceneName) { if (nameInput) { nameInput.setCustomValidity('Enter a scene name.'); nameInput.reportValidity(); nameInput.focus(); } break; }
+        var renamedId = UI.sceneRename; UI.sceneName = sceneName; UI.sceneRenameSaving = true; renderPanel();
+        send({ type: 'sceneUpdate', id: renamedId, name: sceneName }, function (bd) {
+          UI.sceneRenameSaving = false; if (bd) UI.sceneRename = null; renderPanel();
+          if (bd) { toast('Scene renamed.'); var renameReturn = document.querySelector('[data-do="renameScene"][data-scene="' + renamedId + '"]'); if (renameReturn) renameReturn.focus(); }
+        }); break;
+      }
       case 'newScene': { var nm = $('newScene').value.trim(); if (nm) send({ type: 'sceneCreate', name: nm }, function (bd) { if (bd) { UI.view = bd.result.id; render(); } }); break; }
       case 'turnTo': send({ type: 'turnSet', idx: +d.i }); break;
       case 'up': reorder(+d.i, -1); break; case 'down': reorder(+d.i, 1); break;
@@ -1078,6 +1102,7 @@
       toast('Image added.'); input.value = ''; if (document.activeElement === input) input.blur();
     }).catch(function (e) { if (version !== sessionVersion) return; toast((e && e.message || 'The upload did not work.') + ' Nothing was changed.', 8000); input.value = ''; });
   }
+  document.addEventListener('input', function (e) { if (e.target.id === 'sceneName') { UI.sceneName = e.target.value; e.target.setCustomValidity(''); } });
   document.addEventListener('change', function (e) {
     var t = e.target; if (!S || !t.dataset) return;
     if (t.dataset.upload === 'bg') return uploadPicture(t);
@@ -1098,6 +1123,7 @@
     else if (t.id === 'bgUrl') send({ type: 'sceneUpdate', id: viewScene(), bg: t.value.trim() });
   });
   document.addEventListener('keydown', function (e) {
+    if (e.target.id === 'sceneName' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); var nameAction = document.querySelector('[data-do="' + (e.key === 'Enter' ? 'saveSceneName' : 'cancelSceneName') + '"]'); if (nameAction) nameAction.click(); return; }
     if (e.key === 'Escape' && $('lootOverlay') && !$('lootOverlay').hidden) { e.preventDefault(); closeLoot(); return; }
     if (e.key === 'Escape' && UI.sheet) { e.preventDefault(); closeSheet(); return; }
     if (e.key === 'Enter' && e.target.matches && e.target.matches('input[data-edit],input[data-set],input[data-max],#bgUrl,#newScene')) { e.target.blur(); if (e.target.id === 'newScene') { var b = document.querySelector('[data-do=newScene]'); if (b) b.click(); } }

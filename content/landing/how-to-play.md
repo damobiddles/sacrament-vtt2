@@ -68,6 +68,8 @@ In the **Table** tab, press **Remove** beside a player, read the warning, then c
 Press **Fill width** at the top right of the map to use the available horizontal space. Scroll inside the map if it extends below the visible area. **Fit map** shows the whole map again. This changes only your view; it does not move tokens or change anyone else's view.
 
 ### Scenes
+To change a scene name, open the **Scene** tab, press **Rename** beside that scene, type its new name and press **Save name**. **Cancel** leaves the name as it was. Renaming keeps the same map, cards and drawings. Only the GM can rename scenes; prepared scene names stay private until you show that scene to players.
+
 Open the **Scene** tab. Type a name and press **Add**, then **Open** the new scene: you are now working in a scene your players cannot see, with a banner saying so. Add cards, move things, set a picture (**Change the picture for this scene**). When it is ready, press **Show to players** and everyone moves to it. You can go back to an earlier scene the same way, and everything in it is as you left it.
 
 ### Turns, rounds and countdowns
