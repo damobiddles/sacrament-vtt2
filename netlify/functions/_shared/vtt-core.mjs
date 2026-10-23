@@ -240,6 +240,7 @@ export function apply(s, cmd, a, ctx) {
   Object.values(s.chars).forEach(gearKeys);
   migrateAnnotations(s);
   fixSupplies(s, ctx);
+  if (cmd.type !== 'point') fixArmour(s, ctx);
   const H = HANDLERS[cmd.type]; if (!H) fail('invalid', 'Unknown command: ' + str(cmd.type, 30));
   a = Object.assign({}, a, { name: isGM(a) ? 'GM' : (s.players[a.pid] || {}).name || 'Player' });
   const result = H(s, cmd, a, ctx) || {};
@@ -260,6 +261,18 @@ function fixSupplies(s, ctx) {
   const moved = [];
   for (const ch of Object.values(s.chars)) { const card = s.cards[ch.cardId], names = SC.unequipSupplies(ch, card && card.hp); if (names.length) moved.push(ch.name + ': ' + names.join(', ')); }
   if (moved.length) addLog(s, { role: 'gm' }, 'Supply items cannot be equipped, so these were moved to the pack: ' + moved.join('; ') + '.', { now: ctx.now, private: true, kind: 'info' });
+}
+
+
+/* Upgrade old overlapping armour once, keeping all gear and the hero's wounds. */
+function fixArmour(s, ctx) {
+  if (s.armourFix === 1) return; s.armourFix = 1;
+  const moved = [];
+  for (const ch of Object.values(s.chars)) {
+    const card = s.cards[ch.cardId], names = SC.reconcileArmour(ch, card && card.hp);
+    if (names.length) moved.push(ch.name + ': ' + names.join(', '));
+  }
+  if (moved.length) addLog(s, { role: 'gm' }, 'Spare armour moved to the pack under the one-suit, one-helmet, one-shield rule: ' + moved.join('; ') + '. All items were kept. Check any full packs.', { now: ctx.now, private: true, kind: 'info' });
 }
 
 
@@ -598,7 +611,7 @@ const HANDLERS = {
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, dice: diceOf(manual, 20, d20) });
-      if (u.cat) roll.cat = u.cat;   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
+      if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
       nat = natOne(s, a, ctx, ch, chk);
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv });
@@ -734,6 +747,7 @@ const HANDLERS = {
     const ch = charOf(s, roll.charId), cat = roll.cat && !ult ? roll.cat : R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
+    e.weaponBonus = roll.weaponBonus === 2 && roll.cat === 'weapons' ? 2 : 0; e.total += e.weaponBonus;
     e.manual = manual; roll.effort = e; const tc = roll.targetCardId && s.cards[roll.targetCardId];
     L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled) });
     return { rollId: roll.id };

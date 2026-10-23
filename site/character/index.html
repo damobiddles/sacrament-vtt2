@@ -50,6 +50,7 @@
   var S = H.read(E.upgrade);
   /* heroes saved before supplies were kept to the pack: say which were put right (they are saved that way now, so this shows once) */
   if (S.moved && S.moved.length) { var note = document.createElement('div'); note.className = 'panel'; note.setAttribute('role', 'status'); note.innerHTML = '<p><b>Supply items cannot be equipped</b>, so these were moved to your pack: ' + esc(S.moved.join('; ')) + '.</p>'; $('pick').parentNode.insertBefore(note, $('pick')); }
+  if (S.armourMoved && S.armourMoved.length) { var armourNote = document.createElement('div'); armourNote.className = 'panel'; armourNote.setAttribute('role', 'status'); armourNote.textContent = 'Only one body armour, one helmet and one shield can be equipped. Spare armour was kept in your pack: ' + S.armourMoved.join('; ') + '. Check any full packs.'; $('pick').parentNode.insertBefore(armourNote, $('pick')); }
   var cur = function () { return S.heroes.filter(function (h) { return h.id === S.current; })[0] || null; };
   function renderStorage() {
     $('heroSaveStatus').textContent = S.saveError || 'Your heroes are saved in this browser.';

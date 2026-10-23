@@ -105,7 +105,7 @@ test('armour feeds Defence: 10 + CON + armour, armour counting for at most +5, a
   C.edit(h, { op: 'add', id: 'gambeson' }, player, null); assert.equal(C.armourBonus(h), 2); assert.equal(C.defence(h), 14);
   C.edit(h, { op: 'move', index: 0, eq: false }, player, null); assert.equal(C.defence(h), 12, 'armour in the pack does not count');
   h.armour = 2; assert.equal(C.defence(h), 14, 'the GM\'s number still counts');
-  C.edit(h, { op: 'move', index: 0, eq: true }, player, null); C.edit(h, { op: 'add', id: 'brigandine' }, player, null);
+  C.edit(h, { op: 'move', index: 0, eq: true }, player, null); C.edit(h, { op: 'add', id: 'helm' }, player, null); C.edit(h, { op: 'add', id: 'shield' }, player, null);
   assert.equal(C.defence(h), 12 + 5, 'capped at +5 of armour');
 });
 

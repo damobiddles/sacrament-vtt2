@@ -35,7 +35,12 @@
       flavour: text(raw.flavour, 400), does: text(raw.does, 600), equippable: kind === 'supply' ? raw.equippable === true : true,
       temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
     o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
+    if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
+    if (kind === 'weapon' && o.weaponStyle !== 'single') o.slots = Math.max(2, o.slots);
+    if (kind === 'armour') o.armourPart = ['body', 'head', 'shield'].indexOf(raw.armourPart) >= 0 ? raw.armourPart : 'body';
+    if (kind === 'weapon' && o.weaponStyle === 'heavy') { o.cat = 'weapons'; if (STATS.indexOf(o.roll) < 0) o.roll = 'STR'; }
     if (kind === 'grimoire') {
+      o.slots = 3;
       o.temptsHorror = true; o.cat = ''; o.roll = ''; o.horror = horrorOf(raw.horror) || 1;
       o.spells = (Array.isArray(raw.spells) ? raw.spells : []).filter(function (id, n, ids) { return Object.prototype.hasOwnProperty.call(SPELL, id) && ids.indexOf(id) === n; }).slice(0, 3);
       if (raw.pick) { o.pick = 3; o.pickDie = 6; }
@@ -64,7 +69,38 @@
   /* Equipped means marked equipped AND able to be: whatever an old save says, a supply is in the pack. */
   var isEq = function (g) { return g.eq === true && canEquip(itemOf(g)); };
   function slotsUsed(h, set) { return (h.gear || []).reduce(function (a, g) { var it = itemOf(g); return a + ((set === 'eq') === isEq(g) && it ? it.slots : 0); }, 0); }
-  function armourBonus(h) { return (h.gear || []).reduce(function (a, g) { var it = itemOf(g); return a + (isEq(g) && it && it.kind === 'armour' ? it.defence || 0 : 0); }, 0); }
+  function armourPart(it) { return it && it.kind === 'armour' ? it.armourPart || 'body' : ''; }
+  function activeArmour(h) {
+    var parts = {};
+    (h.gear || []).forEach(function (g) {
+      var it = itemOf(g), part = armourPart(it); if (!isEq(g) || !part) return;
+      var old = parts[part] && itemOf(parts[part]);
+      if (!old || (it.defence || 0) > (old.defence || 0) || ((it.defence || 0) === (old.defence || 0) && (it.hearts || 0) > (old.hearts || 0))) parts[part] = g;
+    });
+    return Object.keys(parts).map(function (k) { return parts[k]; });
+  }
+  function armourBonus(h) { return activeArmour(h).reduce(function (n, g) { return n + (itemOf(g).defence || 0); }, 0); }
+  function equipmentProblems(h) {
+    var out = [], active = activeArmour(h);
+    ['eq', 'pack'].forEach(function (set) { var used = slotsUsed(h, set); if (used > B.slots) out.push('Your ' + (set === 'eq' ? 'equipped gear uses ' : 'pack uses ') + used + ' of ' + B.slots + ' slots. Move spare items to the pack or put them aside with your GM.'); });
+    if ((h.gear || []).some(function (g) { return isEq(g) && armourPart(itemOf(g)) && active.indexOf(g) < 0; })) out.push('Only one body armour, one helmet and one shield can contribute. Move spare armour to the pack.');
+    return out;
+  }
+  function armourConflict(h, it, except) { return armourPart(it) && (h.gear || []).some(function (g) { return g !== except && isEq(g) && armourPart(itemOf(g)) === armourPart(it); }); }
+  function weaponHands(it) { return it && ['heavy', 'reach', 'ranged'].indexOf(it.weaponStyle) >= 0 ? 2 : 1; }
+  function damageBonus(it) { return it && it.kind === 'weapon' && it.weaponStyle === 'heavy' && it.cat === 'weapons' ? 2 : 0; }
+  /* Preserve every saved item. Extra suits/helmets/shields move to the pack, even
+     if an old loadout needs manual rearranging afterwards. Preserve wounds. */
+  function reconcileArmour(h, hp) {
+    var alive = hp && hp.cur > 0;
+    var active = activeArmour(h), moved = [];
+    (h.gear || []).forEach(function (g) {
+      var it = itemOf(g);
+      if (isEq(g) && armourPart(it) && active.indexOf(g) < 0) { g.eq = false; hpDelta(hp, it, -1); moved.push(it.name); }
+    });
+    if (alive && hp.cur === 0) hp.cur = 1;
+    return moved;
+  }
   /* Defence: 10 + CON + armour. The armour is what is worn plus the GM's own armour number; R.defence applies the caps. */
   function defence(h) { return R.defence(h.stats.CON, int(h.armour, 0) + armourBonus(h)); }
   /* Put right a hero who has a supply marked as equipped (a save from before supplies were kept to the pack): each goes to the pack. Returns the names of the items moved. */
@@ -80,6 +116,8 @@
   function useOf(h, index, spellId) {
     var g = (h.gear || [])[int(index, -1)]; if (!g) return no('There is nothing there to use.');
     var it = itemOf(g); if (!it) return no('That is not on the gear list.');
+    if (slotsUsed(h, 'eq') > B.slots) return no('Your equipped gear uses more than ten slots. Move spare items to the pack before using it.');
+    if (weaponHands(it) === 2 && activeArmour(h).some(function (a) { return armourPart(itemOf(a)) === 'shield'; })) return no('The ' + it.name + ' needs both hands. Move your shield to the pack first.');
     var src = it, sp = null, pick = it.kind === 'grimoire' && it.pick ? int(it.pick, 0) : 0;
     if (it.kind === 'grimoire' && !pick) {
       sp = spellId && SPELL[spellId]; if (!sp || (it.spells || []).indexOf(sp.id) < 0) return no('Choose one of the spells in ' + it.name + '.');
@@ -94,7 +132,7 @@
     if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
-    return { ok: true, item: it, spell: sp, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', horror: src.temptsHorror ? src.horror : 0 };
+    return { ok: true, item: it, spell: sp, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? src.horror : 0 };
   }
   /* A spell of a grimoire read by the die, as if the reader had chosen it: the same checks have already been made for the book. */
   function useSpell(u, sp) { return { ok: true, item: u.item, spell: sp, gear: u.gear, name: sp.name + ' (' + u.item.name + ')', stat: STATS.indexOf(sp.roll) >= 0 ? sp.roll : '', cat: sp.cat || '', horror: sp.temptsHorror ? sp.horror : 0 }; }
@@ -117,6 +155,8 @@
     if (!it) return null;
     var cat = it.kind === 'relic' ? 'Relic' : CUSTOM_CATS.indexOf(it.category) >= 0 ? it.category : it.kind === 'weapon' ? 'Weapon' : it.kind === 'armour' ? 'Armour' : 'Curio';
     var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
+    if (it.kind === 'armour') out.armourPart = armourPart(it);
     if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
     return out;
   }
@@ -209,7 +249,8 @@
         if (!room(h, 'pack', it)) return no(full(h, 'pack') + ' and the ' + it.name + ' needs ' + plural(it.slots, 'slot', 'slots') + '. Drop something first.');
         var gp = { id: it.id, eq: false }; if (it.uses) gp.uses = it.uses; if (it.custom) gp.def = defOf(it); h.gear.push(gp); return { ok: true };
       }
-      var first = it.kind === 'supply' ? 'pack' : 'eq', second = first === 'eq' ? 'pack' : 'eq', where = room(h, first, it) ? first : room(h, second, it) ? second : null;
+      if (armourConflict(h, it) && !room(h, 'pack', it)) return no('You already have ' + armourPart(it) + ' armour equipped and your pack is full. Make room in the pack first.');
+      var first = it.kind === 'supply' ? 'pack' : 'eq', second = first === 'eq' ? 'pack' : 'eq', where = !armourConflict(h, it) && room(h, first, it) ? first : room(h, second, it) ? second : null;
       if (!where) return no(full(h, first) + ' and the ' + it.name + ' needs ' + plural(it.slots, 'slot', 'slots') + '. The ' + (second === 'pack' ? 'pack' : 'equipped set') + ' is full too (' + slotsUsed(h, second) + ' of ' + B.slots + '). Drop something first.');
       var g = { id: it.id, eq: where === 'eq' }; if (it.uses) g.uses = it.uses; if (it.custom) g.def = defOf(it); h.gear.push(g);
       if (g.eq) hpDelta(hp, it, 1);
@@ -226,6 +267,7 @@
       var mi = itemOf(cur), toEq = op.eq === true; if (!mi) return no('That is not on the gear list.');
       if (isEq(cur) === toEq) return { ok: true };
       if (toEq && !canEquip(mi)) return no(mi.kind === 'supply' ? 'A supply works from the pack, so it cannot be equipped.' : 'The ' + mi.name + ' cannot be equipped: it works from the pack.');
+      if (toEq && armourConflict(h, mi, cur)) return no('Only one ' + armourPart(mi) + ' armour item can be equipped. Move the other one to the pack first.');
       var dest = toEq ? 'eq' : 'pack';
       if (!room(h, dest, mi)) return no(full(h, dest) + ' and the ' + mi.name + ' needs ' + plural(mi.slots, 'slot', 'slots') + '. ' + (toEq ? 'Move something to the pack, or drop it, first.' : 'Drop something first.'));
       cur.eq = toEq; hpDelta(hp, mi, toEq ? 1 : -1);
@@ -251,7 +293,7 @@
     if (!keep && grimoireCount(h) > B.playerGrimoires) out.push('A player may pick only ' + B.playerGrimoires + ' grimoire themselves.');
     if (magicCount(h) > B.magicItems) out.push('A hero carries no more than three relics and grimoires.');
     ['eq', 'pack'].forEach(function (set) { if (slotsUsed(h, set) > B.slots) out.push('The ' + (set === 'eq' ? 'equipped set' : 'pack') + ' uses ' + slotsUsed(h, set) + ' of ' + B.slots + ' slots.'); });
-    return out;
+    return out.concat(equipmentProblems(h).filter(function (msg) { return /Only one/.test(msg); }));
   }
   /* Whatever arrives is made into a hero of the right shape: unknown things dropped, numbers made whole and kept within what the table allows (the build limits are checked by `problems`). */
   function cleanHero(raw) {
@@ -265,6 +307,6 @@
     return h;
   }
 
-  return { TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
+  return { armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
     edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

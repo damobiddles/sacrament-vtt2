@@ -52,6 +52,10 @@ test('GEAR AND HEARTS: slots are enforced, armour changes Defence, and a Plate H
   assert.equal((await me(ann, 'Thorne')).defence, 17, 'CON 2, armour 2 (the GM\'s number) + 3 worn = 5, the most armour counts');
   const st0 = await t.state(), card0 = find(st0, 'Thorne'); assert.equal(card0.hp.max, 10);
   await sheet(ann, thorne.id, { op: 'add', id: 'harness' });
+  assert.equal((await me(ann, 'Thorne')).gear[1].eq, false, 'a second body armour goes to the pack');
+  assert.equal(find(await t.state(), 'Thorne').hp.max, 10);
+  await sheet(ann, thorne.id, { op: 'move', index: 0, eq: false });
+  await sheet(ann, thorne.id, { op: 'move', index: 1, eq: true });
   const card1 = find(await t.state(), 'Thorne'); assert.deepEqual([card1.hp.cur, card1.hp.max], [20, 20]);
   await sheet(ann, thorne.id, { op: 'move', index: 1, eq: false });
   const card2 = find(await t.state(), 'Thorne'); assert.deepEqual([card2.hp.cur, card2.hp.max], [10, 10]);

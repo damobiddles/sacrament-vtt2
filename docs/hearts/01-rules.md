@@ -58,11 +58,13 @@ A **Heart is 10 points**. Health is counted in Hearts, and so is progress on a h
 
 - **Scores.** Spend **6 points** on STR, DEX, CON, INT, WIS and CHA (no more than 6 in one), and **4 points of Effort** on Basic, Weapons, Ranged, Magic and Ultimate.
 - **Health.** 1 Heart (10 points), more from gear.
-- **Kit.** **Ten equipped, ten carried.** Every item says how many slots it takes: a dagger 1, a boar spear 2, a plate harness 3. You can *equip* ten slots (weapons, armour, relics, grimoires) and *carry* ten more in the pack (supplies and spares); there is no “encumbered”. Only equipped gear works; supplies work from the pack. Swapping a spare in is free between turns, or a Move in a fight. Choose a **Calling** for a ready-made kit, or build your own with no more than three relics and grimoires.
+- **Kit.** **Ten equipped, ten carried.** Every item says how many slots it takes: a dagger 1, a boar spear 2, a plate harness 3, every grimoire 3. You can *equip* ten slots (weapons, armour, relics, grimoires) and *carry* ten more in the pack (supplies and spares); there is no “encumbered”. Only equipped gear works; supplies work from the pack. Swapping a spare in is free between turns, or a Move in a fight. Choose a **Calling** for a ready-made kit, or build your own with no more than three relics and grimoires.
 - **Defence** is your CON, plus your armour and shield (armour and shield never add more than +5; Defence never passes +10). A few foes attack your WIS instead, with no armour. A foe must roll **10 + your Defence** to hit you.
 - **A vow.** One sentence. The GM may call on it.
 
 **Progression** (new) comes from what you find, not what you spend. At the end of an adventure the GM gives each hero a **Discovery**: a relic, a grimoire page, a weapon with a history, or a **Mark** (+1 to one score, to a base of +3 at most). You do not gain levels, learn abilities or increase your health by experience. A Heart can be won from a rare relic.
+
+**Equipment choices.** Every grimoire takes three slots. Heavy two-handed melee weapons add +2 damage to Weapons Effort, including when a natural 20 upgrades the roll to Ultimate. Reach/control weapons keep normal damage and their stated benefit. Using a two-handed weapon requires putting the shield in the pack. Only one body armour, one helmet and one shield may contribute; spare armour belongs in the pack. The VTT enforces these equipment restrictions and the heavy damage bonus.
 
 ## 5. The turn (changed)
 

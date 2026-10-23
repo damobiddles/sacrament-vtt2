@@ -107,3 +107,9 @@ The owner requested three spells per grimoire and preservation of all spells acr
 Since the last full phone pass: public loot catalogue, expanded grimoire selection and GM grimoire spell selectors.
 
 Since the last full phone pass: a public loot roller on `/loot/`, using the VTT loot rules without reading or writing game sessions.
+
+## Equipment balance (owner approved)
+
+All grimoires, including GM-designed ones, cost exactly three slots. Weapons have `weaponStyle`: single, heavy, reach or ranged. Heavy ordinary melee (`cat: weapons`) adds +2 damage, retained on an Ultimate upgrade; reach/control weapons keep normal damage. Two-handed weapons cannot be used while a shield is equipped: move it to the pack. Armour has `armourPart`: body, head or shield; one of each contributes. Saved overlapping armour moves to the pack once without deleting items, preserving wounds where possible and leaving a living hero at least 1 HP. Overfull old book loadouts show a warning and must be rearranged before item use. Old custom weapons default to single-handed and old custom armour to body; their GM may choose the appropriate role in the designer.
+
+Since the last full phone pass: three-slot books, equipment warnings and role labels, custom weapon/armour selectors, heavy damage and shield restriction.

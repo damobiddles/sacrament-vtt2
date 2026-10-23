@@ -38,7 +38,7 @@ server.listen(0, async () => {
   p = await open('/character/');
   check('there are no heroes to start, and four ready ones to pick', (await p.$$eval('#ready button', (e) => e.length)) === 4 && /no heroes saved/.test(await txt(p, '#sheetHere')));
   await p.click('[data-ready=ottoline]'); await T(200);
-  check('Ottoline arrives with her kit in 5 of 10 equipped slots', /5 of 10 slots/.test(await txt(p, '#sheetHere')) && (await p.$$eval('#sheetHere .sh-item', (e) => e.length)) === 4, await txt(p, '#sheetHere .sh-sec:nth-of-type(1)'));
+  check('Ottoline arrives with her kit in 8 of 10 equipped slots', /8 of 10 slots/.test(await txt(p, '#sheetHere')) && (await p.$$eval('#sheetHere .sh-item', (e) => e.length)) === 4, await txt(p, '#sheetHere .sh-sec:nth-of-type(1)'));
   check('hearts and defence are shown', (await p.$$eval('#sheetHere .sh-ht', (e) => e.length)) === 1 && /Defence\s*\d+/.test(await txt(p, '#sheetHere')));
   // slots: fill both sets to ten and refuse the next, with the reason on the sheet
   for (let k = 0; k < 22; k++) { await p.selectOption('#shAdd', 'cudgel'); await p.click('[data-sh=add]'); }

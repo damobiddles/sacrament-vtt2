@@ -29,6 +29,9 @@
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
     if (it.defence) b.push('Defence ' + sgn(it.defence));
+    if (it.weaponStyle) b.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand');
+    if (C.damageBonus(it)) b.push('+2 heavy damage');
+    if (it.armourPart) b.push(it.armourPart === 'body' ? 'Body armour' : it.armourPart === 'head' ? 'Helmet' : 'Shield');
     if (it.hearts) b.push('+' + plural(it.hearts, 'Heart', 'Hearts'));
     if (it.effort && it.kind !== 'grimoire') b.push('Effort d' + it.effort);   /* a grimoire is used through its spells, which say their own */
     if (it.roll && it.kind !== 'grimoire') b.push(it.roll);
@@ -46,7 +49,7 @@
   }
 
   /* the line saying what happens when it is used: only an item with an Effort kind rolls */
-  function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')</b> for damage.</p>' : ''; }
+  function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 heavy weapon' : '') + '</b> for damage.</p>' : ''; }
   function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
   function plainLine(src) { return src.cat || !src.temptsHorror ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
@@ -64,6 +67,7 @@
   function render(d, msg, host, pick) {
     var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h), acts = host.use && edit ? C.actions(h) : [];
     var out = '<div class="sh-head"><h2>' + esc(h.name) + ' <span class="sh-sub">' + (d.title || '') + '</span></h2>' + (d.live ? '<span class="sh-live" role="status">At the table · changes show for everyone</span>' : '') + (host.close ? '<button type="button" class="sh-b close" data-sh="close">Close sheet</button>' : '') + '</div>';
+    out += C.equipmentProblems(h).map(function (warning) { return '<p class="sh-note" role="status"><b>' + esc(warning) + '</b></p>'; }).join('');
     out += '<div class="sh-msg" role="status" aria-live="polite">' + (msg ? '<b>' + esc(msg) + '</b>' : '') + '</div>';
     if (d.live && host.use && edit) {
       var ready = acts.filter(function (a) { return a.ok; });
@@ -85,7 +89,7 @@
       (gm ? group('Relics (the GM gives these)', C.items.filter(function (it) { return it.kind === 'relic'; })) + group('Found items (the loot table)', C.items.filter(function (it) { return it.found && it.kind !== 'relic' && it.kind !== 'grimoire'; })) : '');
     var right = '<section class="sh-sec"><h3>Gear</h3><h4>Equipped <span class="sh-note">' + C.slotsUsed(h, 'eq') + ' of ' + B.slots + ' slots</span></h4>' + (eq.join('') || '<p class="sh-note">Nothing equipped.</p>') +
       '<h4>In the pack <span class="sh-note">' + C.slotsUsed(h, 'pack') + ' of ' + B.slots + ' slots</span></h4>' + (pk.join('') || '<p class="sh-note">Nothing in the pack.</p>') +
-      (edit ? '<div class="sh-row sh-add"><label class="sh-f">Add an item<select id="shAdd">' + opts + '</select></label><button type="button" class="sh-b go" data-sh="add">Add</button></div>' : '') + '<p class="sh-note">Only equipped weapons, armour, relics and grimoires work; supplies work from the pack. Relics, grimoires and magic items can tempt the Horror.</p></section>';
+      (edit ? '<div class="sh-row sh-add"><label class="sh-f">Add an item<select id="shAdd">' + opts + '</select></label><button type="button" class="sh-b go" data-sh="add">Add</button></div>' : '') + '<p class="sh-note">Only equipped weapons, armour, relics and grimoires work; supplies work from the pack. Grimoires take three slots. Equip one body armour, one helmet and one shield. Two-handed weapons require the shield to be in the pack. Relics, grimoires and magic items can tempt the Horror.</p></section>';
     right += '<section class="sh-sec"><h3>About ' + esc(h.name) + '</h3>' + field('Appearance', 'appearance', h.appearance, edit, 2, C.TEXT_LIMITS.appearance) + field('Background', 'background', h.background, edit, 3, C.TEXT_LIMITS.background) + field('Notes', 'notes', h.notes, edit, 3, C.TEXT_LIMITS.notes) + (edit ? '<p class="sh-note">Only you and the GM can read your background and notes at a table.</p>' : '') + '</section>';
     return out + '<div class="sh-cols"><div>' + left1 + '</div><div>' + right + '</div></div>';
   }

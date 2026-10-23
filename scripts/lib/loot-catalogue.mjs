@@ -20,6 +20,9 @@ export function lootCatalogue(g) {
   const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${items.filter(i => i.kind === kind).map(i => {
     const details = [`${i.slots} ${i.slots === 1 ? 'slot' : 'slots'}`, i.use || 'GM resolves use'];
     if (kind !== 'grimoire') {
+      if (i.weaponStyle) details.push(i.weaponStyle === 'single' ? 'One hand' : 'Two hands');
+      if (i.weaponStyle === 'heavy' && i.cat === 'weapons') details.push('+2 heavy damage');
+      if (i.armourPart) details.push(i.armourPart === 'body' ? 'Body armour' : i.armourPart === 'head' ? 'Helmet' : 'Shield');
       if (i.roll) details.push(i.roll + ' check');
       if (i.cat) details.push('Damage: ' + effortName(i.cat) + ' Effort' + (i.effort ? ' d' + i.effort : ' (table die)'));
       if (i.defence) details.push('Defence +' + i.defence);

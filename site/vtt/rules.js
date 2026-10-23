@@ -123,7 +123,7 @@
     var t = c.adj !== 'normal' ? 'Target ' + c.target + ' (' + c.adj.toUpperCase() + ', from ' + c.baseTarget + ')' : 'Target ' + c.target;
     return c.d20 + sign + ' ' + (statName || '') + ' = ' + c.total + ' against ' + t + (c.success ? '. Success.' : '. Miss.');
   }
-  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
+  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + (e.weaponBonus ? ' + ' + e.weaponBonus + ' heavy weapon' : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
 
   /* Hit points and task progress. Both count in points, ten to a Heart. A change is clamped to the tracker, and the amount that really changed is returned. */
   function hearts(points) { return Math.ceil(Math.max(0, int(points)) / HEART); }

@@ -17,11 +17,13 @@
       gear: (c.pack || []).map(function (p) { var it = C.item(p.id); return { id: p.id, eq: p.eq === true || (p.eq !== false && !!it && it.kind !== 'supply'), uses: p.uses }; }) });
     h.id = c.id || uid(); var max = clamp(parseInt(c.max, 10) || baseHp(h), 1, 999); h.hp = { cur: clamp(parseInt(c.hp, 10) || 0, 0, max), max: max };
     if (c.from) h.from = String(c.from).slice(0, 60);
+    C.reconcileArmour(h, h.hp);
     return h;
   }
   function tidy(raw) {
     var h = C.cleanHero(raw); h.id = String(raw.id || uid()).slice(0, 40); if (raw.from) h.from = String(raw.from).slice(0, 60);
     var max = clamp(parseInt(raw.hp && raw.hp.max, 10) || baseHp(h), 1, 999); h.hp = { cur: clamp(raw.hp && raw.hp.cur != null ? parseInt(raw.hp.cur, 10) || 0 : max, 0, max), max: max };
+    C.reconcileArmour(h, h.hp);
     return h;
   }
   /* the supply items a saved hero has marked as equipped (they cannot be: a supply stays in the pack), named for the notice on the page */
@@ -31,7 +33,7 @@
   }
   var LIMIT = 30;
   function read(upgrade) {
-    var st = { heroes: [], current: '', converted: {}, moved: [], saveError: '', readOnly: false }, raw = null, text;
+    var st = { heroes: [], current: '', converted: {}, moved: [], armourMoved: [], saveError: '', readOnly: false }, raw = null, text;
     try {
       text = localStorage.getItem(KEY);
       if (text) { raw = JSON.parse(text); if (!raw || !Array.isArray(raw.heroes)) throw new Error('Invalid heroes'); }
@@ -41,9 +43,9 @@
       return st;
     }
     if (raw) {
-      st.heroes = raw.heroes.filter(function (h) { return h && h.stats; }).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); return tidy(h); });
+      st.heroes = raw.heroes.filter(function (h) { return h && h.stats; }).map(function (h) { var m = equippedSupplies(h); if (m.length) st.moved.push((String(h.name || 'A hero').slice(0, 60)) + ': ' + m.join(', ')); var cleaned = tidy(h); var armour = cleaned.gear.filter(function (g, n) { return h.gear && h.gear[n] && h.gear[n].eq && !g.eq && C.armourPart(C.itemOf(g)); }).map(function (g) { return C.itemOf(g).name; }); if (armour.length) st.armourMoved.push(String(h.name || 'A hero').slice(0, 60) + ': ' + armour.join(', ')); return cleaned; });
       st.current = String(raw.current || ''); st.converted = raw.converted && typeof raw.converted === 'object' ? raw.converted : {};
-      if (st.moved.length) save(st);
+      if (st.moved.length || st.armourMoved.length) save(st);
       return st;
     }
     try {

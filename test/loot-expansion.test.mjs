@@ -11,15 +11,16 @@ const original = [...G.items, ...G.relics, ...G.grimoires, ...G.found.slice(0, 4
 const added = G.found.slice(47);
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-test('the expansion doubles each item category while preserving existing definitions and every spell', () => {
+test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
   assert.equal(C.items.length, 178);
   assert.equal(added.length, 89);
   for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28, grimoire: 16 })) {
     assert.equal(C.items.filter(i => i.kind === kind).length, total, kind);
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
-  // Roll ranges intentionally change; saved IDs, item behaviour and spell rules do not.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '74014acbc2996ee3b850f19ac822451b1496f090c41ca0c8298c1ebc196dd033');
+  // Approved equipment balance updates changed book costs, weapon text and armour roles.
+  // This fingerprint locks the reviewed definitions; all spell rules remain unchanged.
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '0f0f900d38628ebfb68cda7e5130940203f631d941b181cb163a5a14cb3c5d8a');
   assert.equal(hash(G.spells), 'b2ad12b6a8b11602d54a4a71be23e100748eb93f14b31b60b23327fc577828ff');
 });
 

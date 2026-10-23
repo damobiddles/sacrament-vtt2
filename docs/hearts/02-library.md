@@ -10,11 +10,11 @@ Every item says how many **slots** it takes (a hero carries ten), when it is **u
 |---|---|---|---|---|---|---|
 | **Pilgrim's Staff** | 1 | Action | STR | d6 | — | Strike an Engaged foe. A hit may leave a living foe Dazed instead of hurt: its next attack rolls 3 less. |
 | **Penitent's Blade** | 1 | Action | STR | d6 | — | Strike an Engaged foe. Held in a Guard it is a better parry: your Guard gives Defence +3 instead of +2. |
-| **Hunting Bow** | 2 | Action | DEX | d8 | — | Shoot a foe in Close or Far. Unlike the crossbow it can fire every Action, but not while a foe is Engaged with you. When you push, the second shot may be at a different foe. |
+| **Hunting Bow** | 2 | Action | DEX | d8 | — | Shoot a foe in Close or Far. Unlike the crossbow it can fire every Action, but not while a foe is Engaged with you. When you push, the second shot may be at a different foe. Requires both hands: move your shield to the pack before using it. |
 | **Gravedigger's Hatchet** | 1 | Action | STR | d6 | — | Strike an Engaged foe, or throw it at a foe in Close. A thrown hatchet lies where it lands: fetching it takes a Move. |
-| **Boar Spear** | 2 | Action | STR | d6 | — | Reach: Strike a foe in Engaged or Close without moving. Braced: when a foe moves from Close into Engaged with you, your next Strike on it before its next turn is Easy (−3). |
-| **Warden's Billhook** | 2 | Action | STR | d6 | — | Strike an Engaged foe. Instead of damage, a hit can hook it: drag it one band towards you, or topple it so that it spends its next Move standing. |
-| **Windlass Crossbow** | 2 | Action | DEX | d8 | — | Shoot a foe in Close or Far. Reloading takes your Move, so it fires at most once a turn unless you push. It cannot be used while a foe is Engaged with you. |
+| **Boar Spear** | 2 | Action | STR | d6 | — | Reach: Strike a foe in Engaged or Close without moving. Braced: when a foe moves from Close into Engaged with you, your next Strike on it before its next turn is Easy (−3). Requires both hands: move your shield to the pack before using it. |
+| **Warden's Billhook** | 2 | Action | STR | d6 | — | Strike an Engaged foe. Instead of damage, a hit can hook it: drag it one band towards you, or topple it so that it spends its next Move standing. Requires both hands: move your shield to the pack before using it. |
+| **Windlass Crossbow** | 2 | Action | DEX | d8 | — | Shoot a foe in Close or Far. Reloading takes your Move, so it fires at most once a turn unless you push. It cannot be used while a foe is Engaged with you. Requires both hands: move your shield to the pack before using it. |
 | **Confessor's Knife** | 1 | Action | STR | d6 | — | Strike an Engaged foe. Small enough to hide in a sleeve. |
 | **Sexton's Spade** | 1 | Action | STR | d4 | — | Strike an Engaged foe with a tool, not a weapon. Also digs. |
 | **Shepherd's Sling** | 1 | Action | DEX | d4 | — | Shoot a foe in Close or Far. A shepherd's tool, not a weapon of war. |
@@ -64,12 +64,12 @@ Every item says how many **slots** it takes (a hero carries ten), when it is **u
 
 | Item | Slots | Used | Roll | Effort | Horror | What it lets you do |
 |---|---|---|---|---|---|---|
-| **The Ashen Psalter** | 1 | Action | INT | d10 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
-| **The Seventh Penance** | 1 | Action | WIS | d8 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
-| **The Book of Quiet Mouths** | 2 | Action | INT | d10 | +2 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
-| **The Cinder Lectionary** | 1 | Action | — | — | +1 | Three spells of fire and ruin. Each spell lists its effect and Horror cost. |
-| **The Book of Last Confessions** | 2 | Action | — | — | +2 | Three workings of the dead and their testimony. Each spell lists its effect and Horror cost. |
-| **The Threshold Lectionary** | 1 | Action | — | — | +1 | Three rites of protection and peril. Each spell lists its effect and Horror cost. |
+| **The Ashen Psalter** | 3 | Action | INT | d10 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Seventh Penance** | 3 | Action | WIS | d8 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Book of Quiet Mouths** | 3 | Action | INT | d10 | +2 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Cinder Lectionary** | 3 | Action | — | — | +1 | Three spells of fire and ruin. Each spell lists its effect and Horror cost. |
+| **The Book of Last Confessions** | 3 | Action | — | — | +2 | Three workings of the dead and their testimony. Each spell lists its effect and Horror cost. |
+| **The Threshold Lectionary** | 3 | Action | — | — | +1 | Three rites of protection and peril. Each spell lists its effect and Horror cost. |
 
 ## Spells
 
@@ -125,11 +125,11 @@ That is all. There are no levels and no abilities to learn: what a hero can do i
 
 The healer. Her prayers and relics keep people standing, and every one of them costs a little of the night.
 
-**STR +1 · DEX +0 · CON +2 · INT +0 · WIS +3 · CHA +0** · Effort weapons +2, magic +1, ultimate +1 · 1 Heart (10) · Defence +4 · **4 equipped, 2 carried**
+**STR +1 · DEX +0 · CON +2 · INT +0 · WIS +3 · CHA +0** · Effort weapons +2, magic +1, ultimate +1 · 1 Heart (10) · Defence +4 · **6 equipped, 2 carried**
 
 - Pilgrim's Staff (1 slot)
 - Quilted Gambeson (1 slot)
-- The Seventh Penance (1 slot)
+- The Seventh Penance (3 slots)
 - Linen Bandages (1 slot)
 - Saint's Knucklebone (1 slot)
 - Hooded Lantern (1 slot)
@@ -170,10 +170,10 @@ The scout. She shoots from Far, works locks and mechanisms, and reads the room b
 
 The caster. The most power in the party, and the quickest way to wake what is listening.
 
-**STR +0 · DEX +1 · CON +1 · INT +3 · WIS +1 · CHA +0** · Effort magic +3, ultimate +1 · 1 Heart (10) · Defence +1 · **5 equipped, 0 carried**
+**STR +0 · DEX +1 · CON +1 · INT +3 · WIS +1 · CHA +0** · Effort magic +3, ultimate +1 · 1 Heart (10) · Defence +1 · **8 equipped, 0 carried**
 
 - Gravedigger's Hatchet (1 slot)
-- The Ashen Psalter (1 slot)
-- The Book of Quiet Mouths (2 slots)
+- The Ashen Psalter (3 slots)
+- The Book of Quiet Mouths (3 slots)
 - Penitent's Chain (1 slot)
 

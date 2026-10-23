@@ -6,14 +6,14 @@
   var C = root.SacramentSheetCore, R = root.SacramentRules;
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var FIXED = { Weapon: 1, Armour: 1, Relic: 1, Grimoire: 1 };   /* these always can be equipped */
-  var blank = function () { return { name: '', category: 'Curio', cat: '', roll: 'STR', slots: 1, flavour: '', does: '', equippable: false, temptsHorror: false, horror: 1, defence: 0, uses: 0, notes: '' }; };
+  var blank = function () { return { name: '', category: 'Curio', cat: '', roll: 'STR', slots: 1, weaponStyle: 'single', armourPart: 'body', flavour: '', does: '', equippable: false, temptsHorror: false, horror: 1, defence: 0, uses: 0, notes: '' }; };
 
   function mount(el, host) {
     var ld = { mode: 'lib', id: null, cardId: null, f: blank(), tab: 'design', hero: '', confirm: null, sig: '' };
 
     function opt(v, label, cur) { return '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(label) + '</option>'; }
     function field(label, key, big, max) { var v = ld.f[key]; return '<label class="sh-f">' + esc(label) + (big ? '<textarea rows="2" data-lf="' + key + '" maxlength="' + max + '">' + esc(v) + '</textarea>' : '<input data-lf="' + key + '" value="' + esc(v) + '" maxlength="' + max + '">') + '</label>'; }
-    function num(label, key, lo, hi) { return '<label class="sh-f">' + esc(label) + '<input type="number" inputmode="numeric" data-lf="' + key + '" min="' + lo + '" max="' + hi + '" value="' + esc(ld.f[key]) + '"></label>'; }
+    function num(label, key, lo, hi) { return '<label class="sh-f">' + esc(label) + '<input type="number" inputmode="numeric" data-lf="' + key + '" min="' + lo + '" max="' + hi + '" value="' + esc(ld.f[key]) + '"' + (key === 'slots' && ld.f.category === 'Grimoire' ? ' disabled' : '') + '></label>'; }
     function seg(key, on, yes, no) {
       return '<div class="lt-seg" role="group">' + [[true, yes], [false, no]].map(function (x) { return '<button type="button" data-lseg="' + key + '" data-v="' + x[0] + '" aria-pressed="' + (on === x[0]) + '"' + (on === x[0] ? ' class="on"' : '') + '>' + esc(x[1]) + '</button>'; }).join('') + '</div>';
     }
@@ -44,13 +44,17 @@
     /* the form */
     function form() {
       var f = ld.f, fixed = !!FIXED[f.category], title = ld.mode === 'card' ? 'Edit this loot card' : ld.mode === 'copy' ? 'Edit a copy of the find' : ld.id ? 'Edit loot' : 'Design loot';
+      if (f.category === 'Grimoire') f.slots = 3;
+      if (f.category === 'Weapon' && f.weaponStyle === 'heavy') { f.cat = 'weapons'; if (!f.roll) f.roll = 'STR'; }
       var out = '<h3>' + title + '</h3>' + field('Name', 'name', false, 60);
       out += '<div class="sh-row"><label class="sh-f">Category<select data-lf="category" data-redraw>' + C.CUSTOM_CATS.map(function (c) { return opt(c, c, f.category); }).join('') + '</select></label>' +
-        '<label class="sh-f">Effort type<select data-lf="cat" data-redraw' + (f.category === 'Grimoire' ? ' disabled' : '') + '>' + opt('', 'None (no damage Effort)', f.cat) + R.CATS.map(function (k) { return opt(k, R.CAT_NAMES[k] + ' (d' + R.DEFAULT_DICE[k] + ')', f.cat); }).join('') + '</select></label></div>';
+        '<label class="sh-f">Effort type<select data-lf="cat" data-redraw' + (f.category === 'Grimoire' || (f.category === 'Weapon' && f.weaponStyle === 'heavy') ? ' disabled' : '') + '>' + opt('', 'None (no damage Effort)', f.cat) + R.CATS.map(function (k) { return opt(k, R.CAT_NAMES[k] + ' (d' + R.DEFAULT_DICE[k] + ')', f.cat); }).join('') + '</select></label></div>';
       out += '<div class="sh-row">' + (f.cat ? '<label class="sh-f">Check stat (for its roll)<select data-lf="roll">' + R.STATS.map(function (k) { return opt(k, k, f.roll); }).join('') + '</select></label>' + num('Uses (0 for no limit)', 'uses', 0, 20) : '') + num('Slots', 'slots', 1, 4) + (f.category === 'Armour' ? num('Defence', 'defence', 0, 5) : '') + '</div>';
+      if (f.category === 'Weapon') out += '<label class="sh-f">Weapon style<select data-lf="weaponStyle" data-redraw>' + [['single','One handed'],['heavy','Heavy melee (+2 Weapons damage, two hands)'],['reach','Reach or control (two hands)'],['ranged','Bow or crossbow (two hands)']].map(function (x) { return opt(x[0], x[1], f.weaponStyle || 'single'); }).join('') + '</select></label>';
+      if (f.category === 'Armour') out += '<label class="sh-f">Armour part<select data-lf="armourPart">' + [['body','Body armour'],['head','Helmet'],['shield','Shield']].map(function (x) { return opt(x[0], x[1], f.armourPart || 'body'); }).join('') + '</select></label>';
       out += field('Description (players see this)', 'flavour', true, 400) + field('Ability text (what it does)', 'does', true, 600);
       if (f.category === 'Grimoire') {
-        out += '<p class="sh-note">Choose three different spells. Each spell keeps its own effect and Horror cost.</p>';
+        out += '<p class="sh-note">Every grimoire takes three slots. Choose three different spells. Each spell keeps its own effect and Horror cost.</p>';
         for (var si = 0; si < 3; si++) out += '<label class="sh-f">Spell ' + (si + 1) + '<select data-lspell="' + si + '">' + opt('', 'Choose a spell', '') + root.SACRAMENT_GEAR.spells.map(function (sp) { return opt(sp.id, sp.name + ' · ' + C.effectLabel(sp), (f.spells || [])[si]); }).join('') + '</select></label>';
       }
       out += '<div class="sh-f">Can it be equipped?' + (fixed ? '<p class="sh-note">A ' + esc(f.category.toLowerCase()) + ' is always equippable.</p>' : seg('equippable', f.equippable === true, 'Equippable', 'Supply (stays in the pack)')) + '</div>';
@@ -64,6 +68,7 @@
     }
     function preview() {
       var it = C.makeCustom(ld.f), pills = [it.slots + (it.slots === 1 ? ' slot' : ' slots')];
+      if (it.weaponStyle) pills.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand'); if (C.damageBonus(it)) pills.push('+2 heavy damage'); if (it.armourPart) pills.push(it.armourPart === 'head' ? 'Helmet' : it.armourPart === 'shield' ? 'Shield' : 'Body armour');
       if (it.defence) pills.push('Defence +' + it.defence); if (it.cat) pills.push('Effort d' + R.DEFAULT_DICE[it.cat]); if (it.roll) pills.push(it.roll);
       return '<div class="sh-note">How a player will see it</div><div class="sh-item"><div><b>' + esc(it.name) + '</b> <span class="sh-pill cat">' + esc(it.category) + '</span> ' + pills.map(function (x) { return '<span class="sh-pill">' + esc(x) + '</span>'; }).join(' ') +
         (it.temptsHorror ? ' <span class="sh-pill tempt">Tempts the Horror · ' + it.horror + '</span>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') +
@@ -120,7 +125,7 @@
       var t = e.target; if (!t.dataset) return;
       if (t.dataset.lspell !== undefined) { ld.f.spells = ld.f.spells || []; ld.f.spells[+t.dataset.lspell] = t.value; drawPrev(); return; }
       if (t.dataset.lhero !== undefined) { ld.hero = t.value; return; }
-      if (t.dataset.lf) { ld.f[t.dataset.lf] = t.value; if (t.dataset.lf === 'category' && t.value === 'Grimoire') { ld.f.cat = ''; ld.f.temptsHorror = true; } if (t.hasAttribute('data-redraw')) { var f = el.querySelector('#ltForm'); if (f) { f.innerHTML = form(); drawPrev(); } } else drawPrev(); }
+      if (t.dataset.lf) { ld.f[t.dataset.lf] = t.value; if (t.dataset.lf === 'category' && t.value === 'Grimoire') { ld.f.cat = ''; ld.f.temptsHorror = true; ld.f.slots = 3; } if (t.dataset.lf === 'weaponStyle' && t.value !== 'single') ld.f.slots = Math.max(2, +ld.f.slots || 2); if (t.hasAttribute('data-redraw')) { var f = el.querySelector('#ltForm'); if (f) { f.innerHTML = form(); drawPrev(); } } else drawPrev(); }
     });
     return { open: open, refresh: refresh, draw: draw, say: say };
   }
