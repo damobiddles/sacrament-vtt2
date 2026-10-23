@@ -117,3 +117,5 @@ Since the last full phone pass: three-slot books, equipment warnings and role la
 Drawing is GM-only: players have Select and Point, can see GM ink, and cannot send draw/drawUndo/drawClear commands. Existing ink is preserved. Since the last full phone pass: player Draw controls removed.
 
 Since the last full phone pass: shared website Back to top button appears after scrolling 400px; excluded from VTT, character and builder screens, supports reduced motion and returns focus to the page heading.
+
+Since the last full phone pass: My heroes now has a starting-hero generator with preview/keep, and a local backup-file restore with review, duplicate skipping and separate copies for changed versions. Test these in the next requested phone suite. Ordinary ranged weapon Effort remains unchanged pending the owner’s separate future weapon update.

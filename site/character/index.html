@@ -8,20 +8,30 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/game/game.css">
 <link rel="stylesheet" href="/sheet/sheet.css">
+<link rel="stylesheet" href="/character/character.css">
 <script src="/nav.js"></script>
 <meta name="theme-color" content="#12100d">
 </head>
 <body>
 <div class="hwrap">
-<p class="proto">Heroes are kept in this browser, on this device. To play one at a table, open the table and press <b>Bring a hero</b>: it is checked against the rules and becomes yours there. Made a character under the earlier rules? If it is saved in this browser it is listed at the bottom of this page, where you can bring it over. <a href="/rules/">Rules</a> &middot; <a href="/vtt/?join">Join a game</a></p>
+<p class="proto">Create a hero here, then open your game and choose <b>Bring a hero</b>. Heroes are saved in this browser on this device. Download a backup to keep them safe or move them to another browser. <a href="/rules/">Rules</a> &middot; <a href="/vtt/?join">Join a game</a></p>
 <div class="label">Sacrament RPG</div>
 <h1>My heroes</h1>
+
+<section class="panel hero-tools" aria-labelledby="generatorTitle">
+  <h2 id="generatorTitle">Roll a new hero</h2>
+  <p>Discover a name, a vow and a complete starting kit. Reroll until someone catches your imagination, then keep the hero and make them your own.</p>
+  <div class="row"><label>Starting focus<select id="generatorFocus"><option value="random">Surprise me</option><option value="fighter">Fighter</option><option value="scout">Scout</option><option value="scholar">Scholar (magic)</option><option value="healer">Healer (prayers)</option></select></label><button class="btn" type="button" id="generateHero">Generate a hero</button></div>
+  <div id="generatorPreview" aria-live="polite"></div>
+  <div class="row"><button class="btn" type="button" id="keepGenerated" hidden>Keep this hero</button></div>
+  <p class="note" id="generatorStatus" role="status">Generating a suggestion does not change your saved heroes. Each one uses the current starting rules.</p>
+</section>
 
 <div class="panel" id="pick">
   <h3>Your heroes</h3>
   <div class="row"><label>Hero<select id="heroSel" aria-label="Choose a hero"></select></label>
     <button class="btn small" id="newHero" type="button">New hero</button><button class="btn small ghost" id="delHero" type="button">Delete</button></div>
-  <h3>Ready to play</h3>
+  <h3>Or choose a ready-made hero</h3>
   <p class="note">A ready-made hero is a copy you can change however the rules allow.</p>
   <div class="row" id="ready"></div>
 </div>
@@ -31,6 +41,12 @@
   <p id="heroLimitStatus"></p>
   <div class="row"><button class="btn small" type="button" id="downloadHeroes">Download heroes backup</button><button class="btn small" type="button" id="retryHeroSave" hidden>Try saving again</button></div>
   <p class="note">Keep the backup private: it includes your heroes and their notes.</p>
+  <h3>Restore a heroes backup</h3>
+  <p>Choose the JSON file you downloaded with the backup button. You can review it before restoring. Existing heroes are kept; a different version is added as a separate copy.</p>
+  <label class="hero-backup-file">Heroes backup file<input type="file" id="restoreHeroesFile" accept=".json,application/json"></label>
+  <div id="restorePreview"></div>
+  <div class="row"><button class="btn" type="button" id="restoreHeroes" hidden>Restore backup</button><button class="btn ghost" type="button" id="cancelRestore" hidden>Cancel</button></div>
+  <p id="restoreStatus" role="status" aria-live="polite"></p>
 </div>
 <div id="sheetHere"></div>
 </div>
@@ -75,14 +91,14 @@
   });
 
   function renderPick() {
-    $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + '</option>'; }).join('') || '<option value="">(none yet)</option>';
+    $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + (h.restoredFrom ? ' · restored copy' : '') + '</option>'; }).join('') || '<option value="">(none yet)</option>';
     $('ready').innerHTML = D.CHARACTERS.map(function (c) { return '<button class="btn small" data-ready="' + c.id + '" type="button">' + esc(c.name) + ' \u00b7 ' + esc(c.calling) + '</button>'; }).join('');
     $('delHero').disabled = !cur();
     $('newHero').disabled = !H.canAdd(S);
     $('ready').querySelectorAll('button').forEach(function (b) { b.disabled = !H.canAdd(S); });
     renderStorage();
   }
-  function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = S.readOnly ? '<div class="panel"><p>Saved heroes could not be read. See the backup notice above. You can make a temporary hero here without replacing the existing saved data.</p></div>' : '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), or take a ready-made hero below and change it.</p></div>'; }
+  function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = S.readOnly ? '<div class="panel"><p>Saved heroes could not be read. See the backup notice above. You can make a temporary hero here without replacing the existing saved data.</p></div>' : '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), generate a suggestion above, or choose a ready-made hero and change it.</p></div>'; }
   function add(h) { if (!H.canAdd(S)) { renderStorage(); return null; } S.heroes.push(h); S.current = h.id; save(); render(); return h; }
   $('heroSel').onchange = function () { S.current = this.value; save(); render(); };
   $('newHero').onclick = function () { add(H.blank('New hero')); };
@@ -90,7 +106,7 @@
   $('ready').onclick = function (e) { var b = e.target.closest('[data-ready]'); if (!b) return; var def = D.CHARACTERS.filter(function (c) { return c.id === b.dataset.ready; })[0]; var h = H.fromEngine(E.newCharacter(def)); h.id = H.uid(); h.from = def.id; add(h); };
   if (!cur() && S.heroes.length) S.current = S.heroes[0].id;
   /* what the earlier-characters section below needs */
-  window.HeroesPage = { esc: esc, sgn: sgn, D: D, S: S,
+  window.HeroesPage = { H: H, C: C, refresh: render, addHero: add, esc: esc, sgn: sgn, D: D, S: S,
     addEngineHero: function (c, key) { if (!H.canAdd(S)) { renderStorage(); return null; } var h = H.fromEngine(c); h.id = H.uid(); h.from = c.from || ''; S.heroes.push(h); S.current = h.id; S.converted[key] = h.id; save(); render(); return h; } };
   render();
 })();
@@ -180,5 +196,7 @@
   next();
 })();
 </script>
+<script src="/sheet/hero-tools.js"></script>
+<script src="/sheet/hero-page.js"></script>
 </body>
 </html>

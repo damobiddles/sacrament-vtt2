@@ -24,6 +24,7 @@
     var h = C.cleanHero(raw); h.id = String(raw.id || uid()).slice(0, 40); if (raw.from) h.from = String(raw.from).slice(0, 60);
     var max = clamp(parseInt(raw.hp && raw.hp.max, 10) || baseHp(h), 1, 999); h.hp = { cur: clamp(raw.hp && raw.hp.cur != null ? parseInt(raw.hp.cur, 10) || 0 : max, 0, max), max: max };
     C.reconcileArmour(h, h.hp);
+    if (typeof raw.restoredFrom === 'string') h.restoredFrom = raw.restoredFrom.slice(0, 40);
     return h;
   }
   /* the supply items a saved hero has marked as equipped (they cannot be: a supply stays in the pack), named for the notice on the page */
@@ -35,7 +36,7 @@
   function read(upgrade) {
     var st = { heroes: [], current: '', converted: {}, moved: [], armourMoved: [], saveError: '', readOnly: false }, raw = null, text;
     try {
-      text = localStorage.getItem(KEY);
+      text = localStorage.getItem(KEY); st.storageVersion = text;
       if (text) { raw = JSON.parse(text); if (!raw || !Array.isArray(raw.heroes)) throw new Error('Invalid heroes'); }
     } catch (e) {
       st.readOnly = true; st.unreadableOriginal = text || '';
@@ -69,8 +70,8 @@
       var data = JSON.stringify({ heroes: st.heroes, current: st.current, converted: st.converted });
       localStorage.setItem(KEY, data);
       if (localStorage.getItem(KEY) !== data) throw new Error('Not saved');
-      st.saveError = ''; return true;
+      st.storageVersion = data; st.saveError = ''; return true;
     } catch (e) { st.saveError = 'Your latest changes could not be saved in this browser. Keep this page open and download a backup, or try saving again.'; return false; }
   }
-  root.SacramentHeroes = { read: read, save: save, blank: blank, fromEngine: fromEngine, uid: uid, KEY: KEY, LIMIT: LIMIT, canAdd: function (st) { return st.heroes.length < LIMIT; }, backup: backup };
+  root.SacramentHeroes = { tidy: tidy, read: read, save: save, blank: blank, fromEngine: fromEngine, uid: uid, KEY: KEY, LIMIT: LIMIT, canAdd: function (st) { return st.heroes.length < LIMIT; }, backup: backup };
 })(typeof window !== 'undefined' ? window : globalThis);
