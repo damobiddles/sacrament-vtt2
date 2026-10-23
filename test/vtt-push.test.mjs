@@ -29,7 +29,7 @@ test('PUSH: a natural 1 typed in from a physical die counts too; any other failu
 test('PUSH: a natural 1 on an item\'s check adds its own point beside the item\'s Horror', async () => {
   const { t, ann, thorne } = await setup([d20(1)]);
   await t.gm.cmd({ type: 'sheet', charId: thorne.id, op: { op: 'add', id: 'embers' } });
-  const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0, spellId: 'emberpsalm' }); assert.equal(r.status, 200);
+  const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0, spellId: 'ember' }); assert.equal(r.status, 200);
   assert.equal(r.body.state.horror.cur, 2, '1 for the spell, 1 for the natural 1');
   assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1\)\..*The Horror rises 1 \(now 2\)/);
 });

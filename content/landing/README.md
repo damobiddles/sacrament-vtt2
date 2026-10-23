@@ -28,3 +28,7 @@ Everything on the home page and its pages (https://playsacrament.com/, /the-game
 ## Feedback submissions
 
 The Feedback page uses Netlify Forms (`vtt-feedback`). The owner reads messages in the Netlify site dashboard under Forms, without publishing their email or using email notifications. Form detection must remain enabled on Netlify. There are no visitor accounts or required email addresses. Spam protection uses a hidden honeypot field. A local preview can check the form but cannot store a Netlify submission.
+
+## Current Loot Tables
+
+`/loot/` is generated from `site/sheet/gear.js`, the same catalogue the VTT reads. Introductory text lives in `loot.md`. Add or edit loot in the catalogue, then build/publish; do not maintain a second item list. Private GM loot notes never appear on this page.

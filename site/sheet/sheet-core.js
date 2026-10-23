@@ -23,18 +23,23 @@
   /* ---------- items the GM designs ---------- */
   /* A designed item travels with the hero as a copy of its details ("def") on the gear entry, so a later change to the GM's library never changes what a hero holds. Whatever
      arrives is tidied here, by the same code in the browser and on the server. The GM's private notes are never part of it. */
-  var CUSTOM_CATS = ['Weapon', 'Armour', 'Curio', 'Mundane', 'Valuable', 'Relic'];
+  var CUSTOM_CATS = ['Weapon', 'Armour', 'Curio', 'Mundane', 'Valuable', 'Relic', 'Grimoire'];
   /* A Horror amount as a designed item keeps it: a whole number, or dice such as "d4+2" (see R.horrorSpec). Anything else is 0. */
   function horrorOf(v) { var h = R.horrorSpec(v); return !h ? 0 : h.fixed != null ? h.fixed : R.sayHorrorAmount(v); }
   function makeCustom(raw) {
     raw = raw && typeof raw === 'object' ? raw : {};
     var category = CUSTOM_CATS.indexOf(raw.category) >= 0 ? raw.category : 'Curio';
-    var kind = category === 'Weapon' ? 'weapon' : category === 'Armour' ? 'armour' : category === 'Relic' ? 'relic' : 'supply';
+    var kind = category === 'Weapon' ? 'weapon' : category === 'Armour' ? 'armour' : category === 'Relic' ? 'relic' : category === 'Grimoire' ? 'grimoire' : 'supply';
     var o = { id: /^x[a-z0-9]{1,14}$/.test(raw.id) ? raw.id : 'xcustom', custom: true, found: true, kind: kind, category: category,
       name: text(raw.name, 60).trim() || 'Unnamed find', slots: clamp(int(raw.slots, 1), 1, 4),
       flavour: text(raw.flavour, 400), does: text(raw.does, 600), equippable: kind === 'supply' ? raw.equippable === true : true,
       temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
-    o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : '';
+    o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
+    if (kind === 'grimoire') {
+      o.temptsHorror = true; o.cat = ''; o.roll = ''; o.horror = horrorOf(raw.horror) || 1;
+      o.spells = (Array.isArray(raw.spells) ? raw.spells : []).filter(function (id, n, ids) { return Object.prototype.hasOwnProperty.call(SPELL, id) && ids.indexOf(id) === n; }).slice(0, 3);
+      if (raw.pick) { o.pick = 3; o.pickDie = 6; }
+    }
     if (kind === 'armour') o.defence = clamp(int(raw.defence, 0), 0, 5);
     var uses = clamp(int(raw.uses, 0), 0, 20); if (uses > 0 && o.cat) o.uses = uses;
     return o;
@@ -42,6 +47,7 @@
   /* The item a gear entry stands for: a designed one carries its own details, anything else is looked up on the gear list. */
   function itemOf(g) { return g ? (g.def ? makeCustom(g.def) : BY[g.id] || null) : null; }
   function spellsOf(it) { return ((it && it.spells) || []).map(function (id) { return SPELL[id]; }).filter(Boolean); }
+  function effectLabel(src) { return src.effect === 'healing' || src.heal ? 'Healing' : src.effect === 'esoteric' || !src.cat ? 'Esoteric effect' : 'Damage'; }
   function blankHero(name) {
     var h = { name: name || 'New hero', calling: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [] };
     STATS.forEach(function (k) { h.stats[k] = 0; }); CATS.forEach(function (k) { h.effort[k] = 0; });
@@ -85,7 +91,7 @@
     if ((it.kind === 'weapon' || it.kind === 'relic' || it.kind === 'grimoire') && !isEq(g)) return no('Equip the ' + it.name + ' first: only equipped weapons, relics and grimoires work.');
     if (it.uses != null && g.uses != null && g.uses <= 0) return no('The ' + it.name + ' has no uses left.');
     /* A grimoire read by the die: the spell is chosen when it is read, so what it rolls is not known yet. */
-    if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, spells: list.slice(0, pick) }; }
+    if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
     return { ok: true, item: it, spell: sp, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', horror: src.temptsHorror ? src.horror : 0 };
@@ -110,7 +116,9 @@
   function designOf(it) {
     if (!it) return null;
     var cat = it.kind === 'relic' ? 'Relic' : CUSTOM_CATS.indexOf(it.category) >= 0 ? it.category : it.kind === 'weapon' ? 'Weapon' : it.kind === 'armour' ? 'Armour' : 'Curio';
-    return { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
+    return out;
   }
   /* The d100 loot table: the item a roll of n gives (1 to 100), or null. */
   /* ---------- the loot tables ---------- */
@@ -258,5 +266,5 @@
   }
 
   return { TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

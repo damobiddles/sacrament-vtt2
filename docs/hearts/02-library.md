@@ -64,9 +64,12 @@ Every item says how many **slots** it takes (a hero carries ten), when it is **u
 
 | Item | Slots | Used | Roll | Effort | Horror | What it lets you do |
 |---|---|---|---|---|---|---|
-| **The Ashen Psalter** | 1 | Action | INT | d10 | +1 | Two spells, each cast as an Action. Ember: a foe in Close or Far is struck by flame for Effort d10 (1 Horror). Kindle: set fire to, or put out, something small; light it up to Close (1 Horror, no roll). |
-| **The Seventh Penance** | 1 | Action | WIS | d8 | +1 | Two prayers, each said as an Action. Mend: an ally in Engaged or Close heals Effort d8, once per person per rest (1 Horror). Ward: an ally in Engaged or Close gets +2 Defence until your next turn (1 Horror). |
-| **The Book of Quiet Mouths** | 2 | Action | INT | d10 | +2 | Three forbidden workings. Unmake: a foe in Close or Far takes Effort d10 force (2 Horror). Speak with the Dead: ask a corpse one question, WIS check (2 Horror). Rend the Veil: once per scene, every foe in Close takes Effort d12 (3 Horror). |
+| **The Ashen Psalter** | 1 | Action | INT | d10 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Seventh Penance** | 1 | Action | WIS | d8 | +1 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Book of Quiet Mouths** | 2 | Action | INT | d10 | +2 | Three spells, each used as an Action. Each spell lists its effect and Horror cost. |
+| **The Cinder Lectionary** | 1 | Action | — | — | +1 | Three spells of fire and ruin. Each spell lists its effect and Horror cost. |
+| **The Book of Last Confessions** | 2 | Action | — | — | +2 | Three workings of the dead and their testimony. Each spell lists its effect and Horror cost. |
+| **The Threshold Lectionary** | 1 | Action | — | — | +1 | Three rites of protection and peril. Each spell lists its effect and Horror cost. |
 
 ## Spells
 
@@ -79,8 +82,18 @@ A spell is cast from a grimoire you carry. The Horror is paid when you roll, hit
 | **Mend** | The Seventh Penance | WIS | d8 | +1 | close | An ally in Engaged or Close heals Effort d8. Once per person per rest. |
 | **Ward** | The Seventh Penance | WIS | — | +1 | close | An ally in Engaged or Close gets +2 Defence until your next turn. |
 | **Unmake** | The Book of Quiet Mouths | INT | d10 | +2 | far | A foe in Close or Far takes Effort d10 force, and is left Dazed: its next attack rolls 3 less. |
-| **Speak with the Dead** | The Book of Quiet Mouths | WIS | — | +2 | engaged | Ask a corpse one question. It answers truly, and briefly. |
-| **Rend the Veil** | The Book of Quiet Mouths | INT | d12 | +3 | close | Once per scene: every foe in Close takes Effort d12. |
+| **Speak with the Dead** | The Seventh Penance | WIS | — | +2 | engaged | Ask a corpse one question. It answers truly, and briefly. |
+| **Rend the Veil** | The Book of Last Confessions | INT | d12 | +3 | close | Once per scene: every foe in Close takes Effort d12. |
+| **Hush** | The Book of Quiet Mouths | none | — | +1 | close | One creature's voice is silenced until the end of the scene. |
+| **Steal a Word** | The Book of Quiet Mouths | none | — | +2 | close | Take the last word a creature spoke. It cannot say that word again until you give it back. |
+| **Mouth of Wax** | The Book of Last Confessions | none | — | +3 | close | A creature's mouth seals shut. It cannot speak, cast or eat until the wax is cut away. |
+| **Confession of the Dead** | The Book of Last Confessions | none | — | +3 | engaged | A corpse answers three questions truthfully. It remembers you afterwards. |
+| **The Last Verse** | The Threshold Lectionary | none | — | +5 | close | Open a crack in a binding. Something comes through, and it owes you nothing. |
+| **Ember Psalm** | The Cinder Lectionary | INT | d10 | +1 | far | A fistful of holy fire burns one creature. |
+| **Pillar of Ash** | The Ashen Psalter | none | — | +2 | close | Choking ash fills the room. Nobody inside can see past arm's length. |
+| **Psalm of Ruin** | The Cinder Lectionary | none | — | +3 | far | Stone and timber crack. A wall, floor, roof or bridge you can see collapses. |
+| **Pyre** | The Cinder Lectionary | INT | d12 | +5 | close | A creature burns from within. |
+| **Its Real Name** | The Threshold Lectionary | none | — | +4 | close | Speak the book's true name. The GM decides what it does, and it is never small. |
 
 ## Foes
 

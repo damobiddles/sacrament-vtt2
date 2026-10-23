@@ -3,7 +3,7 @@
 import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, claimHero } from './helpers.mjs';
 
-const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/feedback/', '/privacy/', '/terms/'];
+const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/loot/', '/feedback/', '/privacy/', '/terms/'];
 
 test('every page loads, has a title and one heading, and nothing errors', async ({ browser }) => {
   const page = await newPage(browser);

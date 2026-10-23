@@ -27,7 +27,7 @@ test('HORROR: a table starts at 0 of 21, and everyone sees the same meter', asyn
 
 test('HORROR: a spell with an Effort die raises the meter by its amount when cast, and the feed says so', async () => {
   const { ann, thorne } = await setup([d20(20), die(5, 10)]);
-  const r = await cast(ann, thorne, 0, 'emberpsalm'); assert.equal(r.status, 200);
+  const r = await cast(ann, thorne, 0, 'ember'); assert.equal(r.status, 200);
   assert.equal(r.body.state.horror.cur, 1); assert.deepEqual(r.body.result.horror, { cur: 1, applied: 1, crossed: [] });
   assert.match(feed(r.body.state), /Thorne read from The Ashen Psalter\. The Horror rises 1 \(now 1\)\./);
   assert.equal((await ann.get()).body.state.horror.cur, 1, 'the player who cast it sees it');
@@ -35,20 +35,20 @@ test('HORROR: a spell with an Effort die raises the meter by its amount when cas
 
 test('HORROR: a failed check still raises it (using it is what tempts the Horror)', async () => {
   const { ann, thorne } = await setup([d20(2)]);   /* not a 1: a natural 1 adds its own point (see vtt-push.test.mjs) */
-  const r = await cast(ann, thorne, 0, 'emberpsalm'); assert.equal(r.status, 200);
+  const r = await cast(ann, thorne, 0, 'ember'); assert.equal(r.status, 200);
   assert.equal(r.body.state.rolls.at(-1).check.success, false); assert.equal(r.body.state.horror.cur, 1);
 });
 
 test('HORROR: a spell with no Effort die and no stat is cast without a roll, and still raises it', async () => {
-  const { t, ann, thorne } = await setup([], ['dust']);
+  const { t, ann, thorne } = await setup([], ['lastconfessions']);
   const r = await cast(ann, thorne, 0, 'waxmouth'); assert.equal(r.status, 200);
   assert.equal(r.body.result.rollId, null); assert.equal((await t.state()).rolls.length, 0, 'nothing was rolled');
-  assert.match(feed(r.body.state), /Thorne uses Mouth of Wax \(The Book of Quiet Mouths\) \(no roll\)\. It tempts the Horror\./);
+  assert.match(feed(r.body.state), /Thorne uses Mouth of Wax \(The Book of Last Confessions\) \(no roll\)\. It tempts the Horror\./);
   assert.match(feed(r.body.state), /The Horror rises 3 \(now 3\)/);
 });
 
 test('HORROR: a rolled amount is rolled at the moment of use and shown in the feed', async () => {
-  const { ann, thorne } = await setup([d20(20), die(3, 4)]);
+  const { ann, thorne } = await setup([d20(20), die(3, 4)], ['cinderlectionary']);
   const r = await cast(ann, thorne, 0, 'pyre'); assert.equal(r.status, 200);
   assert.equal(r.body.state.rolls.at(-1).cat, 'ultimate'); assert.equal(r.body.state.rolls.at(-1).effort, null, 'the damage is the player\'s to roll, as its own step');
   assert.equal(r.body.state.horror.cur, 5); assert.match(feed(r.body.state), /The Horror rises 5 \(d4\+2: 3 \+ 2\) \(now 5\)\./);
@@ -92,19 +92,19 @@ test('HORROR: passing two thresholds at once announces both', async () => {
 });
 
 test('HORROR: at 21 it has arrived; it stays at 21, a further rise adds nothing, and only the GM resets it', async () => {
-  const { t, ann, thorne } = await setup([d20(20), die(4, 4)]);
+  const { t, ann, thorne } = await setup([d20(20), die(4, 4)], ['cinderlectionary', 'embers']);
   await t.gm.cmd({ type: 'horror', mode: 'set', value: 19 });
   const r = await cast(ann, thorne, 0, 'pyre'); assert.equal(r.body.state.horror.cur, 21); assert.deepEqual(r.body.result.horror.crossed, [21]);
   assert.match(feed(r.body.state), /The Horror rises 2 of 6 \(d4\+2: 4 \+ 2\) \(now 21\)\./); assert.match(feed(r.body.state), /The Horror has arrived\./);
   assert.equal((await ann.get()).body.state.horror.cur, 21, 'the player sees it has arrived');
-  const again = await cast(ann, thorne, 0, 'kindle'); assert.equal(again.body.state.horror.cur, 21); assert.match(feed(again.body.state), /The Horror can rise no further \(21\)\./);
+  const again = await cast(ann, thorne, 1, 'kindle'); assert.equal(again.body.state.horror.cur, 21); assert.match(feed(again.body.state), /The Horror can rise no further \(21\)\./);
   assert.equal((await ann.cmd({ type: 'horror', mode: 'set', value: 0 })).status, 403);
   const reset = await t.gm.cmd({ type: 'horror', mode: 'set', value: 0 }); assert.equal(reset.status, 200); assert.equal(reset.body.state.horror.cur, 0);
   assert.equal(reset.body.state.horror.alert, 0, 'below the threshold, nothing is left to deal with'); assert.match(feed(reset.body.state), /The GM lowers the Horror by 21 \(now 0\)\./);
 });
 
 test('HORROR: the GM adjusts it by hand and can undo a rise; a player can do neither, not even for their own spell', async () => {
-  const { t, ann, thorne } = await setup([], ['dust']);
+  const { t, ann, thorne } = await setup([], ['lastconfessions']);
   const up = await t.gm.cmd({ type: 'horror', mode: 'delta', value: 2 }); assert.equal(up.body.state.horror.cur, 2); assert.match(feed(up.body.state), /The GM raises the Horror by 2 \(now 2\)\./);
   const down = await t.gm.cmd({ type: 'horror', mode: 'delta', value: -5 }); assert.equal(down.body.state.horror.cur, 0, 'never below 0');
   assert.equal((await t.gm.cmd({ type: 'horror', mode: 'delta', value: 'lots' })).status, 400);
@@ -144,16 +144,16 @@ test('HORROR: undoing the rise that passed a threshold clears the GM\'s alert', 
   const u = await t.gm.cmd({ type: 'undo', logId: line.id }); assert.equal(u.body.state.horror.cur, 6); assert.equal(u.body.state.horror.alert, 0);
 });
 
-test('HORROR: the grimoire with no title rolls d4 and the reader casts the spell that comes up, with its own Horror', async () => {
-  const { ann, thorne } = await setup([die(3, 4)], ['untitled']);
+test('HORROR: the grimoire with no title rolls d6 and the reader casts the spell that comes up, with its own Horror', async () => {
+  const { ann, thorne } = await setup([die(5, 6)], ['untitled']);
   const r = await cast(ann, thorne, 0, 'realname'); assert.equal(r.status, 200, 'a spell asked for is ignored: the die chooses');
-  assert.deepEqual(r.body.result.picked, { n: 3, spellId: 'doorinward', name: 'The Door Inward' });
-  assert.match(feed(r.body.state), /Thorne reads Grimoire with no title: d4 shows 3, The Door Inward\./);
+  assert.deepEqual(r.body.result.picked, { n: 5, spellId: 'doorinward', name: 'The Door Inward' });
+  assert.match(feed(r.body.state), /Thorne reads Grimoire with no title: d6 shows 5, The Door Inward\./);
   assert.match(feed(r.body.state), /Thorne read from Grimoire with no title\. The Horror rises 2 \(now 2\)\./);
-  const { ann: a2, thorne: t2 } = await setup([die(4, 4), die(5, 6)], ['untitled']);
-  const r2 = await cast(a2, t2, 0); assert.equal(r2.body.result.picked.name, 'Its Real Name');
+  const { ann: a2, thorne: t2 } = await setup([die(5, 6)], ['thresholdlectionary']);
+  const r2 = await cast(a2, t2, 0, 'realname'); assert.equal(r2.status, 200);
   assert.match(feed(r2.body.state), /The Horror rises 5 \(d6: 5\) \(now 5\)\./, 'its own rolled amount');
-  const { ann: a3, thorne: t3 } = await setup([die(1, 4)], ['untitled']);
+  const { ann: a3, thorne: t3 } = await setup([die(1, 6)], ['untitled']);
   assert.equal((await cast(a3, t3, 0)).body.result.picked.name, 'The Page That Watches');
 });
 

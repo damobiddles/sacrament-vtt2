@@ -175,7 +175,7 @@ Only a **party rest in a safe place** lowers the track.
 
 ## 9. Magic, relics and grimoires (new)
 
-Magic is **in objects**. A **grimoire** holds spells (1 or 2 slots); a **relic** does one dangerous thing (1 or 2 slots). Neither is learned. You can cast from a book you carry, and nobody else needs the knowledge. Lose the book and you lose the spells; give it to a friend and they can read it, at their own risk. A new spell is a new item.
+Magic is **in objects**. A **grimoire** holds three spells (1 or 2 slots); a **relic** does one dangerous thing (1 or 2 slots). Neither is learned. You can cast from a book you carry, and nobody else needs the knowledge. Lose the book and you lose the spells; give it to a friend and they can read it, at their own risk. A new spell is a new item.
 
 ## 10. Aftershock tables
 

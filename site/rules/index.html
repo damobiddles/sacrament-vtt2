@@ -93,7 +93,7 @@
     <li><b>A vow.</b> One sentence the GM may call on.</li>
   </ul>
   <p><b>Progression</b> comes from what you find. After an adventure each hero gets a <b>Discovery</b>: a relic, a grimoire page, a weapon with a history, or a <b>Mark</b> (+1 to one score, to a base of +3 at most). There are no levels and no abilities to learn: what a hero can do is what they carry.</p>
-  <p><b>Magic is in objects.</b> A <b>grimoire</b> holds spells; a <b>relic</b> does one dangerous thing. Neither is learned: you cast from the book you carry. Lose the book and you lose the spells. A new spell is a new item.</p>
+  <p><b>Magic is in objects.</b> A <b>grimoire</b> holds three spells; a <b>relic</b> does one dangerous thing. Neither is learned: you cast from the book you carry. Lose the book and you lose the spells. A new spell is a new item.</p>
 </section>
 
 <section id="turns">
@@ -248,7 +248,7 @@
   var kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies', relic: 'Relics: each use adds Horror', grimoire: 'Grimoires: they hold spells' };
   q('#lib').innerHTML = Object.keys(kinds).map(function (k) {
     return '<h3>' + kinds[k] + '</h3><div class="grid2">' + D.ITEMS.filter(function (i) { return i.kind === k; }).map(function (i) { return U.itemCard(i); }).join('') + '</div>';
-  }).join('') + '<h3>Spells</h3><table class="ref wide"><tbody><tr><th>Spell</th><th>Book</th><th>Roll</th><th>Effort</th><th>Horror</th><th>What it does</th></tr>' + D.SPELLS.map(function (s) { return '<tr><th>' + esc(s.name) + '</th><td>' + esc(E.item(s.from).name) + '</td><td>' + (s.roll || 'none') + '</td><td>' + (s.effort ? 'd' + s.effort : '—') + '</td><td>+' + esc(s.horrorText || s.horror) + '</td><td>' + esc(s.does) + '</td></tr>'; }).join('') + '</tbody></table>';
+  }).join('') + '<h3>Spells</h3><table class="ref wide"><tbody><tr><th>Spell</th><th>Book</th><th>Roll</th><th>Effect</th><th>Effort</th><th>Horror</th><th>What it does</th></tr>' + D.SPELLS.map(function (s) { return '<tr><th>' + esc(s.name) + '</th><td>' + esc(E.item(s.from).name) + '</td><td>' + (s.roll || 'none') + '</td><td>' + (s.effect === 'healing' ? 'Healing' : s.effect === 'damage' ? 'Damage' : 'Esoteric effect') + '</td><td>' + (s.effort ? 'd' + s.effort : '—') + '</td><td>+' + esc(s.horrorText || s.horror) + '</td><td>' + esc(s.does) + '</td></tr>'; }).join('') + '</tbody></table>';
   q('#foes tbody').innerHTML = '<tr><th>Foe</th><th>Hearts</th><th>Effort</th><th>You defend with</th><th>Notes</th></tr>' + D.ENEMIES.map(function (e) { return '<tr><th>' + esc(e.name) + '</th><td>' + e.hearts + '</td><td>d' + e.effort + (e.attacks > 1 ? ' ×' + e.attacks : '') + '</td><td>' + e.defend + (e.armoured ? ', armoured' : '') + (e.unholy ? ', unholy' : '') + '</td><td>' + esc(e.note) + '</td></tr>'; }).join('');
   q('#heroes').innerHTML = D.CHARACTERS.map(function (def) {
     var c = E.newCharacter(def);

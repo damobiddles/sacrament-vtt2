@@ -265,7 +265,7 @@ function fixSupplies(s, ctx) {
 
 /* ---------- the GM's own loot ---------- */
 /* An item as the designer edits it, tidied (the sheet's own rules decide what is sensible), with the GM's private notes beside it. */
-const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; return Object.assign(SC.designOf(SC.makeCustom(raw)), { notes: str(raw.notes, 1000) }); };
+const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; const item = SC.makeCustom(raw); if (item.kind === 'grimoire' && item.spells.length !== 3) fail('invalid', 'A grimoire must have three different spells.'); return Object.assign(SC.designOf(item), { notes: str(raw.notes, 1000) }); };
 const libOf = (s) => (s.lootLib = s.lootLib || []);
 /* What players read on a revealed loot card: the description, then what it does. */
 const lootText = (d) => [d.flavour, d.does].filter(Boolean).join('\n\n');
@@ -586,7 +586,7 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     const tc = target && s.cards[target], priv = !!(tc && !isPublic(s, tc)), out = { rollId: null };
     if (u.pick) { /* a grimoire read by the die: the die chooses the spell, and the reader casts it */
-      const sides = u.pick, n = d(ctx, sides), sp = u.spells[n - 1]; u = SC.useSpell(u, sp); out.picked = { n, spellId: sp.id, name: sp.name };
+      const sides = u.pickDie || u.pick, n = d(ctx, sides), sp = u.spells[Math.floor((n - 1) * u.pick / sides)]; u = SC.useSpell(u, sp); out.picked = { n, spellId: sp.id, name: sp.name };
       L(s, a, ctx, ch.name + ' reads ' + u.item.name + ': d' + sides + ' shows ' + n + ', ' + sp.name + '.', { kind: 'roll', dice: diceOf(false, sides, n) });
     }
     const tempts = (u.spell || u.item).temptsHorror ? ' It tempts the Horror.' : ''; let nat = null;

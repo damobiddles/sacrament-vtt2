@@ -99,3 +99,9 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 * **Live contrast check, one timeout:** once, the contrast check against the live site (laptop size) hit its per-step time limit; the same run passed minutes later and on the phone size. Cause unknown; the limit names the stuck step if it recurs.
 * **Not verified:** the passphrase builder's publish, real phones and Safari, whether the storage token fix holds after hours on a warm server, and the rules against any rulebook.
 * **Waiting on the owner:** the "Your call" items on `/inventory/`, the text in `content/landing/` and `site.json` (contact link, privacy draft; the donate link goes to the Ko-fi page).
+
+## Current loot reference
+
+The owner requested three spells per grimoire and preservation of all spells across additional books. `/loot/` (Current Loot Tables) is generated from `site/sheet/gear.js`, with no private GM loot notes. The 96–99 d100 range now uses the Grimoires d8 sub-table. Catalogue spells have an explicit damage/healing/esoteric effect label. Read-by-die books use `pick` for the number of spells and `pickDie` for the die; the untitled book maps a d6 evenly onto three spells. Existing item and spell IDs must stay stable. GM-designed grimoires preserve exactly three known spell IDs through their saved definitions.
+
+Since the last full phone pass: public loot catalogue, expanded grimoire selection and GM grimoire spell selectors.

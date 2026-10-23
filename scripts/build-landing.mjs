@@ -6,6 +6,8 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { esc, parse, fmt } from './lib/markdown.mjs';
+import { lootCatalogue } from './lib/loot-catalogue.mjs';
+import '../site/sheet/gear.js';
 
 const dirUrl = (p, fallback) => (p ? pathToFileURL(p.replace(/\/?$/, '/')) : new URL(fallback, import.meta.url));
 const SRC = dirUrl(process.env.LANDING_CONTENT, '../content/landing/');
@@ -21,6 +23,7 @@ const PAGES = [
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
   { slug: 'blog', path: '/news/', label: 'News' },
+  { slug: 'loot', path: '/loot/', label: 'Loot' },
   { slug: 'feedback', path: '/feedback/', label: 'Feedback' },
   { slug: 'privacy', path: '/privacy/', label: 'Privacy', footerOnly: true },
   { slug: 'terms', path: '/terms/', label: 'Terms of Use', footerOnly: true },
@@ -131,6 +134,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('the-game', NAME);
   text('setting', NAME);
   text('how-to-play', NAME);
+  text('loot', NAME, lootCatalogue(globalThis.SACRAMENT_GEAR));
   text('feedback', NAME, feedbackForm);
   write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>Thank you for helping improve the table.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
   text('privacy', NAME);
