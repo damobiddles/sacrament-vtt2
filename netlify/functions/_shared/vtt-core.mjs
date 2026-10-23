@@ -208,7 +208,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients

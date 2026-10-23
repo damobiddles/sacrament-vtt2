@@ -266,14 +266,15 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await gm.click('[data-do=del]'); await until(A, () => !Object.values(window.__vtt.state().cards).some((c) => c.name === 'Altar')); check('the second press removes it for everyone', !(await card(gm, 'Altar')) && !(await cardsOn(A)).includes('Altar'));
   await gm.reload(); await gm.waitForSelector('#app:not([hidden])'); await until(gm, () => Object.values(window.__vtt.state().cards).length > 0);
   check('after a reload the duplicate (in the Crypt) still has its fields; nothing was lost or brought back', !(await card(gm, 'Altar')) && (await card(gm, 'Altar 2')).gmNotes === altar.gmNotes);
-  /* drawing */
-  await A.click('[data-do=tool][data-tool=draw]'); const ab = await (await A.$('#table')).boundingBox();
-  await A.mouse.move(ab.x + ab.width * 0.2, ab.y + ab.height * 0.8); await A.mouse.down(); for (let i = 1; i <= 8; i++) await A.mouse.move(ab.x + ab.width * (0.2 + i * 0.03), ab.y + ab.height * (0.8 - i * 0.02), { steps: 2 }); await A.mouse.up();
-  await until(gm, () => window.__vtt.state().draw.length === 1); await idle(A);
-  check('a line drawn by a player is drawn on the GM’s table as well', (await gm.$$('#ink polyline')).length === 1 && (await A.$$('#ink polyline')).length === 1);
-  await A.click('[data-do=drawUndo]'); await until(gm, () => window.__vtt.state().draw.length === 0); check('Undo line takes back the player’s own line', (await gm.$$('#ink polyline')).length === 0);
-  await A.mouse.move(ab.x + ab.width * 0.3, ab.y + ab.height * 0.7); await A.mouse.down(); await A.mouse.move(ab.x + ab.width * 0.5, ab.y + ab.height * 0.5, { steps: 4 }); await A.mouse.up(); await until(gm, () => window.__vtt.state().draw.length === 1);
-  await gm.click('[data-do=tool][data-tool=draw]'); await gm.click('[data-do=drawClear]'); await until(A, () => window.__vtt.state().draw.length === 0); check('the GM’s Clear drawing wipes everyone’s lines', (await A.$$('#ink polyline')).length === 0);
+  /* Drawing is GM-only; players still receive the shared ink and can point. */
+  check('players have Point but no Draw tool', (await A.$$('[data-do=tool][data-tool=draw]')).length === 0 && (await A.$$('[data-do=tool][data-tool=point]')).length === 1);
+  await gm.click('[data-do=tool][data-tool=draw]'); const ab = await (await gm.$('#table')).boundingBox();
+  await gm.mouse.move(ab.x + ab.width * 0.2, ab.y + ab.height * 0.8); await gm.mouse.down(); for (let i = 1; i <= 8; i++) await gm.mouse.move(ab.x + ab.width * (0.2 + i * 0.03), ab.y + ab.height * (0.8 - i * 0.02), { steps: 2 }); await gm.mouse.up();
+  await until(A, () => window.__vtt.state().draw.length === 1); await idle(gm);
+  check('a GM line is visible on the player table too', (await gm.$$('#ink polyline')).length === 1 && (await A.$$('#ink polyline')).length === 1);
+  await gm.click('[data-do=drawUndo]'); await until(A, () => window.__vtt.state().draw.length === 0); check('the GM can undo their line', (await A.$$('#ink polyline')).length === 0);
+  await gm.mouse.move(ab.x + ab.width * 0.3, ab.y + ab.height * 0.7); await gm.mouse.down(); await gm.mouse.move(ab.x + ab.width * 0.5, ab.y + ab.height * 0.5, { steps: 4 }); await gm.mouse.up(); await until(A, () => window.__vtt.state().draw.length === 1);
+  await gm.click('[data-do=drawClear]'); await until(A, () => window.__vtt.state().draw.length === 0); check('the GM can clear the drawing', (await A.$$('#ink polyline')).length === 0);
   await A.click('[data-do=tool][data-tool=select]'); await gm.click('[data-do=tool][data-tool=select]');
 
   console.log('--- 14. who is “you”: a player’s own hero, and the hero the GM is acting as, are marked differently and agree with the strip');

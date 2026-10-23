@@ -86,7 +86,7 @@ The **Horror** meter in the top bar runs from 0 to 21 and is the same for everyo
 The **Grimoire with no title** has one button, **Read**: the table rolls a d4 and you cast whichever of its four spells comes up.
 
 ### Pointing and drawing
-**Point** (top left of the table, then press and hold) shows people viewing the same scene where you mean. **Draw** lets you sketch on that scene. Drawings and pointers on a prepared scene remain private until you show that scene to players. **Undo line** and **Clear drawing** affect only the scene you are viewing. Existing drawings stay with the scene that was live when this feature was introduced.
+**Point** (top left of the table, then press and hold) shows people viewing the same scene where you mean. **Draw** is GM-only and lets the GM sketch on that scene. Players can point and see the GM's drawings, but cannot draw, undo lines or clear drawings. Drawings and pointers on a prepared scene remain private until you show that scene to players. **Undo line** and **Clear drawing** affect only the scene you are viewing. Existing drawings stay with the scene that was live when this feature was introduced.
 
 ## On a phone
 The table works on a phone: the tray sits under the table and scrolls by itself.

@@ -395,7 +395,8 @@
     /* drawing */
     put($('ink'), (S.draw || []).filter(function (s) { return (s.sceneId || S.table.scene.id) === view; }).map(function (s) { return '<polyline points="' + s.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" stroke="' + esc(s.color) + '"/>'; }).join(''));
     /* the toolbar and the banner */
-    put($('toolbar'), ['select:Select', 'point:Point', 'draw:Draw'].map(function (t) { var k = t.split(':'); return '<button class="chip' + (UI.tool === k[0] ? ' hot' : '') + '" data-do="tool" data-tool="' + k[0] + '" aria-pressed="' + (UI.tool === k[0]) + '">' + k[1] + '</button>'; }).join('') +
+    if (!G && UI.tool === 'draw') UI.tool = 'select';
+    put($('toolbar'), ['select:Select', 'point:Point'].concat(G ? ['draw:Draw'] : []).map(function (t) { var k = t.split(':'); return '<button class="chip' + (UI.tool === k[0] ? ' hot' : '') + '" data-do="tool" data-tool="' + k[0] + '" aria-pressed="' + (UI.tool === k[0]) + '">' + k[1] + '</button>'; }).join('') +
       (UI.tool === 'point' ? '<span class="note tip">Press and hold on the table, then move: everyone sees where you point.</span>' : UI.tool === 'draw' ? '<span class="note tip">Press and drag on the table to draw.</span>' : '') +
       (UI.tool === 'draw' ? '<button class="chip" data-do="drawUndo">Undo line</button>' + (G ? '<button class="chip" data-do="drawClear">Clear drawing</button>' : '') : ''));
     var b = '';
@@ -944,7 +945,7 @@
       case 'select': pickCard(d.id); render(); break;
       case 'gmstrip': UI.gmStrip = !UI.gmStrip; render(); break;
       case 'deselect': UI.sel = null; render(); break;
-      case 'tool': UI.tool = d.tool; render(); break;
+      case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
       case 'adj': UI.adj = d.adj; renderStrip(); break;
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
@@ -1116,7 +1117,7 @@
   $('table').addEventListener('pointerdown', function (ev) {
     if (!S || ev.button > 0 || UI.drag || UI.draw || UI.pointing) return;
     if (ev.target.closest('#toolbar') || ev.target.closest('#banner')) return;
-    if (UI.tool === 'draw') { UI.drawScene = viewScene(); UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
+    if (UI.tool === 'draw' && gm()) { UI.drawScene = viewScene(); UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
     if (UI.tool === 'point') { UI.pointScene = viewScene(); UI.gesturePointer = ev.pointerId; var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
     var cEl = ev.target.closest('.c');
     if (!cEl) { if (UI.sel) { UI.sel = null; render(); } return; }
