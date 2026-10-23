@@ -76,7 +76,7 @@ input[type=checkbox]{min-height:0;width:20px;height:20px}
 .c:focus-visible,.c.sel{outline:.4cqw solid var(--candle);outline-offset:.2cqw}
 .c.mine{border-color:var(--verdigris)}
 .c.turn{box-shadow:0 0 0 .35cqw var(--candle),0 0 2.5cqw var(--candle)}
-.c.hid{opacity:.72;border-style:dashed}
+.c.hid{border-style:dashed}
 .c.drag{cursor:grabbing;opacity:.9}
 .c .cimg{flex:0 0 40%;background-size:cover;background-position:center;background-color:#0003}
 .c .ct{font:700 1.5cqw/1.2 var(--display);padding:.5cqw .8cqw 0}
@@ -436,3 +436,5 @@ label.phys{align-items:flex-start}
 .scene-list li{flex-wrap:wrap}
 .scene-list li .n{flex:1 1 8em;min-width:0;overflow-wrap:anywhere}
 .scene-rename input{width:100%;min-width:0}
+
+.gm-dice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}.gm-dice label{display:flex;align-items:center;gap:5px}.gm-dice input[type=number]{width:4em}.gm-dice select{width:auto}

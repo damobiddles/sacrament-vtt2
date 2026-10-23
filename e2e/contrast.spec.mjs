@@ -112,8 +112,10 @@ for (const theme of ['dark']) {
       // a failed roll (a physical 2) with the offer to push, then pushed
       if (!QUICK) {
         if (!(await ann.locator('#strip input[data-phys]').count())) { await press(ann.locator('#strip [data-do=toggle][data-key=more]')); await press(ann.locator('#strip [data-do=toggle][data-key=dice]')); }
+        await press(ann.locator('#cards .c', {hasText:'Pit Ghoul'}));
         await ann.locator('#strip input[data-phys]').fill('2', { timeout: 4000 }).catch(() => {}); await press(ann.locator('#strip .stat').first());
-        await ann.waitForTimeout(500); await landed(ann); await visit(ctx, 'table player: a failed roll, the offer to push', ann);
+        await ann.waitForTimeout(500); await landed(ann); if (await ann.locator('#strip [data-noitem]').count()) await press(ann.locator('#strip [data-noitem]'));
+        await visit(ctx, 'table player: a failed roll, the offer to push', ann);
         await press(ann.locator('#panel [data-do=push]')); await ann.waitForTimeout(500); await visit(ctx, 'table player: pushed', ann);
       }
 

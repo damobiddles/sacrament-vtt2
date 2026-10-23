@@ -33,7 +33,7 @@
     var o = { id: /^x[a-z0-9]{1,14}$/.test(raw.id) ? raw.id : 'xcustom', custom: true, found: true, kind: kind, category: category,
       name: text(raw.name, 60).trim() || 'Unnamed find', slots: clamp(int(raw.slots, 1), 1, 4),
       flavour: text(raw.flavour, 400), does: text(raw.does, 600), equippable: kind === 'supply' ? raw.equippable === true : true,
-      temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
+      horrorReason: text(raw.horrorReason, 240), temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
     o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
     if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged', 'firearm'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
     if (kind === 'weapon' && o.weaponStyle !== 'single') o.slots = Math.max(2, o.slots);
@@ -57,6 +57,12 @@
   function itemOf(g) { return g ? (g.def ? makeCustom(g.def) : BY[g.id] || null) : null; }
   function spellsOf(it) { return ((it && it.spells) || []).map(function (id) { return SPELL[id]; }).filter(Boolean); }
   function effectLabel(src) { return src.effect === 'healing' || src.heal ? 'Healing' : src.effect === 'esoteric' || !src.cat ? 'Esoteric effect' : 'Damage'; }
+  /* Public explanations only: private GM loot notes never enter an item description. */
+  function horrorText(src) {
+    if (src.kind === 'grimoire' || src.category === 'Grimoire') return 'Horror: healing spells 0; other spells +1. Casting forbidden magic tempts the Horror.';
+    if (!src.temptsHorror) return src.effect === 'healing' ? 'No Horror cost: healing spells do not tempt the Horror.' : '';
+    return 'Tempts the Horror · +' + R.sayHorrorAmount(src.horror) + '. ' + (src.horrorReason || "Using this item's supernatural power tempts the Horror.");
+  }
   function blankHero(name) {
     var h = { name: name || 'New hero', calling: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [] };
     STATS.forEach(function (k) { h.stats[k] = 0; }); CATS.forEach(function (k) { h.effort[k] = 0; });
@@ -133,7 +139,7 @@
     }
     var label = sp ? sp.name + ' (' + it.name + ')' : it.name;
     /* Something with no Effort die is used only when it tempts the Horror (the table then raises the meter); anything else plain at the table rolls nothing. */
-    if (!src.cat && !pick && !src.temptsHorror) return no((sp ? sp.name : 'The ' + it.name) + ' has no Effort die, so the table rolls nothing for it.');
+    if (!src.cat && !pick && !src.temptsHorror && !sp) return no((sp ? sp.name : 'The ' + it.name) + ' has no Effort die, so the table rolls nothing for it.');
     if ((it.kind === 'weapon' || it.kind === 'relic' || it.kind === 'grimoire') && !isEq(g)) return no('Equip the ' + it.name + ' first: only equipped weapons, relics and grimoires work.');
     if (it.uses != null && g.uses != null && g.uses <= 0) return no('The ' + it.name + ' has no uses left.');
     /* A grimoire read by the die: the spell is chosen when it is read, so what it rolls is not known yet. */
@@ -150,7 +156,7 @@
     (h.gear || []).forEach(function (g, i) {
       var it = itemOf(g); if (!it) return;
       if (it.kind === 'grimoire' && it.pick) { var r = useOf(h, i); out.push({ index: i, spellId: '', ok: r.ok, why: r.why || '', name: 'Read ' + it.name, stat: '', cat: '', pick: it.pick }); }
-      else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
+      else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror || s.heal) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
       else if (it.cat || it.temptsHorror) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
     });
     out.forEach(function (a) { a.gearKey = h.gear[a.index].key; });
@@ -162,7 +168,7 @@
   function designOf(it) {
     if (!it) return null;
     var cat = it.kind === 'relic' ? 'Relic' : CUSTOM_CATS.indexOf(it.category) >= 0 ? it.category : it.kind === 'weapon' ? 'Weapon' : it.kind === 'armour' ? 'Armour' : 'Curio';
-    var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, horrorReason: it.horrorReason || '', flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
     if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
     if (it.kind === 'armour') out.armourPart = armourPart(it);
     if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
@@ -316,5 +322,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

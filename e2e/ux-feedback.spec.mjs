@@ -34,8 +34,9 @@ test('the turn reaching a player is announced to them; a finished roll is put aw
   await expect(ann.locator('#strip')).toHaveClass(/myturn/); await expect(bo.locator('#strip')).not.toHaveClass(/myturn/);
   /* Wisp rolls out of turn with her own die, and misses */
   await bo.locator('#strip [data-do=toggle][data-key=more]').click(); await bo.locator('#strip [data-do=toggle][data-key=dice]').click();
-  await bo.locator('#strip input[data-phys]').fill('2'); await bo.locator('#strip .stat', { hasText: 'CHA' }).click();
+  await card(bo, 'Pit Ghoul').click(); await bo.locator('#strip input[data-phys]').fill('2'); await bo.locator('#strip .stat', { hasText: 'STR' }).click(); await bo.locator('#strip [data-noitem]').click();
   await expect(bo.locator('#panel .calc.bad')).toContainText('Miss'); await expect(bo.locator('#panel [data-do=push]')).toBeVisible();
+  await bo.locator('#panel [data-do=deselect]').click();  // look at the play panel while leaving the failed attack open
   await endTurn(ann);
   await expect(bo.locator('#banner .notice.turn')).toHaveText('Your turn, Wisp.');
   await expect(bo.locator('#strip')).toHaveClass(/myturn/);

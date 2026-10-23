@@ -1,12 +1,12 @@
-// Pushing and natural 1s (the owner's rule, 2026-10-20): after a failed check a hero may push for a second action, which raises the Rising Horror by 1;
+// Pushing and natural 1s (the owner's rule, 2026-10-20): after a failed attack a hero may push for a second action, which raises the Rising Horror by 1;
 // a hero's d20 that shows a natural 1 raises it by 1 by itself. Monsters' rolls do not count.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { table, d20, find, charNamed } from './vtt-helpers.mjs';
 
-const claim = async (t, who, name) => { const ch = charNamed(await t.state(), name); assert.equal((await who.cmd({ type: 'claim', charId: ch.id })).status, 200); return ch; };
+const claim = async (t, who, name) => { const ch = charNamed(await t.state(), name); assert.equal((await who.cmd({ type: 'claim', charId: ch.id })).status, 200); ch.attackTarget = find(await t.state(), 'Pit Ghoul').id; return ch; };
 const feed = (st) => st.log.map((e) => e.text).join(' | ');
-const roll = (who, ch, extra = {}) => who.cmd(Object.assign({ type: 'roll', charId: ch.id, stat: 'STR' }, extra));
+const roll = (who, ch, extra = {}) => who.cmd(Object.assign({ type: 'roll', charId: ch.id, stat: 'STR', attack: true, targetCardId: ch.attackTarget }, extra));
 const last = (r) => r.body.state.rolls.at(-1);
 const push = (who, rollId) => who.cmd({ type: 'push', rollId });
 
@@ -40,7 +40,7 @@ test('PUSH: a monster\'s natural 1 does not raise the Horror', async () => {
   assert.equal(r.body.state.horror.cur, 0);
 });
 
-test('PUSH: after a failed check the hero is offered a push; it raises the Horror by 1 and their next roll is the second action', async () => {
+test('PUSH: after a failed attack the hero is offered a push; it raises the Horror by 1 and their next roll is the second action', async () => {
   const { t, ann, thorne } = await setup([d20(2), d20(15)]);
   const r1 = await roll(ann, thorne); assert.equal(last(r1).canPush, true);
   const p = await push(ann, last(r1).id); assert.equal(p.status, 200);

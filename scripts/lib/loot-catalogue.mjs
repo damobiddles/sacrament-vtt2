@@ -4,7 +4,7 @@ const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Suppli
 const effortName = k => ({ basic: 'Basic', weapons: 'Weapons', guns: 'Guns and gunpowder', magic: 'Magic', ultimate: 'Ultimate' })[k] || k;
 const range = r => r[0] === r[1] ? String(r[0]) : r.join('–');
 const effect = s => s.effect === 'healing' || s.heal ? 'Healing' : s.effect === 'esoteric' || !s.cat ? 'Esoteric effect' : 'Damage';
-const cost = s => s.temptsHorror ? 'Horror +' + esc(s.horror || 0) : 'No Horror cost';
+const cost = s => s.temptsHorror ? 'Horror +' + esc(s.horror || 0) + '. ' + esc(s.horrorReason || 'Using supernatural power tempts the Horror.') : 'No Horror cost';
 
 // Only the public catalogue is accepted here. Private GM loot notes are never imported.
 export function lootCatalogue(g) {
@@ -28,7 +28,7 @@ export function lootCatalogue(g) {
       if (i.defence) details.push('Defence +' + i.defence);
       if (i.hearts) details.push('Hearts +' + i.hearts);
       if (i.uses) details.push(i.uses + ' uses');
-      if (i.temptsHorror) details.push('Horror +' + i.horror);
+      if (i.temptsHorror) details.push('Horror +' + i.horror + '. ' + i.horrorReason);
     }
     const spellList = kind === 'grimoire' ? `<ul class="loot-spells">${i.spells.map(id => {
       const s = spells.get(id);

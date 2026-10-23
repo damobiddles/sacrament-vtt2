@@ -10,7 +10,9 @@ const landed = (page) => page.waitForFunction(() => !window.SacramentDice || !wi
 /* roll STR with what a physical die shows (Thorne has STR +3; the Target is 12) */
 async function rollWith(page, n) {
   if (!(await page.locator('#strip input[data-phys]').count())) { await page.locator('#strip [data-do=toggle][data-key=more]').click(); await page.locator('#strip [data-do=toggle][data-key=dice]').click(); }
-  await page.locator('#strip input[data-phys]').fill(String(n)); await page.locator('#strip .stat', { hasText: 'STR' }).click(); await saved(page); await landed(page);
+  await page.locator('#cards .c', {hasText:'Pit Ghoul'}).click();
+  await page.locator('#strip input[data-phys]').fill(String(n)); await page.locator('#strip .stat', { hasText: 'STR' }).click(); if (await page.locator('#strip [data-noitem]').count()) await page.locator('#strip [data-noitem]').click();
+  await saved(page); await landed(page);
 }
 
 test('Push: a failed roll offers a push; it raises the Horror by 1 and offers the same again, once; a natural 1 adds 1 by itself', async ({ browser }) => {

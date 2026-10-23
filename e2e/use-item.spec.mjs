@@ -52,6 +52,7 @@ test('Use on the sheet: it closes the sheet and shows the roll; an unequipped it
   await ann.locator('#sheetOverlay .sh-item', { hasText: "Penitent's Blade" }).locator('[data-sh=use]').click();
   await expect(ann.locator('#sheetOverlay')).toBeHidden();                                // the sheet gets out of the way
   await expect(ann.locator('#panel')).toContainText("Penitent's Blade");
+  await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();
   await expect(ann.locator('#panel .calc').first()).toContainText('STR');
 });
 

@@ -23,7 +23,7 @@
       var t = ['<span class="sh-pill cat">' + esc(it.category) + '</span>'];
       if (it.cat) t.push('<span class="sh-pill">' + esc(R.CAT_NAMES[it.cat]) + '</span>');
       t.push('<span class="sh-pill">' + (it.equippable ? 'Equippable' : 'Supply') + '</span>');
-      if (it.temptsHorror) t.push('<span class="sh-pill tempt">Tempts the Horror · ' + (it.horror || 0) + '</span>');
+      if (it.temptsHorror) t.push('<span class="sh-pill tempt">' + esc(C.horrorText(it)) + '</span>');
       return t.join(' ');
     }
     function heroSelect() {
@@ -60,7 +60,7 @@
         for (var si = 0; si < 3; si++) out += '<label class="sh-f">Spell ' + (si + 1) + '<select data-lspell="' + si + '">' + opt('', 'Choose a spell', '') + root.SACRAMENT_GEAR.spells.map(function (sp) { return opt(sp.id, sp.name + ' · ' + C.effectLabel(sp), (f.spells || [])[si]); }).join('') + '</select></label>';
       }
       out += '<div class="sh-f">Can it be equipped?' + (fixed ? '<p class="sh-note">A ' + esc(f.category.toLowerCase()) + ' is always equippable.</p>' : seg('equippable', f.equippable === true, 'Equippable', 'Supply (stays in the pack)')) + '</div>';
-      out += f.category === 'Grimoire' ? '<p class="sh-note">Its spells tempt the Horror. Each spell has its own cost.</p>' : '<div class="sh-f">Tempts the Horror?' + seg('temptsHorror', f.temptsHorror === true, 'Yes', 'No') + '</div>' + (f.temptsHorror ? field('Horror amount: a number, or dice such as d4+2', 'horror', false, 8) : '');
+      out += f.category === 'Grimoire' ? '<p class="sh-note">Healing spells cost 0 Horror; every other spell costs 1.</p>' : '<div class="sh-f">Tempts the Horror?' + seg('temptsHorror', f.temptsHorror === true, 'Yes', 'No') + '</div>' + (f.temptsHorror ? field('Horror amount: a number, or dice such as d4+2', 'horror', false, 8) + field('Why it tempts Horror (players see this)', 'horrorReason', true, 240) : '');
       out += field('Rules notes (only you can read these)', 'notes', true, 1000);
       var heroes = host.heroes().length;
       out += '<div class="lt-row lt-actions">' + (ld.mode === 'card' ? '<button type="button" class="sh-b go" data-lb="savecard">Save changes</button>' :
@@ -73,7 +73,7 @@
       if (it.weaponStyle) pills.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand'); if (C.damageBonus(it)) pills.push('+2 heavy damage'); if (it.armourPart) pills.push(it.armourPart === 'head' ? 'Helmet' : it.armourPart === 'shield' ? 'Shield' : 'Body armour');
       if (it.defence) pills.push('Defence +' + it.defence); if (it.cat) pills.push('Effort d' + R.DEFAULT_DICE[it.cat]); if (it.roll) pills.push(it.roll);
       return '<div class="sh-note">How a player will see it</div><div class="sh-item"><div><b>' + esc(it.name) + '</b> <span class="sh-pill cat">' + esc(it.category) + '</span> ' + pills.map(function (x) { return '<span class="sh-pill">' + esc(x) + '</span>'; }).join(' ') +
-        (it.temptsHorror ? ' <span class="sh-pill tempt">Tempts the Horror · ' + it.horror + '</span>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') +
+        (it.temptsHorror ? ' <span class="sh-pill tempt">' + esc(C.horrorText(it)) + '</span>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') +
         (it.cat ? '<p class="sh-eff">Used, it rolls <b>' + esc(R.CAT_NAMES[it.cat]) + ' Effort (d' + R.DEFAULT_DICE[it.cat] + ')</b> for you after a ' + esc(it.roll) + ' check.</p>' : '') + '</div>' + (it.equippable ? '' : '<span class="sh-supply">Supply</span>') + '</div>';
     }
 

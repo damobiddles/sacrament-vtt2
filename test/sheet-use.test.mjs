@@ -56,7 +56,7 @@ test('a grimoire read by the die: one action, no spell chosen, and the die choos
   const h = hero(); C.edit(h, { op: 'add', id: 'untitled' }, gm, null); C.edit(h, { op: 'add', id: 'cloak' }, player, null);
   const u = C.useOf(h, 0, 'borrowedface'); assert.equal(u.ok, true); assert.equal(u.pick, 3); assert.equal(u.pickDie, 6); assert.equal(u.spell, null, 'the spell asked for is ignored: the die chooses');
   assert.deepEqual(u.spells.map((s) => s.name), ['The Page That Watches', 'Borrowed Face', 'The Door Inward']);
-  const sp = C.useSpell(u, u.spells[2]); assert.deepEqual([sp.name, sp.stat, sp.cat, sp.horror], ['The Door Inward (Grimoire with no title)', '', '', 2]);
+  const sp = C.useSpell(u, u.spells[2]); assert.deepEqual([sp.name, sp.stat, sp.cat, sp.horror], ['The Door Inward (Grimoire with no title)', '', '', 1]);
   assert.deepEqual(C.actions(h).map((a) => a.name), ['Read Grimoire with no title']);
   C.edit(h, { op: 'move', index: 0, eq: false }, gm, null); assert.match(C.useOf(h, 0).why, /Equip the Grimoire with no title first/);
 });

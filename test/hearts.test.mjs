@@ -67,7 +67,7 @@ test('every item and spell says what it costs, rolls and does', () => {
     if (it.effort) assert.ok(D.DICE.includes(it.effort), it.id + ' die');
     if (it.roll) assert.ok(E.SCORES.includes(it.roll), it.id + ' roll');
   }
-  for (const sp of D.SPELLS) { assert.ok(E.item(sp.from), sp.id + ' book'); assert.ok(E.item(sp.from).spells.includes(sp.id)); assert.ok(sp.horror >= 1); }
+  for (const sp of D.SPELLS) { assert.ok(E.item(sp.from), sp.id + ' book'); assert.ok(E.item(sp.from).spells.includes(sp.id)); assert.equal(sp.horror, sp.heal ? 0 : 1); }
 });
 test('the armour bonus is CON only and never more than +5', () => {
   const env = mk(), { E } = env, c = hero(env, 'aldric');
@@ -154,18 +154,18 @@ test('a refused use costs nothing: no magic while the Arrival holds, a spell alr
   const env = mk(), { E } = env, h = E.horror(), c = hero(env, 'ottoline'); E.raise(h, 21); E.aftershock(h, 21, 3);
   const no = E.use({ horror: h, scene: 12 }, c, 'embers', 'ember', { d20: 20 }); assert.equal(no.ok, false); assert.equal(h.pos, 21); assert.equal(c.hp, c.max);
   E.lower(h, 2); const g = E.horror();
-  const first = E.use({ horror: g, scene: 12 }, c, 'dust', 'rend', { d20: 20 }); assert.equal(first.ok, true); assert.equal(g.pos, 3);
-  const second = E.use({ horror: g, scene: 12 }, c, 'dust', 'rend', { d20: 20 }); assert.equal(second.ok, false); assert.equal(g.pos, 3, 'not charged for a refusal');
+  const first = E.use({ horror: g, scene: 12 }, c, 'dust', 'rend', { d20: 20 }); assert.equal(first.ok, true); assert.equal(g.pos, 1);
+  const second = E.use({ horror: g, scene: 12 }, c, 'dust', 'rend', { d20: 20 }); assert.equal(second.ok, false); assert.equal(g.pos, 1, 'not charged for a refusal');
 });
 test('casting at 21 is paid in Strain, which nothing reduces, and can bring the caster down', () => {
-  const env = mk(), { E } = env, h = E.horror(), c = hero(env, 'ottoline'); E.raise(h, 21); c.hp = 3;
+  const env = mk(), { E } = env, h = E.horror(), c = hero(env, 'ottoline'); E.raise(h, 21); c.hp = 1;
   const r = E.use({ horror: h, scene: 12 }, c, 'dust', 'unmake', { d20: 20, target: { def: E.enemy('rats'), hp: 10 } });
-  assert.equal(r.horror.strain, 4); assert.equal(c.hp, 0); assert.ok(c.dying);
+  assert.equal(r.horror.strain, 2); assert.equal(c.hp, 0); assert.ok(c.dying);
 });
-test('Mend heals once per person per rest, Horror and all; a dying ally can always be mended', () => {
+test('Mend heals once per person per rest with no Horror; a dying ally can always be mended', () => {
   const env = mk(), { E } = env, h = E.horror(), m = hero(env, 'maren'), a = hero(env, 'aldric'); a.hp = 6;
   const first = E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }); assert.ok(first.healed > 0);
-  const again = E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }); assert.equal(again.healed, 0); assert.equal(h.pos, 2, 'the second casting still cost 1');
+  const again = E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }); assert.equal(again.healed, 0); assert.equal(h.pos, 0, 'neither healing casting costs Horror');
   E.hurt(a, 99); assert.ok(E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }).healed > 0);
 });
 test('the Penitent’s chain: 1 Horror, 1d4 that nothing reduces, +3 to the roll', () => {

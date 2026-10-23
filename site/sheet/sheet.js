@@ -35,7 +35,7 @@
     if (it.hearts) b.push('+' + plural(it.hearts, 'Heart', 'Hearts'));
     if (it.effort && it.kind !== 'grimoire') b.push('Effort d' + it.effort);   /* a grimoire is used through its spells, which say their own */
     if (it.roll && it.kind !== 'grimoire') b.push(it.roll);
-    return b.map(function (x) { return '<span class="sh-pill">' + esc(x) + '</span>'; }).join(' ') + (it.temptsHorror ? ' <span class="sh-pill tempt">Tempts the Horror' + (it.custom && it.horror ? ' · ' + it.horror : '') + '</span>' : '');
+    return b.map(function (x) { return '<span class="sh-pill">' + esc(x) + '</span>'; }).join(' ') + (C.horrorText(it) ? ' <span class="sh-pill tempt">' + esc(C.horrorText(it)) + '</span>' : '');
   }
   function optionText(it) { return it.name + ' (' + plural(it.slots, 'slot', 'slots') + (it.defence ? ', Defence ' + sgn(it.defence) : '') + (it.hearts ? ', +' + plural(it.hearts, 'Heart', 'Hearts') : '') + ')'; }
 
@@ -52,7 +52,7 @@
   function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 heavy weapon' : '') + '</b> for damage.</p>' : ''; }
   function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
-  function plainLine(src) { return src.cat || !src.temptsHorror ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
+  function plainLine(src) { return src.cat || !(src.temptsHorror || src.heal) ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
   function gearItem(g, i, edit, acts, dice) {
     var it = C.itemOf(g); if (!it) return '';
     var spells = it.kind === 'grimoire' ? C.spellsOf(it) : [];
@@ -60,7 +60,7 @@
     return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + ' left</span>' : '') +
       (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + (it.pickDie || it.pick) + ': the die chooses one of its ' + it.pick + ' spells.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
       (it.kind === 'grimoire' && !spells.length ? '<p class="sh-note">No spells are written in it yet.</p>' : '') +
-      (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">Tempts the Horror · +' + esc(R.sayHorrorAmount(s.horror)) + '</span>' + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
+      (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">' + esc(C.horrorText(s)) + '</span>' + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
       '<div class="sh-btns">' + (it.kind === 'grimoire' && !it.pick ? '' : useBtn(act(''), '', it.pick ? 'Read' : '')) + (edit ? (C.canEquip(it) ? '<button type="button" class="sh-b" data-sh="move" data-i="' + i + '" data-gear="' + esc(g.key || '') + '" data-eq="' + (g.eq ? '0' : '1') + '">' + (g.eq ? 'To the pack' : 'Equip') + '</button>' : '<span class="sh-supply" title="' + (it.kind === 'supply' ? 'A supply works from the pack, so it is never equipped.' : 'This works from the pack, so it is never equipped.') + '">' + (it.kind === 'supply' ? 'Supply' : 'Pack only') + '</span>') + '<button type="button" class="sh-b" data-sh="remove" data-i="' + i + '" data-gear="' + esc(g.key || '') + '">Drop</button>' : '') + '</div></div>';
   }
 

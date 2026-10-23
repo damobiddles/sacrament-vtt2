@@ -218,7 +218,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -291,7 +291,7 @@ function fixArmour(s, ctx) {
 const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; const item = SC.makeCustom(raw); if (item.kind === 'grimoire' && item.spells.length !== 3) fail('invalid', 'A grimoire must have three different spells.'); return Object.assign(SC.designOf(item), { notes: str(raw.notes, 1000) }); };
 const libOf = (s) => (s.lootLib = s.lootLib || []);
 /* What players read on a revealed loot card: the description, then what it does. */
-const lootText = (d) => [d.flavour, d.does].filter(Boolean).join('\n\n');
+const lootText = (d) => [d.flavour, d.does, SC.horrorText(d)].filter(Boolean).join('\n\n');
 /* The item a loot command means: one from the library, the one behind a card, or one sent whole (a rolled find, perhaps edited first). */
 function lootSource(s, c) {
   if (c.libId) return { d: libOf(s).find((x) => x.id === c.libId) || fail('not_found', 'That item is no longer in the library.') };
@@ -405,9 +405,10 @@ function natOne(s, a, ctx, ch, chk) {
   if (!chk.nat1) return null;
   return moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
 }
-/* Why a roll cannot be pushed now, or '' when it can. A push follows a failed check: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
+/* Why a roll cannot be pushed now, or '' when it can. A push follows a failed attack: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
 function pushBlock(s, r) {
   if (!r || !r.check || r.attack || r.void) return 'There is nothing to push.';
+  if (!r.isAttack) return 'Only a failed attack can be pushed.';
   if (r.check.success) return 'That roll succeeded.';
   if (r.pushed) return 'That roll has been pushed already.';
   if (r.fromPush) return 'A pushed action cannot be pushed again.';
@@ -590,8 +591,9 @@ const HANDLERS = {
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal'; const manual = c.d20 != null && c.d20 !== '';
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
+    if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
     const chk = R.check({ d20, stat: ch.stats[c.stat], target: s.table.target, adj, settings: s.settings });
-    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
+    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
@@ -617,7 +619,7 @@ const HANDLERS = {
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
       const chk = R.check({ d20, stat: ch.stats[u.stat], target: s.table.target, adj, settings: s.settings });
-      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null } };
+      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null } };
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, dice: diceOf(manual, 20, d20) });
@@ -629,7 +631,7 @@ const HANDLERS = {
     const hr = temptHorror(s, a, ctx, ch, u) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
-  push(s, c, a, ctx) { /* after a failed check the hero may push for a second action: the Horror rises, and their next roll is that action */
+  push(s, c, a, ctx) { /* after a failed attack the hero may push for a second action: the Horror rises, and their next roll is that action */
     const r = s.rolls[c.rollId] || fail('not_found', 'That roll is no longer at the table.'), ch = charOf(s, r.charId);
     if (!ownsChar(ch, a) || r.by !== (isGM(a) ? 'gm' : a.pid)) fail('forbidden', 'That is not your roll.');
     const why = pushBlock(s, r); if (why) fail('invalid', why);
@@ -664,7 +666,7 @@ const HANDLERS = {
     const r = SC.rollLoot((sides) => d(ctx, sides), typed); if (!r.ok) fail(/^Nothing is listed/.test(r.why) ? 'not_found' : 'invalid', r.why);
     const it = r.item, said = SC.sayLoot(r.steps);
     L(s, a, ctx, 'Loot roll ' + said + ': ' + it.name + '.', { kind: 'roll', private: true, dice: r.steps.filter((st) => !st.typed).map((st) => ({ die: st.die, n: st.n })) });
-    return { n: r.steps[0].n, steps: r.steps, said, itemId: it.id, name: it.name, category: it.category || '', flavour: it.flavour || '', tempts: !!it.temptsHorror, gmNote: LOOT_NOTES[it.id] || '',
+    return { n: r.steps[0].n, steps: r.steps, said, itemId: it.id, name: it.name, category: it.category || '', flavour: it.flavour || '', tempts: !!it.temptsHorror, horrorText: SC.horrorText(it), gmNote: LOOT_NOTES[it.id] || '',
       design: it.kind === 'grimoire' ? null : Object.assign(SC.designOf(it), { notes: LOOT_NOTES[it.id] || '' }) };   /* a grimoire carries spells, so it is handed out as itself and not edited here */
   },
   lootSave(s, c, a, ctx) { /* design or change an item in the table's loot library */
@@ -684,6 +686,14 @@ const HANDLERS = {
     const r = SC.edit(ch, { op: 'add', id, def }, { gm: true }, pc && pc.hp); if (!r.ok) fail('limit', r.why);
     if (card) dropCard(s, card); listAdd(recapOf(s, ctx).found, ch.name + ': ' + def.name);
     L(s, a, ctx, 'The GM gives you ' + def.name + '.', ch.owner ? { only: ch.owner, gmText: 'The GM gives ' + def.name + ' to ' + ch.name + '.' } : { private: true, gmText: 'The GM gives ' + def.name + ' to ' + ch.name + '.' }); return { id };
+  },
+  gmDice(s, c, a, ctx) {
+    const sides = Number(c.sides), count = c.count == null ? 1 : Number(c.count);
+    if (![4, 6, 8, 10, 12, 20, 100].includes(sides) || !Number.isInteger(count) || count < 1 || count > 20) fail('invalid', 'Choose a standard die and 1 to 20 dice.');
+    const dice = Array.from({ length: count }, () => ({ die: sides, n: d(ctx, sides) }));
+    const total = dice.reduce((n, x) => n + x.n, 0);
+    const line = L(s, a, ctx, 'GM rolls ' + count + 'd' + sides + ': ' + dice.map(x => x.n).join(' + ') + ' = ' + total + '.', { kind: 'roll', private: c.private === true, dice });
+    return { dice, total, logId: line.id };
   },
   monsterAttack(s, c, a, ctx) { /* the GM's: a monster rolls d20 + its attack bonus against a hero's Defence */
     const att = cardOf(s, c.cardId), tgt = cardOf(s, c.targetCardId);
@@ -751,6 +761,7 @@ const HANDLERS = {
     if (!isGM(a) && roll.by !== a.pid) fail('forbidden', 'That is not your roll.');
     if (roll.effort && !(isGM(a) && c.force)) fail('conflict', 'Effort has already been rolled for this attempt.');
     if (!roll.check) fail('invalid', 'That Effort has no check to follow.');
+    if (roll.nonDamage) fail('invalid', 'That action does not deal damage. The GM resolves its effect.');
     if (!roll.check.success && !(isGM(a) && c.force)) fail('invalid', 'The attempt missed, so there is no Effort to roll.');
     /* After an item, its own kind of Effort is rolled; a natural 20 may still take Ultimate when the table offers it */
     if (!roll.effort) roll.cat = pendingWeaponCat(s, roll);

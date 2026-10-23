@@ -26,7 +26,7 @@
      whether or not the check succeeds (using it is what tempts the Horror). An amount is a whole number ("horror": 2) or dice rolled at the moment of use ("horror": "d4+2").
      An amount of 0 does nothing. Passing a threshold announces it in the feed and alerts the GM; the GM decides what it means, and the table applies no effect itself.
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
-     A push (a second action taken after a failed check) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20). */
+     A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20). */
   var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
   var HORROR_DICE = /^([1-9]?)d(4|6|8|10|12|20)(?:\+([0-9]{1,2}))?$/;   /* "d6", "2d4", "d4+2" */
 

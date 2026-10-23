@@ -99,7 +99,7 @@
 
 <section id="turns">
   <h2><span>5</span> Turns</h2>
-  <p>Rounds go <b>clockwise</b> round the table, then the GM acts for every foe. On your turn you have <b>one Move</b> and <b>one Action</b>. When a check <b>fails</b>, you may <b>push</b> once for a <b>second Action at 1 Horror</b>: the same thing again or something else. The push costs 1, and the second Action then costs whatever it normally costs. Nothing is charged twice for the same thing, and a pushed Action cannot be pushed again.</p>
+  <p>Rounds go <b>clockwise</b> round the table, then the GM acts for every foe. On your turn you have <b>one Move</b> and <b>one Action</b>. When an attack <b>fails</b>, you may <b>push</b> once for a <b>second Action at 1 Horror</b>: the same thing again or something else. The push costs 1, and the second Action then costs whatever it normally costs. Nothing is charged twice for the same thing, and a pushed Action cannot be pushed again.</p>
   <table class="ref wide">
     <tr><th>Strike or shoot</th><td>A STR check in melee, a DEX check at range. On a success roll your weapon&rsquo;s Effort die and add your Effort points: that is the damage.</td></tr>
     <tr><th>Cast or use a relic</th><td>The check and die the item names. The Horror cost is paid as you roll.</td></tr>
@@ -138,7 +138,7 @@
   <table class="ref">
     <tr><th>Rest at a hearth</th><td>1 Heart (10 points).</td></tr>
     <tr><th>Linen bandages</th><td>d6, a WIS check.</td></tr>
-    <tr><th>Mend (the Litany)</th><td>d8, a WIS check, 1 Horror.</td></tr>
+    <tr><th>Mend (the Litany)</th><td>d8, a WIS check, 0 Horror.</td></tr>
     <tr><th>Saint&rsquo;s knucklebone</th><td>d8, no roll, 1 Horror.</td></tr>
   </table>
   <p class="tip">Death Bargains are set aside for now. They may return as an optional module for tables that want a way back from death at a cost.</p>
@@ -148,18 +148,18 @@
   <h2><span>8</span> The Looming Horror</h2>
   <div class="panel" id="table-horror">
     <h3 style="margin-top:0">At the Sacrament RPG Table: the Rising Horror</h3>
-    <p>The table keeps <b>one meter for everyone, from 0 to 21</b>, in its top bar. Every time a hero <b>casts a spell or uses a relic or other item that tempts the Horror</b>, the meter rises by that thing&rsquo;s Horror amount, by itself, and the activity feed says so. It rises <b>whether the check succeeds or fails</b>: using it is what tempts the Horror. An amount of 0 adds nothing.</p>
-    <p>Two more things raise it by <b>1</b>: a hero&rsquo;s d20 showing a <b>natural 1</b> (a monster&rsquo;s does not count), and a <b>push</b>. After a failed check the table offers the hero a push: they take a second Action at once, and the meter rises by 1. A push is once a turn, and only after a failure.</p>
-    <p>Most amounts are a fixed number. Some are <b>rolled when the thing is used</b>, such as <b>d4+2</b> or <b>d6</b>, and the feed shows the roll. Reading the <b>Grimoire with no title</b> rolls a d4 to choose the spell, and the reader casts whichever comes up, at that spell&rsquo;s own amount.</p>
+    <p>The table keeps <b>one meter for everyone, from 0 to 21</b>, in its top bar. Healing spells cost <b>0 Horror</b>; every other spell costs <b>1</b>. Every time a hero <b>uses a relic or other item that tempts the Horror</b>, the meter rises by that thing&rsquo;s Horror amount, by itself, and the activity feed says so. It rises <b>whether the check succeeds or fails</b>: using it is what tempts the Horror. An amount of 0 adds nothing.</p>
+    <p>Two more things raise it by <b>1</b>: a hero&rsquo;s d20 showing a <b>natural 1</b> (a monster&rsquo;s does not count), and a <b>push</b>. After a failed attack the table offers the hero a push: they take a second Action at once, and the meter rises by 1. A push is once a turn, and only after a failure.</p>
+    <p>Most amounts are a fixed number. Some custom items have costs <b>rolled when the thing is used</b>, such as <b>d4+2</b> or <b>d6</b>, and the feed shows the roll. Reading the <b>Grimoire with no title</b> rolls a d6 to choose one of three spells, and the reader casts whichever comes up, at that spell&rsquo;s own amount.</p>
     <p>The meter has thresholds at <b>7</b>, <b>14</b> and <b>21</b>. Passing one is announced in the feed (&ldquo;The Horror stirs&rdquo;, &ldquo;The Horror draws near&rdquo;) and the GM is alerted; <b>the GM decides what happens</b>. At <b>21 the Horror has arrived</b>: everyone is told, and the meter stays at 21 until the GM lowers or resets it. It never falls by itself. <b>Only the GM moves it by hand</b> or takes back a rise. The GM&rsquo;s <b>Party rest</b> (a rest in a safe place) heals every living hero 1 Heart and lowers it by a d6 for every two living heroes.</p>
   </div>
   <p class="note">The rest of this section is the draft rules the table was designed from. Where they differ from the table above, the table is how it plays now.</p>
   <div id="trackdemo"></div>
   <p>One shared track, <b>0 to 21</b>, written where everyone can see it. It has three thresholds: <b>9 The Stirring</b>, <b>15 The Turning</b> and <b>21 The Arrival</b>. Horror rises only by <b>voluntary choices</b>. Failing a check does not add it, and neither does taking damage.</p>
   <table class="ref">
-    <tr><th>A Minor spell or prayer</th><td><b>+1</b></td></tr>
-    <tr><th>A Greater working</th><td><b>+2</b></td></tr>
-    <tr><th>An Ultimate working</th><td><b>+3</b></td></tr>
+    <tr><th>A non-healing spell or prayer</th><td><b>+1</b></td></tr>
+    <tr><th>A Greater working</th><td><b>+1</b></td></tr>
+    <tr><th>An Ultimate working</th><td><b>+1</b></td></tr>
     <tr><th>A relic</th><td>As the relic says, <b>+1 to +3</b>.</td></tr>
     <tr><th>A push</th><td><b>+1</b></td></tr>
   </table>
@@ -174,9 +174,9 @@
   <ul>
     <li><b>Several thresholds at once.</b> Resolve each in ascending order, one aftershock roll each, after the action that crossed them.</li>
     <li><b>Falling below and crossing again.</b> Resting from 11 to 7 re-arms the 9. Rising to 9 later fires it again; staying at or above 9 does not.</li>
-    <li><b>At 21.</b> The track does not rise further. <b>Each point that would is paid by whoever caused it as Strain: 2 damage that nothing reduces.</b> A Minor spell costs its caster 2; an Ultimate working, 6. Magic and pushing are never free, and a hero may decline.</li>
+    <li><b>At 21.</b> The track does not rise further. <b>Each point that would is paid by whoever caused it as Strain: 2 damage that nothing reduces.</b> A non-healing spell costs its caster 2; healing spells have no casting cost. Magic and pushing are never free, and a hero may decline.</li>
     <li><b>The Arrival can forbid magic</b> (result 3). Nothing is attempted, so nothing is paid.</li>
-    <li><b>Healing magic outside combat</b> costs Horror exactly as in combat, and works once per person per rest. A second casting on the same person heals nothing and still costs.</li>
+    <li><b>Healing spells</b> cost no Horror, in or out of combat, and work once per person per rest. A second casting on the same person heals nothing. Healing relics keep their listed cost.</li>
     <li><b>Several heroes at once.</b> Every cost is applied to the one track in the order it happens (clockwise within a round). Costs paid in the same action are added first; thresholds are resolved after the whole action.</li>
   </ul>
   <h3>Resting</h3>
@@ -207,9 +207,9 @@
   <p class="rl"><b>Ordinary check.</b> Wren picks the lock on the sacristy door. The GM calls it Easy, because the lock is old: TN 9. Wren rolls a d20 and adds her DEX (+3): 7 + 3 = 10. She opens it, and the GM does not ask for an Effort die. Nothing about the amount matters.</p>
   <p class="story">Aldric hooks a gaunt penitent with the bill hook. His STR is +3 and he rolls an 11 for 14: a success. Rather than damage it, he chooses the hook&rsquo;s other effect and drags it from Close to Engaged, where the shield can reach it. No Effort die: the amount does not matter.</p>
   <p class="story">Ottoline casts Ember at the penitent from her grimoire: an INT check, +3, a 15 for 18. Success. Ember is a Minor spell, so the track goes from 0 to <b>1</b>, <i>and it would have gone to 1 if she had missed</i>. She rolls d10 for the flame, a 5, and adds her Magic Effort (+3): 8. The penitent has 10 points, so it is at 2.</p>
-  <p class="story">The sexton surges out of the font, 2 Hearts and armoured. Ottoline <b>pushes</b> for a second Action (+1 Horror, now 2) and casts Unmake at it: +2 Horror (now 4). A spell is not slowed by armour. She rolls the d10, a 7, and adds +3: 10. The sexton, at 20, is at 10, and Dazed.</p>
+  <p class="story">The sexton surges out of the font, 2 Hearts and armoured. Ottoline <b>pushes</b> for a second Action (+1 Horror, now 2) and casts Unmake at it: +1 Horror (now 3). A spell is not slowed by armour. She rolls the d10, a 7, and adds +3: 10. The sexton, at 20, is at 10, and Dazed.</p>
   <p class="rl"><b>Defence.</b> The sexton lunges at Maren. Her Defence is her CON (+2) and her gambeson (+2): 4, so the sexton must roll 14. The GM rolls a d20 for it: a 14, and the scene adds 1 for 15. It hits. The sexton rolls its d10: an 8. Maren, at 10, is at 2. The hound&rsquo;s bite next round takes the rest. She is <b>dying</b>, and rolls a d4: a 2.</p>
-  <p class="story">At the end of the round the countdown falls to 1. Wren runs to her and uses her Action to tend: a WIS check with bandages is Easy, TN 9. She rolls a 14 and adds +1. Maren is <b>stable</b>, at 0. The Horror is at 4; a rest at the sacristy will take 2d6 off it.</p>
+  <p class="story">At the end of the round the countdown falls to 1. Wren runs to her and uses her Action to tend: a WIS check with bandages is Easy, TN 9. She rolls a 14 and adds +1. Maren is <b>stable</b>, at 0. The Horror is at 3; a rest at the sacristy will take 2d6 off it.</p>
 </section>
 
 <section id="gm">

@@ -278,13 +278,13 @@
       }
       fx.forEach(function (e) {
         var to = e.target || 'self';
-        if (e.do === 'tend') { if (tgt && tgt.dying && to === 'ally') { out.tended = E.tend(tgt, chk || E.check(E.modifier(actor.scores.WIS, o.bonus || 0), E.tn(ctx.scene, o.adj), o.d20)); handled = true; } else if (to === 'ally' && !tgt) out.intents.push({ k: 'tend', who: 'ally' }); }
+        if (e.do === 'tend') { if (tgt && tgt.dying && (to === 'ally' || to === 'target')) { out.tended = E.tend(tgt, chk || E.check(E.modifier(actor.scores.WIS, o.bonus || 0), E.tn(ctx.scene, o.adj), o.d20)); handled = true; } else if ((to === 'ally' || to === 'target') && !tgt) out.intents.push({ k: 'tend', who: 'ally' }); }
         else if (e.do === 'heal') {
           if (handled) return;
           var r = rollDice(e.dice, chk && chk.crit); out.effort = { die: r.die, rolls: r.rolls, total: r.total };
           var who = to === 'self' ? actor : tgt;
           if (who && typeof who.hp === 'number' && !who.def) { out.healed = E.heal(who, r.total, !!e.force, e.kind); if (!out.healed && !(who.dying || who.stable) && !e.force) out.notes.push('Already mended since the last rest.'); }
-          if (to === 'ally') out.intents.push({ k: 'heal', who: 'ally', n: r.total, kind: e.kind || '' });
+          if ((to === 'ally' || to === 'target')) out.intents.push({ k: 'heal', who: 'ally', n: r.total, kind: e.kind || '' });
         }
         else if (e.do === 'status') out.intents.push({ k: 'status', who: to === 'self' ? 'foe' : to, tag: e.tag, until: e.until || '' });
         else if (e.do === 'buff') {

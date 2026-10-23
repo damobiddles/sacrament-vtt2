@@ -29,11 +29,11 @@ test('every entry has what the sheet needs: a unique id, a name, a slot count, a
 });
 
 test('every spell, every grimoire and every magic item can tempt the Horror, and nothing plain claims to', () => {
-  for (const s of G.spells) assert.equal(s.temptsHorror, true, 'the spell ' + s.name + ' is missing "temptsHorror": true');
+  for (const s of G.spells) assert.equal(s.temptsHorror, s.effect !== 'healing', 'the spell ' + s.name + ' is missing "temptsHorror": true');
   for (const i of [...G.relics, ...G.grimoires]) assert.equal(i.temptsHorror, true, i.name + ' is missing "temptsHorror": true');
   for (const i of (G.found || []).filter((x) => x.kind === 'relic' || x.kind === 'grimoire')) assert.equal(i.temptsHorror, true, i.name + ' is missing "temptsHorror": true');
   for (const i of G.items) assert.ok(!i.temptsHorror, i.name + ' is a plain item but is marked as tempting the Horror: move it to the relics');
-  for (const i of [...G.relics, ...G.grimoires, ...G.spells, ...(G.found || []).filter((x) => x.temptsHorror)]) assert.ok((Number.isInteger(i.horror) && i.horror >= 1) || /^[1-9]?d(4|6|8|10|12|20)(\+[0-9]{1,2})?$/.test(i.horror), i.name + ' tempts the Horror, so it needs a "horror" amount: a whole number of 1 or more, or dice such as "d4+2"');
+  for (const i of [...G.relics, ...G.grimoires, ...G.spells.filter(s => s.effect !== 'healing'), ...(G.found || []).filter((x) => x.temptsHorror)]) assert.ok((Number.isInteger(i.horror) && i.horror >= 1) || /^[1-9]?d(4|6|8|10|12|20)(\+[0-9]{1,2})?$/.test(i.horror), i.name + ' tempts the Horror, so it needs a "horror" amount: a whole number of 1 or more, or dice such as "d4+2"');
 });
 
 test('every grimoire lists spells that exist, and every spell belongs to a grimoire', () => {

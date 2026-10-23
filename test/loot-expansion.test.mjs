@@ -19,9 +19,9 @@ test('the expansion doubles each item category with stable catalogue definitions
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
-  // This fingerprint locks the reviewed definitions; all spell rules remain unchanged.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), 'ebf664cd642ceb67db52665858a1588305ff388630a839bb32491ca30a254593');
-  assert.equal(hash(G.spells), 'b2ad12b6a8b11602d54a4a71be23e100748eb93f14b31b60b23327fc577828ff');
+  // This fingerprint locks the reviewed definitions; playtest-approved healing targets, Horror costs and explanations are included.
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '907d07d9c3099971a77867bcc63496d0c34e119d2c2ec5a376305e9fd766c4ac');
+  assert.equal(hash(G.spells), '610d1269f51438a6de13a156d321dae42d0154b648cfca4ca1a2db9143005698');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {

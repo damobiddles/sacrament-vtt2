@@ -31,7 +31,7 @@ test('"the Hollow" is not used for the horror anywhere in the project', () => {
 test('the sheet and the table say Tempts the Horror', async () => {
   await import('../site/vtt/rules.js'); await import('../site/sheet/gear.js'); await import('../site/sheet/sheet-core.js');
   const sheet = readFileSync(path.join(root, 'site/sheet/sheet.js'), 'utf8'), table = readFileSync(path.join(root, 'site/vtt/vtt.js'), 'utf8');
-  assert.match(sheet, /Tempts the Horror/); assert.match(table, /Tempts the Horror/);
+  assert.match(sheet, /C\.horrorText/); assert.match(globalThis.SacramentSheetCore.horrorText({temptsHorror:true,horror:1}), /Tempts the Horror/); assert.match(table, /Tempts the Horror/);
   const G = globalThis.SACRAMENT_GEAR;
   assert.ok([...G.items, ...G.relics, ...G.grimoires, ...G.found, ...G.spells].some((i) => i.temptsHorror === true), 'the data still carries the temptsHorror flag');
 });

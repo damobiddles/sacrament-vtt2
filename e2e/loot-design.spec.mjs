@@ -27,7 +27,7 @@ test('design, edit and delete: the library shows it, the preview follows the for
   const { gm } = await setup(browser);
   await gm.locator('[data-do=designLoot]').click(); await expect(designer(gm)).toBeVisible();
   await fill(gm, { name: 'Ghoul-Tooth Charm', category: 'Curio', cat: 'magic', flavour: 'Strung on gut.', does: 'Hold it up.', notes: 'SECRETNOTE', tempts: true, horror: 2 });
-  await expect(designer(gm).locator('#ltPrev')).toContainText('Ghoul-Tooth Charm'); await expect(designer(gm).locator('#ltPrev')).toContainText('Tempts the Horror · 2');
+  await expect(designer(gm).locator('#ltPrev')).toContainText('Ghoul-Tooth Charm'); await expect(designer(gm).locator('#ltPrev')).toContainText('Tempts the Horror · +2');
   await expect(designer(gm).locator('#ltPrev')).not.toContainText('SECRETNOTE');
   await designer(gm).locator('[data-lb=save]').click();
   await expect(designer(gm).locator('#ltLib')).toContainText('Ghoul-Tooth Charm'); await expect(designer(gm).locator('#ltLib')).toContainText('Library (1)');

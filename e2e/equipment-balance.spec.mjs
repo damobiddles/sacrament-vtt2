@@ -68,6 +68,7 @@ test('a player must put away their shield before a heavy attack and sees the ext
   await sheet.locator('.sh-item', { hasText: 'Heater Shield' }).getByRole('button', { name: 'To the pack', exact: true }).click();
   await heavy.locator('[data-sh=use]').click();
   await expect(sheet).toBeHidden();
+  await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();
   await expect(ann.locator('#panel .calc.ok')).toContainText('Success');
   await expect(ann.locator('#panel [data-do=effort][data-cat=weapons]')).toContainText('+2 heavy');
   await ann.locator('#panel [data-do=effort][data-cat=weapons]').click();

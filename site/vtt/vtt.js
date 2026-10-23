@@ -197,7 +197,7 @@
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
     UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
-    UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
+    UI.attackChoice = null; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
     UI.notice = null; clearTimeout(UI.noticeTimer); UI.arrivalSeen = false;
@@ -355,6 +355,7 @@
   function applyTarget(r) {
     if (!r || !r.effort || r.applied) return null;
     var c = UI.aim[r.id] && S.cards[UI.aim[r.id]];
+    if (!canTake(c) && (UI.aim[r.id] || r.targetCardId)) { c = S.cards[UI.aim[r.id] || r.targetCardId]; return canTake(c) ? c : null; }
     if (!canTake(c)) { var named = r.targetCardId && S.cards[r.targetCardId], sel = UI.sel && S.cards[UI.sel]; c = canTake(named) ? named : canTake(sel) ? sel : null; if (c) UI.aim[r.id] = c.id; else delete UI.aim[r.id]; }
     return c;
   }
@@ -470,22 +471,28 @@
     return h + '<div class="row" style="margin-top:8px"><button class="btn small" data-do="dismissRoll">Done</button></div></div>';
   }
   function rollCard() {
+    if (UI.attackChoice) {
+      var pending = UI.attackChoice, targets = cardList().filter(function (c) { return onTable(c) && canTake(c); });
+      return '<div class="sec"><h3>Choose a target</h3><p>' + esc(pending.name) + '</p><label class="field">Attack target<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label><div class="row"><button class="btn main" data-do="confirmAttack">Attack selected target</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">Damage will keep this target. Nothing has been rolled yet.</p></div>';
+    }
     if (UI.rolling || D.busy()) return '<div class="sec"><h3>' + esc(UI.rolling || 'Rolling') + '</h3><p class="note" role="status">Rolling…</p></div>';   /* the previous roll is not offered while a new one is on its way, and a new one waits until its dice have landed */
     var r = UI.roll && S.rolls.filter(function (x) { return x.id === UI.roll; })[0]; if (!r) return '';
     var ch = r.check, h = '<div class="sec"><h3>' + esc(r.charName) + (r.item ? ' · ' + esc(r.item) : '') + (r.stat ? ' · ' + r.stat : r.attack ? ' · attack' : ' · Effort') + '</h3>';
     var tgt = applyTarget(r);
     if (r.attack) return h + attackRollView(r, ch);
     if (!S.chars[r.charId]) return h + '<p>' + esc(r.charName) + ' is no longer at the table, so this roll has nothing more to do.</p><div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';   /* the hero was taken off the table while the roll was open */
+    if (r.targetCardId && S.cards[r.targetCardId]) h += '<p class="note">Target: ' + esc(S.cards[r.targetCardId].name) + '</p>';
     if (ch) {
       h += '<div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayCheck(ch, r.stat)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
       if (ch.nat20) h += '<p class="note">Natural 20. Ultimate Effort is on offer' + (S.settings.nat20Ultimate ? '' : ' (switched off at this table)') + '.</p>';
       if (ch.nat1) h += '<p class="note">Natural 1. The Horror rises by 1.</p>';
       if (r.fromPush && !ch.success) h += '<p class="note">That was your pushed second action.</p>';
     }
-    if (ch && !ch.success && !gm()) h += '<p>Missed. No damage to roll.</p>';
+    if (r.nonDamage) h += '<p>' + (ch && ch.success ? 'Success. ' : 'The check failed. ') + 'The GM resolves the effect and any healing or rest limit. No damage to roll.</p>';
+    else if (ch && !ch.success && !gm()) h += '<p>Missed. No damage to roll.</p>';
     else if (!r.effort) {
       var c = S.chars[r.charId], dice = S.settings.dice;
-      var busyE = UI.working === 'effort:' + r.id, word = (tgt ? tgt.hp : r.cat) ? 'damage' : 'Effort';   /* against a foe (or with a weapon, spell or tool in hand) it is damage; against an obstacle's Effort bar, or a plain check, it is Effort */
+      var busyE = UI.working === 'effort:' + r.id, word = (r.isAttack || (tgt ? tgt.hp : r.cat)) ? 'damage' : 'Effort';   /* against a foe (or with a weapon, spell or tool in hand) it is damage; against an obstacle's Effort bar, or a plain check, it is Effort */
       if (r.cat) {   /* an item: its own die, one button, rolled when the player is ready */
         h += (ch && ch.success ? '<p><b>' + (word === 'damage' ? 'A hit!' : 'Success!') + '</b> Now roll the ' + word + '.</p>' : '') + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') +
           '<div class="row col"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Roll ' + word + ': ' + R.CAT_NAMES[r.cat] + ' d' + dice[r.cat] + (c.effort[r.cat] ? ' ' + sgn(c.effort[r.cat]) : '') + (r.weaponBonus ? ' +2 heavy' : '') + '</button>' +
@@ -502,7 +509,7 @@
           (other ? '<div class="row"><button class="btn small" data-do="aim" data-roll="' + r.id + '" data-card="' + other.id + '">Change target to ' + esc(other.name) + '</button></div>' : '') + '<div class="row col">' +
           (UI.working === 'apply:' + r.id ? '<button class="btn" disabled aria-busy="true">Applying to ' + esc(tgt.name) + '…</button>' : '') +  (UI.working === 'apply:' + r.id ? '' : tgt.hp ? '<button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + tgt.id + '" data-field="hp">Apply to ' + esc(tgt.name) + ': −' + r.effort.total + ' HP</button>' : '') +
            (UI.working === 'apply:' + r.id ? '' : tgt.progress ? '<button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + tgt.id + '" data-field="progress">Apply to ' + esc(tgt.name) + ': +' + r.effort.total + ' Effort</button>' : '') + '</div>';
-      } else h += '<p class="note"><b>Not applied yet.</b> Select a card with HP or an Effort bar on the table, then apply this to it. Nothing changes until you do.</p>';
+      } else h += (UI.sel && canTake(S.cards[UI.sel]) ? '<button class="btn" data-do="aim" data-roll="' + r.id + '" data-card="' + UI.sel + '">Set target to ' + esc(S.cards[UI.sel].name) + '</button>' : '') + '<p class="note"><b>Not applied yet.</b> Select a card with HP or an Effort bar on the table, then apply this to it. Nothing changes until you do.</p>';
     }
     if (ch) h += pushView(r);
     if (r.applied && myTurn()) h += '<p class="hint">Press End turn above when you are done.</p>';
@@ -527,7 +534,7 @@
   function rollAgain(r) {
     if (r.targetCardId && S.cards[r.targetCardId]) UI.sel = r.targetCardId; if (gm()) UI.actAs = r.charId;
     UI.adj = (r.check && r.check.adj) || 'normal';
-    if (r.use) { if (!r.use.gearKey) { toast('Choose that item from your sheet again.'); return; } doUseItem(r.charId, r.use.index, r.use.spellId, r.use.gearKey); } else doRoll(r.stat);
+    if (r.use) { if (!r.use.gearKey) { toast('Choose that item from your sheet again.'); return; } doUseItem(r.charId, r.use.index, r.use.spellId, r.use.gearKey); } else doRoll(r.stat, true, !!r.isAttack);
   }
   var physical = function (id, label) { return '<div class="phys"><label>' + label + '<input id="' + id + '" type="number" min="1" max="20" inputmode="numeric" placeholder="optional"></label></div>'; };
 
@@ -666,12 +673,12 @@
     var h = '<div class="row"><button class="btn small main" data-do="lootRoll">Roll loot (d100)</button><button class="btn small" data-do="designLoot">Design loot</button><label class="phys">Own dice<input id="physL" style="width:8em" type="text" inputmode="numeric" placeholder="optional" title="What your own d100 shows. If it leads into a sub-table, add that die after a space: 87 4" aria-label="Your own d100, optional; for a sub-table add its die after a space"></label></div>' + (heroSel ? '<div class="row" style="margin-top:6px">' + heroSel + '</div>' : '');
     if (L0) {
       var D = L0.design;
-      h += '<div class="sec" role="status"><h4>' + esc(L0.said || String(L0.n)) + ': ' + esc(L0.name) + '</h4><p class="note">' + esc(L0.category) + (L0.tempts ? ' · Tempts the Horror' : '') + '</p><p>' + esc(L0.flavour) + '</p>' + (L0.gmNote ? '<p class="unv"><b>For you only:</b> ' + esc(L0.gmNote) + '</p>' : '') +
+      h += '<div class="sec" role="status"><h4>' + esc(L0.said || String(L0.n)) + ': ' + esc(L0.name) + '</h4><p class="note">' + esc(L0.category) + (L0.horrorText ? ' · ' + esc(L0.horrorText) : '') + '</p><p>' + esc(L0.flavour) + '</p>' + (L0.gmNote ? '<p class="unv"><b>For you only:</b> ' + esc(L0.gmNote) + '</p>' : '') +
         '<div class="row">' + (D ? '<button class="btn small" data-do="rollEdit">Edit a copy first</button><button class="btn small" data-do="rollPlace">Put it on the table (hidden)</button>' : '<button class="btn small" data-do="lootCard">Put it on the table (hidden)</button>') +
         (heroes.length ? '<button class="btn small main" data-do="lootGive">Give it to this hero</button>' : '') + '</div></div>';
     }
     h += '<h4 class="libh">Your loot library (' + lib.length + ')</h4>' + (lib.length ? lib.map(function (it) {
-      return '<div class="lt-item"><h4>' + esc(it.name) + '</h4><span class="note">' + esc(it.category) + ' · ' + (it.equippable ? 'Equippable' : 'Supply') + (it.temptsHorror ? ' · Tempts the Horror ' + (it.horror || 0) : '') + '</span><div class="lt-row"><button class="btn small" data-do="libEdit" data-id="' + it.id + '">Edit</button><button class="btn small" data-do="libPlace" data-id="' + it.id + '">Put on table</button>' + (heroes.length ? '<button class="btn small" data-do="libGive" data-id="' + it.id + '">Give</button>' : '') + '</div></div>';
+      return '<div class="lt-item"><h4>' + esc(it.name) + '</h4><span class="note">' + esc(it.category) + ' · ' + (it.equippable ? 'Equippable' : 'Supply') + (it.temptsHorror ? ' · ' + esc(window.SacramentSheetCore.horrorText(it)) : '') + '</span><div class="lt-row"><button class="btn small" data-do="libEdit" data-id="' + it.id + '">Edit</button><button class="btn small" data-do="libPlace" data-id="' + it.id + '">Put on table</button>' + (heroes.length ? '<button class="btn small" data-do="libGive" data-id="' + it.id + '">Give</button>' : '') + '</div></div>';
     }).join('') : '<p class="note">Nothing designed yet. Use Design loot to make your own items.</p>');
     return h + '<p class="note">Only you see the roll and the library. A card put on the table starts hidden; reveal it when the players should see it.</p>';
   }
@@ -679,7 +686,7 @@
   var plain = function (title, body) { return '<div class="sec"><h4>' + title + '</h4>' + body + '</div>'; };
   function lootCardPanel(c) {
     var D = c.loot, heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; });
-    return plain('Loot item', '<p class="note">' + esc(D.category) + (D.cat ? ' · ' + esc(window.SacramentRules.CAT_NAMES[D.cat]) + ' Effort' : '') + ' · ' + (D.equippable ? 'Equippable' : 'Supply') + (D.temptsHorror ? ' · Tempts the Horror ' + (D.horror || 0) : '') + '</p>' + (D.notes ? '<p class="unv"><b>Your notes:</b> ' + esc(D.notes) + '</p>' : '') +
+    return plain('Loot item', '<p class="note">' + esc(D.category) + (D.cat ? ' · ' + esc(window.SacramentRules.CAT_NAMES[D.cat]) + ' Effort' : '') + ' · ' + (D.equippable ? 'Equippable' : 'Supply') + (D.temptsHorror ? ' · ' + esc(window.SacramentSheetCore.horrorText(D)) : '') + '</p>' + (D.notes ? '<p class="unv"><b>Your notes:</b> ' + esc(D.notes) + '</p>' : '') +
       (heroes.length ? '<div class="row"><label class="giveto">Give to<select id="cardHero" aria-label="Hero to give it to">' + heroes.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') + '</select></label><button class="btn small main" data-do="cardGive" data-id="' + c.id + '">Give to hero</button></div><p class="note">Giving puts it on their sheet and takes the card off the table.</p>' : '') +
       '<div class="row"><button class="btn small" data-do="cardEditLoot" data-id="' + c.id + '">Edit item</button></div>');
   }
@@ -850,14 +857,19 @@
   function queuedBadge(card) { var n = hpQueued(card.id); return n ? '<span class="queued" role="status" title="These changes have been sent and are not yet confirmed">saving ' + n + ': ' + card.hp.cur + ' → ' + shownHp(card) + '</span>' : ''; }
   /* Selecting a card. For the GM, selecting a hero's token also makes that hero the one the roll bar controls, and opens the bar. */
   function pickCard(id) { UI.sel = id; var c = S && S.cards[id]; if (gm() && c && c.charId && S.chars[c.charId]) { UI.actAs = c.charId; UI.gmStrip = true; } }
+  function gmDiceView() {
+    var out = '<div class="gm-dice"><button class="chip" data-do="gmDiceToggle" aria-expanded="' + !!UI.gmDiceOpen + '">GM dice</button>';
+    if (UI.gmDiceOpen) out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span role="status">' + esc(UI.gmDiceResult || 'For damage or any other roll. Apply results by hand.') + '</span>';
+    return out + '</div>';
+  }
   function renderStrip() {
-    var el = $('strip'), ch = myChar(), G = gm(), h = '';
+    var el = $('strip'), ch = myChar(), G = gm(), h = G ? gmDiceView() : '';
     if (!ch) {
       var anyFree = Object.keys(S.chars).some(function (k) { return !S.chars[k].owner; });
-      h = G ? '<span class="note">No heroes yet. Nobody has taken up the road.</span>' : anyFree ? '<b>Pick a hero to play.</b> <span class="note">Then your stats appear here.</span>' : Object.keys(S.chars).length ? '<b>No hero is free.</b> <span class="note">Ask the GM to add one. You can watch the table.</span>' : '<b>No heroes yet.</b> <span class="note">Nobody has taken up the road. Ask the GM to add one for you. You can watch the table.</span>';
+      h += G ? '<span class="note">No heroes yet. Nobody has taken up the road.</span>' : anyFree ? '<b>Pick a hero to play.</b> <span class="note">Then your stats appear here.</span>' : Object.keys(S.chars).length ? '<b>No hero is free.</b> <span class="note">Ask the GM to add one. You can watch the table.</span>' : '<b>No heroes yet.</b> <span class="note">Nobody has taken up the road. Ask the GM to add one for you. You can watch the table.</span>';
       el.innerHTML = h; return;
     }
-    if (G && !UI.gmStrip) { el.innerHTML = '<button class="chip" data-do="gmstrip" aria-expanded="false" title="Roll for a hero">Roll as ' + esc(ch.name) + '…</button>'; return; }
+    if (G && !UI.gmStrip) { el.innerHTML = h + '<button class="chip" data-do="gmstrip" aria-expanded="false" title="Roll for a hero">Roll as ' + esc(ch.name) + '…</button>'; return; }
     var card = S.cards[ch.cardId], hp = card && card.hp, keep = UI.phys || '';
     h += '<div class="me' + (G ? ' gm' : '') + '">' + (G ? '<button class="chip" data-do="gmstrip" aria-expanded="true">Hide</button><label class="actas"><span class="note">Acting as</span><select id="actAs" aria-label="Acting as (the hero the strip below controls)">' + Object.keys(S.chars).map(function (k) { return '<option value="' + k + '"' + (k === ch.id ? ' selected' : '') + '>' + esc(S.chars[k].name) + '</option>'; }).join('') + '</select></label>' : '<b title="Your hero">' + esc(ch.name) + '</b>') + '</div>';
     if (hp) h += '<div class="hp"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md' + (hpQueued(card.id) ? ' pend' : ''), true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '" aria-label="' + shownHp(card) + ' of ' + hp.max + ' hit points' + (hpQueued(card.id) ? ' (saving)' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + '</div>';
@@ -870,7 +882,7 @@
       h += '<div class="aim-prompt" role="group" aria-label="Selected target">' +
         '<span class="q">How are you going to deal with <b>' + esc(foe.name) + '</b>?</span>' +
         '<button class="chip" data-do="sheet" data-id="' + ch.id + '" aria-label="Open your character sheet to choose an action">Open character sheet</button>' +
-        (UI.askItem && UI.askItem.card === foe.id ? '<button class="chip" data-do="roll" data-stat="' + UI.askItem.stat + '" data-noitem="1">Roll ' + UI.askItem.stat + ' with no item</button>' : '') +
+        (UI.askItem && UI.askItem.card === foe.id ? '<button class="chip" data-do="roll" data-stat="' + UI.askItem.stat + '" data-noitem="1"' + (foe.hp ? ' data-attack="1"' : '') + '>Roll ' + UI.askItem.stat + ' with no item' + (foe.hp ? ' (attack)' : '') + '</button>' + (foe.hp ? '<button class="chip" data-do="check" data-stat="' + UI.askItem.stat + '">Roll ' + UI.askItem.stat + ' check</button>' : '') : '') +
         '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
@@ -896,7 +908,7 @@
     return how + (a.horror ? '. The Horror rises ' + R.sayHorrorAmount(a.horror) + '.' : a.pick ? '. The Horror rises by that spell\u2019s amount.' : '.');
   }
   function physVal(id) { var i = $(id); var v = i && i.value.trim(); if (i) i.value = ''; return v ? +v : undefined; }
-  function doRoll(stat, noItem) {
+  function doRoll(stat, noItem, attack) {
     var ch = myChar(); if (!ch || UI.rolling) return;   /* one click, one roll: a second click while the first is on its way is ignored */
     /* Aimed at a foe with an item to hand: the first click on a stat asks first, so nobody swings bare-handed by mistake. "Roll with no item" (or the same stat again) goes ahead. */
     var foe = aimFoe(), asked = UI.askItem && foe && UI.askItem.card === foe.id && UI.askItem.stat === stat;
@@ -905,17 +917,23 @@
     UI.rolling = 'Rolling ' + stat; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     renderPanel();
-    send({ type: 'roll', charId: ch.id, stat: stat, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
+    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
   /* Using an item: one click makes the check with the item's stat. On a success the panel offers "Roll damage" with the item's own die, then Apply. */
-  function doUseItem(charId, index, spellId, gearKey) {
+  function doUseItem(charId, index, spellId, gearKey, chosenTarget) {
     var ch = S.chars[charId]; if (!ch || UI.rolling) return;
     gearKey = gearKey || (ch.gear[index] && ch.gear[index].key);
     if (!gearKey) { toast('That item is no longer available. Open your sheet again.'); return; }
+    var use = window.SacramentSheetCore.useOf(heroOf(ch), index, spellId);
+    if (!use.ok) { toast(use.why); return; }
+    var selected = chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
+    if (chosenTarget && !(selected && onTable(selected) && canTake(selected))) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
+    if (use.cat && !(selected && onTable(selected) && canTake(selected))) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, name: use.name}; render(); return; }
+    UI.attackChoice = null;
     UI.askItem = null; UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
-    var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
+    var target = selected && onTable(selected) && (!use.cat || selected.kind !== 'pc') ? selected.id : undefined;
     renderPanel();
     send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
   }
@@ -938,6 +956,13 @@
     send({ type: 'cardCreate', card: card, addToOrder: kind === 'enemy' }, function (b) { UI.adding = false; if (!b) render(); if (b) { UI.sel = b.result.id; UI.cardEdit = b.result.id; render(); setTimeout(function () { var i = document.querySelector('[data-edit=name]'); if (i) { i.focus(); i.select(); } }, 30); } });
   }
 
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'gmDie') UI.gmDie = +t.value;
+    if (t.id === 'gmDiceCount') UI.gmDiceCount = +t.value;
+    if (t.id === 'gmDicePrivate') UI.gmDicePrivate = t.checked;
+    if (t.id === 'attackTarget') UI.attackTarget = t.value;
+  });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-do]'); if (!b || !S) return; var d = b.dataset, c = S.cards[d.id];
     switch (d.do) {
@@ -946,6 +971,16 @@
       case 'nextRound': send({ type: 'nextRound', expect: { round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
       case 'select': pickCard(d.id); render(); break;
+      case 'gmDiceToggle': UI.gmDiceOpen = !UI.gmDiceOpen; renderStrip(); break;
+      case 'gmDiceRoll': {
+        if (!gm() || UI.gmDiceBusy) break;
+        UI.gmDie = +$('gmDie').value; UI.gmDiceCount = +$('gmDiceCount').value; UI.gmDicePrivate = $('gmDicePrivate').checked;
+        UI.gmDiceBusy = true;
+        send({type:'gmDice', sides:UI.gmDie, count:UI.gmDiceCount, private:UI.gmDicePrivate}, function (b) { UI.gmDiceBusy = false; if (b) UI.gmDiceResult = (UI.gmDicePrivate ? 'GM only: ' : 'Shared: ') + b.result.dice.map(function (x) { return x.n; }).join(' + ') + ' = ' + b.result.total; render(); });
+        renderStrip(); break;
+      }
+      case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'); if (!choice || !targetChoice || !targetChoice.value) { toast('Choose a target first.'); break; } doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, targetChoice.value); break; }
+      case 'cancelAttack': UI.attackChoice = null; render(); break;
       case 'gmstrip': UI.gmStrip = !UI.gmStrip; render(); break;
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
@@ -958,8 +993,9 @@
       case 'openScene': UI.sceneRename = null; UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
       case 'sceneBg': UI.sceneBg = !UI.sceneBg; renderPanel(); break;
       case 'gmsub': UI.sub = d.s || null; renderPanel(); break;
-      case 'roll': doRoll(d.stat, !!d.noitem); break;
+      case 'roll': doRoll(d.stat, !!d.noitem, d.attack === '1'); break;
       case 'monCat': UI.monCat = d.cat; renderPanel(); break;
+      case 'check': doRoll(d.stat, true, false); break;
       case 'freeEffort': { var ch = myChar(); if (ch) { var v = physVal('physF'); send({ type: 'freeEffort', charId: ch.id, cat: d.cat, rolled: v }, function (bd) { if (bd) { UI.roll = bd.result.rollId; render(); } }); } break; }
       case 'effort': { if (UI.working) break; var key = 'effort:' + d.roll, rolledE = physVal('physE'); UI.working = key; renderPanel(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE }, function () { UI.working = null; render(); }); break; }
       case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }

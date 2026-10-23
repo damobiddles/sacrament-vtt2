@@ -8,7 +8,7 @@
 
   var HOOKS = { use: 'when it is used (and its roll succeeds)', always: 'all the time it is carried' };
   /* Who it lands on. self: the user; ally: one hero the user chooses; foe: one foe; foes: every foe in the scene. */
-  var TARGETS = { self: 'yourself', ally: 'an ally', foe: 'a foe', foes: 'every foe' };
+  var TARGETS = { self: 'yourself', target: 'yourself or any target', ally: 'an ally', foe: 'a foe', foes: 'every foe' };
   var UNTIL = { turn: 'until their next turn', round: 'until the end of the next round', scene: 'until the end of the scene' };
   var TO = { defence: 'Defence', check: 'the next check', effort: 'Effort', guard: 'the Guard action' };
   var EFFECTS = {
