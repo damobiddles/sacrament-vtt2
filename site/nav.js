@@ -12,7 +12,23 @@
   // There is one theme (dark). A light choice saved in someone's browser by the earlier version is cleared and ignored.
   try { localStorage.removeItem('sacrament-theme'); } catch (e) {}
 
+  function backToTop() {
+    if (/^\/(vtt|character|builder)(\/|$)/.test(location.pathname) || document.body.hasAttribute('data-no-nav')) return;
+    var button = document.createElement('button');
+    button.type = 'button'; button.className = 'sac-back-top'; button.hidden = true;
+    button.textContent = '↑ Back to top';
+    button.addEventListener('click', function () {
+      var heading = document.querySelector('h1');
+      if (heading) { if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
+      window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    });
+    document.body.appendChild(button);
+    function update() { button.hidden = window.scrollY < 400; }
+    window.addEventListener('scroll', update, { passive: true }); update();
+  }
+
   function build() {
+    backToTop();
     if (document.body.hasAttribute('data-no-nav') || document.body.hasAttribute('data-focus')) return;
     var path = location.pathname.replace(/index\.html$/, '');
     var bar = document.createElement('nav');
