@@ -4,6 +4,9 @@ test('public loot tables link to complete three-spell books with clear effect la
   const page = await newPage(browser);
   await page.goto('/loot/');
   await expect(page.getByRole('heading', { name: 'Current Loot Tables', exact: true })).toBeVisible();
+  const navigation = page.getByRole('navigation', { name: 'Loot sections' });
+  await expect(navigation.getByRole('link', { name: 'Grimoires (d8)', exact: true })).toHaveAttribute('href', '#table-grimoires');
+  await expect(navigation.getByRole('link', { name: 'Grimoires and spells', exact: true })).toHaveAttribute('href', '#loot-grimoire');
   const books = page.locator('#loot-grimoire .loot-entry');
   await expect(books).toHaveCount(8);
   for (let n = 0; n < 8; n++) await expect(books.nth(n).locator('.loot-spells > li')).toHaveCount(3);

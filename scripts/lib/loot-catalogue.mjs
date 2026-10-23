@@ -33,5 +33,5 @@ export function lootCatalogue(g) {
     }).join('')}</ul>` : '';
     return `<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}${spellList}</article>`;
   }).join('')}</section>`).join('');
-  return `<nav class="loot-jumps" aria-label="Loot sections">${tables.map(t => `<a href="#table-${esc(t.id)}">${esc(t.name)}</a>`).join(' · ')}<br>${Object.entries(kinds).map(([k, v]) => `<a href="#loot-${k}">${v}</a>`).join(' · ')}</nav><p>${items.length} catalogue items · ${items.filter(i => i.kind === 'grimoire').length} grimoires · ${g.spells.length} different spells.</p>${rolls}${list}`;
+  return `<nav class="loot-jumps" aria-label="Loot sections"><p><b>Roll tables</b><br>${tables.map(t => `<a href="#table-${esc(t.id)}">${esc(t.name)} (d${t.die})</a>`).join(' · ')}</p><p><b>Item catalogue</b><br>${Object.entries(kinds).map(([k, v]) => `<a href="#loot-${k}">${k === 'grimoire' ? 'Grimoires and spells' : v}</a>`).join(' · ')}</p></nav><p>${items.length} catalogue items · ${items.filter(i => i.kind === 'grimoire').length} grimoires · ${g.spells.length} different spells.</p>${rolls}${list}`;
 }
