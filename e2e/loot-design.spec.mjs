@@ -75,8 +75,8 @@ test('a card: put on the table hidden (the player is told nothing), revealed (th
 
 test('a rolled item can be edited first and then put on the table or given; players have no loot controls at all', async ({ browser }) => {
   const { gm, ann } = await setup(browser);
-  await gm.locator('#physL').fill('87 4'); await gm.locator('[data-do=lootRoll]').click(); await expect(gm.locator('#panel')).toContainText('Ashen Rosary');
-  await expect(gm.locator('#panel')).toContainText('87 → Relics d8: 4');   // the d100 led to the Relics sub-table
+  await gm.locator('#physL').fill('87 14'); await gm.locator('[data-do=lootRoll]').click(); await expect(gm.locator('#panel')).toContainText('Ashen Rosary');
+  await expect(gm.locator('#panel')).toContainText('87 → Relics d100: 14');   // the d100 led to the Relics sub-table
   await gm.locator('[data-do=rollEdit]').click(); await expect(designer(gm).locator('[data-lf=name]')).toHaveValue('Ashen Rosary');
   await designer(gm).locator('[data-lf=name]').fill('Blackened Rosary'); await designer(gm).locator('[data-lb=placeform]').click(); await expect(designer(gm)).toContainText('Put on the table, hidden');
   await designer(gm).locator('[data-lb=close]').first().click();

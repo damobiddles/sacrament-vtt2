@@ -56,7 +56,7 @@ test('names read like the lore: no punctuation oddities, and the example items f
   for (const n of names) assert.ok(!/[<>"]| {2}/.test(n), 'odd characters in the name ' + n);
 });
 
-test('the loot tables: every number on the d100 and on each sub-table gives exactly one thing, and 56 things are listed in all', () => {
+test('the loot tables: every number on the d100 and on each sub-table gives exactly one thing, and 145 things are listed in all', () => {
   const tables = [{ id: 'd100', die: 100 }, ...(G.tables || [])];
   for (const t of G.tables || []) {
     assert.match(t.id, /^[a-z]+$/, 'the table id "' + t.id + '" should be lower-case letters only'); assert.notEqual(t.id, 'd100');
@@ -72,7 +72,7 @@ test('the loot tables: every number on the d100 and on each sub-table gives exac
     hits.forEach((h, k) => { assert.equal(h.length, 1, 'on the ' + t.id + ' table the roll ' + (k + 1) + ' gives ' + (h.length ? h.join(' and ') : 'nothing')); });
   }
   for (const i of all()) if (i.table) assert.ok((G.tables || []).some((t) => t.id === i.table), i.name + ' is on a table that does not exist: ' + i.table);
-  assert.equal(listed, 56);
+  assert.equal(listed, 145);
   const depth = (t, k = 1) => (!t.on || t.on === 'd100' ? k : depth(G.tables.find((x) => x.id === t.on), k + 1));
   for (const t of G.tables || []) assert.ok(depth(t) <= 3, 'the ' + t.name + ' table is more than three tables deep');
 });
@@ -85,9 +85,9 @@ test('everything that has an Effort kind also has a stat to roll, and the kinds 
 test('the items the loot table marks as tempting the Horror are exactly the ones flagged', () => {
   const flagged = (table) => all().filter((i) => i.loot && i.temptsHorror && (i.table || 'd100') === table).map((i) => i.loot[0]).sort((a, b) => a - b);
   assert.deepEqual(flagged('d100'), [100]);
-  assert.deepEqual(flagged('valuables'), [5], 'the saint\'s finger bone, on the Valuables and curios table');
+  assert.deepEqual(flagged('valuables'), [13], 'the saint\'s finger bone, on the Valuables and curios table');
   for (const t of ['supplies', 'arms']) assert.deepEqual(flagged(t), [], 'nothing on the ' + t + ' table tempts the Horror');
-  assert.deepEqual(flagged('relics'), [1, 2, 3, 4, 5, 6, 7, 8], 'everything on the Relics table tempts the Horror');
+  assert.deepEqual(flagged('relics'), [1, 5, 10, 14, 19, 23, 28, 32, 37, 41, 46, 51, 55, 60, 64, 69, 73, 78, 82, 87, 91, 96], 'everything on the Relics table tempts the Horror');
 });
 
 test('a note only the GM may read is never in this file (it is sent to every browser)', async () => {

@@ -45,7 +45,7 @@ test('PLACE: an item goes on the table as a hidden loot card; revealing it shows
 });
 
 test('PLACE: a rolled item, edited first, can be put on the table without being saved to the library', async () => {
-  const { t } = await setup(); const roll = await t.gm.cmd({ type: 'lootRoll', ns: [87, 4] }); const d = roll.body.result.design; assert.equal(d.name, 'Ashen Rosary'); assert.equal(d.category, 'Relic');
+  const { t } = await setup(); const roll = await t.gm.cmd({ type: 'lootRoll', ns: [87, 14] }); const d = roll.body.result.design; assert.equal(d.name, 'Ashen Rosary'); assert.equal(d.category, 'Relic');
   const r = await t.gm.cmd({ type: 'lootPlace', item: Object.assign({}, d, { name: 'Blackened Rosary' }) }); assert.equal(r.status, 200);
   assert.ok(find(await t.state(), 'Blackened Rosary')); assert.deepEqual(await lib(t), []);
 });

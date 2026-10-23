@@ -15,7 +15,7 @@ const SCREEN_MS = 90000;   // no single screen may take longer than this to chec
 const QUICK = process.env.CONTRAST_SET === 'quick';
 const AUDIT = !!process.env.CONTRAST_AUDIT, OUT = process.env.CONTRAST_OUT || 'test-results/contrast';
 const VIEWPORTS = { laptop: { width: 1366, height: 800 }, phone: { width: 390, height: 780 } };
-const ALL_PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/feedback/', '/support/', '/privacy/', '/terms/', '/rules/', '/resources/', '/character/',
+const ALL_PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/loot/', '/feedback/', '/support/', '/privacy/', '/terms/', '/rules/', '/resources/', '/character/',
   '/blog/', '/blog/welcome/', '/adventure/', '/brand/', '/404.html', '/inventory/',
   '/vtt/', '/vtt/?join', '/vtt/?run', '/vtt/?room=ZZZZZZ'];
 const QUICK_PAGES = ['/', '/how-to-play/', '/rules/', '/character/', '/vtt/?run', '/vtt/?room=ZZZZZZ'];

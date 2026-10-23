@@ -122,3 +122,9 @@ blockquote.todo::first-line{font-weight:700}
 .loot-spells{padding-left:1.3em}
 .loot-spells h4{font-size:1.1rem;margin:18px 0 6px}
 .loot-effect{display:inline-block;font:600 .85rem var(--body);color:var(--verdigris);border:1px solid var(--edge);padding:3px 6px;margin-left:6px}
+
+.loot-roller{border:1px solid var(--edge);padding:clamp(16px,3vw,24px);margin-bottom:28px;background:var(--bg2)}
+.loot-roller[hidden]{display:none}
+.loot-roller h2{margin-top:0}
+#loot-result:not(:empty){border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
+.loot-result-item h3{margin-top:0}

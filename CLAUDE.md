@@ -102,6 +102,8 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 
 ## Current loot reference
 
-The owner requested three spells per grimoire and preservation of all spells across additional books. `/loot/` (Current Loot Tables) is generated from `site/sheet/gear.js`, with no private GM loot notes. The 96–99 d100 range now uses the Grimoires d8 sub-table. Catalogue spells have an explicit damage/healing/esoteric effect label. Read-by-die books use `pick` for the number of spells and `pickDie` for the die; the untitled book maps a d6 evenly onto three spells. Existing item and spell IDs must stay stable. GM-designed grimoires preserve exactly three known spell IDs through their saved definitions.
+The owner requested three spells per grimoire and preservation of all spells across additional books. `/loot/` (Current Loot Tables) is generated from `site/sheet/gear.js`, with no private GM loot notes. The 96–99 d100 range uses the Grimoires d100 sub-table. The catalogue has 178 items (145 rollable finds); all five sub-tables now use d100, while main-table category odds remain unchanged. Catalogue spells have an explicit damage/healing/esoteric effect label. Read-by-die books use `pick` for the number of spells and `pickDie` for the die; the untitled book maps a d6 evenly onto three spells. Existing item and spell IDs must stay stable. GM-designed grimoires preserve exactly three known spell IDs through their saved definitions.
 
 Since the last full phone pass: public loot catalogue, expanded grimoire selection and GM grimoire spell selectors.
+
+Since the last full phone pass: a public loot roller on `/loot/`, using the VTT loot rules without reading or writing game sessions.

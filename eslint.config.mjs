@@ -4,13 +4,13 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['node_modules/**', 'archive/**', 'site/game/**', 'site/character/**', 'site/legacy/**', 'site/blog/**', 'site/brand/**', 'private/**', 'docs/**', 'test-results/**', 'playwright-report/**', '.vtt-data/**', 'netlify/functions/builder-page.mjs', 'scripts/hearts/**', 'scripts/table-test/**', 'scripts/make-*', 'site/*.js'] },
+  { ignores: ['node_modules/**', 'archive/**', 'site/game/**', 'site/character/**', 'site/legacy/**', 'site/blog/**', 'site/brand/**', 'private/**', 'docs/**', 'test-results/**', 'playwright-report/**', '.vtt-data/**', 'netlify/functions/builder-page.mjs', 'scripts/hearts/**', 'scripts/table-test/**', 'scripts/make-*', 'site/*.js', '!site/loot-roller.js'] },
   js.configs.recommended,
   // Stripping control characters from typed text is deliberate, so this rule would only flag correct code.
   { rules: { 'no-control-regex': 'off' } },
   {
     // the Sacrament RPG Table in the browser (older-style scripts: no import/export)
-    files: ['site/vtt/**/*.js', 'site/sheet/**/*.js'],
+    files: ['site/vtt/**/*.js', 'site/sheet/**/*.js', 'site/loot-roller.js'],
     languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: { ...globals.browser, SacramentRules: 'readonly', module: 'readonly' } },
     rules: { 'no-unused-vars': ['warn', { args: 'none' }] },
   },

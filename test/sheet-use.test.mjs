@@ -41,15 +41,15 @@ test('the list of things a hero can use names each one and says why it cannot be
   assert.equal(list[0].ok, false); assert.match(list[0].why, /Equip/); assert.equal(list[1].ok, true);
 });
 
-test('the loot table: 1-35, 36-58, 59-80 and 81-95 lead to sub-tables; 96-100 give their item; each sub-table number gives its item', () => {
+test('the loot table: 1-35, 36-58, 59-80 and 81-95 lead to sub-tables; 96-99 lead to grimoires; 100 gives its item; each sub-table number gives its item', () => {
   const to = (n) => C.lootEntry(n, 'd100').table.id;
   assert.deepEqual([to(1), to(35), to(36), to(58), to(59), to(80), to(81), to(95)], ['supplies', 'supplies', 'arms', 'arms', 'valuables', 'valuables', 'relics', 'relics']);
   assert.equal(C.lootEntry(96).table.id, 'grimoires'); assert.equal(C.lootItem(100).id, 'sealshard'); assert.equal(C.lootItem(1), null, 'a number that leads into a sub-table is no item by itself');
   assert.equal(C.lootItem(0), null); assert.equal(C.lootItem(101), null);
   const on = (n, t) => C.lootEntry(n, t).item.id;
-  assert.deepEqual([on(1, 'supplies'), on(2, 'supplies'), on(17, 'supplies'), on(18, 'supplies'), on(20, 'supplies')], ['stubs', 'stubs', 'lampoil', 'knuckrosary', 'purse']);
-  assert.deepEqual([on(1, 'arms'), on(3, 'arms'), on(4, 'arms'), on(12, 'arms')], ['sword', 'watchbill', 'jerkin', 'silverdagger']);
-  assert.deepEqual([on(1, 'valuables'), on(5, 'valuables'), on(12, 'valuables')], ['holywater', 'fingerbone', 'prebindcoin']);
+  assert.deepEqual([on(1, 'supplies'), on(2, 'supplies'), on(29, 'supplies'), on(31, 'supplies'), on(34, 'supplies')], ['stubs', 'stubs', 'lampoil', 'knuckrosary', 'purse']);
+  assert.deepEqual([on(1, 'arms'), on(4, 'arms'), on(7, 'arms'), on(34, 'arms')], ['sword', 'watchbill', 'jerkin', 'silverdagger']);
+  assert.deepEqual([on(1, 'valuables'), on(13, 'valuables'), on(44, 'valuables')], ['holywater', 'fingerbone', 'prebindcoin']);
 });
 
 test('a grimoire read by the die: one action, no spell chosen, and the die chooses among its three spells using a d6', () => {
@@ -70,15 +70,15 @@ test('a relic with no Effort die but a stat is used with a check; a designed fin
   assert.equal(C.makeCustom({ name: 'Vial', horror: 4 }).horror, 0, 'nothing that does not tempt the Horror carries an amount');
 });
 
-test('the loot sub-tables: 81 to 95 on the d100 lead into the Relics table, rolled on a d8, and typed numbers are used in order', () => {
+test('the loot sub-tables: 81 to 95 on the d100 lead into the Relics table, rolled on a d100, and typed numbers are used in order', () => {
   assert.equal(C.lootItem(81), null, 'a number that leads into a sub-table gives no item by itself');
-  assert.equal(C.lootEntry(87, 'd100').table.id, 'relics'); assert.equal(C.lootEntry(4, 'relics').item.name, 'Ashen Rosary');
-  const dice = [87, 4], rolled = [];
-  const r = C.rollLoot((sides) => { rolled.push(sides); return dice.shift(); }); assert.equal(r.ok, true); assert.deepEqual(rolled, [100, 8], 'a d100, then the d8');
-  assert.equal(r.item.name, 'Ashen Rosary'); assert.equal(C.sayLoot(r.steps), '87 → Relics d8: 4');
-  const typed = C.rollLoot(() => { throw new Error('nothing should be rolled'); }, [90, 8]); assert.equal(typed.item.name, 'Fragment of stained glass'); assert.deepEqual(typed.steps.map((x) => x.typed), [true, true]);
-  const half = C.rollLoot((sides) => { assert.equal(sides, 8); return 1; }, [95]); assert.equal(half.item.name, "The Warden's Bell", 'a typed d100 with the sub-table left to the table');
-  assert.equal(C.rollLoot(() => 1, [98]).item.name, 'The Ashen Psalter', 'a grimoire range rolls on the new d8 sub-table');
-  assert.equal(C.rollLoot(() => 1, [42, 4]).item.name, 'Boiled leather jerkin', '42 leads into Arms and tools, a d12');
-  assert.match(C.rollLoot(() => 1, [87, 9]).why, /A d8 shows 1 to 8/); assert.match(C.rollLoot(() => 1, [101]).why, /A d100 shows 1 to 100/);
+  assert.equal(C.lootEntry(87, 'd100').table.id, 'relics'); assert.equal(C.lootEntry(14, 'relics').item.name, 'Ashen Rosary');
+  const dice = [87, 14], rolled = [];
+  const r = C.rollLoot((sides) => { rolled.push(sides); return dice.shift(); }); assert.equal(r.ok, true); assert.deepEqual(rolled, [100, 100], 'a d100, then another d100');
+  assert.equal(r.item.name, 'Ashen Rosary'); assert.equal(C.sayLoot(r.steps), '87 → Relics d100: 14');
+  const typed = C.rollLoot(() => { throw new Error('nothing should be rolled'); }, [90, 32]); assert.equal(typed.item.name, 'Fragment of stained glass'); assert.deepEqual(typed.steps.map((x) => x.typed), [true, true]);
+  const half = C.rollLoot((sides) => { assert.equal(sides, 100); return 1; }, [95]); assert.equal(half.item.name, "The Warden's Bell", 'a typed d100 with the sub-table left to the table');
+  assert.equal(C.rollLoot(() => 1, [98]).item.name, 'The Ashen Psalter', 'a grimoire range rolls on the expanded d100 sub-table');
+  assert.equal(C.rollLoot(() => 1, [42, 7]).item.name, 'Boiled leather jerkin', '42 leads into Arms and tools, a d100');
+  assert.match(C.rollLoot(() => 1, [87, 101]).why, /A d100 shows 1 to 100/); assert.match(C.rollLoot(() => 1, [101]).why, /A d100 shows 1 to 100/);
 });

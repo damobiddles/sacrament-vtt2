@@ -27,3 +27,11 @@ Scope: the shared catalogue in `site/sheet/gear.js`, its roll tables, character-
 - A public reference exposes the shared item list by design; it cannot reveal a GM's private custom items, unrevealed finds or private notes.
 
 Validation and publication evidence are recorded separately in the release notes under `/workspace/sacrament-audit/`.
+
+## Catalogue expansion — 23 October 2026
+
+The owner chose 178 total items: 89 additions, doubling each category to 28 weapons, 14 armour pieces, 92 supplies/tools/curios, 28 relics and 16 grimoires. All additions are GM-awarded finds, not new player-selectable starting equipment. Existing item definitions and all 23 spells are unchanged, apart from item roll ranges. The eight new books each combine three existing spells around a theme; they add no new spell rules. New relics use existing damage, healing, disguise, movement, warding and information effects. Manual effects say what the GM applies; no healing or status automation was added. Mundane tools and valuables define practical uses without invented numerical bonuses or prices.
+
+All five sub-tables now use d100 so the larger pools work with ordinary physical dice and require no extra nesting. Main category probabilities stay 35% supplies, 23% arms/tools, 22% valuables/curios, 15% relics, 4% grimoires and 1% binding seal. Within each category, entries receive as nearly equal a share as a d100 permits; individual item odds and the old printed sub-table numbers change. There are 145 rollable finds and 33 starting/direct-award-only entries. The website is still generated from the single VTT catalogue.
+
+Expansion tests check exact counts, the unchanged original item/spell definitions, every sub-table face, both roll boundaries of every addition, GM-only acquisition, book conversion, representative server handouts and public-page completeness. These are consistency checks; fun and balance still need playtesting.

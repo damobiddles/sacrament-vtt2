@@ -109,6 +109,7 @@ export const items = [
   { g: 'site-pages', name: 'Published news post', url: '/news/making-room-for-the-game/', status: 'works', what: 'Published news article.', note: 'Generated from the landing news content.', from: 'The news list.', rec: 'keep', why: 'Current published content.' },
   { g: 'site-pages', name: 'News post: A steadier table, and the road ahead', url: '/news/a-steadier-table/', status: 'works', what: 'Live VTT improvements, proposed roadmap and two downloadable scene images.', note: 'Published 2026-10-23. Planned automation is clearly distinguished from live features.', from: 'The news list.', rec: 'keep', why: 'Shares development progress and artwork for readers to use in their games.' },
   { g: 'site-pages', name: 'Current Loot Tables', url: '/loot/', status: 'works', what: 'Public loot roll tables, complete equipment catalogue and three-spell grimoires, generated from the VTT catalogue.', note: 'Includes damage, healing and esoteric spell labels; no private GM notes.', from: 'Website navigation.', rec: 'keep', why: 'Lets players and GMs look up the current loot without opening a table.' },
+  { g: 'site-pages', name: 'Feedback thank-you page', url: '/feedback/thanks/', status: 'works', what: 'Confirms that feedback was sent and links back to the table.', note: 'The feedback form sends visitors here after submission.', from: 'The feedback form.', rec: 'keep', why: 'Confirms the submission without requiring email.' },
 ];
 
 /* problems noticed while looking (not fixed: stage 1 changes nothing) */

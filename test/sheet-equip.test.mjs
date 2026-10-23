@@ -24,7 +24,7 @@ test('what counts as a supply comes from the data: the type, or the item\'s own 
 
 test('every supply on the list, starter and loot table, cannot be equipped, and nothing else on the list is held back', () => {
   const all = C.items.filter((i) => i.id !== 'testunwieldy' && i.id !== 'testworn');
-  const supplies = all.filter((i) => i.kind === 'supply'); assert.equal(supplies.length, 46);
+  const supplies = all.filter((i) => i.kind === 'supply'); assert.equal(supplies.length, 92);
   for (const i of supplies) assert.equal(C.canEquip(i), false, i.name);
   for (const i of all.filter((x) => x.kind !== 'supply')) assert.equal(C.canEquip(i), true, i.name);
 });
