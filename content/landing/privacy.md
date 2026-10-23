@@ -6,9 +6,9 @@ summary: What the Sacrament RPG Table keeps, why, and how to ask for it to be re
 This website and the Sacrament RPG Table are run by Dungeon Jukebox, also known as Damien Bidmead. You can contact us at [damien.bidmead@gmail.com](mailto:damien.bidmead@gmail.com).
 
 ## Sending feedback
-If you email us about the table, we receive your email address, message and any attachments you choose to send. We use these to understand your feedback and reply. The feedback page opens your own email app; it does not collect or send a message itself.
+The feedback form collects the topic, your message and the device or browser details you choose to include. No email address or account is required. Messages are stored privately using Netlify Forms and are available to the people managing this website. We use them to investigate bugs and improve the table, not to publish your message on a public forum.
 
-Please do not include private GM links, access keys or other players' personal information. You can ask us to remove your correspondence using the contact address above.
+Netlify processes submissions and may process technical information such as your IP address to deliver the service and filter spam. Please leave private GM links, access keys and other players' personal information out of your message. You can contact us at the address above if you want to ask for a message to be removed; include enough detail for us to identify it.
 
 ## Playing at a table
 The Sacrament RPG Table has no accounts. When you join a table you type a **name**, which is shown to the others at that table. A table keeps what the GM and players do in it (cards, notes, rolls, pictures the GM uploads) so that you can leave and come back. Your browser remembers which table you were at so it can put you back.

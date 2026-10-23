@@ -16,7 +16,7 @@ function build(mutate) {
 }
 const post = (title, date, body = 'Hello.') => `---\ntitle: ${title}\ndate: ${date}\nsummary: About ${title}.\n---\n${body}\n`;
 
-test('feedback replaces newsletter and opens an email draft without collecting data', () => {
+test('feedback is a private native form with spam protection and a confirmation page', () => {
   const b = build();
   try {
     assert.equal(b.r.status, 0, b.r.stderr);
@@ -25,13 +25,15 @@ test('feedback replaces newsletter and opens an email draft without collecting d
     assert.match(home, /href="\/feedback\/">Feedback/);
     assert.doesNotMatch(home, /href="\/newsletter\//);
     const feedback = readFileSync(join(b.out, 'feedback/index.html'), 'utf8');
-    assert.match(feedback, />Email feedback<\/a>/);
-    assert.match(feedback, /mailto:damien.bidmead@gmail.com\?subject=/);
-    assert.match(decodeURIComponent(feedback), /What happened/);
-    assert.match(decodeURIComponent(feedback), /What I liked/);
-    assert.match(decodeURIComponent(feedback), /What I would improve/);
-    assert.match(feedback, /email app/);
-    assert.doesNotMatch(feedback, /<form|Sign up/);
+    assert.match(feedback, /<form[^>]*name="vtt-feedback"[^>]*method="POST"[^>]*action="\/feedback\/thanks\/"/);
+    assert.match(feedback, /data-netlify="true"/);
+    assert.match(feedback, /netlify-honeypot="website"/);
+    assert.match(feedback, /name="form-name" value="vtt-feedback"/);
+    assert.match(feedback, /<textarea[^>]*name="message"[^>]*required/);
+    assert.match(feedback, />Send feedback<\/button>/);
+    assert.doesNotMatch(feedback, /mailto:|name="email"|Email feedback/);
+    const thanks = readFileSync(join(b.out, 'feedback/thanks/index.html'), 'utf8');
+    assert.match(thanks, /Thank you for your feedback/);
   } finally { b.cleanup(); }
 });
 

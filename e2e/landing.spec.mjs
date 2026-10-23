@@ -1,5 +1,5 @@
 // The Sacrament RPG home page and its pages (/, /the-game/, /news/ and so on): every page loads, every link works, the two big buttons land in the right place in the table,
-// it works on a small phone, and feedback opens an email draft without sending anything automatically.
+// it works on a small phone, and feedback submits a private form without requiring an email address.
 import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, claimHero } from './helpers.mjs';
 
@@ -104,27 +104,33 @@ test('the old ways in still work: the plain table address and an invitation link
   await expect(ann.locator('#joinCode')).toHaveValue(code);
 });
 
-test('feedback offers a ready email draft without a signup or automatic submission', async ({ browser }) => {
+test('feedback validates a message and submits a private form without requiring email', async ({ browser }) => {
   const page = await newPage(browser);
-  const sent = [];
-  page.on('request', r => { if (r.method() !== 'GET') sent.push(r.method() + ' ' + r.url()); });
+  const submissions = [];
+  // Model Netlify's POST redirect locally; storage acceptance is verified separately on the live site.
+  await page.route('**/feedback/thanks/', async route => {
+    if (route.request().method() !== 'POST') return route.continue();
+    submissions.push(new URLSearchParams(route.request().postData()));
+    await route.fulfill({ status: 303, headers: { location: '/feedback/thanks/' }, body: '' });
+  });
   await page.goto('/feedback/');
-  await expect(page.getByRole('heading', { name: 'Help improve the table', exact: true })).toBeVisible();
-  const email = page.getByRole('link', { name: 'Email feedback', exact: true });
-  const href = await email.getAttribute('href');
-  const draft = new URL(href);
-  expect(draft.protocol).toBe('mailto:');
-  expect(draft.pathname).toBe('damien.bidmead@gmail.com');
-  expect(draft.searchParams.get('subject')).toBe('Sacrament RPG Table feedback');
-  const body = draft.searchParams.get('body');
-  expect(body).toContain('What happened');
-  expect(body).toContain('What I liked');
-  expect(body).toContain('What I would improve');
-  expect(body).toContain('Device and browser');
-  await expect(page.locator('main')).toContainText('opens your email app');
-  await expect(page.locator('form')).toHaveCount(0);
-  await expect(page.getByRole('navigation').first().getByRole('link', { name: 'Newsletter', exact: true })).toHaveCount(0);
-  expect(sent).toEqual([]);
+  await page.getByRole('button', { name: 'Send feedback', exact: true }).click();
+  await expect(page.locator('#feedback-message')).toBeFocused();
+  expect(submissions).toHaveLength(0);
+  await page.getByLabel('What would you like to share?').selectOption('suggestion');
+  await page.getByLabel('Your feedback', { exact: false }).fill('Local test only: clearer scene controls would help.');
+  await page.getByLabel('Device and browser', { exact: false }).fill('Desktop Chromium');
+  await expect(page.locator('input[type=email]')).toHaveCount(0);
+  await expect(page.locator('input[name=website]')).toBeHidden();
+  await page.getByRole('button', { name: 'Send feedback', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Thank you for your feedback', exact: true })).toBeVisible();
+  expect(submissions).toHaveLength(1);
+  expect(submissions[0].get('form-name')).toBe('vtt-feedback');
+  expect(submissions[0].get('topic')).toBe('suggestion');
+  expect(submissions[0].get('message')).toBe('Local test only: clearer scene controls would help.');
+  expect(submissions[0].get('device')).toBe('Desktop Chromium');
+  expect(submissions[0].get('website')).toBe('');
+  expect(submissions[0].has('email')).toBe(false);
 });
 
 test('the donation widget is on landing pages and support is retired', async ({ browser }) => {

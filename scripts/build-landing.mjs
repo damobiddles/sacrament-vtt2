@@ -77,9 +77,19 @@ const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div 
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 
-const feedbackBody = 'What happened (for a bug):\nWhat I expected:\nSteps to repeat it:\nDevice and browser:\n\nWhat I liked:\nWhat I would improve:\n\nOnly fill in the parts that apply. Please leave out private GM links, access keys and other players’ personal information.';
-const feedbackEmail = 'mailto:damien.bidmead@gmail.com?subject=' + encodeURIComponent('Sacrament RPG Table feedback') + '&body=' + encodeURIComponent(feedbackBody);
-const feedbackAction = `<p><a class="btn" href="${esc(feedbackEmail)}">Email feedback</a></p><p class="small">This opens your email app with a message ready to fill in. Nothing is sent until you send the email. You can attach a screenshot there if it helps.</p><p>If the button does not open your email app, write to <a href="mailto:damien.bidmead@gmail.com">damien.bidmead@gmail.com</a>.</p>`;
+const feedbackForm = `<form class="ic-form feedback-form" name="vtt-feedback" method="POST" action="/feedback/thanks/" data-netlify="true" netlify-honeypot="website">
+<input type="hidden" name="form-name" value="vtt-feedback">
+<p hidden><label>Leave this blank <input name="website" tabindex="-1" autocomplete="off"></label></p>
+<label for="feedback-topic">What would you like to share?</label>
+<select id="feedback-topic" name="topic"><option value="bug">Report a bug</option><option value="suggestion">Suggest an improvement</option><option value="liked">Something I liked</option><option value="other">Other feedback</option></select>
+<label for="feedback-message">Your feedback <span class="small">(required)</span></label>
+<p id="feedback-message-hint" class="small">For a bug, tell us what you tried, what you expected and what happened instead.</p>
+<textarea id="feedback-message" name="message" rows="6" required maxlength="6000" aria-describedby="feedback-message-hint"></textarea>
+<label for="feedback-device">Device and browser <span class="small">(optional)</span></label>
+<input id="feedback-device" name="device" type="text" maxlength="150" placeholder="For example: iPhone, Safari">
+<p class="small">Sent privately to the Sacrament team. Please leave out private GM links, access keys and other players' personal information. <a href="/privacy/">Privacy policy</a>.</p>
+<button class="btn" type="submit">Send feedback</button>
+</form>`;
 
 
 function build() {
@@ -121,7 +131,8 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('the-game', NAME);
   text('setting', NAME);
   text('how-to-play', NAME);
-  text('feedback', NAME, feedbackAction);
+  text('feedback', NAME, feedbackForm);
+  write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>Thank you for helping improve the table.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
   text('privacy', NAME);
   text('terms', NAME);
 

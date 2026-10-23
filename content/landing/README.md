@@ -24,3 +24,7 @@ Everything on the home page and its pages (https://playsacrament.com/, /the-game
 * Add `image: /art/your-image.webp` and `image_alt: A short description` in a post's opening metadata to use the same image for social sharing and the home-page preview. Use a local image path ending in .webp, .png, .jpg or .jpeg. Without one, the standard Sacrament sharing image is used.
 * The donate link: the full address (starting with `https://`) in `site.json`. It is set to the Ko-fi page (https://ko-fi.com/sacramentrpg). If it is ever emptied, the page shows a clearly marked placeholder instead of a button.
 * Inside a sentence, `[[YOUR TEXT HERE: ...]]` shows as a small highlighted note. Replace it, brackets and all, with your text.
+
+## Feedback submissions
+
+The Feedback page uses Netlify Forms (`vtt-feedback`). The owner reads messages in the Netlify site dashboard under Forms, without publishing their email or using email notifications. Form detection must remain enabled on Netlify. There are no visitor accounts or required email addresses. Spam protection uses a hidden honeypot field. A local preview can check the form but cannot store a Netlify submission.
