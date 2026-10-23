@@ -8,7 +8,7 @@ Everything on the home page and its pages (https://playsacrament.com/, /the-game
 | About the game | `the-game.md` |
 | The setting (your text goes in the marked boxes) | `setting.md` |
 | The how-to-play guide | `how-to-play.md` |
-| The newsletter page | `newsletter.md` |
+| The feedback page | `feedback.md` |
 | The support page | `support.md` |
 | The privacy page (a draft for you to review) | `privacy.md` |
 | The terms of use page (a draft for you to review) | `terms.md` |

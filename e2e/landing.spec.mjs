@@ -1,9 +1,9 @@
 // The Sacrament RPG home page and its pages (/, /the-game/, /news/ and so on): every page loads, every link works, the two big buttons land in the right place in the table,
-// it works on a small phone, and the newsletter form sends nothing anywhere.
+// it works on a small phone, and feedback opens an email draft without sending anything automatically.
 import { test, expect } from './helpers.mjs';
 import { newPage, makeTable, claimHero } from './helpers.mjs';
 
-const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/newsletter/', '/privacy/', '/terms/'];
+const PAGES = ['/', '/the-game/', '/setting/', '/how-to-play/', '/news/', '/feedback/', '/privacy/', '/terms/'];
 
 test('every page loads, has a title and one heading, and nothing errors', async ({ browser }) => {
   const page = await newPage(browser);
@@ -104,24 +104,27 @@ test('the old ways in still work: the plain table address and an invitation link
   await expect(ann.locator('#joinCode')).toHaveValue(code);
 });
 
-test('the newsletter form asks for consent and sends nothing anywhere', async ({ browser, baseURL }) => {
+test('feedback offers a ready email draft without a signup or automatic submission', async ({ browser }) => {
   const page = await newPage(browser);
-  const own = new URL(baseURL).origin;                                  // this site, whether on this computer or live
   const sent = [];
-  page.on('request', (r) => { if (/fonts\.(googleapis|gstatic)\.com/.test(r.url()) || (r.method() === 'GET' && r.url() === 'https://storage.ko-fi.com/cdn/widget/Widget_2.js')) return;   /* the site's typefaces, loaded on every page */
-    if (!r.url().startsWith(own) || r.method() !== 'GET' || /email/i.test(r.url())) sent.push(r.method() + ' ' + r.url()); });
-  await page.goto('/newsletter/');
-  await page.locator('#nl-email').fill('someone@example.com');
-  await page.getByRole('button', { name: 'Sign up' }).click();
-  await expect(page.locator('#nl-msg')).toContainText('tick the box');
-  await page.locator('#nl-consent').check();
-  await page.getByRole('button', { name: 'Sign up' }).click();
-  await expect(page.locator('#nl-msg')).toContainText('not switched on');
-  await expect(page.locator('.ic-form')).toContainText('Signup is not switched on yet');
-  await expect(page.locator('#nl-consent')).toBeVisible();
-  expect(await page.locator('label.check').innerText()).toMatch(/unsubscribe/i);
+  page.on('request', r => { if (r.method() !== 'GET') sent.push(r.method() + ' ' + r.url()); });
+  await page.goto('/feedback/');
+  await expect(page.getByRole('heading', { name: 'Help improve the table', exact: true })).toBeVisible();
+  const email = page.getByRole('link', { name: 'Email feedback', exact: true });
+  const href = await email.getAttribute('href');
+  const draft = new URL(href);
+  expect(draft.protocol).toBe('mailto:');
+  expect(draft.pathname).toBe('damien.bidmead@gmail.com');
+  expect(draft.searchParams.get('subject')).toBe('Sacrament RPG Table feedback');
+  const body = draft.searchParams.get('body');
+  expect(body).toContain('What happened');
+  expect(body).toContain('What I liked');
+  expect(body).toContain('What I would improve');
+  expect(body).toContain('Device and browser');
+  await expect(page.locator('main')).toContainText('opens your email app');
+  await expect(page.locator('form')).toHaveCount(0);
+  await expect(page.getByRole('navigation').first().getByRole('link', { name: 'Newsletter', exact: true })).toHaveCount(0);
   expect(sent).toEqual([]);
-  expect(page.url()).not.toContain('email');
 });
 
 test('the donation widget is on landing pages and support is retired', async ({ browser }) => {
@@ -186,7 +189,7 @@ test('the "Build and manage characters" button opens the character sheet page, a
 
 test('nothing on any page of the site links to the removed sign-up, and its thank-you page is gone', async ({ browser }) => {
   const page = await newPage(browser);
-  for (const path of ['/', '/news/', '/blog/welcome/', '/how-to-play/', '/newsletter/']) {
+  for (const path of ['/', '/news/', '/blog/welcome/', '/how-to-play/', '/feedback/']) {
     await page.goto(path);
     await expect(page.locator('a[href*="#join"], a[href*="/thanks"]'), path).toHaveCount(0);
   }

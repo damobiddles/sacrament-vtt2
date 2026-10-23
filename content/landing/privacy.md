@@ -5,13 +5,10 @@ summary: What the Sacrament RPG Table keeps, why, and how to ask for it to be re
 ## Who we are
 This website and the Sacrament RPG Table are run by Dungeon Jukebox, also known as Damien Bidmead. You can contact us at [damien.bidmead@gmail.com](mailto:damien.bidmead@gmail.com).
 
-## The newsletter
-When the newsletter is switched on, signing up needs your **email address** and a tick in the consent box. We use your address only to send you the newsletter, and do not sell or share it for any other purpose.
+## Sending feedback
+If you email us about the table, we receive your email address, message and any attachments you choose to send. We use these to understand your feedback and reply. The feedback page opens your own email app; it does not collect or send a message itself.
 
-- **Why we can email you:** because you asked to and ticked the box. You can change your mind at any time.
-- **Leaving:** every email has an unsubscribe link, and you can also write to the contact address above. We will remove you.
-- **Where it is kept:** with the email service we choose. Nothing is collected until the signup is switched on.
-- **How long:** until you unsubscribe.
+Please do not include private GM links, access keys or other players' personal information. You can ask us to remove your correspondence using the contact address above.
 
 ## Playing at a table
 The Sacrament RPG Table has no accounts. When you join a table you type a **name**, which is shown to the others at that table. A table keeps what the GM and players do in it (cards, notes, rolls, pictures the GM uploads) so that you can leave and come back. Your browser remembers which table you were at so it can put you back.

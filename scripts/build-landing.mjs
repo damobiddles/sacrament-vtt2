@@ -1,5 +1,5 @@
 // Builds the Sacrament RPG home page and its pages from content/landing/ into site/: the home page (/), the game, the setting, how to play,
-// newsletter, privacy, terms of use, and the news (/news/).
+// feedback, privacy, terms of use, and the news (/news/).
 // The text lives in content/landing/*.md (see content/landing/README.md); news posts are one file each in content/landing/blog/.
 // The output is not committed; Netlify runs this before publishing (see netlify.toml).
 // For tests, LANDING_CONTENT and LANDING_OUT can point somewhere else.
@@ -21,7 +21,7 @@ const PAGES = [
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
   { slug: 'blog', path: '/news/', label: 'News' },
-  { slug: 'newsletter', path: '/newsletter/', label: 'Newsletter' },
+  { slug: 'feedback', path: '/feedback/', label: 'Feedback' },
   { slug: 'privacy', path: '/privacy/', label: 'Privacy', footerOnly: true },
   { slug: 'terms', path: '/terms/', label: 'Terms of Use', footerOnly: true },
 ];
@@ -64,7 +64,6 @@ const page = (title, desc, path, inner, extraHead = '', social = { src: '/og-ima
 <link rel="stylesheet" href="/blog.css">
 <link rel="stylesheet" href="/landing.css">
 <script src="/nav.js"></script>
-<script src="/landing.js" defer></script>
 ${extraHead}</head>
 <body data-focus>
 ${nav(path.startsWith('/news/') ? '/news/' : path)}
@@ -78,14 +77,9 @@ const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div 
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 
-const newsletterForm = `<form id="newsletter" class="ic-form" novalidate>
-<label for="nl-email" class="label">Your email</label>
-<input id="nl-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
-<label class="check"><input id="nl-consent" name="consent" type="checkbox"> <span>Yes, please email me ${esc(NAME)} news at this address. I can unsubscribe at any time with the link in every email. <a href="/privacy/">How my email is used</a>.</span></label>
-<button class="btn" type="submit">Sign up</button>
-<p id="nl-msg" class="msg" role="status" aria-live="polite"></p>
-<p class="small">Signup is not switched on yet. Nothing you type here is sent anywhere.</p>
-</form>`;
+const feedbackBody = 'What happened (for a bug):\nWhat I expected:\nSteps to repeat it:\nDevice and browser:\n\nWhat I liked:\nWhat I would improve:\n\nOnly fill in the parts that apply. Please leave out private GM links, access keys and other players’ personal information.';
+const feedbackEmail = 'mailto:damien.bidmead@gmail.com?subject=' + encodeURIComponent('Sacrament RPG Table feedback') + '&body=' + encodeURIComponent(feedbackBody);
+const feedbackAction = `<p><a class="btn" href="${esc(feedbackEmail)}">Email feedback</a></p><p class="small">This opens your email app with a message ready to fill in. Nothing is sent until you send the email. You can attach a screenshot there if it helps.</p><p>If the button does not open your email app, write to <a href="mailto:damien.bidmead@gmail.com">damien.bidmead@gmail.com</a>.</p>`;
 
 
 function build() {
@@ -94,6 +88,7 @@ function build() {
   for (const p of PAGES) if (p.path !== '/') rmSync(new URL('.' + p.path, OUT), { recursive: true, force: true });
   rmSync(new URL('./news/', OUT), { recursive: true, force: true });
   rmSync(new URL('./support/', OUT), { recursive: true, force: true });
+  rmSync(new URL('./newsletter/', OUT), { recursive: true, force: true });
   const write = (path, html) => { const dir = new URL('.' + path, OUT); mkdirSync(dir, { recursive: true }); writeFileSync(new URL('index.html', dir), html); };
   const BSRC = new URL('blog/', SRC);
   const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
@@ -126,7 +121,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('the-game', NAME);
   text('setting', NAME);
   text('how-to-play', NAME);
-  text('newsletter', NAME, newsletterForm);
+  text('feedback', NAME, feedbackAction);
   text('privacy', NAME);
   text('terms', NAME);
 

@@ -16,6 +16,25 @@ function build(mutate) {
 }
 const post = (title, date, body = 'Hello.') => `---\ntitle: ${title}\ndate: ${date}\nsummary: About ${title}.\n---\n${body}\n`;
 
+test('feedback replaces newsletter and opens an email draft without collecting data', () => {
+  const b = build();
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    assert.equal(existsSync(join(b.out, 'newsletter/index.html')), false);
+    const home = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(home, /href="\/feedback\/">Feedback/);
+    assert.doesNotMatch(home, /href="\/newsletter\//);
+    const feedback = readFileSync(join(b.out, 'feedback/index.html'), 'utf8');
+    assert.match(feedback, />Email feedback<\/a>/);
+    assert.match(feedback, /mailto:damien.bidmead@gmail.com\?subject=/);
+    assert.match(decodeURIComponent(feedback), /What happened/);
+    assert.match(decodeURIComponent(feedback), /What I liked/);
+    assert.match(decodeURIComponent(feedback), /What I would improve/);
+    assert.match(feedback, /email app/);
+    assert.doesNotMatch(feedback, /<form|Sign up/);
+  } finally { b.cleanup(); }
+});
+
 test('the latest preview and social metadata use the same post image with a safe default', () => {
   const b = build((c) => {
     for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f));
@@ -52,7 +71,7 @@ test('every page is built, and a new blog post is just one new file', () => {
   const b = build((c) => { for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f)); writeFileSync(join(c, 'blog', '2020-01-01-an-older-post.md'), post('An older post', '2020-01-01')); writeFileSync(join(c, 'blog', '2030-01-02-a-brand-new-post.md'), post('A brand new post', '2030-01-02', '## Hello\nSome **bold** words and a [link](/how-to-play/).')); });
   try {
     assert.equal(b.r.status, 0, b.r.stderr);
-    for (const p of ['index.html', 'the-game/index.html', 'setting/index.html', 'how-to-play/index.html', 'newsletter/index.html', 'privacy/index.html', 'terms/index.html', 'news/index.html', 'news/a-brand-new-post/index.html'])
+    for (const p of ['index.html', 'the-game/index.html', 'setting/index.html', 'how-to-play/index.html', 'feedback/index.html', 'privacy/index.html', 'terms/index.html', 'news/index.html', 'news/a-brand-new-post/index.html'])
       assert.ok(existsSync(join(b.out, p)), p + ' was not built');
     const list = readFileSync(join(b.out, 'news/index.html'), 'utf8');
     assert.match(list, /href="\/news\/a-brand-new-post\/"/);

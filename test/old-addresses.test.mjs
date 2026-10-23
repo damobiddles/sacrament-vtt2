@@ -20,7 +20,7 @@ const OLD = '/ic' + 'rpg';   // the old name, written in pieces so this file doe
 test('every old address of the table\'s website redirects permanently to its new address', () => {
   const expected = {
     '/': '/', '/the-game': '/the-game/', '/the-game/': '/the-game/', '/setting': '/setting/', '/setting/': '/setting/',
-    '/how-to-play': '/how-to-play/', '/how-to-play/': '/how-to-play/', '/newsletter': '/newsletter/', '/newsletter/': '/newsletter/',
+    '/how-to-play': '/how-to-play/', '/how-to-play/': '/how-to-play/', '/newsletter': '/feedback/', '/newsletter/': '/feedback/',
     '/support': 'https://ko-fi.com/J4M02969C2', '/support/': 'https://ko-fi.com/J4M02969C2', '/privacy': '/privacy/', '/privacy/': '/privacy/', '/blog': '/news/', '/blog/': '/news/',
   };
   for (const [oldTail, to] of Object.entries(expected)) {
@@ -52,4 +52,9 @@ test('saved tables on devices and on the server keep the names they were saved u
   assert.match(js, /var KEY = 'ic' \+ 'rpg' \+ '-vtt-'/, 'the browser storage prefix changed: every saved table on every device would vanish');
   const fn = readFileSync(new URL('../netlify/functions/vtt.mjs', import.meta.url), 'utf8');
   assert.match(fn, new RegExp("name: '" + OLD.slice(1) + "-vtt'"), 'the storage area name changed: every saved table would vanish');
+});
+
+// Retired signup links should lead visitors to the replacement feedback page.
+test('newsletter addresses now redirect to feedback', () => {
+  for (const path of ['/newsletter', '/newsletter/']) assert.deepEqual(resolve(path), { status: 301, to: '/feedback/' });
 });
