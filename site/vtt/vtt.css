@@ -437,4 +437,20 @@ label.phys{align-items:flex-start}
 .scene-list li .n{flex:1 1 8em;min-width:0;overflow-wrap:anywhere}
 .scene-rename input{width:100%;min-width:0}
 
-.gm-dice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}.gm-dice label{display:flex;align-items:center;gap:5px}.gm-dice input[type=number]{width:4em}.gm-dice select{width:auto}
+.gm-dice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:auto}.gm-dice.open{width:100%}.gm-dice label{display:flex;align-items:center;gap:5px}.gm-dice input[type=number]{width:4em}.gm-dice select{width:auto}
+
+/* Play tray: keep each section and its controls within the sidebar. */
+#panel,.tabbody{min-width:0}
+.play-tray{display:flex;flex-direction:column;gap:16px}
+.play-section{display:flex;flex-direction:column;gap:8px;min-width:0}
+#panel .play-section h3,#panel .play-section p{margin:0}
+.play-tray .start{margin-bottom:0}
+.play-tray .row{row-gap:8px}
+.play-tray .row>label{flex:1 1 100%;min-width:0}
+.play-tray label input{width:100%;min-width:0}
+.play-tray #addOrder{flex:1 1 10em;min-width:0}
+.turn-order li{min-width:0}
+.turn-order .n{display:block;overflow-wrap:anywhere}
+.turn-order .n .pill{display:inline-block;vertical-align:middle;margin-left:6px}
+.turn-order.editing li{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px 0}
+.turn-order.editing .n{grid-column:1/-1;width:100%}

@@ -694,13 +694,13 @@
   var TABS = [['play', 'Play'], ['scene', 'Scene'], ['loot', 'Loot'], ['table', 'Table']];
   function gmTable() {
     var tab = UI.tab || 'play', body = tab === 'scene' ? tabScene() : tab === 'loot' ? lootPanel() : tab === 'table' ? tabTable() : tabPlay();
-    return '<div class="tabs" role="tablist" aria-label="GM tray">' + TABS.map(function (t) { return '<button type="button" role="tab" data-do="gmtab" data-t="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</div><div class="tabbody">' + body + '</div>';
+    return '<div class="tabs" role="tablist" aria-label="GM tray">' + TABS.map(function (t) { return '<button type="button" role="tab" data-do="gmtab" data-t="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</div><div class="tabbody' + (tab === 'play' ? ' play-tray' : '') + '">' + body + '</div>';
   }
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && onTable(c); });
-    var h = startBox() + '<div class="row between"><h3>Turn order</h3>' + (t.order.length ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
-    h += t.order.length ? '<ul class="ol">' + t.order.map(function (e, i) {
+    var h = startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + (t.order.length ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="turnTo" data-i="' + i + '" title="Make it this turn">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
         (edit ? '<button class="chip" data-do="up" data-i="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>Up</button><button class="chip" data-do="down" data-i="' + i + '" aria-label="Move later"' + (i < t.order.length - 1 ? '' : ' disabled') + '>Down</button><button class="chip" data-do="outOrder" data-i="' + i + '" aria-label="Remove from the order">Remove</button>' : '') + '</li>';
@@ -709,8 +709,8 @@
     h += '<p class="hint">Tap a card or token on the table to act on it. Tap a name to make it their turn.</p>';
     var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, nd = R.restDice(living);
     if (!living) UI.restAsk = false;
-    return h + '<h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
-      '<p class="hint">For a rest in a safe place: every living hero recovers 1 Heart (the fallen stand up) and the Horror falls by ' + (nd || 1) + 'd' + R.REST.horrorDie + ' (a d' + R.REST.horrorDie + ' for every two living heroes). One Undo takes it back.</p>' + nextControls();
+    return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
+      '<p class="hint">For a rest in a safe place: every living hero recovers 1 Heart (the fallen stand up) and the Horror falls by ' + (nd || 1) + 'd' + R.REST.horrorDie + ' (a d' + R.REST.horrorDie + ' for every two living heroes). One Undo takes it back.</p></section><section class="play-section">' + nextControls() + '</section>';
   }
   /* A new table: until a player has taken up a hero, the first thing in the GM's tray is how to get them in. */
   function startBox() {
@@ -858,7 +858,7 @@
   /* Selecting a card. For the GM, selecting a hero's token also makes that hero the one the roll bar controls, and opens the bar. */
   function pickCard(id) { UI.sel = id; var c = S && S.cards[id]; if (gm() && c && c.charId && S.chars[c.charId]) { UI.actAs = c.charId; UI.gmStrip = true; } }
   function gmDiceView() {
-    var out = '<div class="gm-dice"><button class="chip" data-do="gmDiceToggle" aria-expanded="' + !!UI.gmDiceOpen + '">GM dice</button>';
+    var out = '<div class="gm-dice' + (UI.gmDiceOpen ? ' open' : '') + '"><button class="chip" data-do="gmDiceToggle" aria-expanded="' + !!UI.gmDiceOpen + '">GM dice</button>';
     if (UI.gmDiceOpen) out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span role="status">' + esc(UI.gmDiceResult || 'For damage or any other roll. Apply results by hand.') + '</span>';
     return out + '</div>';
   }

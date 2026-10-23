@@ -127,3 +127,5 @@ Owner-approved weapon dice: all ordinary catalogue weapons (including bows, cros
 Since the last full phone pass: GM Scene tab has Rename on each scene, inline Scene name with Save/Cancel and Enter/Escape, and wrapping scene rows. Scene identity and contents remain unchanged; prepared names remain private.
 
 Since the last full phone pass: playtest fixes change spell Horror labels, restrict Push to failed attacks, add GM dice in the footer and choose an attack target before item rolls. Healing effects and rest limits remain manual; natural 1 still adds Horror.
+
+Since the last full phone pass: Play tray groups turn order, rest and session scheduling with consistent spacing; order-edit controls use a separate row and long names wrap; scheduling fields fit the sidebar.
