@@ -27,11 +27,17 @@ test('building a hero from nothing: points, Effort and gear are limited with rea
   const st = await stored(page); expect(st.heroes[0].stats.STR).toBe(6); expect(st.heroes[0].effort.weapons).toBe(4); expect(page.errors).toEqual([]);
 });
 
-test('a ready-made hero is a copy that can be changed; heroes can be switched and deleted', async ({ browser }) => {
+test('generated heroes can be changed, switched and deleted without a ready-made selector', async ({ browser }) => {
   const page = await newPage(browser); await page.goto('/character/');
-  await page.locator('[data-ready=wren]').click(); await expect(page.locator('#sheetHere')).toContainText('Wren Ashdown');
-  await page.locator('[data-ready=aldric]').click(); await expect(page.locator('#heroSel option')).toHaveCount(2);
-  await page.locator('#heroSel').selectOption({ label: 'Wren Ashdown' }); await expect(page.locator('#sheetHere [data-text=calling]')).toHaveValue('Cartographer');
+  await expect(page.locator('#ready, [data-ready]')).toHaveCount(0);
+  await expect(page.getByText('Or choose a ready-made hero', {exact:true})).toHaveCount(0);
+  await page.locator('#generatorFocus').selectOption('fighter'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
+  await page.locator('#sheetHere [data-text=name]').fill('Wren Ashdown'); await page.locator('#sheetHere [data-text=name]').blur();
+  const calling = await page.locator('#sheetHere [data-text=calling]').inputValue();
+  await page.locator('#generatorFocus').selectOption('healer'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
+  await page.locator('#sheetHere [data-text=name]').fill('Brother Aldric'); await page.locator('#sheetHere [data-text=name]').blur();
+  await expect(page.locator('#heroSel option')).toHaveCount(2);
+  await page.locator('#heroSel').selectOption({ label: 'Wren Ashdown' }); await expect(page.locator('#sheetHere [data-text=calling]')).toHaveValue(calling);
   page.once('dialog', (d) => d.accept()); await page.locator('#delHero').click();
   await expect(page.locator('#heroSel option')).toHaveCount(1); await expect(page.locator('#sheetHere')).toContainText('Brother Aldric');
 });
@@ -49,6 +55,6 @@ test('heroes saved by the earlier version of the page are copied in, and the old
 });
 
 test('the sheet on this page fits a phone @phone', async ({ browser }) => {
-  const page = await newPage(browser, { width: 390, height: 844 }); await page.goto('/character/'); await page.locator('[data-ready=maren]').click();
+  const page = await newPage(browser, { width: 390, height: 844 }); await page.goto('/character/'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
   const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); expect(wide).toBeLessThanOrEqual(1);
 });

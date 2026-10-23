@@ -23,7 +23,7 @@ test('generated heroes are previews until kept, can be edited and brought to a t
 });
 
 test('downloaded backups restore in another browser only after confirmation and survive reload',async({browser},testInfo)=>{
-  const source=await newPage(browser);await source.goto('/character/');await source.locator('[data-ready=wren]').click();
+  const source=await newPage(browser);await source.goto('/character/');await source.locator('#generatorFocus').selectOption('scout');await source.locator('#generateHero').click();await source.locator('#keepGenerated').click();
   await source.locator('#sheetHere [data-text=notes]').fill('Keep these private notes.');await source.locator('#sheetHere [data-text=notes]').blur();
   const event=source.waitForEvent('download');await source.locator('#downloadHeroes').click();const file=await (await event).path();
   const page=await newPage(browser);await page.goto('/character/');await page.locator('#newHero').click();

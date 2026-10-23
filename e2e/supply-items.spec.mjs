@@ -41,7 +41,7 @@ test('nowhere else at the table offers Equip for a supply: the hero strip, its I
 });
 
 test('on the My heroes page: supplies have the label, weapons and armour keep their buttons', async ({ browser }) => {
-  const page = await newPage(browser); await page.goto('/character/'); await page.locator('[data-ready=wren]').click();
+  const page = await newPage(browser); await page.goto('/character/'); await page.locator('#newHero').click(); await addOnSheet(page, 'crossbow', 'gambeson', 'picks', 'rope', 'lantern', 'bandages', 'spirits');
   const supplies = ["Locksmith's Picks", 'Rope and Grapnel', 'Hooded Lantern', 'Linen Bandages', 'Flask of Aqua Vitae'];
   for (const name of supplies) { const it = item(page, name); await expect(it.locator('.sh-supply'), name).toHaveText('Supply'); await expect(it.locator('[data-sh=move]'), name).toHaveCount(0); }
   for (const name of ['Windlass Crossbow', 'Quilted Gambeson']) { await expect(item(page, name).locator('.sh-supply')).toHaveCount(0); await expect(item(page, name).locator('[data-sh=move]')).toHaveText('To the pack'); }

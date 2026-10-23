@@ -69,7 +69,7 @@ for (const theme of ['dark']) {
       }
 
       // the My heroes page with a hero on it (the sheet), and the same sheet over the table
-      await page.goto('/character/'); await setTheme(page, theme); await press(page.locator('[data-ready=maren]')); await page.waitForTimeout(150); await openAll(page); await visit(ctx, 'My heroes: a hero sheet', page);
+      await page.goto('/character/'); await setTheme(page, theme); await page.locator('#generatorFocus').selectOption('healer'); await press(page.locator('#generateHero')); await press(page.locator('#keepGenerated')); await page.waitForTimeout(150); await openAll(page); await visit(ctx, 'My heroes: a hero sheet', page);
 
       }
 

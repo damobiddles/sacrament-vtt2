@@ -36,8 +36,14 @@ server.listen(0, async () => {
 
   console.log('--- 2. the My heroes page and its sheet');
   p = await open('/character/');
-  check('there are no heroes to start, and four ready ones to pick', (await p.$$eval('#ready button', (e) => e.length)) === 4 && /no heroes saved/.test(await txt(p, '#sheetHere')));
-  await p.click('[data-ready=ottoline]'); await T(200);
+  check('there are no heroes to start, and the generator replaces the ready-made selector', (await p.$$eval('#ready, [data-ready]', (e) => e.length)) === 0 && !!(await p.$('#generateHero')) && /no heroes saved/.test(await txt(p, '#sheetHere')));
+  // An existing saved hero is still editable after the ready-made selector is retired.
+  await Promise.race([p.evaluate(() => {
+    const D = window.HEARTS_DATA, E = window.HeartsEngine(D), H = window.SacramentHeroes;
+    const hero = H.fromEngine(E.newCharacter(D.CHARACTERS.find(c => c.id === 'ottoline')));
+    localStorage.setItem(H.KEY, JSON.stringify({ heroes: [hero], current: hero.id, converted: {} }));
+  }), new Promise((_, reject) => setTimeout(() => reject(Error('Could not seed existing hero')), 5000))]);
+  await p.reload(); await T(200);
   check('Ottoline arrives with her kit in 8 of 10 equipped slots', /8 of 10 slots/.test(await txt(p, '#sheetHere')) && (await p.$$eval('#sheetHere .sh-item', (e) => e.length)) === 4, await txt(p, '#sheetHere .sh-sec:nth-of-type(1)'));
   check('hearts and defence are shown', (await p.$$eval('#sheetHere .sh-ht', (e) => e.length)) === 1 && /Defence\s*\d+/.test(await txt(p, '#sheetHere')));
   // slots: fill both sets to ten and refuse the next, with the reason on the sheet

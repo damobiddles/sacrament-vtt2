@@ -30,7 +30,8 @@ test('all 31 existing heroes remain available while every creation route respect
   });
   await page.goto('/character/');
   await expect(page.locator('#heroSel option')).toHaveCount(31); await expect(page.locator('[data-text=name]')).toHaveValue('Hero 30');
-  await expect(page.locator('#newHero')).toBeDisabled(); await expect(page.locator('#ready button').first()).toBeDisabled();
+  await expect(page.locator('#newHero')).toBeDisabled(); await expect(page.locator('#ready, [data-ready]')).toHaveCount(0);
+  await page.locator('#generateHero').click(); await expect(page.locator('#keepGenerated')).toBeDisabled();
   expect(await page.evaluate(() => window.HeroesPage.addEngineHero({},'extra'))).toBe(null);
   await page.reload(); await expect(page.locator('#heroSel option')).toHaveCount(31);
 });
