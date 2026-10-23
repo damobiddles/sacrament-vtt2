@@ -1,7 +1,7 @@
 import { esc } from './markdown.mjs';
 
 const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies, tools and curios', relic: 'Relics', grimoire: 'Grimoires' };
-const effortName = k => ({ basic: 'Basic', weapons: 'Weapons', guns: 'Ranged', magic: 'Magic', ultimate: 'Ultimate' })[k] || k;
+const effortName = k => ({ basic: 'Basic', weapons: 'Weapons', guns: 'Guns and gunpowder', magic: 'Magic', ultimate: 'Ultimate' })[k] || k;
 const range = r => r[0] === r[1] ? String(r[0]) : r.join('–');
 const effect = s => s.effect === 'healing' || s.heal ? 'Healing' : s.effect === 'esoteric' || !s.cat ? 'Esoteric effect' : 'Damage';
 const cost = s => s.temptsHorror ? 'Horror +' + esc(s.horror || 0) : 'No Horror cost';

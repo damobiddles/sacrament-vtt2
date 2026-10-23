@@ -88,6 +88,15 @@ function gearIndex(ch, key) {
   return i;
 }
 
+/* Pending item attacks from before ordinary ranged weapons joined Weapons use
+   the current category. Already rolled damage and newer item snapshots stay intact. */
+function pendingWeaponCat(s, roll) {
+  if (roll.weaponEffort === 1 || roll.effort || !roll.use || roll.use.spellId || !['guns', 'basic'].includes(roll.cat)) return roll.cat;
+  const gear = (s.chars[roll.charId] || {}).gear || [];
+  const g = roll.use.gearKey ? gear.find(g => g.key === roll.use.gearKey) : gear[roll.use.index];
+  const it = SC.itemOf(g);
+  return it && it.kind === 'weapon' && it.cat === 'weapons' ? 'weapons' : roll.cat;
+}
 /* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
 function charView(c, whole) {
   gearKeys(c);
@@ -133,6 +142,7 @@ export function project(s, a, opt = {}) {
   /* a roll is the person's own; the card it names is shown only if they can see it, and its amounts only if the numbers are not hidden */
   const rolls = s.rollOrder.map((id) => s.rolls[id]).filter((r) => r && (gm || r.by === a.pid)).slice(-30).map((r) => {
     if (r.check && !r.check.success && !r.attack) r = Object.assign({}, r, { canPush: !pushBlock(s, r) });
+    const cat = pendingWeaponCat(s, r); if (cat !== r.cat) r = Object.assign({}, r, { cat });
     if (gm) return r;
     const t = r.targetCardId && cards[r.targetCardId] ? r.targetCardId : null; let ap = r.applied && cards[r.applied.cardId] ? { cardId: r.applied.cardId, field: r.applied.field } : null;
     if (ap && !(s.cards[ap.cardId] && numbersHidden(s.cards[ap.cardId]))) ap.applied = r.applied.applied;
@@ -607,7 +617,7 @@ const HANDLERS = {
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
       const chk = R.check({ d20, stat: ch.stats[u.stat], target: s.table.target, adj, settings: s.settings });
-      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, use: { index, gearKey: c.gearKey, spellId: c.spellId || null } };
+      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null } };
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, dice: diceOf(manual, 20, d20) });
@@ -743,6 +753,7 @@ const HANDLERS = {
     if (!roll.check) fail('invalid', 'That Effort has no check to follow.');
     if (!roll.check.success && !(isGM(a) && c.force)) fail('invalid', 'The attempt missed, so there is no Effort to roll.');
     /* After an item, its own kind of Effort is rolled; a natural 20 may still take Ultimate when the table offers it */
+    if (!roll.effort) roll.cat = pendingWeaponCat(s, roll);
     const ult = c.cat === 'ultimate' && roll.check.offerUltimate;
     const ch = charOf(s, roll.charId), cat = roll.cat && !ult ? roll.cat : R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);

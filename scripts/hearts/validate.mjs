@@ -25,13 +25,13 @@ L.push('', 'A starting hero has a best score of +2: a 55% chance against the usu
 L.push('## 2. What an Action is worth', '', 'Expected damage from one attack at a modifier of +2 against TN 12 (success 55%, 5% of those criticals that add a d12). Expected damage = average of the die × (chance of success + 5%).', '',
   '| Source | Effort | Horror | Damage per Action | Against an armoured foe | Damage per Horror point |', '|---|---|---|---|---|---|');
 const p = E.chance(3, 12), MOD = 3;
-const rows = [['Fists or an improvised weapon (Basic, +1)', 4, 0, 'weapon', 1], ['Cudgel, hatchet, spear or bill hook (Weapons)', 6, 0, 'weapon', MOD], ['Hunting bow or windlass crossbow (Ranged; the crossbow fires every other Action unless pushed)', 8, 0, 'weapon', MOD],
+const rows = [['Fists or an improvised weapon (Basic, +1)', 4, 0, 'weapon', 1], ['Cudgel, hatchet, spear or bill hook (Weapons)', 6, 0, 'weapon', MOD], ['Hunting bow or windlass crossbow (Weapons; the crossbow fires every other Action unless pushed)', 6, 0, 'weapon', MOD],
   ['Ember (Magic)', 10, 1, 'spell', MOD], ['Unmake (Magic, also Dazes the foe)', 10, 2, 'spell', MOD], ['Executioner’s blade (relic, Magic)', 10, 1, 'relic', MOD], ['Rend the Veil, one target (Ultimate, once a scene)', 12, 3, 'spell', 0]];
 for (const [n, die, hz, kind, mod] of rows) {
   const dmg = (avg(die) + mod) * (p + 0.05), arm = (avg(E.effortAgainst(die, { armoured: true }, kind)) + mod) * (p + 0.05);
   L.push(`| ${n} | d${die} + ${mod} | ${hz} | ${f1(dmg)} | ${f1(arm)} | ${hz ? f1(dmg / hz) : '—'} |`);
 }
-L.push('', 'Weapons, ranged weapons and magic roll d6, d8 and d10 (the Effort categories), so magic is the biggest die, and it is paid for in Horror. A hero who casts every turn adds roughly 1 Horror a round. A standard fight lasts 3 to 5 rounds in the simulation (section 6), so a party of casters reaches the first threshold (9) in a fight or two and the second (15) in two or three. That is the intended pace, and the reason the shared track matters. The ready-made heroes put three of their four Effort points into their main kind of blow, so the table above assumes +3 (a hero with 0 in a kind rolls the bare die).',
+L.push('', 'Ordinary weapons, including bows and crossbows, roll d6; guns and gunpowder weapons roll d8; magic rolls d10, so magic is the biggest die, and it is paid for in Horror. A hero who casts every turn adds roughly 1 Horror a round. A standard fight lasts 3 to 5 rounds in the simulation (section 6), so a party of casters reaches the first threshold (9) in a fight or two and the second (15) in two or three. That is the intended pace, and the reason the shared track matters. The ready-made heroes put three of their four Effort points into their main kind of blow, so the table above assumes +3 (a hero with 0 in a kind rolls the bare die).',
   `Rend the Veil is once a scene: against four foes in Close it deals about ${f1(avg(12) * (p + 0.05) * 4)} in total for 3 Horror, which is the best rate in the book, and the reason a Doomed scene should be hard to reach.`, '');
 
 /* 3. action economy */

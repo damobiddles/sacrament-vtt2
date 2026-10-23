@@ -31,6 +31,8 @@ The bar along the bottom gives you quick access to your hero's status and core a
 3. If you succeeded, roll the damage: choose a kind of **Effort** (Basic, Weapons, Guns, Magic or Ultimate). It rolls and shows the total.
 4. Press **Apply to** the card shown. The enemy's hearts go down, or the obstacle's Effort bar fills. Nothing changes until you press Apply.
 
+Ordinary melee weapons, bows, crossbows and slings use **Weapons d6**. **Guns d8** is for guns, gunpowder weapons and similar devices. Older saved heroes keep their Effort points; if you put points in Guns for a bow, move those points to Weapons on your sheet.
+
 The card the Effort will go to is marked **TARGET**. Looking at another card does not move it. To change it on purpose, select the other card and press **Change target**.
 
 ### Using your own dice

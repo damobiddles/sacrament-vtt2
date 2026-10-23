@@ -118,6 +118,8 @@ Drawing is GM-only: players have Select and Point, can see GM ink, and cannot se
 
 Since the last full phone pass: shared website Back to top button appears after scrolling 400px; excluded from VTT, character and builder screens, supports reduced motion and returns focus to the page heading.
 
-Since the last full phone pass: My heroes now has a starting-hero generator with preview/keep, and a local backup-file restore with review, duplicate skipping and separate copies for changed versions. Test these in the next requested phone suite. Ordinary ranged weapon Effort remains unchanged pending the owner’s separate future weapon update.
+Since the last full phone pass: My heroes now has a starting-hero generator with preview/keep, and a local backup-file restore with review, duplicate skipping and separate copies for changed versions. Test these in the next requested phone suite. The later weapon update moves ordinary ranged weapons to Weapons d6; saved Effort allocations remain intact with a reminder to reassign old bow bonuses.
 
 Since the last full phone pass: removed the ready-made hero selector from My heroes at the owner’s request; the generator, blank sheets and all existing saved heroes remain.
+
+Owner-approved weapon dice: all ordinary catalogue weapons (including bows, crossbows, slings and weapon-listed tools) use Weapons d6. Guns/gunpowder use Guns d8. Custom ranged style means bow/crossbow d6; firearm style means two-handed gun/gunpowder d8; single-handed Guns remains available. Existing Effort points are not silently reassigned: sheets explain that old bow bonuses under Guns can be moved to Weapons. New scouts invest in Weapons. Old pending item attacks are resolved with the corrected category when their possession can still be identified; completed damage is preserved. Since the last full phone pass: weapon labels, designer firearm style, saved-archer reminder and corrected Effort guidance.

@@ -11,3 +11,5 @@ This table is a digital version of that tabletop: a room, a monster, a puzzle or
 On your turn you try something. You roll a twenty-sided die, add the number for the right stat (strength, dexterity and so on), and compare the total with a **Target** number the GM has set for the scene. Meet it and you succeed.
 
 Success on an attack or a task earns **Effort**. You roll a smaller die for it, add your bonus, and the result takes away an enemy's **hit points** or fills in progress on an obstacle such as a stuck door. Hit points are counted in **hearts**, ten points to a heart, so a glance at the table shows how hurt anyone is. Some threats are **countdowns**: something that gets worse every round until someone deals with it.
+
+Ordinary weapons, including bows, crossbows and slings, use **Weapons Effort (d6)**. Guns, gunpowder weapons and similar devices use **Guns Effort (d8)**.

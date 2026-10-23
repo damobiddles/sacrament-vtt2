@@ -73,7 +73,7 @@
       kit = [weapon, pick(['gambeson', 'brigandine'])]; if (C.weaponHands(C.item(weapon)) === 1) kit.push('shield');
       kit = kit.concat(['bandages', 'rope', 'tinder', 'rations']);
     } else if (focus === 'scout') {
-      h.calling = pick(['Boundary scout', 'Road guide', 'Hunter']); primary = 'DEX'; secondary = 'WIS'; third = pick(['CON', 'INT', 'STR']); effort = 'guns';
+      h.calling = pick(['Boundary scout', 'Road guide', 'Hunter']); primary = 'DEX'; secondary = 'WIS'; third = pick(['CON', 'INT', 'STR']); effort = 'weapons';
       kit = [pick(['bow', 'crossbow']), 'gambeson', 'knife', 'rope', 'lantern', 'picks', 'rations', 'tinder'];
     } else {
       book = focus === 'healer' ? 'litany' : pick(['embers', 'dust']);

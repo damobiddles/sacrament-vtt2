@@ -262,7 +262,7 @@ test('six scores with six points, and four points of Effort: the ready heroes ke
   for (let i = 0; i < 60; i++) { const r = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 12, target: { def: E.enemy('rats'), hp: 99 } }); assert.ok(r.effort.bonus === 3 && r.effort.total >= 4 && r.effort.total <= 9, 'd6+3'); }
   const crit = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 20, target: { def: E.enemy('rats'), hp: 99 } }); a.effort.ultimate = 2;
   const crit2 = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 20, target: { def: E.enemy('rats'), hp: 99 } }); assert.equal(crit2.effort.ultBonus, 2); assert.equal(crit2.effort.rolls.length, 2);
-  assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'crossbow')), 'ranged'); assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'cudgel')), 'weapons');
+  assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'crossbow')), 'weapons'); assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'cudgel')), 'weapons');
 });
 test('a hero from the three-score days is carried over: each old score covers two new ones, and the total stays six', () => {
   const env = mk(), { E } = env, old = { id: 'o', name: 'Old', scores: { Body: 2, Mind: 1, Spirit: 0 }, pack: [{ id: 'embers' }], max: 20, hp: 20 };

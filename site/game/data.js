@@ -48,7 +48,7 @@
       scores: { STR: 3, DEX: 0, CON: 2, INT: 0, WIS: 1, CHA: 0 }, effort: { basic: 1, weapons: 3, ranged: 0, magic: 0, ultimate: 0 }, kit: ['billhook', 'brigandine', 'shield', 'oil', 'rope'],
       note: 'The wall. He takes the foes’ attention, raises his shield over a friend and hooks the dangerous ones into reach.' },
     { id: 'wren', name: 'Wren Ashdown', calling: 'Cartographer', vow: 'To find the way out and come back with it.',
-      scores: { STR: 0, DEX: 3, CON: 1, INT: 1, WIS: 1, CHA: 0 }, effort: { basic: 1, weapons: 0, ranged: 3, magic: 0, ultimate: 0 }, kit: ['crossbow', 'gambeson', 'picks', 'rope', 'lantern', 'bandages', 'spirits'],
+      scores: { STR: 0, DEX: 3, CON: 1, INT: 1, WIS: 1, CHA: 0 }, effort: { basic: 1, weapons: 3, ranged: 0, magic: 0, ultimate: 0 }, kit: ['crossbow', 'gambeson', 'picks', 'rope', 'lantern', 'bandages', 'spirits'],
       note: 'The scout. She shoots from Far, works locks and mechanisms, and reads the room before anyone walks into it.' },
     { id: 'ottoline', name: 'Ottoline Vane', calling: 'Heretic scholar', vow: 'To know it, whatever it costs.',
       scores: { STR: 0, DEX: 1, CON: 1, INT: 3, WIS: 1, CHA: 0 }, effort: { basic: 0, weapons: 0, ranged: 0, magic: 3, ultimate: 1 }, kit: ['hatchet', 'embers', 'dust', 'chain'],

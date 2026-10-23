@@ -35,9 +35,13 @@
       flavour: text(raw.flavour, 400), does: text(raw.does, 600), equippable: kind === 'supply' ? raw.equippable === true : true,
       temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
     o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
-    if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
+    if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged', 'firearm'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
     if (kind === 'weapon' && o.weaponStyle !== 'single') o.slots = Math.max(2, o.slots);
     if (kind === 'armour') o.armourPart = ['body', 'head', 'shield'].indexOf(raw.armourPart) >= 0 ? raw.armourPart : 'body';
+    if (kind === 'weapon' && o.weaponStyle === 'ranged') o.cat = 'weapons';
+    if (kind === 'weapon' && o.weaponStyle === 'firearm') o.cat = 'guns';
+    if (kind === 'weapon' && (!o.cat || o.cat === 'basic')) o.cat = 'weapons';
+    if (kind === 'weapon' && !o.roll) o.roll = o.weaponStyle === 'ranged' || o.weaponStyle === 'firearm' ? 'DEX' : 'STR';
     if (kind === 'weapon' && o.weaponStyle === 'heavy') { o.cat = 'weapons'; if (STATS.indexOf(o.roll) < 0) o.roll = 'STR'; }
     if (kind === 'grimoire') {
       o.slots = 3;
@@ -87,7 +91,11 @@
     return out;
   }
   function armourConflict(h, it, except) { return armourPart(it) && (h.gear || []).some(function (g) { return g !== except && isEq(g) && armourPart(itemOf(g)) === armourPart(it); }); }
-  function weaponHands(it) { return it && ['heavy', 'reach', 'ranged'].indexOf(it.weaponStyle) >= 0 ? 2 : 1; }
+  function weaponHands(it) { return it && ['heavy', 'reach', 'ranged', 'firearm'].indexOf(it.weaponStyle) >= 0 ? 2 : 1; }
+  /* Explain the changed category without moving anyone's invested points. */
+  function weaponEffortNote(h) {
+    return h.effort && h.effort.guns > 0 && (h.gear || []).some(function (g) { var it = itemOf(g); return it && it.kind === 'weapon' && it.cat === 'weapons' && (it.weaponStyle === 'ranged' || it.band === 'far'); }) ? 'Your Guns bonus does not apply to bows, crossbows or slings. These use Weapons d6. If your Guns points were for a bow, lower Guns and add those points to Weapons. Your saved points have been kept.' : '';
+  }
   function damageBonus(it) { return it && it.kind === 'weapon' && it.weaponStyle === 'heavy' && it.cat === 'weapons' ? 2 : 0; }
   /* Preserve every saved item. Extra suits/helmets/shields move to the pack, even
      if an old loadout needs manual rearranging afterwards. Preserve wounds. */
@@ -307,6 +315,6 @@
     return h;
   }
 
-  return { armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
+  return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
     edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

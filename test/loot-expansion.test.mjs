@@ -18,9 +18,9 @@ test('the expansion doubles each item category with stable catalogue definitions
     assert.equal(C.items.filter(i => i.kind === kind).length, total, kind);
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
-  // Approved equipment balance updates changed book costs, weapon text and armour roles.
+  // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // This fingerprint locks the reviewed definitions; all spell rules remain unchanged.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '0f0f900d38628ebfb68cda7e5130940203f631d941b181cb163a5a14cb3c5d8a');
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), 'ebf664cd642ceb67db52665858a1588305ff388630a839bb32491ca30a254593');
   assert.equal(hash(G.spells), 'b2ad12b6a8b11602d54a4a71be23e100748eb93f14b31b60b23327fc577828ff');
 });
 

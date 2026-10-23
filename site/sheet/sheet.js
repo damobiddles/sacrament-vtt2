@@ -79,6 +79,7 @@
     left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + B.points + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
       (edit ? '<p class="sh-note">' + B.points + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
     left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + R.DEFAULT_DICE[k]; return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
+    if (C.weaponEffortNote(h)) left1 += '<p class="sh-note" role="note">' + esc(C.weaponEffortNote(h)) + '</p>';
     var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, acts, d.dice)); });
     var option = function (it) { return '<option value="' + it.id + '"' + (pick === it.id ? ' selected' : '') + '>' + esc(optionText(it)) + '</option>'; };
     var group = function (label, list) { return list.length ? '<optgroup label="' + label + '">' + list.map(option).join('') + '</optgroup>' : ''; };
