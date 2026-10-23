@@ -36,6 +36,29 @@ test('a blog with no posts still builds, and says so', () => {
   try {
     assert.equal(b.r.status, 0, b.r.stderr);
     assert.match(readFileSync(join(b.out, 'news/index.html'), 'utf8'), /Nothing here yet/);
+    assert.doesNotMatch(readFileSync(join(b.out, 'index.html'), 'utf8'), /class="ic-latest"/);
+  } finally { b.cleanup(); }
+});
+
+test('the home page automatically promotes the newest post on each build and escapes its text', () => {
+  const b = build((c) => {
+    for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f));
+    writeFileSync(join(c, 'blog', '2026-01-01-first.md'), post('First post', '2026-01-01'));
+  });
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    assert.match(readFileSync(join(b.out, 'index.html'), 'utf8'), /href="\/news\/first\/"/);
+    writeFileSync(join(b.content, 'blog', '2026-01-02-newest.md'), post('Newest <script>bad</script>', '2026-01-02'));
+    const rebuilt = spawnSync('node', ['scripts/build-landing.mjs'], { cwd: new URL('..', import.meta.url).pathname, env: { ...process.env, LANDING_CONTENT: b.content, LANDING_OUT: b.out }, encoding: 'utf8' });
+    assert.equal(rebuilt.status, 0, rebuilt.stderr);
+    const home = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(home, /Latest from the blog/);
+    assert.match(home, /href="\/news\/newest\/"/);
+    assert.doesNotMatch(home, /href="\/news\/first\/"/);
+    assert.match(home, />Read more<\/a>/);
+    assert.match(home, /<time datetime="2026-01-02">2 January 2026<\/time>/);
+    assert.match(home, /Newest &lt;script&gt;bad&lt;\/script&gt;/);
+    assert.doesNotMatch(home, /<script>bad<\/script>/);
   } finally { b.cleanup(); }
 });
 

@@ -88,13 +88,17 @@ function build() {
   rmSync(new URL('./news/', OUT), { recursive: true, force: true });
   rmSync(new URL('./support/', OUT), { recursive: true, force: true });
   const write = (path, html) => { const dir = new URL('.' + path, OUT); mkdirSync(dir, { recursive: true }); writeFileSync(new URL('index.html', dir), html); };
+  const BSRC = new URL('blog/', SRC);
+  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
+  const latest = posts[0];
+  const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest from the blog</h2><article><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></article></section>` : '';
 
   /* home */
   const h = read('home');
   const homeArt = [
-    { file: 'sacrament-home-1', alt: 'A lone warrior faces a moonlit ruined fortress' },
+    { file: 'sacrament-home-1', alt: 'A cloaked traveller crosses a stone bridge towards a lantern-lit church' },
     { file: 'sacrament-home-2', alt: 'A necromancer performs a ritual amid standing stones and skulls' },
-    { file: 'sacrament-home-3', alt: 'A ruined chapel lit by eerie green and magenta moonlight' },
+    { file: 'sacrament-home-3', alt: 'A ruined chapel with a fallen bell and candles around a carved altar' },
   ];
   const cards = h.body.split(/^## /m).slice(1).map((c, i) => { const [t, ...rest] = c.split('\n'); const art = homeArt[i]; const picture = art ? `<picture class="ic-card-art"><img src="/art/${art.file}.webp" alt="${esc(art.alt)}" loading="lazy" decoding="async" width="800" height="800"></picture>` : ''; return `<article class="card ic-illustrated-card">${picture}<h2>${esc(t.trim())}</h2><p>${esc(rest.join(' ').trim())}</p></article>`; }).join('');
   write('/', page(h.title + ' | A shared table in your browser', h.summary, '/',
@@ -102,7 +106,7 @@ function build() {
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
 <p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share.</p>
 <p class="small ic-flavour"><em>The Church keeps the world. Someone has to go where it won't.</em></p></div></header>
-<main class="wrap blist ic-cards">${cards}<p class="ic-more"><a href="/how-to-play/">How to play here</a> &middot; <a href="/the-game/">About the game</a></p>
+<main class="wrap blist ic-cards">${cards}${latestPost}<p class="ic-more"><a href="/how-to-play/">How to play here</a> &middot; <a href="/the-game/">About the game</a></p>
 ${notes('early', 'This is an early version, built in the open. The rules it follows are still being worked out, so some details may change.')}
 </main>`));
 
@@ -120,8 +124,6 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('terms', NAME);
 
   /* the blog */
-  const BSRC = new URL('blog/', SRC);
-  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
   const list = posts.map((p) => `<article class="card"><time datetime="${p.date}">${fmt(p.date)}</time><h2><a href="/news/${p.slug}/">${esc(p.title)}</a></h2>${p.summary ? '<p>' + esc(p.summary) + '</p>' : ''}<a class="more" href="/news/${p.slug}/">Read the post</a></article>`).join('\n');
   write('/news/', page('Blog | ' + NAME, 'News and notes about the ' + NAME + '.', '/news/',
     `${head(NAME, 'Blog', 'News and notes about the table.')}<main class="wrap blist">${list || '<p>Nothing here yet.</p>'}</main>`));
