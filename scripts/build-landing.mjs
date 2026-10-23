@@ -34,7 +34,11 @@ const todo = (html) => html
 const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><ul>${PAGES.filter((p) => !p.footerOnly).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul><div class="ic-kofi" aria-label="Support Sacrament on Ko-fi"><script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script><script>if (window.kofiwidget2) { kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'J4M02969C2'); kofiwidget2.draw(); }</script><noscript><a href="https://ko-fi.com/J4M02969C2" rel="noopener noreferrer">Support me on Ko-fi</a></noscript></div></div></nav>`;
 const footer = () => `<footer class="ic-foot"><div class="wrap"><p><b>${esc(NAME)}</b>. Keep to the consecrated roads.</p><p><a href="/privacy/">Privacy Policy</a> &middot; <a href="/terms/">Terms of Use</a></p><p>&copy; ${new Date().getFullYear()} Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>`;
 
-const page = (title, desc, path, inner, extraHead = '') => `<!doctype html>
+const postImage = (p) => ({
+  src: /^\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:png|webp|jpe?g)$/.test(p.image || '') ? p.image : '/og-image.png',
+  alt: p.image_alt || p.title || NAME,
+});
+const page = (title, desc, path, inner, extraHead = '', social = { src: '/og-image.png', alt: NAME }) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -46,8 +50,11 @@ const page = (title, desc, path, inner, extraHead = '') => `<!doctype html>
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${SITE}${path}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="${SITE}/og-image.png">
+<meta property="og:image" content="${SITE}${esc(social.src)}">
+<meta property="og:image:alt" content="${esc(social.alt)}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE}${esc(social.src)}">
+<meta name="twitter:image:alt" content="${esc(social.alt)}">
 <meta name="theme-color" content="#12100d">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -91,7 +98,7 @@ function build() {
   const BSRC = new URL('blog/', SRC);
   const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
   const latest = posts[0];
-  const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest from the blog</h2><article><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></article></section>` : '';
+  const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest from the blog</h2><article><img class="ic-latest-image" src="${esc(postImage(latest).src)}" alt="${esc(postImage(latest).alt)}" loading="lazy" decoding="async"><div><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></div></article></section>` : '';
 
   /* home */
   const h = read('home');
@@ -131,7 +138,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
     const newer = posts[n - 1], older = posts[n + 1];
     write('/news/' + p.slug + '/', page(p.title + ' | ' + NAME, p.summary || p.title, '/news/' + p.slug + '/',
       `<main class="wrap post"><a class="back" href="/news/">All posts</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html)}</div></article>
-<nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`));
+<nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
   console.log('Built the Sacrament RPG pages: ' + PAGES.length + ' pages and ' + posts.length + ' post(s).');
 }

@@ -16,6 +16,38 @@ function build(mutate) {
 }
 const post = (title, date, body = 'Hello.') => `---\ntitle: ${title}\ndate: ${date}\nsummary: About ${title}.\n---\n${body}\n`;
 
+test('the latest preview and social metadata use the same post image with a safe default', () => {
+  const b = build((c) => {
+    for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f));
+    writeFileSync(join(c, 'blog', '2026-01-02-imaged.md'), '---\ntitle: Imaged post\ndate: 2026-01-02\nsummary: A summary.\nimage: /art/example.png\nimage_alt: A chamber & altar\n---\nHello.\n');
+    writeFileSync(join(c, 'blog', '2026-01-01-plain.md'), post('Plain post', '2026-01-01'));
+  });
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    const home = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(home, /class="ic-latest-image"[^>]*src="\/art\/example.png"[^>]*alt="A chamber &amp; altar"/);
+    const article = readFileSync(join(b.out, 'news/imaged/index.html'), 'utf8');
+    assert.match(article, /property="og:image" content="https:\/\/playsacrament.com\/art\/example.png"/);
+    assert.match(article, /name="twitter:image" content="https:\/\/playsacrament.com\/art\/example.png"/);
+    assert.match(article, /property="og:image:alt" content="A chamber &amp; altar"/);
+    const plain = readFileSync(join(b.out, 'news/plain/index.html'), 'utf8');
+    assert.match(plain, /property="og:image" content="https:\/\/playsacrament.com\/og-image.png"/);
+  } finally { b.cleanup(); }
+});
+
+test('an invalid post image cannot inject markup or load an external tracking image', () => {
+  const b = build((c) => {
+    for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f));
+    writeFileSync(join(c, 'blog', '2026-01-02-unsafe.md'), '---\ntitle: Unsafe image\ndate: 2026-01-02\nimage: //example.com/track.png\n---\nHello.\n');
+  });
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    const home = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(home, /class="ic-latest-image"[^>]*src="\/og-image.png"/);
+    assert.doesNotMatch(home, /example.com/);
+  } finally { b.cleanup(); }
+});
+
 test('every page is built, and a new blog post is just one new file', () => {
   const b = build((c) => { for (const f of readdirSync(join(c, 'blog'))) if (f.endsWith('.md')) rmSync(join(c, 'blog', f)); writeFileSync(join(c, 'blog', '2020-01-01-an-older-post.md'), post('An older post', '2020-01-01')); writeFileSync(join(c, 'blog', '2030-01-02-a-brand-new-post.md'), post('A brand new post', '2030-01-02', '## Hello\nSome **bold** words and a [link](/how-to-play/).')); });
   try {

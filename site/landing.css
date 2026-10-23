@@ -66,7 +66,10 @@ blockquote.todo::first-line{font-weight:700}
 .ic-card-art img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;object-position:center;background:#111713}
 .ic-latest{grid-column:1/-1;border-top:1px solid var(--line);padding-top:24px}
 .ic-latest h2{font-size:1.5rem;margin-bottom:16px}
-.ic-latest article{max-width:70ch}
+.ic-latest article{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:clamp(18px,3vw,32px);align-items:start}
+.ic-latest article>div{min-width:0}
+.ic-latest-image{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line)}
+@media(max-width:600px){.ic-latest article{grid-template-columns:minmax(0,1fr)}}
 .ic-latest time{font-size:.92rem;color:var(--dim)}
 .ic-latest h3{font-size:clamp(1.6rem,3vw,2rem);margin:8px 0 12px}
 .ic-latest h3 a{color:var(--fg);text-decoration:none}

@@ -1,6 +1,8 @@
 ---
 title: A steadier table, and the road ahead
 date: 2026-10-23
+image: /art/vtt-gifts/cathedral-ritual-chamber.png
+image_alt: An overhead cathedral crypt with a green ritual circle, stone pillars and a candlelit altar.
 summary: Safer saves, clearer character actions and more room for the map. Here is what has changed in the Sacrament RPG Table, what we want to tackle next, and a little artwork for your next session.
 ---
 The candles are lit. The players have arrived. The last thing a GM needs is to wonder whether the table has saved.
