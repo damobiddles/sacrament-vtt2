@@ -60,9 +60,17 @@ Those are areas for further work, rather than a promise to deliver everything at
 
 [Download the graveyard scene — original WebP](/art/ghoul_graveyard_1920x1280.webp)
 
+## The road to Hollowmere
+
+![An empty plague cart beside a candlelit wayshrine, on the cobbled road to a walled church at dusk.](/art/vtt-gifts/hollowmere-pilgrim-road.webp)
+
+*A new scene background for your table: the gate is still lit, and the cart waits by the road.*
+
+[Download the Hollowmere road scene — original PNG, 1586 × 992](/art/vtt-gifts/hollowmere-pilgrim-road.png) · [Download the smaller, lossless WebP](/art/vtt-gifts/hollowmere-pilgrim-road.webp)
+
 ## A little something for your next session
 
-The two images in this post are a gift for your own games. Download them using the links above: the ritual chamber is an overhead battle map, while the graveyard is a scene background. The downloads keep the original image dimensions and quality.
+The three images in this post are a gift for your own games. Download them using the links above: the ritual chamber is an overhead battle map, while the graveyard and Hollowmere road are scene backgrounds. The downloads keep the original image dimensions and quality.
 
 We would like to include more usable artwork in future posts, so there is something to take back to your table as well as something to read.
 
@@ -72,4 +80,4 @@ The latest fixes have passed local release checks. We have also checked the publ
 
 If something gets in your way, tell us what you were trying to do, which browser or device you were using, and what happened. Those small moments are often the best guide to what needs attention next.
 
-[Open the Sacrament RPG Table](https://playsacrament.com/vtt/) or [send feedback](mailto:damien.bidmead@gmail.com).
+[Open the Sacrament RPG Table](https://playsacrament.com/vtt/) or [send feedback](/feedback/).
