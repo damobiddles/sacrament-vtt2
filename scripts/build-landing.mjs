@@ -8,15 +8,16 @@ import { pathToFileURL } from 'node:url';
 import { esc, parse, fmt } from './lib/markdown.mjs';
 import { lootCatalogue } from './lib/loot-catalogue.mjs';
 import '../site/sheet/gear.js';
+import '../site/nav.js';
 
 const dirUrl = (p, fallback) => (p ? pathToFileURL(p.replace(/\/?$/, '/')) : new URL(fallback, import.meta.url));
 const SRC = dirUrl(process.env.LANDING_CONTENT, '../content/landing/');
 const OUT = dirUrl(process.env.LANDING_OUT, '../site/');
 const SITE = 'https://playsacrament.com';
 const cfg = existsSync(new URL('site.json', SRC)) ? JSON.parse(readFileSync(new URL('site.json', SRC), 'utf8')) : {};
-const NAME = cfg.name || 'Sacrament RPG Table';
+const NAME = cfg.name || 'Sacrament RPG';
 
-/* the pages, in the order of the bar across the top (Privacy and Terms are in the footer) */
+/* Public routes owned by this builder. Shared navigation lives in site/nav.js. */
 const PAGES = [
   { slug: 'home', path: '/', label: 'Home' },
   { slug: 'the-game', path: '/the-game/', label: 'The game' },
@@ -25,6 +26,7 @@ const PAGES = [
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'blog', path: '/news/', label: 'News' },
+  { slug: 'resources', path: '/resources/', label: 'Resources' },
   { slug: 'loot', path: '/loot/', label: 'Loot' },
   { slug: 'feedback', path: '/feedback/', label: 'Feedback' },
   { slug: 'privacy', path: '/privacy/', label: 'Privacy', footerOnly: true },
@@ -36,8 +38,8 @@ const todo = (html) => html
   .replace(/<blockquote>(YOUR TEXT HERE)/g, '<blockquote class="todo">$1')
   .replace(/\[\[(.*?)\]\]/g, '<mark class="todo-inline">$1</mark>');
 
-const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><ul>${PAGES.filter((p) => !p.footerOnly && !p.guide).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul><div class="ic-kofi"><a class="btn kofi-button" href="https://ko-fi.com/J4M02969C2" target="_blank" rel="noopener noreferrer" aria-label="Support Sacrament on Ko-fi (opens in a new tab)">Support me on Ko-fi</a></div></div></nav>`;
-const footer = () => `<footer class="ic-foot"><div class="wrap"><p><b>${esc(NAME)}</b>. Keep to the consecrated roads.</p><p><a href="/privacy/">Privacy Policy</a> &middot; <a href="/terms/">Terms of Use</a></p><p>&copy; ${new Date().getFullYear()} Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>`;
+const nav = globalThis.SacramentSite.navigation;
+const footer = globalThis.SacramentSite.footer;
 
 const postImage = (p) => ({
   src: /^\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:png|webp|jpe?g)$/.test(p.image || '') ? p.image : '/og-image.png',
@@ -71,7 +73,7 @@ const page = (title, desc, path, inner, extraHead = '', social = { src: '/og-ima
 <script src="/nav.js"></script>
 ${extraHead}</head>
 <body data-focus>
-${nav(path.startsWith('/news/') ? '/news/' : path)}
+${nav(path)}
 ${inner}
 ${footer()}
 </body>
@@ -97,6 +99,21 @@ const feedbackForm = `<form class="ic-form feedback-form" name="vtt-feedback" me
 </form>`;
 
 
+function resources() {
+  const cards = [
+    ['Play', 'My heroes', '/character/', 'Generate a character, customise the sheet, or download and restore a private backup.', 'Build and manage heroes'],
+    ['Reference', 'Player and GM rules', '/rules/', 'The current VTT rules, examples and first-session guidance, organised by role.', 'Find your guide'],
+    ['Reference', 'Current Loot Tables', '/loot/', 'Browse the VTT catalogue, roll a random find and learn about creating custom loot.', 'Browse and roll loot'],
+    ['Play', 'Sacrament RPG Table', '/vtt/', 'Open your table, make a new one or join with an invitation from your GM.', 'Open the Sacrament RPG Table'],
+    ['For creators', 'Brand kit', '/brand/', 'Logos, colours, typefaces and sharing assets for writing about Sacrament.', 'Open the brand kit']
+  ];
+  return '<div class="resource-grid">' + cards.map(([tag,title,url,desc,label]) => '<article class="card"><span class="tag">' + tag + '</span><h2>' + title + '</h2><p>' + desc + '</p><a class="btn" href="' + url + '">' + label + '</a></article>').join('') + '</div><section class="resource-art" aria-labelledby="artwork-title"><h2 id="artwork-title">Scenes for your table</h2><p>Free artwork downloads from our news posts. Keep the original files for your table, or use the smaller WebP where available.</p><div class="resource-grid">' + [
+    ['Cathedral ritual chamber','/art/vtt-gifts/cathedral-ritual-chamber.png','A battle map of a ritual chamber beneath a cathedral'],
+    ['Graveyard encounter','/art/ghoul_graveyard_1920x1280.webp','A ghoul in a graveyard'],
+    ['Hollowmere road','/art/vtt-gifts/hollowmere-pilgrim-road.webp','A pilgrim road with a church and plague cart']
+  ].map(([title,src,alt]) => '<article class="card"><img class="resource-image" src="' + src + '" alt="' + alt + '" loading="lazy" decoding="async"><h3>' + title + '</h3><p><a href="' + (title === 'Hollowmere road' ? '/art/vtt-gifts/hollowmere-pilgrim-road.png' : src) + '" download>Download ' + title.toLowerCase() + '</a>' + (title === 'Hollowmere road' ? ' · <a href="' + src + '" download>Smaller WebP</a>' : '') + '</p></article>').join('') + '</div><p><a href="/news/a-steadier-table/">Read about the artwork and VTT updates</a></p></section><section class="resource-history"><h2>Earlier development</h2><p><a href="/adventure/">The Sexton’s Ledger playtest</a> records an adventure using an earlier version of the rules. For current play, use the <a href="/rules/">player and GM guides</a>.</p></section>';
+}
+
 function build() {
   /* The output folder is the whole site, so clear only the folders this script makes (never anything else). */
   mkdirSync(OUT, { recursive: true });
@@ -108,7 +125,7 @@ function build() {
   const BSRC = new URL('blog/', SRC);
   const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
   const latest = posts[0];
-  const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest from the blog</h2><article><img class="ic-latest-image" src="${esc(postImage(latest).src)}" alt="${esc(postImage(latest).alt)}" loading="lazy" decoding="async"><div><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></div></article></section>` : '';
+  const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest news</h2><article><img class="ic-latest-image" src="${esc(postImage(latest).src)}" alt="${esc(postImage(latest).alt)}" loading="lazy" decoding="async"><div><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></div></article></section>` : '';
 
   /* home */
   const h = read('home');
@@ -123,47 +140,54 @@ function build() {
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
 <p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share.</p>
 <p class="small ic-flavour"><em>The Church keeps the world. Someone has to go where it won't.</em></p></div></header>
-<main class="wrap blist ic-cards">${cards}${latestPost}<p class="ic-more"><a href="/how-to-play/">How to play here</a> &middot; <a href="/the-game/">About the game</a></p>
+<main class="wrap blist ic-cards"><section class="site-start" aria-labelledby="start-heading"><h2 id="start-heading">Find your way into Sacrament</h2><div class="site-paths"><div><h3>Discover the game</h3><p>Learn what you play, how the dice work and the world your heroes inhabit.</p><a href="/the-game/">Meet Sacrament RPG</a></div><div><h3>Play your first session</h3><p>Follow a short checklist for players and GMs, with links to the current rules.</p><a href="/how-to-play/">Start here</a></div><div><h3>Find tools and artwork</h3><p>Browse loot, manage heroes and download scenes for your table.</p><a href="/resources/">Explore the resources</a></div></div></section>${cards}${latestPost}<p class="ic-more"><a href="/how-to-play/">First game checklist</a> &middot; <a href="/feedback/">Share feedback</a></p>
 ${notes('early', 'This is an early version, built in the open. The rules it follows are still being worked out, so some details may change.')}
 </main>`));
 
   /* the text pages */
   const text = (slug, label, extraAfter = '') => {
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
-    let html = todo(p.html);
+    let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
     if (meta.guide) {
       const sections = [];
-      html = html.replace(/<h3>(.*?)<\/h3>/g, (_, title) => {
+      html = html.replace(/<h2>(.*?)<\/h2>/g, (_, title) => {
         const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         sections.push({ id, title });
         return '<h2 id="' + id + '">' + title + '</h2>';
       });
       html = '<nav class="guide-contents" aria-label="On this page"><h2>On this page</h2><ul>' + sections.map(s => '<li><a href="#' + s.id + '">' + s.title + '</a></li>').join('') + '</ul></nav>' + html;
     }
+    if (slug === 'how-to-play') {
+      html = html.replace('<h2>I am a player</h2>', '<h2 id="for-players">I am a player</h2>').replace('<h2>I am the GM</h2>', '<h2 id="for-gms">I am the GM</h2>');
+      html = '<nav class="role-paths" aria-label="Choose your role"><a href="#for-players">I am a player</a><a href="#for-gms">I am the GM</a><a href="/rules/">Find a rules guide</a></nav>' + html;
+    }
     write(meta.path, page(p.title + ' | ' + NAME, p.summary, meta.path,
-      `${head(label, p.title, p.summary)}<main class="wrap post ic-body"><div class="body">${html}${extraAfter}</div></main>`));
+      `${head(label, p.title, p.summary)}<main class="wrap post ic-body${slug === 'resources' ? ' site-resources' : ''}"><div class="body">${html}${extraAfter}</div></main>`));
   };
-  text('the-game', NAME);
-  text('setting', NAME);
+  text('the-game', NAME, '<aside class="site-next"><h2>Ready to play?</h2><p><a class="btn" href="/how-to-play/">Start your first game</a> <a href="/setting/">Explore the setting</a></p></aside>');
+  text('setting', NAME, '<aside class="site-next"><h2>Take a hero into this world</h2><p><a class="btn" href="/character/">Create a hero</a> <a href="/how-to-play/">Learn how to play</a></p></aside>');
   text('how-to-play', NAME);
   text('player-guide', NAME);
   text('gm-guide', NAME);
+  text('resources', NAME, resources());
   text('loot', NAME, lootCatalogue(globalThis.SACRAMENT_GEAR));
-  text('feedback', NAME, feedbackForm);
-  write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>Thank you for helping improve the table.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
+  text('feedback', NAME, feedbackForm + '<aside class="site-next"><h2>Looking for help with a game?</h2><p>Use the <a href="/how-to-play/">first game checklist</a>, <a href="/player-guide/">player guide</a> or <a href="/gm-guide/">GM guide</a>. Follow <a href="/news/">News</a> for published updates.</p></aside>');
+  write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>We review feedback privately to plan fixes and improvements. Follow <a href="/news/">News</a> for updates.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
   text('privacy', NAME);
   text('terms', NAME);
 
   /* the blog */
   const list = posts.map((p) => `<article class="card"><time datetime="${p.date}">${fmt(p.date)}</time><h2><a href="/news/${p.slug}/">${esc(p.title)}</a></h2>${p.summary ? '<p>' + esc(p.summary) + '</p>' : ''}<a class="more" href="/news/${p.slug}/">Read the post</a></article>`).join('\n');
-  write('/news/', page('Blog | ' + NAME, 'News and notes about the ' + NAME + '.', '/news/',
-    `${head(NAME, 'Blog', 'News and notes about the table.')}<main class="wrap blist">${list || '<p>Nothing here yet.</p>'}</main>`));
+  write('/news/', page('News | ' + NAME, 'News and notes about the ' + NAME + '.', '/news/',
+    `${head(NAME, 'News', 'Updates, playtest notes and free artwork for your table.')}<main class="wrap blist">${list || '<p>Nothing here yet.</p>'}</main>`));
   posts.forEach((p, n) => {
     const newer = posts[n - 1], older = posts[n + 1];
     write('/news/' + p.slug + '/', page(p.title + ' | ' + NAME, p.summary || p.title, '/news/' + p.slug + '/',
-      `<main class="wrap post"><a class="back" href="/news/">All posts</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html)}</div></article>
+      `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
 <nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
+  const urls = [...new Set([...PAGES.map(p => p.path), '/rules/', '/character/', '/vtt/', '/brand/', '/adventure/', ...posts.map(p => '/news/' + p.slug + '/')])];
+  writeFileSync(new URL('sitemap.xml', OUT), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(path => '<url><loc>' + SITE + esc(path) + '</loc></url>').join('\n') + '\n</urlset>\n');
   console.log('Built the Sacrament RPG pages: ' + PAGES.length + ' pages and ' + posts.length + ' post(s).');
 }
 build();

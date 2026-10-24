@@ -30,7 +30,7 @@ Sacrament is built on the spine of another game: **the Index Card RPG**, by **Ha
 
 ## How to send word
 
-Write to [damien.bidmead@gmail.com](mailto:damien.bidmead@gmail.com). A place for playtesters to talk to each other is coming soon.
+Use the [feedback form](/feedback/) to report a bug, share an idea or tell us what you like. No account or email address is needed.
 
 The most useful reports say:
 

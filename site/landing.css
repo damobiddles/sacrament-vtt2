@@ -1,9 +1,4 @@
 /* The Sacrament RPG home page and its pages. Colours, fonts and buttons come from theme.css; the page shapes are shared with the blog (blog.css). */
-.ic-nav{background:var(--bg2);border-bottom:1px solid var(--line)}
-.ic-nav ul{list-style:none;margin:0 auto;padding:6px max(10px,env(safe-area-inset-left,0px));max-width:1040px;display:flex;flex-wrap:wrap;gap:2px 6px}
-.ic-nav a{display:inline-block;padding:10px 10px;min-height:24px;font-family:var(--label);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.76rem;color:var(--dim);text-decoration:none;border-bottom:2px solid transparent}
-.ic-nav a:hover{color:var(--fg)}
-.ic-nav a[aria-current=page]{color:var(--candle);border-bottom-color:var(--candle)}
 .ic-hero{padding-bottom:44px}
 .ic-hero h1{font-size:clamp(3rem,12vw,6.5rem)}
 .ic-cta{display:flex;flex-wrap:wrap;gap:14px;margin:26px 0 10px}
@@ -34,8 +29,6 @@ blockquote.todo::first-line{font-weight:700}
 .ic-foot p{margin:6px 0;max-width:none}
 .ic-foot b{font-family:var(--display);color:var(--fg);font-size:1.1rem}
 @media (max-width:600px){
-  .ic-nav ul{gap:0 2px;padding:2px 8px}
-  .ic-nav a{padding:11px 7px;font-size:.7rem;letter-spacing:.08em}
   .ic-hero{padding-top:26px;padding-bottom:26px}
   .ic-hero h1{font-size:clamp(2.6rem,13vw,4rem);margin:6px 0 10px}
   .ic-hero .lede{font-size:1.05rem;line-height:1.5}
@@ -45,15 +38,10 @@ blockquote.todo::first-line{font-weight:700}
   .bhead{padding-top:26px}
 }
 
-/* the playtest sign-up on the home page */
 
 /* A site-owned support link stays readable without a third-party script. */
-.ic-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:1180px;margin:0 auto;padding-right:max(10px,env(safe-area-inset-right,0px))}
-.ic-nav-inner ul{flex:1 1 auto;min-width:0;margin:0;max-width:none}
-.ic-kofi{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;white-space:nowrap}
 .ic-kofi .kofi-button{color:var(--on-blood);background:var(--blood);border:1px solid var(--blood-hi);box-shadow:none;letter-spacing:normal;text-transform:none;padding:8px 12px;min-height:44px}
 .ic-kofi .kofi-button:hover,.ic-kofi .kofi-button:focus-visible{color:var(--on-blood);background:var(--blood);border-color:var(--on-blood)}
-@media(max-width:760px){.ic-nav-inner{flex-wrap:wrap;justify-content:center;padding:0 10px 9px}.ic-nav-inner ul{flex:1 1 100%;justify-content:center}.ic-kofi{margin-left:auto}}
 
 /* Move the Sacrament mark from the duplicate top bar into the home hero. */
 .ic-hero-title{display:flex;align-items:center;gap:clamp(14px,3vw,38px);max-width:100%}
@@ -78,8 +66,6 @@ blockquote.todo::first-line{font-weight:700}
 .ic-latest p{margin:0 0 16px}
 
 /* October layout pass: consistent rhythm, comfortable reading and responsive navigation. */
-.ic-nav a{line-height:1.35;min-height:44px;display:inline-flex;align-items:center}
-.ic-nav ul{row-gap:4px}
 .ic-hero{padding-bottom:clamp(32px,5vw,56px)}
 .ic-hero .lede{max-width:62ch;line-height:1.55}
 .ic-hero .ic-cta{margin-top:clamp(20px,3vw,32px)}
@@ -93,12 +79,6 @@ blockquote.todo::first-line{font-weight:700}
 .ic-body .body{overflow-wrap:break-word}
 .ic-body .body blockquote{line-height:1.5}
 .ic-foot{margin-top:clamp(28px,5vw,48px)}
-@media(max-width:760px){
-  .ic-nav-inner{row-gap:0}
-  .ic-nav-inner ul{padding-inline:4px}
-  .ic-nav a{padding:10px 9px;font-size:.74rem;letter-spacing:.06em}
-  .ic-kofi{margin:0 auto}
-}
 @media(max-width:600px){
   .ic-hero .ic-cta{gap:10px}
   .ic-cards{gap:18px}
@@ -136,3 +116,38 @@ blockquote.todo::first-line{font-weight:700}
 .guide-contents li{break-inside:avoid;margin-bottom:8px}
 .ic-body h2[id]{scroll-margin-top:90px}
 @media(max-width:650px){.guide-contents ul{columns:1}}
+
+/* Shared site navigation. Tool pages keep their compact in-game header. */
+.ic-nav{background:var(--bg2);border-bottom:1px solid var(--line)}
+.ic-nav-inner{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;max-width:1280px;margin:auto;padding:8px max(16px,env(safe-area-inset-left,0px))}
+.ic-nav ul{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;list-style:none;padding:0;margin:0;min-width:0}
+.ic-nav a{display:inline-flex;align-items:center;min-height:44px;padding:9px 10px;color:var(--dim);font:600 .76rem/1.35 var(--label);letter-spacing:.07em;text-transform:uppercase;text-decoration:none;border-bottom:2px solid transparent}
+.ic-nav a:hover{color:var(--fg)}
+.ic-nav ul a[aria-current=page]{color:var(--candle);border-bottom-color:var(--candle)}
+.ic-nav .ic-brand{gap:8px;font:700 1.05rem/1.2 var(--display);letter-spacing:0;text-transform:none;color:var(--fg);padding:0;white-space:nowrap}
+.ic-brand img{flex:none}
+.ic-kofi{display:flex;justify-content:flex-end;white-space:nowrap}
+.site-skip{position:fixed;left:16px;top:8px;z-index:10000;transform:translateY(-180%);padding:12px 18px;background:var(--bg2);color:var(--fg);border:2px solid var(--candle)}
+.site-skip:focus{transform:none}
+.site-footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px;padding-bottom:24px}
+.site-footer-grid nav{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.site-footer-grid nav a{padding-block:3px;line-height:1.5}
+.site-footer-grid p{max-width:30ch}
+.site-legal{padding-top:18px;border-top:1px solid var(--line)}
+.site-start,.site-next{grid-column:1/-1;padding:24px;border:1px solid var(--line);background:var(--bg2)}
+.site-next{margin-top:28px}
+.site-start h2,.site-next h2{margin-top:0;margin-bottom:20px}
+.site-paths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.site-paths h3{font-size:1.3rem;margin:0 0 8px}
+.site-paths p{margin:0 0 12px;color:var(--dim)}
+.site-resources{max-width:1080px}
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:22px;margin:24px 0}
+.resource-grid .card{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.resource-grid .card h2,.resource-grid .card h3{font-size:1.6rem;margin:10px 0 12px}
+.resource-grid .card .btn{margin-top:auto}
+.body .resource-image{width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;margin:0;border:1px solid var(--line)}
+.resource-art,.resource-history{border-top:1px solid var(--line);padding-top:12px;margin-top:32px}
+.role-paths{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 24px}
+.role-paths a{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border:1px solid var(--edge);background:var(--bg2)}
+@media(max-width:1050px){.ic-nav-inner{grid-template-columns:1fr auto}.ic-nav ul{grid-column:1/-1;grid-row:2;justify-content:flex-start}.ic-kofi{grid-column:2;grid-row:1}}
+@media(max-width:650px){.site-footer-grid,.site-paths{grid-template-columns:minmax(0,1fr)}.site-start,.site-next{padding:18px}.ic-nav-inner{gap:6px}.ic-nav ul{gap:2px}.ic-nav a{font-size:.72rem;padding:9px 8px}.ic-nav .ic-brand{font-size:1rem}.ic-kofi .kofi-button{font-size:.72rem;padding:8px}.ic-brand img{width:24px;height:24px}}

@@ -1,13 +1,13 @@
 ---
 title: Sacrament RPG
-summary: A shared table for Sacrament RPG. One person runs the game, everyone else joins from their own phone or computer.
-lede: A shared table for Sacrament RPG, in your browser. One person runs the game and everyone else joins from their own phone or computer, with no accounts and nothing to download.
+summary: A dark fantasy roleplaying game with a shared virtual table. Create a hero, gather your group and play in your browser.
+lede: A dark fantasy roleplaying game of stone churches, forbidden magic and perilous roads. Gather your group around a shared table in your browser, with no accounts and nothing to install.
 ---
-## Start in a minute
-The GM makes a table and gets a six-letter code. Players type the code (or open the invitation link), pick a hero, and everyone is at the same table.
+## Heroes with something to lose
+Generate a starting hero, give them a name and a vow, and make their kit your own. Their choices and the things they carry shape how they face the road ahead.
 
-## Made for phones too
-Dice, hearts, turns and countdowns are handled for you, and the table stays on screen while you play. It works on a phone as well as a laptop.
+## One table for the whole group
+The GM creates a table and shares an invitation. Players join from their browsers. Dice, Hearts, turns and countdowns keep the action visible as the story unfolds.
 
-## The GM stays in control
-Prepare the next scene in private, keep hidden cards and private notes hidden, and show things to the players only when you choose.
+## A world in the GM’s hands
+Prepare scenes privately, reveal threats when the moment comes, and decide what the Horror brings. The table handles the numbers while your group decides what happens next.

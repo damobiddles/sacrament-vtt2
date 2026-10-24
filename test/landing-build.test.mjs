@@ -79,8 +79,18 @@ test('every page is built, and a new blog post is just one new file', () => {
     assert.match(list, /href="\/news\/a-brand-new-post\/"/);
     assert.ok(list.indexOf('a-brand-new-post') < list.indexOf('an-older-post'), 'newest first');
     const one = readFileSync(join(b.out, 'news/a-brand-new-post/index.html'), 'utf8');
-    assert.match(one, /<h3>Hello<\/h3>/); assert.match(one, /<b>bold<\/b>/); assert.match(one, /2 January 2030/);
+    assert.match(one, /<h2>Hello<\/h2>/); assert.match(one, /<b>bold<\/b>/); assert.match(one, /2 January 2030/);
     assert.match(one, /href="\/news\/an-older-post\/"/, 'links to the older post');
+  } finally { b.cleanup(); }
+});
+
+test('the sitemap follows current pages and news while excluding redirects and private tools', () => {
+  const b = build(c => writeFileSync(join(c, 'blog', '2030-01-02-new-route.md'), post('New route', '2030-01-02')));
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    const xml = readFileSync(join(b.out, 'sitemap.xml'), 'utf8');
+    for (const path of ['/vtt/', '/character/', '/resources/', '/player-guide/', '/gm-guide/', '/news/new-route/']) assert.ok(xml.includes('https://playsacrament.com' + path + '</loc>'), path);
+    assert.doesNotMatch(xml, /\/blog\/|\/support\/|\/inventory\/|\/builder\/|\/feedback\/thanks\//);
   } finally { b.cleanup(); }
 });
 
@@ -105,7 +115,7 @@ test('the home page automatically promotes the newest post on each build and esc
     const rebuilt = spawnSync('node', ['scripts/build-landing.mjs'], { cwd: new URL('..', import.meta.url).pathname, env: { ...process.env, LANDING_CONTENT: b.content, LANDING_OUT: b.out }, encoding: 'utf8' });
     assert.equal(rebuilt.status, 0, rebuilt.stderr);
     const home = readFileSync(join(b.out, 'index.html'), 'utf8');
-    assert.match(home, /Latest from the blog/);
+    assert.match(home, /Latest news/);
     assert.match(home, /href="\/news\/newest\/"/);
     assert.doesNotMatch(home, /href="\/news\/first\/"/);
     assert.match(home, />Read more<\/a>/);

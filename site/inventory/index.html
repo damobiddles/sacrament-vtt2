@@ -73,9 +73,9 @@
 
 <div class="box"><h2>Decisions so far</h2><ul><li><b>2026-10-20</b> Character sheet built: one sheet over the table and on My heroes, with a gear list file (site/sheet/gear.js) you can edit. The old hero sheet was replaced by it.</li><li><b>2026-10-20</b> Removed the playtest sign-up form from the home page, its thank-you page (/thanks/ now redirects home) and the link to it in the Welcome post. The Newsletter page stays.</li><li><b>2026-10-20</b> Keep: accepted for all 43 items marked Keep. Nothing to do.</li><li><b>2026-10-20</b> Archive: done for the three Archive items (the example blog post, the earlier Basic Rules page, the empty folders). Their old addresses redirect; nothing was deleted.</li><li><b>2026-10-20</b> Your call: kept as they are, on my suggestion: the Sexton's Ledger page, the designer builder, the published library, and the test tables. One item is still open: tidying the 50 branches on GitHub that are already part of the main site (waiting for permission to delete them).</li></ul></div>
 
-<div class="box"><h2>Problems I noticed (not fixed)</h2><ul><li><b>The sitemap is incomplete.</b> It leaves out the Sacrament RPG table (/vtt/), the &quot;A rules check&quot; post and the news posts except the example. It includes the &quot;delete me&quot; example post.</li><li><b>The published ability library is not used by anything.</b> /api/nodes serves a library, but no page reads it (a code comment says two tools do).</li><li><b>The home page footer shows a &quot;Designer&quot; link.</b> It leads to the passphrase page (hidden from search engines, but visible to visitors).</li><li><b>Two old addresses were never pages.</b> /game/ and /hearts/ show &quot;Not found&quot;.</li></ul></div>
+<div class="box"><h2>Problems I noticed (not fixed)</h2><ul><li><b>The published ability library is not used by anything.</b> /api/nodes serves a library, but no page reads it (a code comment says two tools do).</li><li><b>Two old addresses were never pages.</b> /game/ and /hearts/ show &quot;Not found&quot;.</li></ul></div>
 
-<nav class="toc" aria-label="Sections"><a href="#table">The Sacrament RPG Table itself</a><a href="#site-pages">The Sacrament RPG home page and its pages</a><a href="#sacrament">Sacrament, the other game on this site</a><a href="#old-addresses">Old addresses and redirects</a><a href="#designer">Designer tools and data</a><a href="#plumbing">Site plumbing: files that browsers and search engines fetch</a><a href="#repo">In the project files, not on the website</a><a href="#leftovers">Leftovers</a></nav>
+<nav class="toc" aria-label="Sections"><a href="#table">The Sacrament RPG Table itself</a><a href="#site-pages">The Sacrament RPG home page and its pages</a><a href="#sacrament">Rules, tools and earlier material</a><a href="#old-addresses">Old addresses and redirects</a><a href="#designer">Designer tools and data</a><a href="#plumbing">Site plumbing: files that browsers and search engines fetch</a><a href="#repo">In the project files, not on the website</a><a href="#leftovers">Leftovers</a></nav>
 <section class="grp" id="table"><h2>The Sacrament RPG Table itself <span class="n">8</span></h2><p class="intro">The shared table where a GM and players actually play. Anyone who has ever been invited holds a link into this part, so it must keep working at exactly these addresses.</p><article class="it" id="i1" data-id="i1" data-name="The table: make or join a game" data-rec="keep" data-where="/vtt/">
 <h3>The table: make or join a game</h3>
 <p class="addr"><a class="u" href="/vtt/">playsacrament.com/vtt/</a></p>
@@ -201,10 +201,10 @@
 <h3>The setting</h3>
 <p class="addr"><a class="u" href="/setting/">playsacrament.com/setting/</a></p>
 <div class="cols">
-<div><h4>What it is</h4><p>An empty page with marked boxes for your setting text.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Entirely placeholders until you write it.</p></div>
+<div><h4>What it is</h4><p>The public world of Sacrament, its history, Church, magic and lands.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Published public setting; private GM material is excluded.</p></div>
 <div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
-<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Waiting for you.</p>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The public world reference.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for The setting"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article>
@@ -351,14 +351,14 @@
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Feedback thank-you page"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article></section>
-<section class="grp" id="sacrament"><h2>Sacrament, the other game on this site <span class="n">14</span></h2><p class="intro">The original site: the home page, the Basic Rules, the hero builder, the Sacrament table, the blog and older material.</p><article class="it" id="i22" data-id="i22" data-name="Home page (Sacrament RPG)" data-rec="keep" data-where="/">
+<section class="grp" id="sacrament"><h2>Rules, tools and earlier material <span class="n">14</span></h2><p class="intro">Current tools and references, with earlier development material clearly identified.</p><article class="it" id="i22" data-id="i22" data-name="Home page (Sacrament RPG)" data-rec="keep" data-where="/">
 <h3>Home page (Sacrament RPG)</h3>
 <p class="addr"><a class="u" href="/">playsacrament.com/</a></p>
 <div class="cols">
-<div><h4>What it is</h4><p>The front door: &quot;Join a game&quot; and &quot;Run a game&quot;, three short boxes, and a footer with only the Privacy Policy and Terms of Use links (the other footer links were removed on 2026-10-20 while you decide what goes there). It replaced the earlier Sacrament home page on 2026-10-20; that page is kept in archive/old-site/home/ (nothing deleted).</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works on laptop and phone. Built from content/landing/.</p></div>
-<div><h4>What links to it</h4><p>Everywhere (the site's logo links here).</p></div>
-<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The site's front door.</p>
+<div><h4>What it is</h4><p>The front door: game introduction, Join a game, Run a game, character creation, three visitor journeys, approved artwork and an automatically updated latest-news preview.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Shared public navigation and footer. Built from content/landing/.</p></div>
+<div><h4>What links to it</h4><p>The site logo and main navigation.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The main starting point for new visitors and returning players.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Home page (Sacrament RPG)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article>
@@ -388,7 +388,7 @@
 <h3>Resources</h3>
 <p class="addr"><a class="u" href="/resources/">playsacrament.com/resources/</a></p>
 <div class="cols">
-<div><h4>What it is</h4><p>Downloads and links: the Sacrament RPG Table, brand kit, the Sexton's Ledger adventure, and &quot;coming soon&quot; items.</p></div>
+<div><h4>What it is</h4><p>A generated hub for heroes, current guides, loot, scene artwork, the table and creator assets. Earlier playtests are labelled separately.</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
 <div><h4>What links to it</h4><p>Navigation bar, home page footer.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Index of extras.</p>
@@ -422,7 +422,7 @@
 <p class="addr"><a class="u" href="/blog/">playsacrament.com/blog/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>The list of Sacrament updates, plus a page per post: Welcome, The rules after the first playtest, and A rules check.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. One post (&quot;A rules check&quot;) is missing from the sitemap, so search engines may not find it.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> The live address redirects to /news/. Earlier source material is retained in git; current navigation uses News.</p></div>
 <div><h4>What links to it</h4><p>Navigation bar, home page footer, every blog page.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Your Sacrament blog.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Updates (the Sacrament blog)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -433,7 +433,7 @@
 <p class="addr"><a class="u" href="/blog/welcome/">playsacrament.com/blog/welcome/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>The first update. Mentions the old VTT features.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Some of what it says may be out of date.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> The live address redirects to /news/. Earlier source material is retained in git; current navigation uses News.</p></div>
 <div><h4>What links to it</h4><p>The blog list and other posts.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: Welcome"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -444,7 +444,7 @@
 <p class="addr"><a class="u" href="/blog/rules-after-the-first-playtest/">playsacrament.com/blog/rules-after-the-first-playtest/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>An update on rule changes after the Sexton's Ledger playtest.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> The live address redirects to /news/. Earlier source material is retained in git; current navigation uses News.</p></div>
 <div><h4>What links to it</h4><p>The blog list, other posts.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: The rules after the first playtest"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -455,7 +455,7 @@
 <p class="addr"><a class="u" href="/blog/a-rules-check/">playsacrament.com/blog/a-rules-check/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>An update about running one adventure 1,500 times in a simulator.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Missing from the sitemap.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> The live address redirects to /news/. Earlier source material is retained in git; current navigation uses News.</p></div>
 <div><h4>What links to it</h4><p>The blog list, other posts.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Dated posts are a record.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Blog post: A rules check"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -565,7 +565,7 @@
 <p class="addr"><a class="u" href="/sitemap.xml">playsacrament.com/sitemap.xml</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>The list of pages offered to search engines.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works but incomplete: it leaves out /vtt/, the &quot;A rules check&quot; post and the news posts other than the example.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Generated from current pages and news posts on every build; includes /vtt/ and excludes retired redirects and private tools.</p></div>
 <div><h4>What links to it</h4><p>robots.txt.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needs updating when pages are archived.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Sitemap"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -587,7 +587,7 @@
 <p class="addr"><a class="u" href="/blog/feed.xml">playsacrament.com/blog/feed.xml</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>A feed people can subscribe to for new Sacrament posts.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. The news has no feed yet.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> The live address redirects to /news/. Earlier source material is retained in git; current navigation uses News.</p></div>
 <div><h4>What links to it</h4><p>Blog pages.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Needed by subscribers.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Sacrament updates feed (RSS)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -650,7 +650,7 @@
 </article></section>
 <section class="grp" id="repo"><h2>In the project files, not on the website <span class="n">5</span></h2><p class="intro">These are not reachable by website visitors (only the &quot;site&quot; folder is published). They are listed because you asked for anything left over. If the project on GitHub is public, anyone can read these.</p><article class="it" id="i49" data-id="i49" data-name="Table notes: docs/vtt/" data-rec="keep" data-where="docs/vtt">
 <h3>Table notes: docs/vtt/</h3>
-<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/docs/vtt">docs/vtt</a> <span class="small">(project files; opens on GitHub)</span></p>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacrament-vtt2/tree/main/docs/vtt">docs/vtt</a> <span class="small">(project files; opens on GitHub)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>How the Sacrament RPG Table works (README), and the record of what was tested live.</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current and accurate as of this week.</p></div>
@@ -661,7 +661,7 @@
 </article>
 <article class="it" id="i50" data-id="i50" data-name="Sacrament Hearts design notes: docs/hearts/" data-rec="keep" data-where="docs/hearts">
 <h3>Sacrament Hearts design notes: docs/hearts/</h3>
-<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/docs/hearts">docs/hearts</a> <span class="small">(project files; opens on GitHub)</span></p>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacrament-vtt2/tree/main/docs/hearts">docs/hearts</a> <span class="small">(project files; opens on GitHub)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>Notes behind the Sacrament Hearts rules: audit, rules, item library, adventure, validation.</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Not public on the website.</p></div>
@@ -672,7 +672,7 @@
 </article>
 <article class="it" id="i51" data-id="i51" data-name="Website text: content/" data-rec="keep" data-where="content">
 <h3>Website text: content/</h3>
-<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/content">content</a> <span class="small">(project files; opens on GitHub)</span></p>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacrament-vtt2/tree/main/content">content</a> <span class="small">(project files; opens on GitHub)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>The text of the Sacrament blog (content/blog) and of the Sacrament RPG landing pages and blog (content/landing). Edited by hand; built into pages.</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current.</p></div>
@@ -683,7 +683,7 @@
 </article>
 <article class="it" id="i52" data-id="i52" data-name="Designer tool source: private/builder.html" data-rec="keep" data-where="private/builder.html">
 <h3>Designer tool source: private/builder.html</h3>
-<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/private/builder.html">private/builder.html</a> <span class="small">(project files; opens on GitHub)</span></p>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacrament-vtt2/tree/main/private/builder.html">private/builder.html</a> <span class="small">(project files; opens on GitHub)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>The source of the node builder, packed into the protected builder at build time.</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current.</p></div>
@@ -694,7 +694,7 @@
 </article>
 <article class="it" id="i53" data-id="i53" data-name="Check and test tools: test/, e2e/, scripts/" data-rec="keep" data-where="scripts">
 <h3>Check and test tools: test/, e2e/, scripts/</h3>
-<p class="addr"><a class="u" href="https://github.com/damobiddles/sacramentweb/tree/main/scripts">scripts</a> <span class="small">(project files; opens on GitHub)</span></p>
+<p class="addr"><a class="u" href="https://github.com/damobiddles/sacrament-vtt2/tree/main/scripts">scripts</a> <span class="small">(project files; opens on GitHub)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>Unit tests, browser tests and scripts (build, live check, latency, screenshots, simulators).</p></div>
 <div><h4>Does it work?</h4><p><span class="badge ok">Present</span> Current. A few scripts (screenshots, latency) are one-off tools.</p></div>

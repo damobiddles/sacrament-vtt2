@@ -34,3 +34,5 @@ The Feedback page uses Netlify Forms (`vtt-feedback`). The owner reads messages 
 `/loot/` is generated from `site/sheet/gear.js`, the same catalogue the VTT reads. Introductory text lives in `loot.md`. Add or edit loot in the catalogue, then build/publish; do not maintain a second item list. Private GM loot notes never appear on this page.
 
 Current VTT rules are in `player-guide.md` and `gm-guide.md`, published at `/player-guide/` and `/gm-guide/`. The first-game checklist links both. Update these alongside rules or control changes; distinguish automatic mechanics from GM rulings. They are public pages and must never include private setting material.
+
+The website navigation and footer have one definition in `site/nav.js`, shared by the landing builder and older public pages. `resources.md` and the resource cards in `build-landing.mjs` produce `/resources/`. The builder also writes `sitemap.xml` from its pages and posts; never add retired redirects or private tools to it. Current news stays at `/news/`; `/blog/` remains a legacy redirect.
