@@ -21,9 +21,11 @@ export function lootCatalogue(g) {
   const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${items.filter(i => i.kind === kind).map(i => {
     const details = [`${i.slots} ${i.slots === 1 ? 'slot' : 'slots'}`, i.use || 'GM resolves use'];
     if (globalThis.SacramentRules.rangeText(i)) details.push(globalThis.SacramentRules.rangeText(i));
+    if (i.once === 'scene') details.push('Once per scene');
     if (i.rangeNote) details.push(i.rangeNote);
     if (kind !== 'grimoire') {
       if (i.weaponStyle) details.push(i.weaponStyle === 'single' ? 'One hand' : 'Two hands');
+      if (i.weaponStyle === 'crossbow') details.push('+2 to attack checks; reload costs a Move');
       if (i.weaponStyle === 'heavy' && i.cat === 'weapons') details.push('+2 heavy damage');
       if (i.armourPart) details.push(i.armourPart === 'body' ? 'Body armour' : i.armourPart === 'head' ? 'Helmet' : 'Shield');
       if (i.roll) details.push(i.roll + ' check');

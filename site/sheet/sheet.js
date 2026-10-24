@@ -28,9 +28,11 @@
 
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
+    if (it.once === 'scene') b.push('Once per scene');
     if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
     if (it.weaponStyle) b.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand');
+    if (C.attackBonus(it)) b.push('+2 crossbow accuracy');
     if (C.damageBonus(it)) b.push('+2 heavy damage');
     if (it.armourPart) b.push(it.armourPart === 'body' ? 'Body armour' : it.armourPart === 'head' ? 'Helmet' : 'Shield');
     if (it.hearts) b.push('+' + plural(it.hearts, 'Heart', 'Hearts'));
@@ -51,7 +53,7 @@
 
   /* the line saying what happens when it is used: only an item with an Effort kind rolls */
   function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 heavy weapon' : '') + '</b> for damage.</p>' : ''; }
-  function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
+  function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (a.mode ? ' data-mode="' + esc(a.mode) + '"' : '') + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
   function plainLine(src) { var heal = C.healingOf(src); if (heal) return '<p class="sh-eff">Used, it ' + (src.roll ? 'checks ' + esc(src.roll) + ' and, on success, ' : '') + 'applies healing d' + heal.die + ' automatically. ' + (heal.tend ? 'On a dying hero, bandages Tend instead; a natural 20 also heals d4. ' : '') + (heal.kind ? 'Once per target per rest; downed targets may be healed again.' : 'Uses its remaining charges.') + '</p>'; return src.cat || !(src.temptsHorror || src.heal) ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
   function gearItem(g, i, edit, acts, dice) {
@@ -143,9 +145,9 @@
       else if (k === 'hp' && d.canHp && host.hp) { host.hp(+b.dataset.d); }
       else if ((k === 'use' || k === 'quickUse') && host.use && d.canEdit) {
         var useIndex = b.dataset.gear ? d.hero.gear.findIndex(function (g) { return g.key === b.dataset.gear; }) : +b.dataset.i;
-        var u = C.useOf(d.hero, useIndex, b.dataset.spell || '');
+        var u = C.useOf(d.hero, useIndex, b.dataset.spell || '', b.dataset.mode || '');
         if (!u.ok) { msg = u.why; draw(true); return; }
-        msg = ''; host.use(useIndex, b.dataset.spell || '', function (ok, why) { if (!ok) { msg = why || 'That could not be done. Try again.'; draw(true); } }, b.dataset.gear || undefined);
+        msg = ''; host.use(useIndex, b.dataset.spell || '', function (ok, why) { if (!ok) { msg = why || 'That could not be done. Try again.'; draw(true); } }, b.dataset.gear || undefined, b.dataset.mode || '');
       }
     });
     el.addEventListener('change', function (e) {

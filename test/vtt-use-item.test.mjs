@@ -100,12 +100,15 @@ test('LOOT: a d100 number that leads into a sub-table rolls it too, and the feed
   assert.equal((await t.gm.cmd({ type: 'lootRoll', n: 100 })).body.result.said, '100', 'a plain find says one number');
 });
 
-test('USE: a natural 20 may roll Ultimate in place of the item\'s own die when the table offers it, and not otherwise', async () => {
-  const { t, ann, thorne } = await setup([d20(20), die(9, 12), d20(20), die(2, 6)]);
+test('USE: a natural 20 adds Ultimate to normal damage only when the table offers it', async () => {
+  const { t, ann, thorne } = await setup([d20(20), die(2, 6), die(9, 12), d20(20), die(2, 6)]);
   await give(t, thorne, 'sword');
   const hit = lastRoll(await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0 }));
-  assert.equal(lastRoll(await ann.cmd({ type: 'effort', rollId: hit.id, cat: 'ultimate' })).effort.cat, 'ultimate');
+  const first = lastRoll(await ann.cmd({ type: 'effort', rollId: hit.id, cat: 'ultimate' })).effort;
+  assert.equal(first.cat, 'weapons'); assert.equal(first.total, 2 + thorne.effort.weapons + 9 + thorne.effort.ultimate);
+  assert.deepEqual(first.critical, {die:12, rolled:9, bonus:thorne.effort.ultimate});
   await t.gm.cmd({ type: 'settings', patch: { nat20Ultimate: false } });
   const hit2 = lastRoll(await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0 }));
-  assert.equal(lastRoll(await ann.cmd({ type: 'effort', rollId: hit2.id, cat: 'ultimate' })).effort.cat, 'weapons');
+  const second = lastRoll(await ann.cmd({ type: 'effort', rollId: hit2.id, cat: 'ultimate' })).effort;
+  assert.equal(second.cat, 'weapons'); assert.equal(second.total, 2 + thorne.effort.weapons); assert.equal(second.critical, undefined);
 });

@@ -84,16 +84,17 @@ test('legacy armour reconciliation preserves all items and wounds, is idempotent
   }
 });
 
-test('heavy damage respects the table die, adds the bonus once for physical dice and retains it on Ultimate', async () => {
+test('heavy damage respects house dice and adds its bonus once alongside an extra critical die', async () => {
   const t = await table(); const ch = charNamed(await t.state(), 'Thorne');
   await t.gm.cmd({ type: 'settings', patch: { dice: { weapons: 8 } } });
   await t.gm.cmd({ type: 'sheet', charId: ch.id, op: { op: 'add', id: 'vesperaxe' } });
-  for (const [d20, cat, rolled, size] of [[15, 'weapons', 7, 8], [20, 'ultimate', 9, 12]]) {
+  for (const [d20, cat, rolled, size] of [[15, 'weapons', 7, 8], [20, 'weapons', 7, 8]]) {
     const hit = await t.gm.cmd({ type: 'useItem', charId: ch.id, index: 0, d20 });
-    const damage = await t.gm.cmd({ type: 'effort', rollId: hit.body.result.rollId, cat, rolled });
+    const damage = await t.gm.cmd({ type: 'effort', rollId: hit.body.result.rollId, cat, rolled, criticalRolled: 9 });
     const e = damage.body.state.rolls.at(-1).effort;
     assert.equal(e.die, size);
-    assert.equal(e.total, rolled + ch.effort[cat] + 2);
+    assert.equal(e.total, rolled + ch.effort[cat] + 2 + (d20 === 20 ? 9 + ch.effort.ultimate : 0));
+    assert.equal(!!e.critical, d20 === 20);
   }
   const free = await t.gm.cmd({ type: 'freeEffort', charId: ch.id, cat: 'weapons', damageBonus: 100, rolled: 4 });
   assert.equal(free.body.state.rolls.at(-1).effort.total, 4 + ch.effort.weapons);
@@ -123,7 +124,7 @@ test('saved-table armour correction is private, keeps every item and applies onl
 test('future catalogue weapons and armour must declare the roles used by the equipment rules', () => {
   for (const it of C.items) {
     if (it.kind === 'weapon') {
-      assert.ok(['single', 'heavy', 'reach', 'ranged'].includes(it.weaponStyle), it.name);
+      assert.ok(['single', 'heavy', 'reach', 'ranged', 'crossbow'].includes(it.weaponStyle), it.name);
       if (C.weaponHands(it) === 2) assert.ok(it.slots >= 2, it.name);
     }
     if (it.kind === 'armour') assert.ok(['body', 'head', 'shield'].includes(it.armourPart), it.name);

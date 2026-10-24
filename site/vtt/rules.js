@@ -114,6 +114,14 @@
     return { cat: cat, die: size, rolled: r, bonus: bonus, total: r + bonus };
   }
 
+  /* A successful natural 20 adds one Ultimate die. Its bonus is applied once,
+     even when the original ability already uses Ultimate. */
+  function criticalEffort(o) {
+    var size = settingsOf(o.settings).dice.ultimate, n = int(o.rolled), bonus = o.base.cat === 'ultimate' ? 0 : clamp(int(o.bonus), 0, MAX_BONUS);
+    if (n < 1 || n > size) throw new Error('A d' + size + ' shows 1 to ' + size + '.');
+    return Object.assign({}, o.base, { total: o.base.total + n + bonus, critical: { die: size, rolled: n, bonus: bonus } });
+  }
+
   /* A hero's Defence: the number a monster must reach. 10 + CON + armour, armour counting for at most +5, the bonus never above +10. */
   function defence(con, armour) { return DEFENCE_BASE + clamp(clamp(int(con), -MAX_BONUS, MAX_BONUS) + Math.min(Math.max(int(armour), 0), ARMOUR_CAP), -DEFENCE_MAX, DEFENCE_MAX); }
 
@@ -132,7 +140,7 @@
     var t = c.adj !== 'normal' ? 'Target ' + c.target + ' (' + c.adj.toUpperCase() + ', from ' + c.baseTarget + ')' : 'Target ' + c.target;
     return c.d20 + sign + ' ' + (statName || '') + ' = ' + c.total + ' against ' + t + (c.success ? '. Success.' : '. Miss.');
   }
-  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + (e.weaponBonus ? ' + ' + e.weaponBonus + ' heavy weapon' : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
+  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + (e.weaponBonus ? ' + ' + e.weaponBonus + ' heavy weapon' : '') + (e.critical ? ' + d' + e.critical.die + ' ' + e.critical.rolled + (e.critical.bonus ? ' + ' + e.critical.bonus + ' Ultimate' : '') + ' critical' : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
 
   /* Hit points and task progress. Both count in points, ten to a Heart. A change is clamped to the tracker, and the amount that really changed is returned. */
   function hearts(points) { return Math.ceil(Math.max(0, int(points)) / HEART); }
@@ -168,5 +176,5 @@
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
     HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove,
-    sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
+    sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

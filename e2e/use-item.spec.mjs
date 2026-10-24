@@ -25,7 +25,7 @@ test('Aiming at a foe: the strip asks what the hero is using; the hit rolls noth
   await ann.locator('.stat[data-stat=STR]').click();
   await expect(ann.locator('#strip [data-noitem]')).toContainText('Roll STR with no item');
   expect((await state(ann)).rolls.length).toBe(0);
-  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click(); await ann.locator('#strip input[data-phys]').fill('20');
+  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click(); await ann.locator('#strip input[data-phys]').fill('15');
   await ann.locator('#strip [data-do=sheet]').click();
   await ann.locator('#sheetOverlay .sh-item', { hasText: "Penitent's Blade" }).locator('[data-sh=use]').click();
   await expect(ann.locator('#panel .calc.ok')).toContainText('Success');

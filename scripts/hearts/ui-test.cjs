@@ -30,7 +30,7 @@ server.listen(0, async () => {
   let p = await open('/rules/');
   check('current rules show the shared range definitions and link to both role guides', (await p.$$eval('.range-reference [data-range]', es=>es.map(e=>e.dataset.range))).join() === 'close,near,far,veryfar' && !!(await p.$('a[href="/player-guide/"]')) && !!(await p.$('a[href="/gm-guide/"]')));
   check('current rules show d10 rest, shared Horror and ordinary weapon dice', /one d10 per 2 living heroes/.test(await txt(p, '#current-rule-values')) && /thresholds 7, 14, 21/.test(await txt(p, '#current-rule-values')) && /Weapons d6; Guns d8/.test(await txt(p, '#current-rule-values')));
-  check('obsolete proposed rules are absent from the public reference', !(await p.$('.earlier-draft, #aftertables, #trackdemo')) && /Ultimate replaces/.test((await txt(p, 'body')).replace(/\s+/g,' ')));
+  check('current critical damage adds a die and obsolete prototype controls remain absent', !(await p.$('.earlier-draft, #aftertables, #trackdemo')) && /adds an extra Ultimate die/.test(await txt(p, 'body')) && !/Ultimate replaces/.test(await txt(p, 'body')));
   check('the rules page is indexable and canonical', !(await p.$('meta[name=robots]')) && /playsacrament.com\/rules\//.test(await p.getAttribute('link[rel=canonical]', 'href')));
   await p.setViewportSize({ width: PW, height: 800 }); await noScroll(p, 'the rules page at phone width');
 

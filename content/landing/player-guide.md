@@ -39,7 +39,7 @@ The GM sets the **Target**, the number to meet or beat. Roll **d20 + the relevan
 
 Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A successful conversation or a simple lock may need no further roll. The GM describes the result.
 
-**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses and adds 1 Horror. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 can offer Ultimate Effort if the GM has enabled that option. Monster attacks have different natural-roll rules, explained in the GM guide.
+**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses and adds 1 Horror. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
 
 ## Attacks: target, roll, damage, apply
 
@@ -51,9 +51,9 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 
 The damage target stays attached to that attack. Looking at another card does not redirect it. To change it deliberately, select the intended card and use **Change target**.
 
-**Effort dice:** Basic d4 for basic work or bare hands; Weapons d6 for ordinary weapons, including bows, crossbows and slings; Guns d8 for guns and gunpowder; Magic d10 for magical damage; Ultimate d12 when an effect or the table's critical option grants it. Add the bonus in the matching category. The GM can change table dice, so read the labels at your table. Heavy ordinary melee weapons add +2 damage, including an Ultimate upgrade; reach weapons keep normal damage and their described reach or control.
+**Effort dice:** Basic d4 for basic work or bare hands; Weapons d6 for ordinary weapons, including bows, crossbows and slings; Guns d8 for guns and gunpowder; Magic d10 for magical damage; Ultimate d12 when an effect or the table's critical option grants it. Add the bonus in the matching category. The GM can change table dice, so read the labels at your table. Heavy ordinary melee weapons add +2 damage, including a critical; crossbows add +2 to their attack checks but keep Weapons d6 and a Move to reload; reach weapons keep normal damage and their described reach or control.
 
-**Push:** only a failed attack offers a Push. Taking it adds 1 Horror and grants an immediate second action: repeat the attempt or try something else. You can Push once per turn; the pushed action cannot be pushed again. Failed ordinary checks do not offer it.
+**Push:** only a failed attack offers a Push. Taking it adds 1 Horror and grants an immediate second action: repeat the attempt or try something else. You can Push once during your own active turn; the pushed action cannot be pushed again. Outside that turn, ask the GM to use the explicit **Allow this Push** control on your failed attack. Failed ordinary checks do not offer it.
 
 ## Equipment and magic
 
@@ -97,3 +97,8 @@ Ask your GM when an effect, distance or consequence needs a ruling. Use [Feedbac
 ## Distance and range
 
 {{RANGES}}
+
+
+## Area spells and scene abilities
+
+Rend the Veil asks you to select the affected foes before rolling. The GM confirms range and eligibility. Roll once, then Apply to the selected foes together. Once-per-scene powers spend their allowance on the attempt, even on a miss, and copies do not grant extra uses. Rest and reloading the page do not reset them. The GM can refresh scene abilities for a new encounter, or Undo a mistaken attempt after undoing its damage. The Executioner's Blade offers a separate final blow with its own 3-Horror cost and scene limit.

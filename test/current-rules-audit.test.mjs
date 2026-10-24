@@ -30,9 +30,10 @@ test('a fallen hero cannot start attacks, checks, item actions, Effort or Push; 
  await t.gm.cmd({type:'rest'});assert.equal((await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15})).status,200);
 });
 
-// Range/text corrections must not alter IDs, odds, slots, dice, costs, effects or spell assignments.
-test('the range audit preserves all catalogue mechanics and loot probabilities',async()=>{
+// Reviewed power and equipment updates intentionally supersede the range-only snapshot.
+// The separate stable-catalogue fingerprint in powers-release protects IDs, odds, slots and spell assignments.
+test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'dbefa83f2e437064dbe66e064d90d78ae5d9e22eec4b0b7b334a9a740b0027c2');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'ee304265b52e5b86d91f77064631498cdf08345571544aeb39e0fd0743196f57');
 });

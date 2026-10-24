@@ -200,7 +200,7 @@
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
     UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
-    UI.attackChoice = null; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
+    UI.attackChoice = null; UI.areaTargets = []; UI.powerResetAsk = false; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
     UI.notice = null; clearTimeout(UI.noticeTimer); UI.arrivalSeen = false;
@@ -255,7 +255,7 @@
       return { hero: heroOf(ch), hp: hasHp ? { cur: shownHp(card), max: card.hp.max } : null, canEdit: G || mine, canHp: (G || mine) && hasHp, gm: G, live: true, dice: S.settings.dice, title: mine ? 'your hero' : G ? 'seen as the GM' : '' };
     },
     roll: function (stat, adj, physical) { if (!gm()) return; UI.adj = adj; UI.phys = physical; closeSheet(); doRoll(stat, true, false); },
-    use: function (index, spellId, done, gearKey) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey); done(true); },
+    use: function (index, spellId, done, gearKey, mode) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey, undefined, mode); done(true); },
     act: function (op, done) { UI.lastError = ''; send({ type: 'sheet', charId: UI.sheet, op: op }, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); },
     hp: function (d) { var ch = S.chars[UI.sheet], card = ch && S.cards[ch.cardId]; if (card && card.hp) hpQueue(card.id, { d: d }, function (done) { send({ type: 'adjust', cardId: card.id, field: 'hp', delta: d }, done); }); },
     close: function () { closeSheet(); }
@@ -478,13 +478,34 @@
     }
     return h + '<div class="row" style="margin-top:8px"><button class="btn small" data-do="dismissRoll">Done</button></div></div>';
   }
+  function criticalPrompt(r) {
+    return r.criticalRule === 'extra' && r.check && r.check.success && r.check.offerUltimate && !r.effort ? '<p class="hint">Critical: your normal Effort plus an extra Ultimate d' + S.settings.dice.ultimate + '. Each bonus is counted once.</p>' + physical('physCritical', 'Own extra Ultimate die (optional)') : '';
+  }
+  function areaRollView(r) {
+    var ids = (r.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; });
+    var h = '<div class="sec"><h3>' + esc(r.charName) + ' · ' + esc(r.item) + '</h3><p>Targets: ' + ids.map(function (id) { return esc(S.cards[id].name); }).join(', ') + '.</p>';
+    if (r.void) return h + '<p>This attempt was undone. Its damage cannot be applied.</p></div>';
+    if (r.check) h += '<p>' + esc(R.sayCheck(r.check, r.stat)) + '</p>';
+    if (r.check && !r.check.success) h += '<p>The spell missed. Its scene use and Horror cost were spent.</p>' + pushView(r);
+    else if (!r.effort) h += '<div class="row"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Roll area damage: ' + R.CAT_NAMES[r.cat] + ' d' + S.settings.dice[r.cat] + '</button></div>' + physical('physE', 'Own die for area damage') + criticalPrompt(r);
+    else {
+      h += '<p>' + esc(R.sayEffort(r.effort, 'damage to each target')) + '</p>';
+      if (r.applied) h += '<p><b>Applied</b> to the selected targets. One Undo in Activity restores all damage.</p>';
+      else if (ids.length) h += '<p>The GM confirms range and eligible foes. Targets that have left view will be skipped.</p><button class="btn main" data-do="applyArea" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Apply to ' + ids.length + ' selected ' + (ids.length === 1 ? 'foe' : 'foes') + '</button>';
+      else h += '<p>No selected target is still in view. Ask the GM to resolve this roll.</p>';
+    }
+    return h + '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
+  }
   function rollCard() {
     if (UI.attackChoice) {
       var pending = UI.attackChoice, targets = cardList().filter(function (c) { return onTable(c) && (pending.healing ? !!c.hp : canTake(c)); });
+      if (pending.area) return '<div class="sec"><h3>Choose affected foes</h3><p>' + esc(pending.name) + '</p><p class="note">' + esc(pending.range) + '. The GM confirms range and eligible targets. One roll affects every selected foe.</p><fieldset class="area-targets"><legend>Targets</legend>' + targets.filter(function (c) { return c.kind !== 'pc' && c.hp && (c.sceneId == null || c.sceneId === S.table.scene.id); }).map(function (c) { return '<label class="check"><input type="checkbox" data-area-target="' + c.id + '"' + ((UI.areaTargets || []).indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') + '</fieldset><div class="row"><button class="btn main" data-do="confirmAttack">Cast at selected foes</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">The scene use and Horror are spent when you attempt the spell, even on a miss.</p></div>';
       return '<div class="sec"><h3>' + (pending.healing ? 'Choose who to heal' : 'Choose a target') + '</h3><p>' + esc(pending.name) + '</p>' + (pending.range ? '<p class="note">' + esc(pending.range) + '. The GM checks distance and line of sight.</p>' : '') + '<label class="field">' + (pending.healing ? 'Healing target' : 'Attack target') + '<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label><div class="row"><button class="btn main" data-do="confirmAttack">' + (pending.healing ? 'Heal selected target' : 'Attack selected target') + '</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">' + (pending.healing ? 'Healing is applied automatically after a successful check, within the listed rest limit.' : 'Damage will keep this target. Nothing has been rolled yet.') + '</p></div>';
     }
     if (UI.rolling || D.busy()) return '<div class="sec"><h3>' + esc(UI.rolling || 'Rolling') + '</h3><p class="note" role="status">Rolling…</p></div>';   /* the previous roll is not offered while a new one is on its way, and a new one waits until its dice have landed */
     var r = UI.roll && S.rolls.filter(function (x) { return x.id === UI.roll; })[0]; if (!r) return '';
+    if (r.area) return areaRollView(r);
+    if (r.void) return '<div class="sec"><p>This attempt was undone. It cannot be used again.</p></div>';
     var ch = r.check, h = '<div class="sec"><h3>' + esc(r.charName) + (r.item ? ' · ' + esc(r.item) : '') + (r.stat ? ' · ' + r.stat : r.attack ? ' · attack' : ' · Effort') + '</h3>';
     var tgt = applyTarget(r);
     if (r.attack) return h + attackRollView(r, ch);
@@ -496,6 +517,7 @@
       if (ch.nat1) h += '<p class="note">Natural 1. The Horror rises by 1.</p>';
       if (r.fromPush && !ch.success) h += '<p class="note">That was your pushed second action.</p>';
     }
+    if (r.accuracy) h += '<p class="hint">Includes +' + r.accuracy + ' crossbow accuracy.</p>';
     if (r.healing && r.healing.stable) h += '<p>The patient is stable. Their dying countdown has stopped.</p>';
     else if (r.healingAttempt && !r.healing) h += '<p>Healing check failed. No healing was applied.</p>';
     else if (r.healing) h += '<p>Healing rolled: <b>' + r.healing.amount + '</b>. ' + (r.applied ? 'Applied to ' + esc(S.cards[r.applied.cardId] ? S.cards[r.applied.cardId].name : 'the patient') + '.' : 'Undone. The healing and its rest allowance have been restored.') + '</p>';
@@ -507,9 +529,10 @@
       if (r.cat) {   /* an item: its own die, one button, rolled when the player is ready */
         h += (ch && ch.success ? '<p><b>' + (word === 'damage' ? 'A hit!' : 'Success!') + '</b> Now roll the ' + word + '.</p>' : '') + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') +
           '<div class="row col"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Roll ' + word + ': ' + R.CAT_NAMES[r.cat] + ' d' + dice[r.cat] + (c.effort[r.cat] ? ' ' + sgn(c.effort[r.cat]) : '') + (r.weaponBonus ? ' +2 heavy' : '') + '</button>' +
-          (ch && ch.offerUltimate && r.cat !== 'ultimate' ? '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Natural 20: roll Ultimate d' + dice.ultimate + (c.effort.ultimate ? ' ' + sgn(c.effort.ultimate) : '') + (r.weaponBonus ? ' +2 heavy' : '') + ' instead</button>' : '') + '</div>' + physical('physE', 'Physical die for ' + word);
+          (ch && ch.offerUltimate && r.criticalRule !== 'extra' && r.cat !== 'ultimate' ? '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Natural 20: roll Ultimate d' + dice.ultimate + (c.effort.ultimate ? ' ' + sgn(c.effort.ultimate) : '') + (r.weaponBonus ? ' +2 heavy' : '') + ' instead</button>' : '') + '</div>' + physical('physE', 'Physical die for ' + word);
       } else
-      h += '<h4>Roll ' + word + '</h4><p class="hint">Pick what you did it with: Basic for bare hands or a clumsy tool, Weapons for melee weapons, bows, crossbows or slings; Guns for guns and gunpowder weapons; Magic for a spell.</p>' + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') + '<div class="cats">' + R.CATS.map(function (k) { return '<button data-do="effort" data-cat="' + k + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + (k === 'ultimate' && ch && ch.nat20 ? ' class="hint"' : '') + '>' + R.CAT_NAMES[k] + ' d' + dice[k] + '<b>' + sgn(c.effort[k]) + '</b></button>'; }).join('') + '</div>' + physical('physE', 'Physical die for ' + word);
+      h += '<h4>Roll ' + word + '</h4><p class="hint">Pick what you did it with: Basic for bare hands or a clumsy tool, Weapons for melee weapons, bows, crossbows or slings; Guns for guns and gunpowder weapons; Magic for a spell.</p>' + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') + '<div class="cats">' + R.CATS.filter(function (k) { return k !== 'ultimate' || r.criticalRule !== 'extra'; }).map(function (k) { return '<button data-do="effort" data-cat="' + k + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + (k === 'ultimate' && ch && ch.nat20 ? ' class="hint"' : '') + '>' + R.CAT_NAMES[k] + ' d' + dice[k] + '<b>' + sgn(c.effort[k]) + '</b></button>'; }).join('') + '</div>' + physical('physE', 'Physical die for ' + word);
+      h += criticalPrompt(r);
     } else {
       var ef = r.applied ? r.applied.field === 'hp' : tgt ? !!tgt.hp && !tgt.progress : false;
       h += '<div class="calc">' + esc(R.sayEffort(r.effort, ef ? 'damage' : 'Effort')) + '</div>';
@@ -539,13 +562,14 @@
     }
     if (r.pushed && latest) return '<div class="push done"><p><b>You pushed.</b> Take your second action: the same again, or choose a stat or item below.</p>' +
       '<button class="btn main" data-do="again" data-roll="' + r.id + '">Same again: ' + esc(r.item ? r.item : r.stat) + '</button></div>';
+    if (r.isAttack && r.check && !r.check.success && r.pushReason) return '<p class="hint">' + esc(r.pushReason) + '</p>';
     return '';
   }
   /* The second action, the same as the first: the same stat (or item), the same difficulty, at the same thing. */
   function rollAgain(r) {
     if (r.targetCardId && S.cards[r.targetCardId]) UI.sel = r.targetCardId; if (gm()) UI.actAs = r.charId;
     UI.adj = (r.check && r.check.adj) || 'normal';
-    if (r.use) { if (!r.use.gearKey) { toast('Choose that item from your sheet again.'); return; } doUseItem(r.charId, r.use.index, r.use.spellId, r.use.gearKey); } else doRoll(r.stat, true, !!r.isAttack);
+    if (r.use) { if (!r.use.gearKey) { toast('Choose that item from your sheet again.'); return; } doUseItem(r.charId, r.use.index, r.use.spellId, r.use.gearKey, r.area ? r.targetCardIds : undefined, r.use.mode); } else doRoll(r.stat, true, !!r.isAttack);
   }
   var physical = function (id, label) { return '<div class="phys"><label>' + label + '<input id="' + id + '" type="number" min="1" max="20" inputmode="numeric" placeholder="optional"></label></div>'; };
 
@@ -645,7 +669,7 @@
     if (UI.cardEdit === c.id) return gmCardEdit(c);
     var id = c.id, pc = c.kind === 'pc', h = '<div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
     h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (c.gmNotes ? '<p class="note gmnote"><b>Your note:</b> ' + esc(c.gmNotes) + '</p>' : '') + numbersBlock(c) + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
-    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; }
+    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed attack. Its extra action cannot be pushed again.</p>'; }
     var fights = !pc && (c.kind === 'enemy' || c.kind === 'obstacle' || !!c.hp || !!c.progress);   /* Hazards and obstacles can attack heroes as well as enemies. */
     if (fights) {
       var heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (x) { var hc = S.cards[x.cardId]; return hc && hc.hp && !hc.hp.hidden; });
@@ -745,6 +769,7 @@
     if (deleting) h += '<div class="sec scene-delete"><h4>Delete ' + esc(deleting.name) + '?</h4><p>This permanently removes this scene, its table cards and its drawings. Heroes and items held by players are kept. This cannot be undone. Uploaded pictures are kept in case another scene uses them.</p><div class="row"><button class="btn small danger" data-do="confirmSceneDelete" data-scene="' + deleting.id + '"' + (UI.sceneDeleting ? ' disabled aria-busy="true"' : '') + '>Delete this scene</button><button class="btn small" data-do="cancelSceneDelete">Cancel</button></div></div>';
     var renaming = S.scenes.filter(function (x) { return x.id === UI.sceneRename; })[0];
     if (renaming) h += '<div class="sec scene-rename"><h4>Rename ' + esc(renaming.name) + '</h4><label>Scene name<input id="sceneName" maxlength="60" required value="' + esc(UI.sceneName || '') + '"' + (UI.sceneRenameSaving ? ' disabled' : '') + '></label><div class="row"><button type="button" class="btn small main" data-do="saveSceneName"' + (UI.sceneRenameSaving ? ' disabled aria-busy="true"' : '') + '>' + (UI.sceneRenameSaving ? 'Saving…' : 'Save name') + '</button><button type="button" class="btn small" data-do="cancelSceneName"' + (UI.sceneRenameSaving ? ' disabled' : '') + '>Cancel</button></div></div>';
+    h += '<div class="row"><button class="btn small" data-do="scenePowerReset">' + (UI.powerResetAsk === S.table.scene.id ? 'Confirm: refresh scene abilities' : 'Refresh scene abilities') + '</button></div><p class="hint">For a new encounter in the live scene. Rest and switching scenes do not refresh spent scene abilities. Unfinished limited rolls from this encounter cannot be applied after a refresh.</p>';
     h += '<div class="row"><input id="newScene" placeholder="New scene name" maxlength="60" aria-label="New scene name"><button class="btn small" data-do="newScene">Add</button></div>';
     h += '<div class="row"><button type="button" class="link" data-do="sceneBg" aria-expanded="' + !!UI.sceneBg + '">' + (UI.sceneBg ? 'Hide picture settings' : 'Change the picture for this scene') + '</button></div>';
     if (UI.sceneBg) h += '<label>Picture address<input id="bgUrl" value="' + esc(bg) + '" placeholder="https://…"></label><label>Or upload one<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="bg"></label>';
@@ -936,23 +961,26 @@
     send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
-  function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
+  function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
   /* Using an item: one click makes the check with the item's stat. On a success the panel offers "Roll damage" with the item's own die, then Apply. */
-  function doUseItem(charId, index, spellId, gearKey, chosenTarget) {
+  function doUseItem(charId, index, spellId, gearKey, chosenTarget, mode) {
     var ch = S.chars[charId]; if (!ch || UI.rolling) return;
     gearKey = gearKey || (ch.gear[index] && ch.gear[index].key);
     if (!gearKey) { toast('That item is no longer available. Open your sheet again.'); return; }
-    var use = window.SacramentSheetCore.useOf(heroOf(ch), index, spellId);
+    var use = window.SacramentSheetCore.useOf(heroOf(ch), index, spellId, mode);
     if (!use.ok) { toast(use.why); return; }
+    var areaIds = use.area && Array.isArray(chosenTarget) ? chosenTarget : null;
+    if (use.area && !areaIds) { UI.areaTargets = []; UI.attackChoice = { charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, area: true, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.source || use.item) }; render(); return; }
+    if (areaIds) chosenTarget = areaIds[0];
     var selected = use.healing && use.healing.self ? S.cards[ch.cardId] : chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
     function usableTarget(card) { return card && onTable(card) && (use.healing ? !!card.hp : canTake(card)); }
     if (chosenTarget && !usableTarget(selected)) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
-    if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.item), healing: !!use.healing}; render(); return; }
+    if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.item), healing: !!use.healing}; render(); return; }
     UI.attackChoice = null;
     UI.askItem = null; UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
     var target = selected && onTable(selected) && (use.healing || !use.cat || selected.kind !== 'pc') ? selected.id : undefined;
     renderPanel();
-    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.healing && !b.result.rollId) toast(b.result.healing.stable ? 'The patient is stable.' : 'Healing applied: ' + (b.result.healing.applied == null ? b.result.healing.amount : b.result.healing.applied) + ' HP.'); if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
+    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, mode: mode || undefined, targetCardIds: areaIds || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.healing && !b.result.rollId) toast(b.result.healing.stable ? 'The patient is stable.' : 'Healing applied: ' + (b.result.healing.applied == null ? b.result.healing.amount : b.result.healing.applied) + ' HP.'); if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
   }
   function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', order: o }); }
   /* a place on the table where a new card of this size overlaps nothing, nearest the middle; units are those of the table's width (it is 100 wide and 62.5 high) */
@@ -978,6 +1006,7 @@
     if (t.id === 'gmDie') UI.gmDie = +t.value;
     if (t.id === 'gmDiceCount') UI.gmDiceCount = +t.value;
     if (t.id === 'gmDicePrivate') UI.gmDicePrivate = t.checked;
+    if (t.dataset.areaTarget) { UI.areaTargets = (UI.areaTargets || []).filter(function (id) { return id !== t.dataset.areaTarget; }); if (t.checked) UI.areaTargets.push(t.dataset.areaTarget); }
     if (t.id === 'attackTarget') UI.attackTarget = t.value;
   });
   document.addEventListener('click', function (e) {
@@ -996,7 +1025,7 @@
         send({type:'gmDice', sides:UI.gmDie, count:UI.gmDiceCount, private:UI.gmDicePrivate}, function (b) { UI.gmDiceBusy = false; if (b) UI.gmDiceResult = (UI.gmDicePrivate ? 'GM only: ' : 'Shared: ') + b.result.dice.map(function (x) { return x.n; }).join(' + ') + ' = ' + b.result.total; render(); });
         renderStrip(); break;
       }
-      case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'); if (!choice || !targetChoice || !targetChoice.value) { toast('Choose a target first.'); break; } doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, targetChoice.value); break; }
+      case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'), chosen = choice && choice.area ? (UI.areaTargets || []) : targetChoice && targetChoice.value; if (!choice || !chosen || (Array.isArray(chosen) && !chosen.length)) { toast('Choose a target first.'); break; } doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, chosen, choice.mode); break; }
       case 'cancelAttack': UI.attackChoice = null; render(); break;
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
@@ -1013,8 +1042,11 @@
       case 'monCat': UI.monCat = d.cat; renderPanel(); break;
       case 'check': doRoll(d.stat, true, false); break;
       case 'freeEffort': { var ch = myChar(); if (ch) { var v = physVal('physF'); send({ type: 'freeEffort', charId: ch.id, cat: d.cat, rolled: v }, function (bd) { if (bd) { UI.roll = bd.result.rollId; render(); } }); } break; }
-      case 'effort': { if (UI.working) break; var key = 'effort:' + d.roll, rolledE = physVal('physE'); UI.working = key; renderPanel(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE }, function () { UI.working = null; render(); }); break; }
+      case 'effort': { if (UI.working) break; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; renderPanel(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE }, function () { UI.working = null; render(); }); break; }
       case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }
+      case 'allowPush': if (!UI.working) { UI.working = 'push:' + d.roll; send({ type: 'pushOverride', rollId: d.roll }, function () { UI.working = null; render(); }); } break;
+      case 'scenePowerReset': if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
+      case 'applyArea': { if (UI.working) break; var areaRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; if (!areaRoll) break; UI.working = 'apply:' + d.roll; var ids = (areaRoll.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; }); send({ type: 'applyArea', rollId: d.roll, cardIds: ids }, function () { UI.working = null; render(); }); break; }
       case 'again': { var ra = S.rolls.filter(function (x) { return x.id === d.roll; })[0]; if (ra) rollAgain(ra); break; }
       case 'apply': { if (UI.working) break; var key2 = 'apply:' + d.roll; UI.working = key2; renderPanel(); send({ type: 'apply', rollId: d.roll, cardId: d.card, field: d.field }, function () { UI.working = null; render(); }); break; }
       case 'monsterAttack': {

@@ -45,7 +45,7 @@ A normal check may resolve the situation immediately. Use Effort when the amount
 
 For **hero checks**, the total determines success, even on a natural 1 or 20. A hero's natural 1 adds 1 Horror. A successful natural 20 offers Ultimate when the table option is on. For **monster attacks**, natural 1 always misses and natural 20 always hits. Do not apply that monster exception to hero checks.
 
-Players should select a target before attacking. A successful attack carries that target into damage; they roll damage and press Apply. An ordinary failed check cannot Push. A failed attack can: +1 Horror for a second immediate action, once per turn, with no further Push of that action.
+Players should select a target before attacking. A successful attack carries that target into damage; they roll damage and press Apply. An ordinary failed check cannot Push. A player can Push a failed attack only on their own active turn: +1 Horror for a second immediate action, once, with no further Push of that action. For an exception, select that hero and press **Allow this Push (+1 Horror)** on their latest failed attack. It spends the cost and grants one extra action atomically. Without turn order, only the GM can grant this exception.
 
 ## Turns and monster attacks
 
@@ -105,3 +105,10 @@ In Scene, a scene that is not live has a **Delete** button. Read the confirmatio
 ## Distance and range
 
 {{RANGES}}
+
+
+## Tracked powers and critical damage
+
+Rend the Veil selects several foes, uses one check and one damage roll, and applies the result to those selected targets together. You confirm range and who is affected. One Undo restores the whole damage event. Once-per-scene uses, including failed attempts, are tracked per caster and source across copies and reconnections. Returning to an old scene or resting does not reset them. In Scene, confirm **Refresh scene abilities** only when starting a new encounter there; this invalidates unfinished limited rolls from the old encounter. To correct a mistaken use, undo its damage first, then its attempt; undo Horror separately if appropriate. The Executioner's Blade has an automated final-blow action with its listed 3-Horror cost and scene limit.
+
+For new hero checks, a successful natural 20 adds an extra Ultimate die to normal damage/Effort when enabled. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. The heavy +2 is also added only once. Earlier pending rolls retain their earlier rule. Monster natural rolls still govern hits and misses only. Crossbows have +2 accuracy, Weapons d6 and their reload Move; the GM still manages reloads and the Move budget.

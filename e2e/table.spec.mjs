@@ -96,7 +96,7 @@ test('Effort is rolled and applied to the selected enemy once, and its hearts go
 
   await ghoul.click();
   await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click();
-  await ann.locator('#strip input[data-phys]').fill('20');
+  await ann.locator('#strip input[data-phys]').fill('15');
   await ann.locator('.stat[data-stat=STR]').click();
   await ann.locator('#strip [data-do=roll][data-noitem]').click();   /* Thorne holds his hatchet, so the strip asks first */
   await ann.locator('#physE').fill('4');
