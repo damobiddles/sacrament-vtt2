@@ -133,9 +133,11 @@ test('feedback validates a message and submits a private form without requiring 
   expect(submissions[0].has('email')).toBe(false);
 });
 
-test('the donation widget is on landing pages and support is retired', async ({ browser }) => {
+test('the donation link is on landing pages without a remote widget and support is retired', async ({ browser }) => {
   const page = await newPage(browser); await page.goto('/');
-  await expect(page.locator('.ic-kofi script[src]')).toHaveAttribute('src', 'https://storage.ko-fi.com/cdn/widget/Widget_2.js');
+  await expect(page.locator('.ic-kofi .kofi-button')).toBeVisible();
+  await expect(page.locator('.ic-kofi .kofi-button')).toHaveAttribute('href', 'https://ko-fi.com/J4M02969C2');
+  await expect(page.locator('.ic-kofi script')).toHaveCount(0);
   await expect(page.locator('.ic-nav a[href="/support/"]')).toHaveCount(0);
 });
 
