@@ -85,8 +85,8 @@ test('BLOW: a monster\'s hit on a dying hero takes a round off instead of rollin
   assert.deepEqual(find(b2.body.state, 'Thorne').dying, { left: 2, stable: false, dead: false }); assert.match(feed(b2.body.state), /is dying again: d4 shows 2/);
 });
 
-test('REST: every living hero recovers a Heart (the fallen stand up), the Horror falls by 2d6 for four heroes, and one Undo takes it all back', async () => {
-  const { t, ann, card } = await setup([die(2, 4), die(3, 6), die(5, 6)]);
+test('REST: every living hero recovers a Heart (the fallen stand up), the Horror falls by 2d10 for four heroes, and one Undo takes it all back', async () => {
+  const { t, ann, card } = await setup([die(2, 4), die(3, 10), die(5, 10)]);
   await t.gm.cmd({ type: 'horror', mode: 'set', value: 12 });
   await down(ann, card);
   const wisp = find(await t.state(), 'Wisp'); await t.gm.cmd({ type: 'adjust', cardId: wisp.id, field: 'hp', delta: -4 });
@@ -94,18 +94,18 @@ test('REST: every living hero recovers a Heart (the fallen stand up), the Horror
   const r = await t.gm.cmd({ type: 'rest' }); assert.equal(r.status, 200);
   const st = r.body.state; assert.equal(find(st, 'Thorne').hp.cur, 10); assert.equal(find(st, 'Thorne').dying, null); assert.equal(find(st, 'Wisp').hp.cur, 10);
   assert.equal(st.horror.cur, 4, '12 - (3 + 5)');
-  const line = lastLog(st, /The party rests/); assert.match(line.text, /Thorne \+10 HP \(now 10\/10\), back on their feet; Wisp \+4 HP/); assert.match(line.text, /Horror 2d6: 3 \+ 5 = 8\. The Horror falls by 8 \(now 4\)\./);
+  const line = lastLog(st, /The party rests/); assert.match(line.text, /Thorne \+10 HP \(now 10\/10\), back on their feet; Wisp \+4 HP/); assert.match(line.text, /Horror 2d10: 3 \+ 5 = 8\. The Horror falls by 8 \(now 4\)\./);
   assert.equal((await t.gm.cmd({ type: 'undo', logId: line.id })).status, 200);
   const u = await t.state(); assert.equal(find(u, 'Thorne').hp.cur, 0); assert.equal(find(u, 'Thorne').dying.left, 2); assert.equal(find(u, 'Wisp').hp.cur, 6); assert.equal(u.horror.cur, 12);
 });
 
 test('REST: the dead do not rest, and are not counted for the Horror\'s dice', async () => {
-  const { t, ann, card } = await setup([die(1, 4), die(6, 6)]);
+  const { t, ann, card } = await setup([die(1, 4), die(6, 10)]);
   await t.gm.cmd({ type: 'horror', mode: 'set', value: 10 });
   await down(ann, card); await t.gm.cmd({ type: 'nextRound' });
   const r = await t.gm.cmd({ type: 'rest' }); const st = r.body.state;
   assert.equal(find(st, 'Thorne').hp.cur, 0); assert.equal(find(st, 'Thorne').dying.dead, true);
-  assert.match(lastLog(st, /The party rests/).text, /Horror 2d6: 6 \+ /, 'three living heroes: 2d6');
+  assert.match(lastLog(st, /The party rests/).text, /Horror 2d10: 6 \+ /, 'three living heroes: 2d10');
   assert.match(lastLog(st, /The party rests/).text, /Everyone is already at full health/, 'the living three were not hurt');
   assert.doesNotMatch(lastLog(st, /The party rests/).text, /Thorne/);
 });

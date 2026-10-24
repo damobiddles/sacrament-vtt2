@@ -56,6 +56,8 @@
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
       spin(st.log); var fresh = UI.freshLog || []; S = st; UI.dirty = false;
+      if (gm() && UI.view && !S.scenes.some(function (sc) { return sc.id === UI.view; })) { UI.view = null; UI.sel = null; UI.sceneRename = null; UI.sceneDelete = null; }
+      if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
       if (was) noticeChanges(was, fresh);
       if (!UI.rollChecked) { /* after a reload, pick up where the person was: the latest roll of theirs that still has something to do */
         UI.rollChecked = true; var mine = S.rolls.filter(function (r) { return (r.attack || S.chars[r.charId]) && ((r.effort && !r.applied) || (r.check && r.check.success && !r.effort && !r.healingResolved)); }); if (mine.length) UI.roll = mine[mine.length - 1].id;
@@ -196,7 +198,7 @@
     pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
-    UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
+    UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
     UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
     UI.attackChoice = null; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
@@ -258,6 +260,7 @@
   };
   function openSheet(charId) {
     if (!S || !S.chars[charId]) return;
+    if (gm()) UI.actAs = charId;
     UI.sheet = charId; UI.sheetFrom = document.activeElement; var el = $('sheetOverlay'); el.hidden = false; window.SacramentDialogs.open(el, UI.sheetFrom);
     if (!sheetView) sheetView = window.SacramentSheet.mount(el, sheetHost);
     sheetView.say(''); el.scrollTop = 0; setTimeout(function () { var c = el.querySelector('[data-sh=close]'); if (c) c.focus(); }, 0);
@@ -294,7 +297,7 @@
       '<span class="big" id="tgtv">' + t.target + '</span>' + (G ? '<button class="chip" data-do="target" data-d="1" aria-label="Raise the Target">+</button>' : ''));
     put($('tRound'), '<span class="lbl">Round</span><span class="big">' + t.round + '</span>' + (G ? '<button class="chip" data-do="nextRound" title="Start the next round: every running timer loses 1">Next round</button>' : ''));
     put($('tTurn'), '<span class="lbl">Turn</span><span class="who">' + (cur ? esc(cur.name) : (t.order.length ? 'Unseen' : 'No one')) + '</span>' +
-      (myTurn() ? '<button class="btn small main" data-do="endTurn">End turn</button>' : ''));
+      (G && t.order.length ? '<button class="btn small main" data-do="endTurn">Next turn</button>' : ''));
     var tm = cardList().filter(function (c) { return c.timer && (gm() ? onTable(c) || true : true); });
     renderHorror();
     put($('tTimers'), tm.map(function (c) { var T = c.timer; return '<button class="chip' + (!T.hidden && T.cur === 0 ? ' hot' : '') + (c.visible ? '' : ' hid') + '" data-do="select" data-id="' + c.id + '" title="' + esc(c.name) + (c.visible ? '' : ' (hidden from players)') + (T.paused ? ' (paused)' : '') + '">' + esc(T.label || c.name) + ' <b>' + (T.hidden ? '?' : T.cur) + '</b>' + (T.paused ? ' ⏸' : '') + '</button>'; }).join(''));
@@ -517,7 +520,7 @@
       } else h += (UI.sel && canTake(S.cards[UI.sel]) ? '<button class="btn" data-do="aim" data-roll="' + r.id + '" data-card="' + UI.sel + '">Set target to ' + esc(S.cards[UI.sel].name) + '</button>' : '') + '<p class="note"><b>Not applied yet.</b> Select a card with HP or an Effort bar on the table, then apply this to it. Nothing changes until you do.</p>';
     }
     if (ch) h += pushView(r);
-    if (r.applied && myTurn()) h += '<p class="hint">Press End turn above when you are done.</p>';
+    if (r.applied) h += '<p class="hint">' + (gm() ? 'Use Next turn above when everyone is ready.' : 'Tell the GM when you are finished. The GM advances turns.') + '</p>';
     h += '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
     return h;
   }
@@ -606,7 +609,7 @@
     }
     var cur = turnCardId() && S.cards[turnCardId()];
     return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + downHelp(S.cards[ch.cardId]) +
-      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Press End turn at the top when you are done.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then use a weapon below or in My character.</p>') + '<details class="player-first-turn"><summary>Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Open My character for your sheet and Ready to use actions.</li><li>After a successful attack, roll damage and Apply to the named target.</li><li>Press End turn when finished.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
+      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Tell the GM when you are finished.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then use a weapon below or in My character.</p>') + '<details class="player-first-turn"><summary>Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Open My character for your sheet and Ready to use actions.</li><li>After a successful attack, roll damage and Apply to the named target.</li><li>Tell the GM when you are finished; the GM moves to the next turn.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
   /* HP as hearts: each Heart is 10 points, filled one after another from the first. A last Heart that holds fewer than 10 is drawn smaller, so no capacity is implied that is not
@@ -640,7 +643,7 @@
     var id = c.id, pc = c.kind === 'pc', h = '<div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
     h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (c.gmNotes ? '<p class="note gmnote"><b>Your note:</b> ' + esc(c.gmNotes) + '</p>' : '') + numbersBlock(c) + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; }
-    var fights = !pc && !!c.hp;   /* only a card with HP that is not a hero attacks: not loot, a door or a timer */
+    var fights = !pc && (c.kind === 'enemy' || c.kind === 'obstacle' || !!c.hp || !!c.progress);   /* Hazards and obstacles can attack heroes as well as enemies. */
     if (fights) {
       var heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (x) { var hc = S.cards[x.cardId]; return hc && hc.hp && !hc.hp.hidden; });
       if (UI.atk !== id) h += '<div class="row"><button class="btn main grow" data-do="attackToggle" data-id="' + id + '">Attack a hero…</button></div>';
@@ -731,9 +734,12 @@
       var right = isLive ? '<span class="pill">Live</span>' : '';
       if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '">Open</button>';
       else if (!isLive) right += '<span class="pill">Preparing</span><button class="btn small main" data-do="reveal" data-scene="' + x.id + '">Show to players</button>';
+      if (!isLive) right += '<button type="button" class="btn small danger" data-do="deleteScene" data-scene="' + x.id + '" aria-label="Delete scene: ' + esc(x.name) + '">Delete</button>';
       right += '<button type="button" class="btn small" data-do="renameScene" data-scene="' + x.id + '" aria-label="Rename scene: ' + esc(x.name) + '">Rename</button>';
       return '<li class="' + (isView ? 'cur' : '') + '"><span class="n">' + esc(x.name) + '</span>' + right + '</li>';
-    }).join('') + '</ul>';
+    }).join('') + '</ul><p class="hint">Show another scene to players before deleting the live scene. Heroes and items held by players are kept.</p>';
+    var deleting = S.scenes.filter(function (x) { return x.id === UI.sceneDelete; })[0];
+    if (deleting) h += '<div class="sec scene-delete"><h4>Delete ' + esc(deleting.name) + '?</h4><p>This permanently removes this scene, its table cards and its drawings. Heroes and items held by players are kept. This cannot be undone. Uploaded pictures are kept in case another scene uses them.</p><div class="row"><button class="btn small danger" data-do="confirmSceneDelete" data-scene="' + deleting.id + '"' + (UI.sceneDeleting ? ' disabled aria-busy="true"' : '') + '>Delete this scene</button><button class="btn small" data-do="cancelSceneDelete">Cancel</button></div></div>';
     var renaming = S.scenes.filter(function (x) { return x.id === UI.sceneRename; })[0];
     if (renaming) h += '<div class="sec scene-rename"><h4>Rename ' + esc(renaming.name) + '</h4><label>Scene name<input id="sceneName" maxlength="60" required value="' + esc(UI.sceneName || '') + '"' + (UI.sceneRenameSaving ? ' disabled' : '') + '></label><div class="row"><button type="button" class="btn small main" data-do="saveSceneName"' + (UI.sceneRenameSaving ? ' disabled aria-busy="true"' : '') + '>' + (UI.sceneRenameSaving ? 'Saving…' : 'Save name') + '</button><button type="button" class="btn small" data-do="cancelSceneName"' + (UI.sceneRenameSaving ? ' disabled' : '') + '>Cancel</button></div></div>';
     h += '<div class="row"><input id="newScene" placeholder="New scene name" maxlength="60" aria-label="New scene name"><button class="btn small" data-do="newScene">Add</button></div>';
@@ -976,6 +982,7 @@
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
+      case 'gmstrip': UI.gmStrip = !UI.gmStrip; render(); break;
       case 'select': pickCard(d.id); render(); break;
       case 'gmDiceToggle': UI.gmDiceOpen = !UI.gmDiceOpen; renderStrip(); break;
       case 'gmDiceRoll': {
@@ -987,7 +994,6 @@
       }
       case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'); if (!choice || !targetChoice || !targetChoice.value) { toast('Choose a target first.'); break; } doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, targetChoice.value); break; }
       case 'cancelAttack': UI.attackChoice = null; render(); break;
-      case 'gmstrip': UI.gmStrip = !UI.gmStrip; render(); break;
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
       case 'adj': UI.adj = d.adj; renderStrip(); break;
@@ -1105,6 +1111,9 @@
           if (bd) { toast('Scene renamed.'); var renameReturn = document.querySelector('[data-do="renameScene"][data-scene="' + renamedId + '"]'); if (renameReturn) renameReturn.focus(); }
         }); break;
       }
+      case 'deleteScene': UI.sceneDelete = d.scene; render(); break;
+      case 'cancelSceneDelete': UI.sceneDelete = null; render(); break;
+      case 'confirmSceneDelete': { if (UI.sceneDeleting) break; UI.sceneDeleting = true; var sid = d.scene; render(); send({ type: 'sceneDelete', id: sid }, function (b) { UI.sceneDeleting = false; if (b) { if (UI.view === sid) UI.view = null; UI.sceneDelete = null; UI.sel = null; } render(); }); break; }
       case 'newScene': { var nm = $('newScene').value.trim(); if (nm) send({ type: 'sceneCreate', name: nm }, function (bd) { if (bd) { UI.view = bd.result.id; render(); } }); break; }
       case 'turnTo': send({ type: 'turnSet', idx: +d.i }); break;
       case 'up': reorder(+d.i, -1); break; case 'down': reorder(+d.i, 1); break;

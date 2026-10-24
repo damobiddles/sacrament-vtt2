@@ -62,7 +62,7 @@ test('forcing the gate: select, roll STR, see the sum, roll Effort, apply to the
   const ap = await ann.cmd({ type: 'apply', rollId: roll.id, cardId: gate.id, field: 'progress' }); assert.equal(ap.body.result.applied, 7);
   assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 7);
   assert.equal((await ann.cmd({ type: 'apply', rollId: roll.id, cardId: gate.id, field: 'progress' })).status, 409, 'once only');
-  const turn = await ann.cmd({ type: 'endTurn' }); assert.equal(turn.status, 200); assert.equal(turn.body.state.table.idx, 1);
+  const turn = await t.gm.cmd({ type: 'endTurn' }); assert.equal(turn.status, 200); assert.equal(turn.body.state.table.idx, 1);
 });
 
 test('checks without Effort, rolls with no target, and physical dice typed in', async () => {
@@ -122,7 +122,7 @@ test('turns and timers: the countdown loses 1 when a new round begins, the GM is
   const t = await table(), ann = await t.join('Ann'), st = await t.state(), thorne = charNamed(st, 'Thorne'); await ann.cmd({ type: 'claim', charId: thorne.id });
   const clock = () => find(null, '') ; void clock;
   const timerOf = async () => find(await t.state(), 'The Ceiling Groans').timer;
-  assert.equal((await ann.cmd({ type: 'endTurn' })).status, 200, 'Thorne is first'); assert.equal((await ann.cmd({ type: 'endTurn' })).status, 403, 'then it is Wisp’s turn, not Ann’s');
+  assert.equal((await t.gm.cmd({ type: 'endTurn' })).status, 200, 'the GM advances Thorne’s turn'); assert.equal((await ann.cmd({ type: 'endTurn' })).status, 403, 'then it is Wisp’s turn, not Ann’s');
   assert.equal((await timerOf()).cur, 4, 'no new round yet');
   for (let i = 0; i < 3; i++) await t.gm.cmd({ type: 'endTurn' }); const wrap = await t.gm.cmd({ type: 'endTurn' }); /* Wisp, Brother Anselm, Tilda, then the ghoul, wraps to round 2 */
   assert.equal(wrap.body.state.table.round, 2); assert.equal(wrap.body.state.table.idx, 0); assert.equal((await timerOf()).cur, 3);
@@ -144,7 +144,7 @@ test('a paused timer does not move, a manual one does not move by itself, and th
 
 test('undoing a turn is refused once the turn has moved on; a hidden timer ticks and alerts only the GM', async () => {
   const t = await table(), ann = await t.join('Ann'), st = await t.state(); const thorne = charNamed(st, 'Thorne'); await ann.cmd({ type: 'claim', charId: thorne.id });
-  const e1 = (await ann.cmd({ type: 'endTurn' })).body.state.log.at(-1); await t.gm.cmd({ type: 'endTurn' });
+  const e1 = (await t.gm.cmd({ type: 'endTurn' })).body.state.log.at(-1); await t.gm.cmd({ type: 'endTurn' });
   assert.equal((await t.gm.cmd({ type: 'undo', logId: e1.id })).status, 409);
   assert.equal((await ann.cmd({ type: 'undo', logId: e1.id })).status, 403, 'a player never takes a turn back (only the GM does)');
   const sec = await t.gm.cmd({ type: 'cardCreate', card: { name: 'Hidden dread', visible: false, timer: { cur: 1, max: 1, auto: true }, gmNotes: 'The cult arrives' } }); assert.equal(sec.status, 200);

@@ -35,7 +35,7 @@ With no card selected, the tray has **Play**, **Scene**, **Loot** and **Table** 
 - **Loot:** roll catalogue loot, design your own items and award them.
 - **Table:** invitations, recovery, players and house rules.
 
-Select a hero or use **Roll as …** to act for that hero. **GM dice** in the footer rolls d4, d6, d8, d10, d12, d20 or d100, with a choice of shared or GM-only results. These standalone rolls do not alter HP.
+Select a hero or use **Roll as …** when you need to help a player or cover an absent player. **GM dice** in the footer rolls d4, d6, d8, d10, d12, d20 or d100, with a choice of shared or GM-only results. These standalone rolls do not alter HP.
 
 ## Checks and Effort
 
@@ -49,7 +49,7 @@ Players should select a target before attacking. A successful attack carries tha
 
 ## Turns and monster attacks
 
-The Play tab's **Turn order** lets you select the active character or edit the order. **End turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
+The Play tab's **Turn order** lets you select the active character or edit the order. The GM’s **Next turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
 
 To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. This differs from the player's separate Apply step. Undo is available in Activity. A hidden attacker is presented to players as “Something”.
 
@@ -65,7 +65,7 @@ Bandages make an Easy WIS Tend check on a dying target: success marks Stable; a 
 
 At 0 HP a hero gets a d4 dying countdown. Each new round removes one; zero means death. A hit on an already dying hero removes a round; hitting a stable hero restarts dying. Healing of at least 1 HP stands a living hero up and clears dying. Stable stops the countdown without healing.
 
-When the fiction allows it, press **Party rest** in Play. It heals living heroes 10 HP up to their maximum, refreshes healing allowances and reduces positive Horror by one d6 per two living heroes, rounding up. It does not raise dead heroes. The GM decides whether the location is safe and enough time has passed.
+When the fiction allows it, press **Party rest** in Play. It heals living heroes 10 HP up to their maximum, refreshes healing allowances and reduces positive Horror by one d10 per two living heroes, rounding up. It does not raise dead heroes. The GM decides whether the location is safe and enough time has passed.
 
 Healing Undo restores the related HP, charge and allowance. Undo later related healing or rests first if warned. Horror costs have their own GM Undo; do not assume undoing HP also undoes Horror.
 
@@ -96,3 +96,7 @@ The designer supports your own loot. Keep three known spells in each grimoire an
 - **Your choice:** optional scene-danger automation and table dice settings. Explain those choices to players.
 
 If saving or connection problems appear, leave the page open while it retries. Review Activity before repeating an action. Use disposable tables to experiment, and send a [feedback report](/feedback/) with the steps and device/browser, never private access links.
+
+## Delete a scene
+
+In Scene, a scene that is not live has a **Delete** button. Read the confirmation and press **Delete this scene** to permanently remove its table cards and drawings. Heroes and items held by players are kept. To delete the live scene, show a different scene first. You cannot remove the last scene. Uploaded pictures are kept because other scenes may use them.

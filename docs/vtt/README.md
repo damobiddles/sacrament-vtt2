@@ -174,7 +174,7 @@ Built on the owner's request (2026-10-21), following the Rules page (`#dying`). 
 - **Blows.** A monster's hit on a dying hero takes a round off instead of rolling damage; on a stable hero it starts a new d4.
 - **The GM's buttons** (the hero's panel, at 0): **Stable** (after a successful Tend: Tend itself is an ordinary WIS check), **Hurt again (new d4)**, **−1 round**, **+1 round**, and **Give a round back** for a dead hero. Players cannot use them; the lines the table writes itself can only be undone by the GM.
 - **Healing.** Any HP gain stands a dying or stable hero up ("… is back on their feet."); undoing it puts the countdown back as it was. A dead hero's HP does not rise until the GM gives them a round back.
-- **Party rest** (GM, Play tab, asks twice): every living hero recovers 1 Heart (the fallen stand up), and the Horror falls by a d6 for every two living heroes (1 to 2: 1d6; 3 to 4: 2d6; 5 to 6: 3d6), all on one feed line with one Undo. The dead are not counted.
+- **Party rest** (GM, Play tab, asks twice): every living hero recovers 1 Heart (the fallen stand up), and the Horror falls by a d10 for every two living heroes (1 to 2: 1d10; 3 to 4: 2d10; 5 to 6: 3d10), all on one feed line with one Undo. The dead are not counted.
 - Tested locally: `test/vtt-dying.test.mjs`, `e2e/dying.spec.mjs`.
 
 ## What is run by hand

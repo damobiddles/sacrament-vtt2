@@ -18,7 +18,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 1. **Make a table.** Open [Run a table](/vtt/?run). Start with the sample encounter to learn the controls, or untick it to begin empty.
 2. **Keep your access safe.** In the **Table** tab, save the private GM recovery link. Keep it to yourself. Use the separate **Copy invite link** to invite players.
 3. **Prepare a simple encounter.** In **Scene**, add an enemy and an obstacle. Keep unrevealed cards hidden. In **Play**, arrange the turn order. Set the Target and explain any house rules.
-4. **Walk through a first turn.** Have a player select the enemy, use a weapon, roll damage and Apply. Then End turn. The footer's **GM dice** can roll shared or private dice without changing HP.
+4. **Walk through a first turn.** Have a player select the enemy, use a weapon, roll damage and Apply. The GM then presses **Next turn**. The footer's **GM dice** can roll shared or private dice without changing HP.
 
 [Read the GM guide: preparation, monster attacks, scenes, privacy and manual rulings](/gm-guide/)
 

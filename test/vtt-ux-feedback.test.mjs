@@ -29,7 +29,7 @@ test('GIFT: a player adding to their own sheet writes nothing in the feed', asyn
 test('TURN: End turn says who finished and who is next', async () => {
   const t = await table(), ann = await t.join('Ann'); await claim(t, ann, 'Thorne');
   const st = await t.state();
-  assert.equal((await ann.cmd({ type: 'endTurn', expect: { round: st.table.round, idx: st.table.idx } })).status, 200);
+  assert.equal((await t.gm.cmd({ type: 'endTurn', expect: { round: st.table.round, idx: st.table.idx } })).status, 200);
   assert.equal(texts((await ann.get()).body.state).at(-1), 'Thorne ends their turn. Wisp’s turn.');
 });
 

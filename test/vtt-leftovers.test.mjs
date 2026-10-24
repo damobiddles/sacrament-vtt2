@@ -4,13 +4,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { table, find, charNamed } from './vtt-helpers.mjs';
 
-test('LEFTOVER 5: a player cannot undo their own End turn; the GM still can', async () => {
+test('LEFTOVER 5: a player cannot undo the GM’s turn advance; the GM still can', async () => {
   const t = await table(); let st = await t.state();
   const p = await t.join('Ash'); await p.cmd({ type: 'claim', charId: charNamed(st, 'Thorne').id });
   st = await t.state(); assert.equal(st.cards[st.table.order[st.table.idx].id].name, 'Thorne');
-  const ended = await p.cmd({ type: 'endTurn', expect: { round: st.table.round, idx: st.table.idx } }); assert.equal(ended.status, 200, JSON.stringify(ended.body));
+  const ended = await t.gm.cmd({ type: 'endTurn', expect: { round: st.table.round, idx: st.table.idx } }); assert.equal(ended.status, 200, JSON.stringify(ended.body));
   const mine = (await p.get()).body.state.log.filter((e) => e.kind === 'turn').pop();
-  assert.equal(mine.undoable, false, 'the player is not offered Undo on their End turn');
+  assert.equal(mine.undoable, false, 'the player is not offered Undo on the GM’s turn advance');
   const r = await p.cmd({ type: 'undo', logId: mine.id }); assert.equal(r.status, 403);
   st = await t.state(); assert.equal(st.table.idx, 1, 'the turn stayed moved on');
   const gmLine = st.log.filter((e) => e.kind === 'turn').pop(); assert.equal(gmLine.undoable, true);

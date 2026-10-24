@@ -63,7 +63,7 @@ test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blo
   await rest.click(); await expect(rest).toHaveText('Sure? The party rests'); await rest.click(); await saved(gm);
   await expect.poll(async () => (await thorne(ann)).hp.cur).toBe(10);
   await expect(ann.locator('#strip .atzero')).toHaveCount(0);
-  await openFeed(gm); await expect(gm.locator('#feed')).toContainText('The party rests. Thorne +10 HP (now 10/10), back on their feet; the rest are already at full. Horror 2d6');
+  await openFeed(gm); await expect(gm.locator('#feed')).toContainText('The party rests. Thorne +10 HP (now 10/10), back on their feet; the rest are already at full. Horror 2d10');
   await expect.poll(async () => (await state(ann)).horror.cur).toBeLessThan(12);
   await shot(gm, '5-gm-after-rest');
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);

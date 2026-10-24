@@ -103,8 +103,8 @@ test('the turn: a retried End turn or Next round ticks the timers once, and two 
   /* a person double-clicks: two different actions, both for the turn they could see */
   const dbl = await Promise.all([t.gm.cmd({ type: 'nextRound', expect: { round: 2, idx: 0 } }), t.gm.cmd({ type: 'nextRound', expect: { round: 2, idx: 0 } })]);
   assert.deepEqual(dbl.map((r) => r.status).sort(), [200, 409]); assert.equal((await t.state()).table.round, 3); assert.equal(await timer(), 2);
-  /* the GM and the player both press End turn on Thorne's turn */
-  const both = await Promise.all([ann.cmd({ type: 'endTurn', expect: { round: 3, idx: 0 } }), t.gm.cmd({ type: 'endTurn', expect: { round: 3, idx: 0 } })]);
+  /* Two GM tabs advance the same visible turn: one succeeds, one conflicts. */
+  const both = await Promise.all([t.gm.cmd({ type: 'endTurn', expect: { round: 3, idx: 0 } }), t.gm.cmd({ type: 'endTurn', expect: { round: 3, idx: 0 } })]);
   assert.deepEqual(both.map((r) => r.status).sort(), [200, 409]); assert.equal((await t.state()).table.idx, 1); assert.equal((await t.state()).table.round, 3);
   /* retried after the counter has moved on: stale, and the timer does not move */
   const again = await t.gm.cmd({ type: 'nextRound' }, { client: 'gmretry001', n: 1 }); assert.equal(again.body.result.duplicate, true); assert.equal(await timer(), 2);
@@ -132,7 +132,7 @@ test('a hidden timer does not exist for the players: not in the order tick, the 
   await t.gm.cmd({ type: 'orderSet', order: [...(await t.state()).table.order.map((o) => o.id), dread] });
   const seen = []; const watch = (r) => { seen.push(everything(r)); return r; };
   /* walk the whole order, the player pressing End turn when it is hers, so the round wraps and the hidden timer reaches 0 */
-  watch(await ann.cmd({ type: 'endTurn', expect: { round: 1, idx: 0 } })); for (let i = 0; i < 4; i++) await t.gm.cmd({ type: 'endTurn' });   /* Wisp, Brother Anselm, Tilda, the ghoul: the ritual is next */
+  await t.gm.cmd({ type: 'endTurn', expect: { round: 1, idx: 0 } }); watch(await ann.get()); for (let i = 0; i < 4; i++) await t.gm.cmd({ type: 'endTurn' });   /* Wisp, Brother Anselm, Tilda, the ghoul: the ritual is next */
   const last = watch(await ann.get()); void last;
   const wrap = await t.gm.cmd({ type: 'endTurn' }); assert.equal(wrap.body.state.table.round, 2); assert.equal(find(await t.state(), 'Cult Ritual').timer.cur, 0);
   assert.equal((await t.state()).alerts.length, 1, 'the GM is alerted');
@@ -142,8 +142,10 @@ test('a hidden timer does not exist for the players: not in the order tick, the 
   /* a player who presses End turn when the round wraps is not told what ticked */
   const t2 = await table(), a2 = await t2.join('Ann'); const th = await claim(t2, a2, 'Thorne'); const o = (await t2.state()).table.order.map((x) => x.id);
   const h2 = (await t2.gm.cmd({ type: 'cardCreate', card: { name: 'Secret Clock', visible: false, timer: { cur: 1, max: 1, auto: true } } })).body.result.id;
-  await t2.gm.cmd({ type: 'orderSet', order: [o[0]] }); const r = await a2.cmd({ type: 'endTurn' }); assert.equal(r.status, 200); assert.deepEqual(Object.keys(r.body.result).sort(), ['idx', 'round'], 'no list of what ticked or fired');
-  assert.ok(!everything(r).includes('Secret Clock')); assert.equal(find(await t2.state(), 'Secret Clock').timer.cur, 0); void th; void h2;
+  await t2.gm.cmd({ type: 'orderSet', order: [o[0]] });
+  const denied = await a2.cmd({ type: 'endTurn' }); assert.equal(denied.status, 403); assert.ok(!everything(denied).includes('Secret Clock'));
+  const r = await t2.gm.cmd({ type: 'endTurn' }); assert.equal(r.status, 200);
+  const player = await a2.get(); assert.ok(!everything(player).includes('Secret Clock')); assert.equal(find(await t2.state(), 'Secret Clock').timer.cur, 0); void th; void h2;
 });
 
 test('the turn line does not name a hidden card whose turn it is; a visible timer on a card in another scene is not announced either', async () => {

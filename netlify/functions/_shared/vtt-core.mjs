@@ -218,7 +218,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -588,6 +588,20 @@ const HANDLERS = {
 
   sceneCreate(s, c, a, ctx) { if (Object.keys(s.scenes).length >= LIMITS.scenes) fail('limit', 'Too many scenes.'); const id = nid(s, 'sc'); s.scenes[id] = { id, name: str(c.name, LIMITS.name, 'Unmarked Ground') || 'Unmarked Ground', bg: url(c.bg) }; L(s, a, ctx, 'Prepared scene ' + s.scenes[id].name + '.', { private: true }); return { id }; },
   sceneUpdate(s, c) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (own(c, 'name')) { const name = str(c.name, LIMITS.name).trim(); if (!name) fail('invalid', 'Enter a scene name.'); sc.name = name; } if (own(c, 'bg')) sc.bg = url(c.bg); return {}; },
+  sceneDelete(s, c, a, ctx) {
+    const sc = s.scenes[c.id] || fail('not_found', 'No such scene.');
+    if (sc.id === s.table.scene) fail('invalid', 'Show another scene to players before deleting the live scene.');
+    if (Object.keys(s.scenes).length < 2) fail('invalid', 'Keep at least one scene.');
+    Object.values(s.cards).filter(card => card.sceneId === sc.id).forEach(card => {
+      if (card.kind === 'pc' || card.owner) card.sceneId = null;
+      else dropCard(s, card);
+    });
+    s.draw = (s.draw || []).filter(line => line.sceneId !== sc.id);
+    Object.keys(s.pointers || {}).forEach(id => { if (s.pointers[id].sceneId === sc.id) delete s.pointers[id]; });
+    delete s.scenes[sc.id]; drew(s); s.pv = (s.pv || 0) + 1;
+    L(s, a, ctx, 'Deleted prepared scene ' + sc.name + '.', { private: true });
+    return { id: sc.id };
+  },
   sceneReveal(s, c, a, ctx) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {}; },
 
   orderSet(s, c) {
@@ -598,9 +612,6 @@ const HANDLERS = {
   turnSet(s, c) { s.table.idx = clamp(int(c.idx, 0), 0, Math.max(0, s.table.order.length - 1)); return {}; },
   endTurn(s, c, a, ctx) {
     expectTurn(s, c);
-    const cur = s.cards[s.table.order[s.table.idx]];
-    const mine = cur && cur.charId && s.chars[cur.charId] && s.chars[cur.charId].owner === a.pid;
-    if (!isGM(a) && !mine) fail('forbidden', 'It is not your turn.');
     return advance(s, a, ctx, false);
   },
   nextRound(s, c, a, ctx) { expectTurn(s, c); return advance(s, a, ctx, true); },
@@ -799,7 +810,7 @@ const HANDLERS = {
     } else fail('invalid', 'Choose stable, hurt or round.');
     return { dying: card.dying };
   },
-  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by a d6 for every two of them. One line, one Undo. */
+  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by a d10 for every two of them. One line, one Undo. */
     const heroes = Object.values(s.cards).filter((card) => isHero(card) && !(card.dying && card.dying.dead));
     if (!heroes.length) fail('invalid', 'There is no living hero to rest.');
     const effects = [], parts = [];

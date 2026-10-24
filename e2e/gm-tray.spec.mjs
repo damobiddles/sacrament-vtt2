@@ -89,7 +89,7 @@ test('a selected monster: one main button opens the attack form in place, Edit c
   await expect(gm.locator('#panel [data-edit=img],#panel input[data-upload=card]')).toHaveCount(0);
   await expect(gm.locator('#panel [data-do=dup]')).toBeVisible(); await expect(gm.locator('#panel [data-do=del]')).toBeVisible(); await expect(gm.locator('#panel [data-do=hideNumbers]')).toBeVisible();
   await gm.locator('#panel [data-do=cardEditDone]').click(); await expect(gm.locator('#panel .cardname')).toHaveText('Pit Ghoul');
-  await gm.locator('#cards .c', { hasText: 'Sealed Gate' }).click(); await expect(gm.locator('#panel [data-do=attackToggle]')).toHaveCount(0);   /* a door has no HP: it does not attack */ await expect(gm.locator('#panel [data-edit=name]')).toHaveCount(0);
+  await gm.locator('#cards .c', { hasText: 'Sealed Gate' }).click(); await expect(gm.locator('#panel [data-do=attackToggle]')).toHaveCount(1);   /* obstacles can now attack heroes, using the same GM controls */ await expect(gm.locator('#panel [data-edit=name]')).toHaveCount(0);
   await gm.locator('#panel [data-do=deselect]').click(); await expect(tab(gm, 'play')).toBeVisible();
   const look = await gm.evaluate(() => ({ caps: getComputedStyle(document.querySelector('#panel [data-do=gmtab]')).textTransform, icons: document.querySelectorAll('#panel svg').length })); expect(look.caps).toBe('none'); expect(look.icons).toBe(0);
   expect(gm.errors).toEqual([]);

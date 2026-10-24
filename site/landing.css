@@ -151,3 +151,5 @@ blockquote.todo::first-line{font-weight:700}
 .role-paths a{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border:1px solid var(--edge);background:var(--bg2)}
 @media(max-width:1050px){.ic-nav-inner{grid-template-columns:1fr auto}.ic-nav ul{grid-column:1/-1;grid-row:2;justify-content:flex-start}.ic-kofi{grid-column:2;grid-row:1}}
 @media(max-width:650px){.site-footer-grid,.site-paths{grid-template-columns:minmax(0,1fr)}.site-start,.site-next{padding:18px}.ic-nav-inner{gap:6px}.ic-nav ul{gap:2px}.ic-nav a{font-size:.72rem;padding:9px 8px}.ic-nav .ic-brand{font-size:1rem}.ic-kofi .kofi-button{font-size:.72rem;padding:8px}.ic-brand img{width:24px;height:24px}}
+
+.ic-kofi .kofi-button{gap:8px}.kofi-cup{display:block;flex:none;filter:invert(1)}

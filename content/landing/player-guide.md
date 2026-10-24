@@ -47,7 +47,7 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 2. Use your equipped weapon or spell from **Ready to use**, or your character's item actions. If you have not selected a target, choose one when asked. A stat roll can also offer an attack without an item; choose an ordinary check for other tasks.
 3. The table rolls the check and compares the total with the Target.
 4. On a successful attack, press **Roll damage**, then **Apply** to change the target's HP or progress. Check the named target before applying.
-5. Press **End turn** when done. **Undo last** can take back your own mistaken action when it is still safe to undo.
+5. Tell the GM when you are finished; the GM advances turns. **Undo last** can take back your own mistaken action when it is still safe to undo.
 
 The damage target stays attached to that attack. Looking at another card does not redirect it. To change it deliberately, select the intended card and use **Change target**.
 
@@ -77,7 +77,7 @@ Catalogue healing is automated: the table changes HP, spends charges and tracks 
 
 At **0 HP**, your hero gets a d4 dying countdown. It loses one at each new round and the hero dies when it reaches zero. Being hit while down can shorten it. Successful Tend makes you **Stable**, stopping the countdown. Healing of at least 1 HP puts a living downed hero back on their feet.
 
-The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowances and reduces Horror. The GM decides whether the place and time allow a rest. It does not bring dead heroes back.
+The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowances and reduces Horror by one d10 per two living heroes, rounding up. The GM decides whether the place and time allow a rest. It does not bring dead heroes back.
 
 ## The shared Horror
 

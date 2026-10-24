@@ -70,7 +70,7 @@
   }
 
   /* The party's rest: every living hero recovers a Heart, and the Horror falls by a d6 for every two living heroes (1 or 2: 1d6; 3 or 4: 2d6; 5 or 6: 3d6). */
-  var REST = { heal: HEART, horrorDie: 6, perDie: 2 };
+  var REST = { heal: HEART, horrorDie: 10, perDie: 2 };
   function restDice(living) { return Math.ceil(Math.max(0, int(living, 0)) / REST.perDie); }
 
   /* The two table settings. Everything else is a fixed rule. */
