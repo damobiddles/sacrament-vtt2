@@ -58,7 +58,7 @@
       spin(st.log); var fresh = UI.freshLog || []; S = st; UI.dirty = false;
       if (was) noticeChanges(was, fresh);
       if (!UI.rollChecked) { /* after a reload, pick up where the person was: the latest roll of theirs that still has something to do */
-        UI.rollChecked = true; var mine = S.rolls.filter(function (r) { return (r.attack || S.chars[r.charId]) && ((r.effort && !r.applied) || (r.check && r.check.success && !r.effort)); }); if (mine.length) UI.roll = mine[mine.length - 1].id;
+        UI.rollChecked = true; var mine = S.rolls.filter(function (r) { return (r.attack || S.chars[r.charId]) && ((r.effort && !r.applied) || (r.check && r.check.success && !r.effort && !r.healingResolved)); }); if (mine.length) UI.roll = mine[mine.length - 1].id;
       }
       remember();
       render();
@@ -189,6 +189,7 @@
   }
 
   function resetSession() {
+    window.SacramentDialogs.reset();
     sessionVersion++; clearTimeout(timer); clearTimeout(UI.nudge); clearTimeout(UI.leaveTimer); polling = false; again = false;
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
     clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
@@ -257,13 +258,14 @@
   };
   function openSheet(charId) {
     if (!S || !S.chars[charId]) return;
-    UI.sheet = charId; UI.sheetFrom = document.activeElement; var el = $('sheetOverlay'); el.hidden = false;
+    UI.sheet = charId; UI.sheetFrom = document.activeElement; var el = $('sheetOverlay'); el.hidden = false; window.SacramentDialogs.open(el, UI.sheetFrom);
     if (!sheetView) sheetView = window.SacramentSheet.mount(el, sheetHost);
     sheetView.say(''); el.scrollTop = 0; setTimeout(function () { var c = el.querySelector('[data-sh=close]'); if (c) c.focus(); }, 0);
   }
-  function closeSheet() { UI.sheet = null; var el = $('sheetOverlay'); el.hidden = true; el.innerHTML = ''; var f = UI.sheetFrom; UI.sheetFrom = null; if (f && f.focus && document.contains(f)) f.focus(); render(); }
+  function closeSheet() { UI.sheet = null; var el = $('sheetOverlay'); el.hidden = true; el.innerHTML = ''; UI.sheetFrom = null; window.SacramentDialogs.close(el); render(); }
   /* the GM's loot designer: a second overlay, drawn only on the GM's own actions and on changes to the library, so typing is never interrupted */
   var lootView = null, lootHost = {
+    dice: function () { return S ? S.settings.dice : R.DEFAULT_DICE; },
     lib: function () { return (S && S.lootLib) || []; },
     heroes: function () { return S ? Object.keys(S.chars).map(function (k) { return { id: k, name: S.chars[k].name }; }) : []; },
     send: function (cmd, done) { return send(cmd, done); },
@@ -274,10 +276,10 @@
   function openLoot(spec) {
     var el = $('lootOverlay'); if (!el || !S || !gm()) return;
     if (!lootView) lootView = window.SacramentLoot.mount(el, lootHost);
-    UI.lootFrom = document.activeElement; el.hidden = false; lootView.open(spec); el.scrollTop = 0;
+    UI.lootFrom = document.activeElement; el.hidden = false; window.SacramentDialogs.open(el, UI.lootFrom); lootView.open(spec); el.scrollTop = 0;
     setTimeout(function () { var c = el.querySelector('[data-lb=close]'); if (c) c.focus(); }, 0);
   }
-  function closeLoot() { var el = $('lootOverlay'); el.hidden = true; el.innerHTML = ''; var f = UI.lootFrom; UI.lootFrom = null; if (f && f.focus && document.contains(f)) f.focus(); render(); }
+  function closeLoot() { var el = $('lootOverlay'); el.hidden = true; el.innerHTML = ''; UI.lootFrom = null; window.SacramentDialogs.close(el); render(); }
   function renderLoot() { var el = $('lootOverlay'); if (el && !el.hidden && lootView) lootView.refresh(); }
   function renderSheet() {
     var el = $('sheetOverlay'); if (!el) return;
@@ -448,7 +450,7 @@
 
   /* The GM's monster attack, in the same panel as a player's roll: the roll against Defence, then (on a hit) "Roll damage" rolls it and takes it off the hero. The die it uses can be changed and is remembered. */
   function attackRollView(r, ch) {
-    var hero = S.cards[r.targetCardId], hn = hero ? hero.name : 'the hero', h = '';
+    var hero = S.cards[r.targetCardId], hn = hero ? hero.name : 'the hero', h = r.attack.sceneBonus ? '<p class="note">Base attack ' + sgn(r.attack.baseBonus) + ' + scene danger ' + r.attack.sceneBonus + '.</p>' : '';
     h += '<p class="note">attacks ' + esc(hn) + '</p><div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayAttack(ch)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
     var downH = hero && hero.kind === 'pc' && hero.hp && hero.hp.cur === 0 ? hero.dying || { none: true } : null;
     if (!ch.success) h += '<p>Missed. No damage to roll.</p>';
@@ -472,8 +474,8 @@
   }
   function rollCard() {
     if (UI.attackChoice) {
-      var pending = UI.attackChoice, targets = cardList().filter(function (c) { return onTable(c) && canTake(c); });
-      return '<div class="sec"><h3>Choose a target</h3><p>' + esc(pending.name) + '</p><label class="field">Attack target<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label><div class="row"><button class="btn main" data-do="confirmAttack">Attack selected target</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">Damage will keep this target. Nothing has been rolled yet.</p></div>';
+      var pending = UI.attackChoice, targets = cardList().filter(function (c) { return onTable(c) && (pending.healing ? !!c.hp : canTake(c)); });
+      return '<div class="sec"><h3>' + (pending.healing ? 'Choose who to heal' : 'Choose a target') + '</h3><p>' + esc(pending.name) + '</p><label class="field">' + (pending.healing ? 'Healing target' : 'Attack target') + '<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label><div class="row"><button class="btn main" data-do="confirmAttack">' + (pending.healing ? 'Heal selected target' : 'Attack selected target') + '</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">' + (pending.healing ? 'Healing is applied automatically after a successful check, within the listed rest limit.' : 'Damage will keep this target. Nothing has been rolled yet.') + '</p></div>';
     }
     if (UI.rolling || D.busy()) return '<div class="sec"><h3>' + esc(UI.rolling || 'Rolling') + '</h3><p class="note" role="status">Rolling…</p></div>';   /* the previous roll is not offered while a new one is on its way, and a new one waits until its dice have landed */
     var r = UI.roll && S.rolls.filter(function (x) { return x.id === UI.roll; })[0]; if (!r) return '';
@@ -484,11 +486,14 @@
     if (r.targetCardId && S.cards[r.targetCardId]) h += '<p class="note">Target: ' + esc(S.cards[r.targetCardId].name) + '</p>';
     if (ch) {
       h += '<div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayCheck(ch, r.stat)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
-      if (ch.nat20) h += '<p class="note">Natural 20. Ultimate Effort is on offer' + (S.settings.nat20Ultimate ? '' : ' (switched off at this table)') + '.</p>';
+      if (ch.nat20 && !r.nonDamage) h += '<p class="note">Natural 20. Ultimate Effort is on offer' + (S.settings.nat20Ultimate ? '' : ' (switched off at this table)') + '.</p>';
       if (ch.nat1) h += '<p class="note">Natural 1. The Horror rises by 1.</p>';
       if (r.fromPush && !ch.success) h += '<p class="note">That was your pushed second action.</p>';
     }
-    if (r.nonDamage) h += '<p>' + (ch && ch.success ? 'Success. ' : 'The check failed. ') + 'The GM resolves the effect and any healing or rest limit. No damage to roll.</p>';
+    if (r.healing && r.healing.stable) h += '<p>The patient is stable. Their dying countdown has stopped.</p>';
+    else if (r.healingAttempt && !r.healing) h += '<p>Healing check failed. No healing was applied.</p>';
+    else if (r.healing) h += '<p>Healing rolled: <b>' + r.healing.amount + '</b>. ' + (r.applied ? 'Applied to ' + esc(S.cards[r.applied.cardId] ? S.cards[r.applied.cardId].name : 'the patient') + '.' : 'Undone. The healing and its rest allowance have been restored.') + '</p>';
+    else if (r.nonDamage) h += '<p>' + (ch && ch.success ? 'Success. ' : 'The check failed. ') + 'The GM resolves this effect. No damage to roll.</p>';
     else if (ch && !ch.success && !gm()) h += '<p>Missed. No damage to roll.</p>';
     else if (!r.effort) {
       var c = S.chars[r.charId], dice = S.settings.dice;
@@ -710,7 +715,7 @@
     var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, nd = R.restDice(living);
     if (!living) UI.restAsk = false;
     return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
-      '<p class="hint">For a rest in a safe place: every living hero recovers 1 Heart (the fallen stand up) and the Horror falls by ' + (nd || 1) + 'd' + R.REST.horrorDie + ' (a d' + R.REST.horrorDie + ' for every two living heroes). One Undo takes it back.</p></section><section class="play-section">' + nextControls() + '</section>';
+      '<p class="hint">For a rest in a safe place: every living hero recovers 1 Heart (the fallen stand up) and the Horror falls by ' + (nd || 1) + 'd' + R.REST.horrorDie + ' (a d' + R.REST.horrorDie + ' for every two living heroes). One Undo takes it back.</p></section><section class="play-section"><h3>Monster attacks</h3><label class="check"><input type="checkbox" data-setting="sceneDanger"' + (S.settings.sceneDanger ? ' checked' : '') + '> Add scene danger automatically</label><p class="hint">At Target ' + S.table.target + ', add +' + R.sceneDanger(S.table.target) + ' to monster attacks. Keep each monster’s Attack bonus as its base bonus. Remove any scene bonus you previously added by hand before switching this on.</p></section><section class="play-section">' + nextControls() + '</section>';
   }
   /* A new table: until a player has taken up a hero, the first thing in the GM's tray is how to get them in. */
   function startBox() {
@@ -758,7 +763,7 @@
     send({ type: 'cardCreate', card: card, addToOrder: true }, function (b) { if (b) { UI.sel = b.result.id; render(); toast('Added ' + m.name + ', hidden. Show it when the players should see it.', 6000); } });
   }
   function tabTable() {
-    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Healing from items and prayers (and their once-per-rest limits), the scene-danger bonus on monster attacks (put it in the monster’s attack bonus), and anything the rules baseline does not list are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
+    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in Play. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
     var h = '<h3>Invite players</h3><div class="row"><b class="code">' + esc(S.code) + '</b><button class="btn main grow" data-do="copy">Copy invite link</button></div>';
     h += horrorControls();
     h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li class="player-row"><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small danger" data-do="removePlayer" data-pid="' + p.id + '"' + (UI.removeBusy === p.id ? ' disabled' : '') + ' aria-label="' + (UI.removePlayerAsk === p.id ? 'Confirm removal of ' : 'Remove ') + esc(p.name) + '">' + (UI.removeBusy === p.id ? 'Removing…' : UI.removePlayerAsk === p.id ? 'Confirm removal' : 'Remove') + '</button>' + (UI.removePlayerAsk === p.id ? '<p class="hint player-warning">Their current access will stop and their hero becomes available. Private possessions return hidden to the GM. They can join again with the invitation code.</p><button class="btn small" data-do="cancelRemovePlayer">Cancel</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
@@ -886,7 +891,7 @@
         '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
-    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">Sheet</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
+    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">' + (G ? 'Character sheet' : 'My character') + '</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
       (UI.optMore ? '<div class="opt row2"><button class="chip" data-do="toggle" data-key="effort" aria-expanded="' + !!UI.optEffort + '">Effort</button><button class="chip" data-do="toggle" data-key="dice" aria-expanded="' + !!UI.optDice + '">My dice</button></div>' : '');
     var gear = cardList().filter(function (c) { return c.owner && (G ? false : c.owner === S.you.pid); });
     if (gear.length) h += '<div class="gear"><span class="note">Gear</span>' + gear.map(function (c) { return '<button class="chip" data-do="select" data-id="' + c.id + '">' + esc(c.name) + '</button>'; }).join('') + '</div>';
@@ -928,14 +933,15 @@
     if (!gearKey) { toast('That item is no longer available. Open your sheet again.'); return; }
     var use = window.SacramentSheetCore.useOf(heroOf(ch), index, spellId);
     if (!use.ok) { toast(use.why); return; }
-    var selected = chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
-    if (chosenTarget && !(selected && onTable(selected) && canTake(selected))) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
-    if (use.cat && !(selected && onTable(selected) && canTake(selected))) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, name: use.name}; render(); return; }
+    var selected = use.healing && use.healing.self ? S.cards[ch.cardId] : chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
+    function usableTarget(card) { return card && onTable(card) && (use.healing ? !!card.hp : canTake(card)); }
+    if (chosenTarget && !usableTarget(selected)) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
+    if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, name: use.name, healing: !!use.healing}; render(); return; }
     UI.attackChoice = null;
     UI.askItem = null; UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
-    var target = selected && onTable(selected) && (!use.cat || selected.kind !== 'pc') ? selected.id : undefined;
+    var target = selected && onTable(selected) && (use.healing || !use.cat || selected.kind !== 'pc') ? selected.id : undefined;
     renderPanel();
-    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
+    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.healing && !b.result.rollId) toast(b.result.healing.stable ? 'The patient is stable.' : 'Healing applied: ' + (b.result.healing.applied == null ? b.result.healing.amount : b.result.healing.applied) + ' HP.'); if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
   }
   function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', order: o }); }
   /* a place on the table where a new card of this size overlaps nothing, nearest the middle; units are those of the table's width (it is 100 wide and 62.5 high) */

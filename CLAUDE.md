@@ -87,11 +87,9 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 * **Quick checks and feature work skip phones.** Do not write, run or screenshot phone layouts while building something, and do not add phone mockups to plans, unless the owner asks. New phone-only tests are tagged `@phone` in their title so the regular runs leave them out (`--grep-invert @phone`).
 * **Before each deploy: `npm run phone-check`** (under 30 seconds). It loads the home page and the table (as GM and as a player) at 360×640 and fails if anything is broken (script errors, a page that scrolls sideways), overlapping buttons, or controls off-screen. It is a smoke test, not a layout review.
 * **The phone suite** (`npm run phone-suite`) holds the full phone tests. Run it only when the owner asks for "the phone suite". After a full pass, empty the list below and write the date.
-* **Changed since the last full phone pass** (add a line for every feature built or changed that touches the screen, so the next phone suite knows what to look at). Last full phone pass: **2026-10-21**, the phone suite run on branch `claude/project-thread-327m9k` after the bug-hunt fixes (all green: the GM's top bar back to three rows, the player's My dice row shorter). Since then: the UX pass (branch `claude/project-thread-01nawz`): the GM's *Getting started* box, the gold "Your turn" and red "hits you" notices over the table, the lit strip on your turn, the dying help in the player's panel, the GM's note in the card view, the Effort hint line. The improvements (branch `claude/project-thread-l8nokf`): *Your tables* and the install line on the first screen, *Try it now* on the home page, the GM link and *Session recap* in the Table tab, *Next session* in the Play tab and the player's panel, *Your monsters* in the Scene tab and *Save to my monsters* on an enemy, the chime switch under My dice.
+* **Last full automated phone suite:** 2026-10-24, the owner-authorised backlog pass. Pending phone-review queue: empty. This is simulated Chromium phone testing; physical devices, Safari and real assistive technology remain unverified.
 
-* Since that full phone pass: table recovery warning and downloadable private link; the combat choice now includes an explicit roll without an item, with one Sheet button. Check these in the next requested phone suite.
 
-* Since that full phone pass: hero save warnings and backup downloads; player removal controls; scene-specific drawing and pointers; quick actions at the top of live sheets; optional Fill width map viewport.
 
 ## Known open issues (do not claim they are fixed)
 
@@ -104,28 +102,23 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 
 The owner requested three spells per grimoire and preservation of all spells across additional books. `/loot/` (Current Loot Tables) is generated from `site/sheet/gear.js`, with no private GM loot notes. The 96–99 d100 range uses the Grimoires d100 sub-table. The catalogue has 178 items (145 rollable finds); all five sub-tables now use d100, while main-table category odds remain unchanged. Catalogue spells have an explicit damage/healing/esoteric effect label. Read-by-die books use `pick` for the number of spells and `pickDie` for the die; the untitled book maps a d6 evenly onto three spells. Existing item and spell IDs must stay stable. GM-designed grimoires preserve exactly three known spell IDs through their saved definitions.
 
-Since the last full phone pass: public loot catalogue, expanded grimoire selection and GM grimoire spell selectors.
 
-Since the last full phone pass: a public loot roller on `/loot/`, using the VTT loot rules without reading or writing game sessions.
 
 ## Equipment balance (owner approved)
 
 All grimoires, including GM-designed ones, cost exactly three slots. Weapons have `weaponStyle`: single, heavy, reach or ranged. Heavy ordinary melee (`cat: weapons`) adds +2 damage, retained on an Ultimate upgrade; reach/control weapons keep normal damage. Two-handed weapons cannot be used while a shield is equipped: move it to the pack. Armour has `armourPart`: body, head or shield; one of each contributes. Saved overlapping armour moves to the pack once without deleting items, preserving wounds where possible and leaving a living hero at least 1 HP. Overfull old book loadouts show a warning and must be rearranged before item use. Old custom weapons default to single-handed and old custom armour to body; their GM may choose the appropriate role in the designer.
 
-Since the last full phone pass: three-slot books, equipment warnings and role labels, custom weapon/armour selectors, heavy damage and shield restriction.
 
-Drawing is GM-only: players have Select and Point, can see GM ink, and cannot send draw/drawUndo/drawClear commands. Existing ink is preserved. Since the last full phone pass: player Draw controls removed.
+Drawing is GM-only: players have Select and Point, can see GM ink, and cannot send draw/drawUndo/drawClear commands. Existing ink is preserved.
 
-Since the last full phone pass: shared website Back to top button appears after scrolling 400px; excluded from VTT, character and builder screens, supports reduced motion and returns focus to the page heading.
 
-Since the last full phone pass: My heroes now has a starting-hero generator with preview/keep, and a local backup-file restore with review, duplicate skipping and separate copies for changed versions. Test these in the next requested phone suite. The later weapon update moves ordinary ranged weapons to Weapons d6; saved Effort allocations remain intact with a reminder to reassign old bow bonuses.
 
-Since the last full phone pass: removed the ready-made hero selector from My heroes at the owner’s request; the generator, blank sheets and all existing saved heroes remain.
 
-Owner-approved weapon dice: all ordinary catalogue weapons (including bows, crossbows, slings and weapon-listed tools) use Weapons d6. Guns/gunpowder use Guns d8. Custom ranged style means bow/crossbow d6; firearm style means two-handed gun/gunpowder d8; single-handed Guns remains available. Existing Effort points are not silently reassigned: sheets explain that old bow bonuses under Guns can be moved to Weapons. New scouts invest in Weapons. Old pending item attacks are resolved with the corrected category when their possession can still be identified; completed damage is preserved. Since the last full phone pass: weapon labels, designer firearm style, saved-archer reminder and corrected Effort guidance.
+Owner-approved weapon dice: all ordinary catalogue weapons (including bows, crossbows, slings and weapon-listed tools) use Weapons d6. Guns/gunpowder use Guns d8. Custom ranged style means bow/crossbow d6; firearm style means two-handed gun/gunpowder d8; single-handed Guns remains available. Existing Effort points are not silently reassigned: sheets explain that old bow bonuses under Guns can be moved to Weapons. New scouts invest in Weapons. Old pending item attacks are resolved with the corrected category when their possession can still be identified; completed damage is preserved.
 
-Since the last full phone pass: GM Scene tab has Rename on each scene, inline Scene name with Save/Cancel and Enter/Escape, and wrapping scene rows. Scene identity and contents remain unchanged; prepared names remain private.
 
-Since the last full phone pass: playtest fixes change spell Horror labels, restrict Push to failed attacks, add GM dice in the footer and choose an attack target before item rolls. Healing effects and rest limits remain manual; natural 1 still adds Horror.
 
-Since the last full phone pass: Play tray groups turn order, rest and session scheduling with consistent spacing; order-edit controls use a separate row and long names wrap; scheduling fields fit the sidebar.
+
+Backlog pass authorised by the owner on 2026-10-24: phone suite and Safari review, healing/rest automation, opt-in scene danger, My character, reliability/security follow-ups, accessibility and maintenance. Monster natural 1 always misses and natural 20 always hits, explicitly approved in chat. Run the full phone suite for this pass; subsequent routine work returns to the normal phone-check policy.
+
+New behaviour: catalogue healing is server-applied and once-per-recipient/source per rest; downed recipients may be healed again, dead heroes cannot be raised, and a fallen caster cannot act. Bandages Tend dying heroes; critical Tend heals d4. Natural-20 ordinary healing adds d12, following the existing healing engine. Healing Undo restores HP/charge/allowance; undo later healing/rests first. Canonical healing mechanics survive newly designed/awarded loot copies through a validated healingSource; old free-text copies stay unchanged/manual. Scene danger is off by default to protect existing manually adjusted monster bonuses.

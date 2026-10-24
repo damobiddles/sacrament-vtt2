@@ -8,6 +8,6 @@ summary: The current Sacrament RPG loot tables, equipment and three-spell grimoi
 
 Roll d100 on the main table, then roll d100 again on the table it points to. Each number has one result. The catalogue below also includes starting equipment and items the GM can award directly.
 
-Spells are labelled **Damage**, **Healing** or **Esoteric effect**. Damage spells roll Effort; other effects do what their description says. The GM still resolves effects the table does not automate, including healing adjustments. A grimoire holds three spells; some spells appear in more than one book.
+Spells are labelled **Damage**, **Healing** or **Esoteric effect**. Damage spells roll Effort; other effects do what their description says. The GM still resolves effects the table does not automate, such as ranges and free-text custom effects. A grimoire holds three spells; some spells appear in more than one book.
 
 This page is generated from the same shared loot catalogue as the VTT. Every published catalogue update automatically updates these lists, roll tables and the loot roller. Loot you create in your own game stays in that table; your custom items and private GM notes are not published here.

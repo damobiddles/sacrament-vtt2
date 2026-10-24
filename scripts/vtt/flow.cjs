@@ -316,7 +316,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const site = await mk('site'); await site.goto(base + '/');
   const joinRun = await site.$$eval('a', (e) => e.map((x) => ({ t: x.innerText.trim(), h: x.getAttribute('href') })));
   check('the home page is the Sacrament RPG Table page: it has “Join a game” and “Run a game” going to the table', joinRun.some((l) => /^Join a game$/i.test(l.t) && l.h === '/vtt/?join') && joinRun.some((l) => /^Run a game$/i.test(l.t) && l.h === '/vtt/?run'), JSON.stringify(joinRun.slice(0, 6)));
-  await site.goto(base + '/resources/'); check('Resources lists the Sacrament RPG Table, linked to the home page', (await site.$$eval('a', (e) => e.some((x) => x.getAttribute('href') === '/' && /Sacrament RPG Table/i.test(x.innerText)))));
+  await site.goto(base + '/resources/'); check('Resources opens the Sacrament RPG Table directly', (await site.$$eval('a', (e) => e.some((x) => x.getAttribute('href') === '/vtt/' && /Sacrament RPG Table/i.test(x.innerText)))));
   const inv = await mk('inv'); await inv.goto(base + '/vtt/?room=ZZZZZZ'); await inv.waitForSelector('#entry:not([hidden])');
   const jb = await (await inv.$('#joinForm')).boundingBox(), mb = await (await inv.$('#makeForm')).boundingBox();
   check('on an invitation link the Join form comes first, with the code filled in, a line saying who invited you, and the name box ready to type in', jb.y < mb.y && (await inv.inputValue('#joinCode')) === 'ZZZZZZ' && /invited to the table ZZZZZZ/i.test(await inv.innerText('#inviteMsg')) && (await inv.evaluate(() => document.activeElement && document.activeElement.id)) === 'joinName', jb.y + ' vs ' + mb.y);

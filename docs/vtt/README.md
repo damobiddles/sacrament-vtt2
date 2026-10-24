@@ -1,3 +1,5 @@
+> **Current update — 24 October 2026:** catalogue healing, target selection, bandage charges and rest limits are automated. Known healing items keep those mechanics when newly awarded through the loot designer; existing free-text custom copies are kept intact and remain manual. Scene danger is an opt-in Play switch; remove any manually included scene bonus before enabling it. Monster natural 1 always misses, natural 20 always hits (owner decision). My character opens the player sheet. Dialogs trap and restore keyboard focus. Damage totals and hardest blow now track Undo; other recap lists are historical event records. Older descriptions below are historical where they conflict with this update.
+
 # Sacrament RPG Table
 
 A small shared table, at `/vtt/`. One screen: the table stays in view while a player rolls, applies Effort and ends the turn.

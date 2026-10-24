@@ -13,7 +13,7 @@ Your GM will send you either an **invitation link** or a **six-letter table code
 After you join, the panel on the side shows the heroes nobody has taken yet. Press **Play** next to the one you want. If none are free, ask your GM to add one for you.
 
 ### Your sheet
-Press **Sheet** on your strip (or **Open your sheet** when you select your own token) to open your hero full-screen over the table. The table keeps running underneath, and closing the sheet puts you straight back. On it you can change your scores (6 points to share, no more than 6 in one), your Effort (4 points), your gear (ten slots equipped, ten in the pack) and write your appearance, background and notes. If a rule says no, the sheet tells you why in plain words. You can choose one grimoire yourself; relics and further books are finds your GM gives you. Non-healing spells and magic items show their Horror amount and why they tempt it. Healing spells have no casting cost. Supplies (rope, bandages, candles, loot such as a signet ring) work from the pack: they show a **Supply** label instead of an Equip button. Only you and the GM can read your background and notes. The GM can open and change any hero's sheet.
+Press **My character** on your strip (or **Open your sheet** when you select your own token) to open your hero full-screen over the table. The table keeps running underneath, and closing the sheet puts you straight back. On it you can change your scores (6 points to share, no more than 6 in one), your Effort (4 points), your gear (ten slots equipped, ten in the pack) and write your appearance, background and notes. If a rule says no, the sheet tells you why in plain words. You can choose one grimoire yourself; relics and further books are finds your GM gives you. Non-healing spells and magic items show their Horror amount and why they tempt it. Healing spells have no casting cost. Supplies (rope, bandages, candles, loot such as a signet ring) work from the pack: they show a **Supply** label instead of an Equip button. Only you and the GM can read your background and notes. The GM can open and change any hero's sheet.
 
 You can also build heroes between sessions on the [My heroes](/character/) page, which saves them in your browser. You can keep up to 30 heroes here; older lists above that limit remain available. **Generate a hero** suggests a name, vow, scores, Effort and starting equipment; choose a focus or let it surprise you, then press **Keep this hero** to save it. You can edit it afterwards or start with a blank sheet. **Download heroes backup** saves a private file containing all your heroes and notes. To restore it, use **Heroes backup file** on My heroes, choose the downloaded JSON file, review the preview and press **Restore backup**. Existing heroes are kept: identical copies are skipped and different versions are added separately. The file is read in your browser, without uploading it to a server. If browser saving fails, keep the page open and download the latest changes before closing it. At a table with no hero yet, press **Bring a hero** to copy one from there: the table checks it against the rules and makes it yours.
 
@@ -98,11 +98,19 @@ The table works on a phone: the tray sits under the table and scrolls by itself.
 ## What it does not do yet
 - **No distances or ranges.** Range is whatever the map picture shows. The table does not measure it.
 - **The Horror is counted, not played.** The table raises the Horror meter and tells the GM at each threshold, but the GM decides what the Horror does.
-- **Healing is by hand.** The table keeps the dying countdown (a d4 at 0, a round off each new round) and the GM's **Party rest**, but healing from bandages and prayers, and its once-per-rest limit, you run yourselves: change hit points with the **−** and **+** controls, and tell the story.
+- **Free-text effects need a ruling.** Catalogue healing is automated, including bandages, Mend and healing relics. The GM resolves custom items written only as text and any esoteric effects. Existing custom copies without healing mechanics remain manual.
 - **No accounts.** A table is its code. If a player loses their device they rejoin as a new person and the GM can give them back their hero.
 - **The rules are not final.** They are still being worked out, so a few details may change.
 
 ### GM dice
 Press **GM dice** in the footer to roll one or more d4, d6, d8, d10, d12, d20 or d100 dice. Choose **GM only** for a private result; otherwise everyone sees it in Activity. These rolls do not change HP.
 
-Healing can target yourself or another target within the stated range. Drinking an item heals its drinker. Healing amounts and once-per-rest limits are still resolved by the GM.
+Healing can target yourself or another target within the stated range. Drinking an item heals its drinker. Catalogue healing is applied automatically: choose a target and use Mend, bandages or a healing relic. The table tracks once-per-target rest limits, bandage charges and standing up a dying hero. Party rest refreshes these limits. Ranges and custom items written only as free text still need the GM’s ruling.
+
+### Your first five minutes
+
+**GM:** make a table with the sample encounter, save your private recovery link, and copy the separate invite link for players. In Play, choose whether to add scene danger automatically. If you already included it in a monster’s Attack bonus, remove that part before switching automation on. A natural 1 on a monster attack always misses; a natural 20 always hits.
+
+**Player:** join using the invite link, claim a hero or bring one from My heroes, then open My character. Select an enemy before using a weapon. A successful attack leads to Roll damage, then Apply. For healing, choose who receives it; the table changes HP and tracks the rest limit for you.
+
+Need a background or battle map? The [Resources page](/resources/) collects the artwork downloads. Use [Feedback](/feedback/) to report a problem or tell us how the session went.

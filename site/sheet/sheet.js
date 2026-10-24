@@ -52,7 +52,7 @@
   function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 heavy weapon' : '') + '</b> for damage.</p>' : ''; }
   function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */
-  function plainLine(src) { return src.cat || !(src.temptsHorror || src.heal) ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
+  function plainLine(src) { var heal = C.healingOf(src); if (heal) return '<p class="sh-eff">Used, it ' + (src.roll ? 'checks ' + esc(src.roll) + ' and, on success, ' : '') + 'applies healing d' + heal.die + ' automatically. ' + (heal.tend ? 'On a dying hero, bandages Tend instead; a natural 20 also heals d4. ' : '') + (heal.kind ? 'Once per target per rest; downed targets may be healed again.' : 'Uses its remaining charges.') + '</p>'; return src.cat || !(src.temptsHorror || src.heal) ? '' : '<p class="sh-eff">' + (src.roll ? 'Used, it makes a ' + esc(src.roll) + ' check (no Effort).' : 'Used, it rolls nothing.') + '</p>'; }
   function gearItem(g, i, edit, acts, dice) {
     var it = C.itemOf(g); if (!it) return '';
     var spells = it.kind === 'grimoire' ? C.spellsOf(it) : [];
@@ -78,7 +78,7 @@
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
     left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + B.points + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
       (edit ? '<p class="sh-note">' + B.points + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
-    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + R.DEFAULT_DICE[k]; return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
+    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
     if (C.weaponEffortNote(h)) left1 += '<p class="sh-note" role="note">' + esc(C.weaponEffortNote(h)) + '</p>';
     var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, acts, d.dice)); });
     var option = function (it) { return '<option value="' + it.id + '"' + (pick === it.id ? ' selected' : '') + '>' + esc(optionText(it)) + '</option>'; };
@@ -130,8 +130,8 @@
       var d = host.get(), k = b.dataset.sh;
       if (k === 'close') { if (host.close) host.close(); return; }
       if (!d) return; d = effective(d);
-      if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, value: (d.hero.stats[b.dataset.k] || 0) + (+b.dataset.d) });
-      else if (k === 'effort') attempt({ op: 'effort', cat: b.dataset.k, value: (d.hero.effort[b.dataset.k] || 0) + (+b.dataset.d) });
+      if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, delta: +b.dataset.d });
+      else if (k === 'effort') attempt({ op: 'effort', cat: b.dataset.k, delta: +b.dataset.d });
       else if (k === 'add') { var sel = el.querySelector('#shAdd'); if (sel) attempt({ op: 'add', id: sel.value }); }
       else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });
       else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, gearKey: b.dataset.gear || undefined, eq: b.dataset.eq === '1' });

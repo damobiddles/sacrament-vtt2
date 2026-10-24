@@ -1,7 +1,7 @@
 // A local server for the Sacrament RPG table: the static site from site/, plus the same session service the Netlify function runs, saving rooms to a folder.
 // Used for development and by the end-to-end test. Usage: node scripts/vtt/server.mjs [port] [dataDir]
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rename, rm } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeService } from '../../netlify/functions/_shared/vtt-service.mjs';
@@ -19,6 +19,7 @@ export function fileStore(dir) {
     kind: 'file',
     get: (code) => serial(code, () => read(code)),
     putImage: async (code, id, bytes, mime) => { await mkdir(join(dir, 'img'), { recursive: true }); await writeFile(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, '')), bytes); },
+    deleteImage: async (code, id) => { await rm(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, '')), { force: true }); },
     getImage: async (code, id) => { try { return { bytes: await readFile(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, ''))) }; } catch (e) { return null; } },
     put: (code, data, etag) => serial(code, async () => {
       const cur = await read(code); if (etag === null ? !!cur : !cur || cur.etag !== etag) return false;

@@ -89,12 +89,12 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(360);
   expect(await ann.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   await expect(ann.locator('#tHorror')).toContainText('12/21');
-  await ann.locator('[data-do=toggle][data-key=items]').click();
-  const read = ann.locator('#strip [data-do=useItem]', { hasText: 'Read Grimoire with no title' }); await expect(read).toHaveCount(1);
-  await expect(read).toContainText('d4 spell');
+  await ann.locator('#strip [data-do=sheet]').click();
+  const read = ann.locator('#sheetOverlay [data-sh=quickUse]', { hasText: 'Read Grimoire with no title' }); await expect(read).toHaveCount(1);
+  await expect(ann.locator('#sheetOverlay')).toContainText('rolls d6');
   await read.click(); await saved(ann);
-  await expect(ann.locator('#toast')).toContainText(/The die shows [1-4]: /);
-  const after = +(await meter(ann).getAttribute('aria-valuenow')); expect(after).toBeGreaterThan(12);
+  await expect(ann.locator('#toast')).toContainText(/The die shows [1-6]: /);
+  await expect(meter(ann)).toHaveAttribute('aria-valuenow', '13');
   await shot(ann, '5-player-phone-after-reading');
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);
 });

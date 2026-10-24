@@ -20,7 +20,7 @@ test('a natural 20 offers Ultimate Effort (the table can switch that off); a 20 
   const hi = R.check({ d20: 20, stat: -3, target: 30 }); assert.equal(hi.nat20, true); assert.equal(hi.offerUltimate, true); assert.equal(hi.success, false, 'success is only the total meeting the Target');
   assert.equal(R.check({ d20: 20, stat: 0, target: 5, settings: { nat20Ultimate: false } }).offerUltimate, false);
   assert.equal(R.check({ d20: 1, stat: 10, target: 5 }).success, true); assert.equal(R.check({ d20: 1, stat: 0, target: 5 }).nat1, true);
-  assert.deepEqual(Object.keys(R.settingsOf({ nat20AutoSuccess: true, nat1AutoFail: true })).sort(), ['dice', 'nat20Ultimate']);
+  assert.deepEqual(Object.keys(R.settingsOf({ nat20AutoSuccess: true, nat1AutoFail: true })).sort(), ['dice', 'nat20Ultimate', 'sceneDanger']);
 });
 test('a stat and bonus never count for more than +10, and a d20 shows 1 to 20', () => {
   assert.equal(R.check({ d20: 10, stat: 8, bonus: 9, target: 5 }).mod, 10);

@@ -49,6 +49,11 @@
       o.spells = (Array.isArray(raw.spells) ? raw.spells : []).filter(function (id, n, ids) { return Object.prototype.hasOwnProperty.call(SPELL, id) && ids.indexOf(id) === n; }).slice(0, 3);
       if (raw.pick) { o.pick = 3; o.pickDie = 6; }
     }
+    var healingSource = BY[raw.healingSource];
+    if (healingSource && healingOf(healingSource)) {
+      o.healingSource = healingSource.id; o.effect = 'healing'; o.cat = ''; o.roll = healingSource.roll || '';
+      if (healingSource.uses != null) o.uses = healingSource.uses;
+    }
     if (kind === 'armour') o.defence = clamp(int(raw.defence, 0), 0, 5);
     var uses = clamp(int(raw.uses, 0), 0, 20); if (uses > 0 && o.cat) o.uses = uses;
     return o;
@@ -127,6 +132,14 @@
   /* ---------- using an item ---------- */
   /* What it means for a hero to use the item at index i of their gear (for a grimoire, one of its spells). If it has an Effort kind ("cat") the table makes a check with the
      stat in "roll" and, on a success, rolls that Effort's die for them. An item with no Effort kind never rolls. */
+  function healingOf(src) {
+    if (!src) return null;
+    if (src.healingSource && BY[src.healingSource]) return healingOf(BY[src.healingSource]);
+    var fx = (src.fx || []).filter(function (f) { return f.do === 'heal'; })[0];
+    if (!fx && src.effect !== 'healing') return null;
+    return { die: fx ? +fx.dice.replace('1d', '') : src.effort || 8, kind: fx ? fx.kind || '' : src.id,
+      self: !!(fx && fx.target === 'self'), force: !!(fx && fx.force), tend: (src.fx || []).some(function (f) { return f.do === 'tend'; }) };
+  }
   function useOf(h, index, spellId) {
     var g = (h.gear || [])[int(index, -1)]; if (!g) return no('There is nothing there to use.');
     var it = itemOf(g); if (!it) return no('That is not on the gear list.');
@@ -139,17 +152,17 @@
     }
     var label = sp ? sp.name + ' (' + it.name + ')' : it.name;
     /* Something with no Effort die is used only when it tempts the Horror (the table then raises the meter); anything else plain at the table rolls nothing. */
-    if (!src.cat && !pick && !src.temptsHorror && !sp) return no((sp ? sp.name : 'The ' + it.name) + ' has no Effort die, so the table rolls nothing for it.');
+    if (!src.cat && !pick && !src.temptsHorror && !sp && !healingOf(src)) return no((sp ? sp.name : 'The ' + it.name) + ' has no Effort die, so the table rolls nothing for it.');
     if ((it.kind === 'weapon' || it.kind === 'relic' || it.kind === 'grimoire') && !isEq(g)) return no('Equip the ' + it.name + ' first: only equipped weapons, relics and grimoires work.');
     if (it.uses != null && g.uses != null && g.uses <= 0) return no('The ' + it.name + ' has no uses left.');
     /* A grimoire read by the die: the spell is chosen when it is read, so what it rolls is not known yet. */
     if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
-    return { ok: true, item: it, spell: sp, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? src.horror : 0 };
+    return { ok: true, item: it, spell: sp, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? src.horror : 0 };
   }
   /* A spell of a grimoire read by the die, as if the reader had chosen it: the same checks have already been made for the book. */
-  function useSpell(u, sp) { return { ok: true, item: u.item, spell: sp, gear: u.gear, name: sp.name + ' (' + u.item.name + ')', stat: STATS.indexOf(sp.roll) >= 0 ? sp.roll : '', cat: sp.cat || '', horror: sp.temptsHorror ? sp.horror : 0 }; }
+  function useSpell(u, sp) { return { ok: true, item: u.item, spell: sp, gear: u.gear, name: sp.name + ' (' + u.item.name + ')', stat: STATS.indexOf(sp.roll) >= 0 ? sp.roll : '', cat: sp.cat || '', healing: healingOf(sp), horror: sp.temptsHorror ? sp.horror : 0 }; }
   /* Every way this hero could use what they carry, with a reason where it cannot be done now: for the Use buttons. */
   function actions(h) {
     var out = [];
@@ -157,9 +170,9 @@
       var it = itemOf(g); if (!it) return;
       if (it.kind === 'grimoire' && it.pick) { var r = useOf(h, i); out.push({ index: i, spellId: '', ok: r.ok, why: r.why || '', name: 'Read ' + it.name, stat: '', cat: '', pick: it.pick }); }
       else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror || s.heal) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
-      else if (it.cat || it.temptsHorror) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
+      else if (it.cat || it.temptsHorror || healingOf(it)) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
     });
-    out.forEach(function (a) { a.gearKey = h.gear[a.index].key; });
+    out.forEach(function (a) { a.gearKey = h.gear[a.index].key; a.healing = useOf(h, a.index, a.spellId).healing || null; });
     return out;
   }
   /* The details of a designed item as they are kept on a sheet: the item without its marks. */
@@ -169,6 +182,7 @@
     if (!it) return null;
     var cat = it.kind === 'relic' ? 'Relic' : CUSTOM_CATS.indexOf(it.category) >= 0 ? it.category : it.kind === 'weapon' ? 'Weapon' : it.kind === 'armour' ? 'Armour' : 'Curio';
     var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, horrorReason: it.horrorReason || '', flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    var source = BY[it.healingSource || it.id]; if (source && healingOf(source)) out.healingSource = source.id;
     if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
     if (it.kind === 'armour') out.armourPart = armourPart(it);
     if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
@@ -236,7 +250,7 @@
     }
     if (op.op === 'score') {
       if (STATS.indexOf(op.stat) < 0) return no('That is not one of the six scores.');
-      var val = int(op.value, NaN), old = h.stats[op.stat] || 0; if (!isFinite(val)) return no('A score is a whole number.');
+      var old = h.stats[op.stat] || 0, val = op.delta != null ? old + int(op.delta, NaN) : int(op.value, NaN); if (!isFinite(val)) return no('A score is a whole number.');
       var lowering = val < old;
       if (val < 0 && !(val > old)) return no('A score cannot go below 0.');
       if (val > B.scoreMax && !lowering) return no('A score can be at most ' + B.scoreMax + '.');
@@ -246,7 +260,7 @@
     }
     if (op.op === 'effort') {
       if (CATS.indexOf(op.cat) < 0) return no('That is not a kind of Effort.');
-      var ev = int(op.value, NaN), eo = h.effort[op.cat] || 0; if (!isFinite(ev)) return no('Effort is a whole number.');
+      var eo = h.effort[op.cat] || 0, ev = op.delta != null ? eo + int(op.delta, NaN) : int(op.value, NaN); if (!isFinite(ev)) return no('Effort is a whole number.');
       if (ev < 0) return no('Effort cannot go below 0.');
       var eafter = sum(h.effort, CATS) - eo + ev;
       if (eafter > B.effortPoints && ev > eo) { var el = effortLeft(h); return no(el <= 0 ? 'You have no Effort points left: all ' + B.effortPoints + ' are spent. Take a point off another kind first.' : 'You have only ' + plural(el, 'Effort point', 'Effort points') + ' left for this.'); }
@@ -322,5 +336,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

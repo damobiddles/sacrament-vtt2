@@ -52,7 +52,7 @@ test('a supply is never put in the equipped set to make room: when the pack is f
 test('a supply that is somehow marked equipped counts as in the pack, and can be moved there cleanly', () => {
   const h = hero({ gear: [{ id: 'bandages', eq: true, uses: 3 }, { id: 'sword', eq: true }] });
   assert.equal(C.slotsUsed(h, 'eq'), 1); assert.equal(C.slotsUsed(h, 'pack'), 1);
-  assert.equal(C.actions(h).length, 1, 'it still works from the pack');
+  assert.equal(C.actions(h).length, 2, 'the weapon and automated bandages both work'); assert.ok(C.actions(h).find(a => a.index === 0).healing);
 });
 
 test('fixing a hero that already has a supply equipped moves it to the pack and says which', () => {

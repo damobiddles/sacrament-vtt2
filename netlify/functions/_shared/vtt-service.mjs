@@ -123,7 +123,8 @@ export function makeService({ store, rng = null, now = Date.now, createKey = '' 
           const had = cur.data.images || {}, n = Object.keys(had).length, total = Object.values(had).reduce((t, m) => t + m.size, 0);
           if (n >= IMAGES.perTable || total + bytes.length > IMAGES.tableBytes) return err(403, 'limit', 'This table has as many images as it can keep.');
           const id = randomBytes(12).toString('hex'); await store.putImage(code, id, bytes, mime);
-          const r = await mutate(code, token, 'img.' + id, (state) => { state.images = state.images || {}; if (Object.keys(state.images).length >= IMAGES.perTable) throw new Fail('limit', 'This table has as many images as it can keep.'); state.images[id] = { mime, size: bytes.length, at: now() }; return { result: { id, url: '/.netlify/functions/vtt/img/' + code + '/' + id } }; });
+          const r = await mutate(code, token, 'img.' + id, (state) => { state.images = state.images || {}; if (Object.keys(state.images).length >= IMAGES.perTable || Object.values(state.images).reduce((sum, meta) => sum + meta.size, 0) + bytes.length > IMAGES.tableBytes) throw new Fail('limit', 'This table has as many images as it can keep.'); state.images[id] = { mime, size: bytes.length, at: now() }; return { result: { id, url: '/.netlify/functions/vtt/img/' + code + '/' + id } }; });
+          if (r.status !== 200 && store.deleteImage) await store.deleteImage(code, id);
           return r.status === 200 ? out(200, { ok: true, id, url: '/.netlify/functions/vtt/img/' + code + '/' + id }) : r;
         }
         if (body.op === 'cmd') return await mutate(code, token, body.cmd && body.cmd.actionId, (state, a, ctx) => apply(state, body.cmd, a, ctx), { dv: body.dv });
@@ -140,6 +141,7 @@ export function memoryStore() {
     kind: 'memory',
     async get(code) { const r = m.get(code); return r ? { data: JSON.parse(r.json), etag: r.etag } : null; },
     async putImage(code, id, bytes, mime) { m.set('img:' + code + id, { bytes: Buffer.from(bytes), mime }); },
+    async deleteImage(code, id) { m.delete('img:' + code + id); },
     async getImage(code, id) { return m.get('img:' + code + id) || null; },
     async put(code, data, etag) { const r = m.get(code); if (etag === null ? !!r : !r || r.etag !== etag) return false; m.set(code, { json: JSON.stringify(data), etag: String(++n) }); return true; },
     _raw: m

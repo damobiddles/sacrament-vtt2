@@ -332,7 +332,7 @@ function applyEffort(s, roll, card, field, a, ctx) {
   const full = body(who.gm), shown = hide ? who.pub + ' → ' + card.name + ': ' + (field === 'hp' ? 'a hit' : 'progress') + '.' : body(who.pub);
   const e = L(s, a, ctx, shown, { kind: 'apply', effects: [delta(card.id, field, applied), { t: 'roll', roll: roll.id }], private: !isPublic(s, card), gmText: shown !== full ? full : '' });
   roll.applied = { cardId: card.id, field, applied, log: e.id };
-  if (field === 'hp' && applied < 0) recapBlow(s, ctx, roll, card, -applied);
+  if (field === 'hp' && applied < 0) recapBlow(s, ctx, roll, card, -applied, e.id);
   if (field === 'hp') settleHero(s, card, was, e, ctx);
   return hide && !isGM(a) ? {} : { applied };
 }
@@ -394,9 +394,9 @@ function moveHorror(s, a, ctx, d, say, dice) {
   return { cur: h.cur, applied: m.applied, crossed: m.crossed, arrived: m.arrived, log: e.id };
 }
 /* A hero has used something that tempts the Horror: its amount (fixed, or rolled now with the table's dice) goes on the meter, whatever the check did. No amount, no line. */
-function temptHorror(s, a, ctx, ch, u) {
+function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
-  const what = u.spell ? ch.name + ' read from ' + u.item.name + '.' : ch.name + ' used ' + u.item.name + '.';
+  const what = privateUse ? 'A private use of magic tempts the Horror.' : u.spell ? ch.name + ' read from ' + u.item.name + '.' : ch.name + ' used ' + u.item.name + '.';
   return moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
 }
 
@@ -422,6 +422,62 @@ const turnKey = (s, ch) => (s.table.order.length && s.table.order[s.table.idx] =
 /* A new roll for a hero: if they have just pushed, this is their second action. */
 function takeAction(ch, roll) { if (ch.pushPending) { roll.fromPush = true; ch.pushPending = false; } }
 
+/* Known catalogue healing is resolved atomically, with the same server-owned dice as attacks.
+   Usage belongs to the recipient and source, so changing caster or carrying duplicate books cannot bypass a rest limit. */
+function useHealing(s, c, a, ctx, ch, u, selected) {
+  const h = u.healing, actor = s.cards[ch.cardId];
+  if (actor && actor.hp && actor.hp.cur === 0) fail('invalid', 'A fallen hero cannot use healing. Ask someone else to tend or heal them.');
+  const target = h.self ? actor : selected || actor;
+  if (!target || !target.hp) fail('invalid', 'Choose a target with HP to heal.');
+  noRaisingTheDead(target, 1);
+  const down = target.hp.cur === 0, tending = h.tend && down && target.dying && !target.dying.stable;
+  if (target.hp.cur >= target.hp.max) fail('invalid', target.name + ' is already at full HP.');
+  if (h.kind && !down && !h.force && (target.healingUses || {})[h.kind]) fail('invalid', target.name + ' has already received this healing since the last party rest.');
+  const privateLine = !isPublic(s, target), hidden = numbersHidden(target), out = { rollId: null };
+  let chk = null, roll = null;
+  if (u.stat) {
+    const manual = c.d20 != null && c.d20 !== '', n = manual ? int(c.d20, 0) : d(ctx, 20);
+    chk = R.check({ d20: n, stat: ch.stats[u.stat], target: s.table.target, adj: tending ? 'easy' : c.adj, settings: s.settings });
+    roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual,
+      targetCardId: target.id, effort: null, applied: null, void: false, at: ctx.now, item: u.name, nonDamage: true, isAttack: false,
+      use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
+    takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
+    recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
+    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat), { kind: 'roll', private: privateLine, dice: diceOf(manual, 20, n) });
+    natOne(s, a, ctx, ch, chk);
+  } else ch.pushPending = false;
+  temptHorror(s, a, ctx, ch, u, privateLine);
+  const effects = [], dice = [];
+  if (u.item.uses != null) {
+    const before = u.gear.uses == null ? u.item.uses : u.gear.uses;
+    u.gear.uses = Math.max(0, before - 1);
+    effects.push({ t: 'healingCharge', char: ch.id, key: c.gearKey, before, after: u.gear.uses });
+  }
+  const passed = !chk || chk.success;
+  let amount = 0, applied = 0;
+  if (passed) {
+    if (tending) { effects.push(dyingFx(target, target.dying)); target.dying = Object.assign({}, target.dying, { stable: true }); }
+    if (!tending || (chk && chk.nat20)) {
+      const die = tending ? 4 : h.die, n = d(ctx, die); amount = n; dice.push({ die, n });
+      if (!tending && chk && chk.offerUltimate) { const critical = d(ctx, 12); amount += critical; dice.push({ die: 12, n: critical }); }
+      const before = target.hp.cur; applied = adjustField(s, target, 'hp', amount); effects.push(delta(target.id, 'hp', applied));
+      if (h.kind && !tending) {
+        target.healingUses = target.healingUses || {}; const beforeMark = target.healingUses[h.kind] || null, mark = nid(s, 'h'); target.healingUses[h.kind] = mark;
+        effects.push({ t: 'healingUse', card: target.id, kind: h.kind, before: beforeMark, after: mark, epoch: target.healEpoch || 0 });
+      }
+      const line = L(s, a, ctx, ch.name + ' heals ' + target.name + (hidden ? '.' : ': +' + applied + ' HP (' + dice.map(x => 'd' + x.die + ' ' + x.n).join(' + ') + ').'), { kind: 'heal', effects, private: privateLine, dice });
+      settleHero(s, target, before, line, ctx);
+      out.healing = { amount, log: line.id }; if (isGM(a) || !hidden) out.healing.applied = applied;
+      if (roll) { roll.healing = { amount, dice }; roll.applied = { cardId: target.id, field: 'healing', applied, log: line.id }; }
+      return out;
+    }
+  }
+  const line = L(s, a, ctx, passed ? target.name + ' is stable. The countdown stops.' : ch.name + ' could not heal ' + target.name + '.', { kind: 'heal', effects, private: privateLine });
+  if (roll && passed && tending) { roll.healing = { amount, dice, stable: true }; roll.applied = { cardId: target.id, field: 'healing', applied: 0, log: line.id }; }
+  out.healing = { amount, log: line.id, stable: !!(passed && tending) }; if (isGM(a) || !hidden) out.healing.applied = applied;
+  return out;
+}
+
 /* ---------- the session recap ---------- */
 /* A running tally of tonight's game for the GM to share afterwards: each hero's rolls, the hardest blow, who fell, what was found, how high the Horror rose,
    the scenes shown. It names only what the players have seen (a hidden card is "something unseen"). It counts as things happen: an Undo does not take them back out.
@@ -433,10 +489,15 @@ function recapCheck(s, ctx, ch, chk) {
   const R0 = recapOf(s, ctx), h = R0.heroes[ch.id] = R0.heroes[ch.id] || { name: ch.name, rolls: 0, hits: 0, n20: 0, n1: 0, dealt: 0 };
   h.name = ch.name; h.rolls += 1; if (chk.success) h.hits += 1; if (chk.nat20) h.n20 += 1; if (chk.nat1) h.n1 += 1;
 }
-function recapBlow(s, ctx, roll, card, amount) {
+function recapBlow(s, ctx, roll, card, amount, logId) {
   const R0 = recapOf(s, ctx), on = isPublic(s, card) ? card.name : 'something unseen';
   if (!roll.attack && roll.charId && R0.heroes[roll.charId]) R0.heroes[roll.charId].dealt += amount;
-  if (!roll.attack && (!R0.best || amount > R0.best.n)) R0.best = { who: roll.charName, n: amount, on: str(on, 60) };
+  if (!roll.attack) {
+    if (!R0.blows) { R0.blows = []; R0.bestBeforeBlows = R0.best ? clone(R0.best) : null; }
+    const event = { log: logId, charId: roll.charId, who: roll.charName, n: amount, on: str(on, 60) }; R0.blows.push(event);
+    if (!R0.best || amount > R0.best.n) R0.best = event;
+    while (R0.blows.length > LIMITS.log) { const old = R0.blows.shift(); if (!old.undone && (!R0.bestBeforeBlows || old.n > R0.bestBeforeBlows.n)) R0.bestBeforeBlows = old; }
+  }
 }
 const recapDeath = (s, ctx, card) => { const R0 = recapOf(s, ctx); if (card.dying && card.dying.dead && !R0.died.includes(card.name)) listAdd(R0.died, card.name); };
 
@@ -614,6 +675,7 @@ const HANDLERS = {
       const sides = u.pickDie || u.pick, n = d(ctx, sides), sp = u.spells[Math.floor((n - 1) * u.pick / sides)]; u = SC.useSpell(u, sp); out.picked = { n, spellId: sp.id, name: sp.name };
       L(s, a, ctx, ch.name + ' reads ' + u.item.name + ': d' + sides + ' shows ' + n + ', ' + sp.name + '.', { kind: 'roll', dice: diceOf(false, sides, n) });
     }
+    if (u.healing) return Object.assign(out, useHealing(s, Object.assign({}, c, { index, adj }), a, ctx, ch, u, tc));
     const tempts = (u.spell || u.item).temptsHorror ? ' It tempts the Horror.' : ''; let nat = null;
     if (!u.stat) ch.pushPending = false;   /* a pushed second action with no roll is still the second action */
     if (u.stat) {
@@ -628,7 +690,7 @@ const HANDLERS = {
       nat = natOne(s, a, ctx, ch, chk);
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv });
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
-    const hr = temptHorror(s, a, ctx, ch, u) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
+    const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
   push(s, c, a, ctx) { /* after a failed attack the hero may push for a second action: the Horror rises, and their next roll is that action */
@@ -700,8 +762,8 @@ const HANDLERS = {
     if (att.kind === 'pc') fail('invalid', 'A hero attacks with its own rolls. Choose a monster.');
     const ch = tgt.kind === 'pc' && tgt.charId && s.chars[tgt.charId], hero = ch && tgt.hp ? ch : fail('invalid', 'Choose a hero to attack.');
     const manual = c.d20 != null && c.d20 !== '', d20 = manual ? int(c.d20, 0) : d(ctx, 20);
-    let res; try { res = R.attack({ d20, bonus: att.attack || 0, defence: SC.defence(hero) }); } catch (err) { fail('invalid', err.message); }
-    const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, attack: { cardId: att.id }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
+    let res; try { res = R.attack({ d20, bonus: (att.attack || 0) + (s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0), defence: SC.defence(hero) }); } catch (err) { fail('invalid', err.message); }
+    const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, attack: { cardId: att.id, baseBonus: att.attack || 0, sceneBonus: s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0 }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
     s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     const who = attackerNames(s, roll), hide = numbersHidden(att), line = (n) => n + ' attacks ' + tgt.name + (hide ? (res.hit ? ': hit.' : ': miss.') : ' · ' + R.sayAttack(res)) + (manual ? ' [physical die]' : '');
     L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', dice: diceOf(manual, 20, d20), diceGm: hide });
@@ -741,6 +803,10 @@ const HANDLERS = {
     const heroes = Object.values(s.cards).filter((card) => isHero(card) && !(card.dying && card.dying.dead));
     if (!heroes.length) fail('invalid', 'There is no living hero to rest.');
     const effects = [], parts = [];
+    Object.values(s.cards).filter(card => card.hp && Object.keys(card.healingUses || {}).length).forEach(card => {
+      const before = clone(card.healingUses || {}), epoch = card.healEpoch || 0;
+      effects.push({ t: 'healingReset', card: card.id, before, epoch, afterEpoch: epoch + 1 }); card.healingUses = {}; card.healEpoch = epoch + 1;
+    });
     heroes.forEach((card) => {
       const applied = adjustField(s, card, 'hp', R.REST.heal); if (applied) effects.push(delta(card.id, 'hp', applied));
       let up = ''; if (card.dying && card.hp.cur > 0) { effects.push(dyingFx(card, card.dying)); card.dying = null; up = ', back on their feet'; }
@@ -812,6 +878,15 @@ const HANDLERS = {
     if (!isGM(a) && e.effects.some((fx) => fx.t === 'turn')) fail('forbidden', 'Only the GM can take a turn back.');   /* a new round also ticks timers and countdowns for everyone */
     if ((e.private || e.only) && !isGM(a) && !e.only) fail('not_found', 'That entry is no longer there.');
     for (const fx of e.effects) {
+      if (['healingUse', 'healingReset'].includes(fx.t)) {
+        const card = s.cards[fx.card] || fail('conflict', 'That patient is no longer at the table.');
+        if (fx.t === 'healingUse' && ((card.healEpoch || 0) !== fx.epoch || (card.healingUses || {})[fx.kind] !== fx.after)) fail('conflict', 'Undo later healing or rests for this patient first.');
+        if (fx.t === 'healingReset' && ((card.healEpoch || 0) !== fx.afterEpoch || Object.keys(card.healingUses || {}).length)) fail('conflict', 'Undo later healing or rests first.');
+      }
+      if (fx.t === 'healingCharge') {
+        const gear = ((s.chars[fx.char] || {}).gear || []).find(g => g.key === fx.key);
+        if (!gear || gear.uses !== fx.after) fail('conflict', 'Undo later uses of this item first.');
+      }
       if (fx.t === 'turn' && (s.table.idx !== fx.to.idx || s.table.round !== fx.to.round)) fail('conflict', 'The turn has moved on since then, so it cannot be taken back.');
       if ((fx.t === 'delta' || fx.t === 'dying') && !s.cards[fx.card]) fail('conflict', 'That card is gone, so there is nothing to put back.');
     }
@@ -822,10 +897,19 @@ const HANDLERS = {
       else if (fx.t === 'turn') { s.table.idx = fx.from.idx; s.table.round = fx.from.round; }
       else if (fx.t === 'roll') { const r = s.rolls[fx.roll]; if (r) { r.applied = null; r.blow = false; } }
       else if (fx.t === 'dying') s.cards[fx.card].dying = fx.before ? clone(fx.before) : null;
+      else if (fx.t === 'healingUse') { const card = s.cards[fx.card]; if (fx.before) card.healingUses[fx.kind] = fx.before; else delete card.healingUses[fx.kind]; }
+      else if (fx.t === 'healingReset') { const card = s.cards[fx.card]; card.healingUses = clone(fx.before); card.healEpoch = fx.epoch; }
+      else if (fx.t === 'healingCharge') s.chars[fx.char].gear.find(g => g.key === fx.key).uses = fx.before;
       else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */
     e.effects.forEach((fx) => { const card = (fx.t === 'delta' || fx.t === 'dying') && s.cards[fx.card]; if (isHero(card) && card.hp.cur > 0) card.dying = null; });
+    const recap = s.recap, event = recap && (recap.blows || []).find(x => x.log === e.id && !x.undone);
+    if (event) {
+      event.undone = true;
+      if (recap.heroes[event.charId]) recap.heroes[event.charId].dealt = Math.max(0, recap.heroes[event.charId].dealt - event.n);
+      recap.best = (recap.blows || []).filter(x => !x.undone).reduce((best, x) => !best || x.n > best.n ? x : best, recap.bestBeforeBlows || null);
+    }
     e.undone = true;
     L(s, a, ctx, 'Undid: ' + e.text + (short && !e.gmText ? ' (part of it no longer fits, so less was put back)' : ''), { private: e.private, only: e.only, gmText: e.gmText ? 'Undid: ' + e.gmText + (short ? ' (part of it no longer fits, so less was put back)' : '') : '' });
     return short && (isGM(a) || !concealed) ? { partial: true } : {}; /* whether a hidden number was at its limit is itself a hidden number */

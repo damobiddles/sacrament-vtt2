@@ -56,13 +56,13 @@
   #panel .sec { padding-bottom:10px; }
 }
 @media(max-width:600px) {
-  #top { padding:3px 8px; column-gap:8px; }
+  #top { padding:2px 8px; column-gap:8px; row-gap:0; }
   #panel { padding:10px 12px; gap:9px; }
   #panel .cats { gap:5px; }
   #panel .cats button { padding:4px 2px; }
-  #feed .bar1 { padding:3px 9px; }
+  #feed .bar1 { padding:0 9px; }
   #feed ol { padding:4px 9px 8px; }
-  #strip { padding:6px 8px calc(6px + env(safe-area-inset-bottom)); gap:6px 8px; }
+  #strip { padding:4px 8px calc(4px + env(safe-area-inset-bottom)); gap:4px 6px; }
   #entry { padding:20px 12px; }
   #entry .entry-grid { gap:12px; }
   #entry .card-box { padding:16px; }

@@ -1,6 +1,6 @@
 /* Sacrament RPG table rules arithmetic, kept apart from the interface and from the session service. Nothing here touches the DOM, a clock or a random source
    unless one is passed in. Baseline: the rules as described in the project's own notes (docs/vtt/README.md).
-   Nothing is invented: what is not established is left out (no critical-failure rule; a monster's attack is a plain d20 + bonus against 10 + CON + armour, as the Rules page says, with no special result on a 1 or a 20). The rules are provisional: see docs/vtt/README.md. */
+   Nothing is invented: what is not established is left out (no critical-failure rule; a monster attacks Defence with d20 + bonus; its natural 1 always misses and natural 20 always hits, as approved by the owner). The rules are provisional: see docs/vtt/README.md. */
 /* Loaded as a plain script in the browser and imported (for its effect) in Node: either way it puts SacramentRules on the global object, as site/legacy/fx.js does. */
 (function (root, factory) { root.SacramentRules = factory(); })(typeof globalThis !== 'undefined' ? globalThis : window, function () {
   'use strict';
@@ -74,7 +74,7 @@
   function restDice(living) { return Math.ceil(Math.max(0, int(living, 0)) / REST.perDie); }
 
   /* The two table settings. Everything else is a fixed rule. */
-  var DEFAULT_SETTINGS = { nat20Ultimate: true, dice: DEFAULT_DICE };
+  var DEFAULT_SETTINGS = { sceneDanger: false, nat20Ultimate: true, dice: DEFAULT_DICE };
 
   var clamp = function (n, lo, hi) { return Math.max(lo, Math.min(hi, n)); };
   var int = function (v, d) { v = parseInt(v, 10); return isFinite(v) ? v : (d || 0); };
@@ -82,11 +82,12 @@
   function settingsOf(s) {
     s = s || {}; var dice = {}, cfg = {};
     CATS.forEach(function (k) { var v = int(s.dice && s.dice[k], DEFAULT_DICE[k]); dice[k] = [4, 6, 8, 10, 12, 20].indexOf(v) >= 0 ? v : DEFAULT_DICE[k]; });
-    cfg.nat20Ultimate = s.nat20Ultimate !== false; cfg.dice = dice;
+    cfg.sceneDanger = s.sceneDanger === true; cfg.nat20Ultimate = s.nat20Ultimate !== false; cfg.dice = dice;
     return cfg;
   }
 
   /* The Target a roll is made against: the scene's Target moved by EASY or HARD, never below 1. */
+  function sceneDanger(target) { return Math.max(0, int(target) - 11); }
   function targetFor(scene, adj) { return Math.max(1, int(scene) + (ADJ[adj] || 0)); }
 
   /* A stat check: d20 plus the stat. `d20` is the die (rolled by the caller, or typed in from a physical die). */
@@ -113,7 +114,8 @@
   function attack(o) {
     var d = int(o.d20); if (d < 1 || d > 20) throw new Error('A d20 shows 1 to 20.');
     var mod = clamp(int(o.bonus), -MAX_BONUS, MAX_BONUS), total = d + mod, def = int(o.defence);
-    return { d20: d, mod: mod, total: total, defence: def, hit: total >= def, success: total >= def };
+    var hit = d === 20 || (d !== 1 && total >= def);
+    return { d20: d, mod: mod, total: total, defence: def, hit: hit, success: hit, nat1: d === 1, nat20: d === 20 };
   }
   function sayAttack(a) { return a.d20 + (a.mod < 0 ? ' - ' + Math.abs(a.mod) : ' + ' + a.mod) + ' = ' + a.total + ' against Defence ' + a.defence + (a.hit ? '. Hit.' : '. Miss.'); }
 
@@ -159,5 +161,5 @@
 
   return { STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
     HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove,
-    settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
+    sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

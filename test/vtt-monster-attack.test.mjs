@@ -22,7 +22,8 @@ test('rules: a hero\'s Defence is 10 + CON + armour, armour counts for at most +
   assert.equal(R.defence(-3, 0), 7);
   assert.equal(R.attack({ d20: 11, bonus: 3, defence: 14 }).hit, true, 'reaching the Defence is a hit');
   assert.equal(R.attack({ d20: 10, bonus: 3, defence: 14 }).hit, false);
-  assert.equal(R.attack({ d20: 20, bonus: 0, defence: 25 }).hit, false, 'a natural 20 has no special effect here');
+  assert.equal(R.attack({ d20: 20, bonus: 0, defence: 25 }).hit, true, 'owner decision: natural 20 always hits');
+  assert.equal(R.attack({ d20: 1, bonus: 10, defence: 10 }).hit, false, 'natural 1 always misses');
   assert.throws(() => R.attack({ d20: 21, bonus: 0, defence: 10 }));
 });
 

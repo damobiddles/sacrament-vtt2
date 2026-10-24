@@ -73,10 +73,10 @@ test('the GM\'s loot table: roll, see the find and a GM-only note, put it on the
   expect(gm.errors).toEqual([]);
 });
 
-test('the Items button and the Use buttons fit a phone @phone', async ({ browser }) => {
+test('the sheet quick actions fit a phone @phone', async ({ browser }) => {
   const { ann } = await setup(browser, { width: 390, height: 844 }); await takeBlade(ann);
   await ann.locator('#sheetOverlay [data-sh=close]').click();
-  await ann.locator('[data-do=toggle][data-key=items]').click();
-  await expect(ann.locator('#strip [data-do=useItem]')).toBeVisible();
+  await ann.locator('#strip [data-do=sheet]').click();
+  await expect(ann.locator('#sheetOverlay [data-sh=quickUse]').first()).toBeVisible();
   const wide = await ann.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); expect(wide).toBeLessThanOrEqual(1);
 });

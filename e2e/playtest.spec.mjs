@@ -31,11 +31,13 @@ test('healing remains usable, shows zero Horror and no damage or Push controls',
  await bounded(gm.evaluate(async()=>{
   const s=window.__vtt.state(),ch=Object.values(s.chars).find(c=>c.name==='Thorne'),entry=Object.entries(localStorage).find(([k])=>k.endsWith(s.code)&&!k.includes('join-')),token=JSON.parse(entry[1]).token;
   const r=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{type:'sheet',charId:ch.id,op:{op:'add',id:'litany'},actionId:'healingbook.1'}})});if(!r.ok)throw Error('Could not give test book');
+  const hurt=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{type:'adjust',cardId:ch.cardId,field:'hp',delta:-5,actionId:'healingbook.2'}})});if(!hurt.ok)throw Error('Could not prepare test patient');
  }),15000,'giving a disposable healing grimoire');
  await expect.poll(async()=>Object.values((await state(p)).chars).find(c=>c.name==='Thorne').gear.length).toBe(2);
  await p.locator('#strip [data-do=toggle][data-key=more]').click();await p.locator('#strip [data-do=toggle][data-key=dice]').click();await p.locator('#strip input[data-phys]').fill('15');
  await p.locator('#strip [data-do=sheet]').click();const mend=p.locator('#sheetOverlay .sh-spells li',{hasText:'Mend'});await expect(mend).toContainText('No Horror cost');await expect(mend).toContainText('Yourself or any target');await mend.locator('[data-sh=use]').click();
- await expect(p.locator('#panel')).toContainText('No damage to roll');await expect(p.locator('[data-do=effort],[data-do=push]')).toHaveCount(0);expect((await state(p)).horror.cur).toBe(0);
+ await p.locator('#attackTarget').selectOption({label:'Thorne'});await p.locator('[data-do=confirmAttack]').click();
+ await expect(p.locator('#panel')).toContainText('Healing rolled:');await expect(p.locator('[data-do=effort],[data-do=push]')).toHaveCount(0);expect((await state(p)).horror.cur).toBe(0);
  expect(gm.errors).toEqual([]);expect(p.errors).toEqual([]);
 });
 

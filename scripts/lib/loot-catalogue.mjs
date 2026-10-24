@@ -32,7 +32,7 @@ export function lootCatalogue(g) {
     }
     const spellList = kind === 'grimoire' ? `<ul class="loot-spells">${i.spells.map(id => {
       const s = spells.get(id);
-      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (GM applies)' : ''} · ${esc(s.band || 'GM decides range')} · ${cost(s)}</p></li>`;
+      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(s.band || 'GM decides range')} · ${cost(s)}</p></li>`;
     }).join('')}</ul>` : '';
     return `<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}${spellList}</article>`;
   }).join('')}</section>`).join('');

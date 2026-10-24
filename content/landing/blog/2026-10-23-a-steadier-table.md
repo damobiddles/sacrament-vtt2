@@ -9,6 +9,8 @@ The candles are lit. The players have arrived. The last thing a GM needs is to w
 
 The latest Sacrament RPG Table updates focus on the practical things that help a session keep moving: protecting characters, keeping everyone in step and giving the scene more room. Here is what is live now, followed by the work we want to tackle next.
 
+**Update, 24 October:** backup-file restore and the character generator are now available on My heroes. The VTT also has GM dice, scene renaming, healing with rest-limit tracking, and an optional automatic scene-danger bonus in Play. Monster natural 1s always miss and natural 20s always hit. The roadmap below records the earlier plan; the live controls and [How to play](/how-to-play/) describe the current behaviour.
+
 ## Live now: a safer session
 
 We have tightened how the table handles delayed replies, interrupted connections and repeated actions. A reply from a previous session should no longer interfere with the table you are playing at now, and uncertain saves pause for recovery rather than letting more actions pile up behind them.

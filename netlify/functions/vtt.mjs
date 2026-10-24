@@ -30,6 +30,7 @@ export function blobStore(getStore) {
       return r && r.data ? { data: r.data, etag: r.etag } : null;
     },
     async putImage(code, id, bytes, mime) { await (await store()).set('img-' + code + '-' + id, bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), { metadata: { mime } }); },
+    async deleteImage(code, id) { await (await store()).delete('img-' + code + '-' + id); },
     async getImage(code, id) { const buf = await (await store()).get('img-' + code + '-' + id, { type: 'arrayBuffer' }); return buf ? { bytes: Buffer.from(buf) } : null; },
     async put(code, data, etag) {
       const r = await (await store()).setJSON(key(code), data, etag === null ? { onlyIfNew: true } : { onlyIfMatch: etag }), saved = !!(r && r.modified && r.etag);

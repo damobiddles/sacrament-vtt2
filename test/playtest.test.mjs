@@ -17,7 +17,8 @@ test('playtest: healing spells remain usable without Horror and other spells cos
 test('playtest: healing checks never offer damage or Push and casting adds no Horror',async()=>{
  const t=await table(),p=await t.join('Healer'),ch=charNamed(await t.state(),'Thorne');await p.cmd({type:'claim',charId:ch.id});
  await t.gm.cmd({type:'sheet',charId:ch.id,op:{op:'add',id:'litany'}});
- for(const n of [15,2]){const r=await p.cmd({type:'useItem',charId:ch.id,index:0,spellId:'mend',d20:n,targetCardId:ch.cardId});assert.equal(r.status,200);const roll=r.body.state.rolls.at(-1);assert.equal(r.body.state.horror.cur,0);assert.ok(!roll.cat);assert.ok(!roll.canPush);assert.equal((await p.cmd({type:'push',rollId:roll.id})).status,400);}
+ await t.gm.cmd({type:'adjust',cardId:ch.cardId,field:'hp',delta:-9});
+ for(const n of [2,15]){const r=await p.cmd({type:'useItem',charId:ch.id,index:0,spellId:'mend',d20:n,targetCardId:ch.cardId});assert.equal(r.status,200);const roll=r.body.state.rolls.at(-1);assert.equal(r.body.state.horror.cur,0);assert.ok(!roll.cat);assert.ok(!roll.canPush);assert.equal((await p.cmd({type:'push',rollId:roll.id})).status,400);}
 });
 
 test('playtest: only failed attacks can Push, including unarmed attacks with an explicit target',async()=>{

@@ -12,7 +12,7 @@ test('public loot tables link to complete three-spell books with clear effect la
   await expect(page.locator('.loot-entry')).toHaveCount(178);
   await expect(page.locator('#item-lowdoors .loot-effect')).toHaveText(['Esoteric effect', 'Esoteric effect', 'Esoteric effect']);
   await expect(page.locator('#item-hospicepsalter .loot-effect')).toHaveText(['Healing', 'Esoteric effect', 'Esoteric effect']);
-  await expect(page.locator('#item-hospicerib')).toContainText('GM rolls and applies healing');
+  await expect(page.locator('#item-hospicerib')).toContainText('The table applies healing');
   await expect(page.locator('#table-arms')).toContainText('Processional Harness');
   for (let n = 0; n < 16; n++) await expect(books.nth(n).locator('.loot-spells > li')).toHaveCount(3);
   await expect(page.locator('#item-embers .loot-effect')).toHaveText(['Damage', 'Esoteric effect', 'Esoteric effect']);
