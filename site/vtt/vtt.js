@@ -733,15 +733,15 @@
   }
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
-    var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && onTable(c); });
-    var h = startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + (t.order.length ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
+    var h = startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="turnTo" data-i="' + i + '" title="Make it this turn">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
         (edit ? '<button class="chip" data-do="up" data-i="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>Up</button><button class="chip" data-do="down" data-i="' + i + '" aria-label="Move later"' + (i < t.order.length - 1 ? '' : ' disabled') + '>Down</button><button class="chip" data-do="outOrder" data-i="' + i + '" aria-label="Remove from the order">Remove</button>' : '') + '</li>';
     }).join('') + '</ul>' : '<p class="hint">Nobody is in the turn order yet.</p>';
     if (edit && addable.length) h += '<div class="row"><select id="addOrder" aria-label="Add to the order">' + addable.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small" data-do="addOrder">Add</button></div>';
-    h += '<p class="hint">Tap a card or token on the table to act on it. Tap a name to make it their turn.</p>';
+    h += '<p class="hint">This is the live scene’s order. Each scene remembers its order and whose turn it is. Tap a name to make it their turn.</p>';
     var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, nd = R.restDice(living);
     if (!living) UI.restAsk = false;
     return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
@@ -982,7 +982,7 @@
     renderPanel();
     send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, mode: mode || undefined, targetCardIds: areaIds || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.healing && !b.result.rollId) toast(b.result.healing.stable ? 'The patient is stable.' : 'Healing applied: ' + (b.result.healing.applied == null ? b.result.healing.amount : b.result.healing.applied) + ' HP.'); if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
   }
-  function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', order: o }); }
+  function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', sceneId: S.table.scene.id, order: o }); }
   /* a place on the table where a new card of this size overlaps nothing, nearest the middle; units are those of the table's width (it is 100 wide and 62.5 high) */
   function freeSpot(w, h) {
     var boxes = cardList().filter(onTable).map(function (c) { var l = S.layout[c.id]; if (!l) return null; var tok = c.kind === 'token' || c.kind === 'pc'; return { x: l.x, y: l.y * 0.625, w: l.w, h: tok ? l.w : l.h }; }).filter(Boolean), best = null;
@@ -1014,8 +1014,8 @@
     switch (d.do) {
       case 'mapWidth': UI.mapWide = !UI.mapWide; renderTable(); break;
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
-      case 'nextRound': send({ type: 'nextRound', expect: { round: S.table.round, idx: S.table.idx } }); break;
-      case 'endTurn': send({ type: 'endTurn', expect: { round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
+      case 'nextRound': send({ type: 'nextRound', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }); break;
+      case 'endTurn': send({ type: 'endTurn', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
       case 'select': pickCard(d.id); render(); break;
       case 'gmDiceToggle': UI.gmDiceOpen = !UI.gmDiceOpen; renderStrip(); break;
       case 'gmDiceRoll': {
@@ -1151,10 +1151,10 @@
       case 'cancelSceneDelete': UI.sceneDelete = null; render(); break;
       case 'confirmSceneDelete': { if (UI.sceneDeleting) break; UI.sceneDeleting = true; var sid = d.scene; render(); send({ type: 'sceneDelete', id: sid }, function (b) { UI.sceneDeleting = false; if (b) { if (UI.view === sid) UI.view = null; UI.sceneDelete = null; UI.sel = null; } render(); }); break; }
       case 'newScene': { var nm = $('newScene').value.trim(); if (nm) send({ type: 'sceneCreate', name: nm }, function (bd) { if (bd) { UI.view = bd.result.id; render(); } }); break; }
-      case 'turnTo': send({ type: 'turnSet', idx: +d.i }); break;
+      case 'turnTo': send({ type: 'turnSet', sceneId: S.table.scene.id, idx: +d.i }); break;
       case 'up': reorder(+d.i, -1); break; case 'down': reorder(+d.i, 1); break;
-      case 'outOrder': send({ type: 'orderSet', order: S.table.order.map(function (x) { return x.id; }).filter(function (x, i) { return i !== +d.i; }) }); break;
-      case 'addOrder': { var v2 = $('addOrder').value; if (v2) send({ type: 'orderSet', order: S.table.order.map(function (x) { return x.id; }).concat([v2]) }); break; }
+      case 'outOrder': send({ type: 'orderSet', sceneId: S.table.scene.id, order: S.table.order.map(function (x) { return x.id; }).filter(function (x, i) { return i !== +d.i; }) }); break;
+      case 'addOrder': { var v2 = $('addOrder').value; if (v2) send({ type: 'orderSet', sceneId: S.table.scene.id, order: S.table.order.map(function (x) { return x.id; }).concat([v2]) }); break; }
       case 'cancelRemovePlayer': UI.removePlayerAsk = null; renderPanel(); break;
       case 'removePlayer':
         if (!gm() || UI.removeBusy) break;

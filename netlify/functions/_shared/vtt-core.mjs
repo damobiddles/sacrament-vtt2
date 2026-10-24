@@ -217,6 +217,7 @@ export function addCharacter(s, p) {
     calling: '', vow: '', appearance: '', background: '', notes: '', gear: [] };
   if (p.sheet) Object.assign(s.chars[id], { calling: p.sheet.calling, vow: p.sheet.vow, appearance: p.sheet.appearance, background: p.sheet.background, notes: p.sheet.notes, gear: p.sheet.gear });
   s.table.order.push(card.id);
+  Object.values(s.scenes).forEach(scene => { if (scene.turns && !scene.turns.order.includes(card.id)) scene.turns.order.push(card.id); });
   return s.chars[id];
 }
 
@@ -305,9 +306,40 @@ function lootSource(s, c) {
 function dropCard(s, card) { delete s.cards[card.id]; delete s.layout[card.id]; leaveOrder(s, card.id); }
 /* A card leaves the turn order: whoever is acting keeps the turn (a place before theirs going moves them up one); if it was the acting card's own turn, the next in line has it. */
 function leaveOrder(s, id) {
-  const at = s.table.order.indexOf(id); if (at < 0) return;
-  s.table.order.splice(at, 1); if (at < s.table.idx) s.table.idx -= 1;
-  s.table.idx = clamp(s.table.idx, 0, Math.max(0, s.table.order.length - 1));
+  const remove = turns => {
+    const at = turns.order.indexOf(id); if (at < 0) return;
+    turns.order.splice(at, 1); if (at < turns.idx) turns.idx -= 1;
+    turns.idx = clamp(turns.idx, 0, Math.max(0, turns.order.length - 1));
+  };
+  remove(s.table);
+  Object.values(s.scenes).forEach(scene => { if (scene.turns) remove(scene.turns); });
+}
+/* The live order remains in table for older pages and saves. A scene stores its
+   own order/actor when left; first visits start with heroes and that scene's
+   already-tracked enemies, never enemies from the previous scene. */
+const inSceneOrder = (s, id, sceneId) => own(s.cards, id) && (s.cards[id].kind === 'pc' || s.cards[id].sceneId == null || s.cards[id].sceneId === sceneId);
+function cleanSceneTurns(s, sceneId, turns) {
+  const acting = turns.order[turns.idx], seen = new Set();
+  const order = turns.order.filter(id => inSceneOrder(s, id, sceneId) && !seen.has(id) && seen.add(id));
+  const at = order.indexOf(acting);
+  return { order, idx: at >= 0 ? at : clamp(turns.idx, 0, Math.max(0, order.length - 1)) };
+}
+function sceneTurns(s, sceneId) {
+  const scene = s.scenes[sceneId];
+  if (!scene.turns) {
+    const heroes = Object.values(s.cards).filter(c => c.kind === 'pc').map(c => c.id);
+    const ordered = s.table.order.filter(id => s.cards[id] && (s.cards[id].kind === 'pc' || s.cards[id].sceneId === sceneId));
+    scene.turns = { order: ordered.concat(heroes.filter(id => !ordered.includes(id))), idx: 0 };
+  }
+  return scene.turns;
+}
+function joinSceneOrder(s, card) {
+  const sceneId = card.kind === 'pc' ? s.table.scene : card.sceneId || s.table.scene;
+  const turns = sceneId === s.table.scene ? s.table : sceneTurns(s, sceneId);
+  if (!turns.order.includes(card.id)) turns.order.push(card.id);
+}
+function expectOrderScene(s, c) {
+  if (c.sceneId && c.sceneId !== s.table.scene) fail('conflict', 'The live scene has changed. Review its turn order before editing.');
 }
 
 const d = (ctx, sides) => 1 + Math.floor(ctx.rng() * sides);
@@ -547,7 +579,7 @@ const HANDLERS = {
   settings(s, c, a, ctx) { const m = Object.assign({}, s.settings, c.patch || {}); if (c.patch && c.patch.dice) m.dice = Object.assign({}, s.settings.dice, c.patch.dice); s.settings = R.settingsOf(m); L(s, a, ctx, 'House rules changed.'); return {}; },
 
   cardCreate(s, c, a, ctx) {
-    const card = newCard(s, c.card || {}, a); if (c.addToOrder) s.table.order.push(card.id);
+    const card = newCard(s, c.card || {}, a); if (c.addToOrder) joinSceneOrder(s, card);
     L(s, a, ctx, 'Added ' + card.name + '.', vis(s, card)); return { id: card.id };
   },
   cardUpdate(s, c, a, ctx) {
@@ -560,7 +592,13 @@ const HANDLERS = {
     if (own(p, 'attack')) card.attack = attackBonus(p.attack, card.kind);
     if (own(p, 'hideNumbers') && card.kind !== 'pc') card.hideNumbers = p.hideNumbers === true;
     if (own(p, 'kind') && ['card', 'token', 'loot'].includes(p.kind) && card.kind !== 'pc') card.kind = p.kind;
-    if (own(p, 'sceneId')) card.sceneId = p.sceneId && s.scenes[p.sceneId] ? p.sceneId : null;
+    if (own(p, 'sceneId')) {
+      const sceneId = p.sceneId && own(s.scenes, p.sceneId) ? p.sceneId : null;
+      if (sceneId !== card.sceneId) {
+        const tracked = s.table.order.includes(card.id) || Object.values(s.scenes).some(sc => sc.id !== s.table.scene && sc.turns && sc.turns.order.includes(card.id));
+        leaveOrder(s, card.id); card.sceneId = sceneId; if (tracked) joinSceneOrder(s, card);
+      }
+    }
     if (own(p, 'w') || own(p, 'h')) { const l = s.layout[card.id]; if (own(p, 'w')) l.w = clamp(int(p.w, l.w), 3, 60); if (own(p, 'h')) l.h = clamp(int(p.h, l.h), 3, 80); }
     const nowPublic = isPublic(s, card);
     if (own(p, 'visible') && nowPublic !== wasPublic) L(s, a, ctx, (nowPublic ? 'Revealed ' : 'Hid ') + card.name + '.', { private: !nowPublic });
@@ -633,14 +671,28 @@ const HANDLERS = {
     L(s, a, ctx, 'Deleted prepared scene ' + sc.name + '.', { private: true });
     return { id: sc.id };
   },
-  sceneReveal(s, c, a, ctx) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (s.table.scene !== sc.id) Object.values(s.chars).forEach(ch => { ch.pushPending = false; }); s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {}; },
+  sceneReveal(s, c, a, ctx) {
+    const sc = own(s.scenes, c.id) && s.scenes[c.id] || fail('not_found', 'No such scene.');
+    if (s.table.scene !== sc.id) {
+      Object.values(s.scenes).forEach(scene => { sceneTurns(s, scene.id); });
+      s.scenes[s.table.scene].turns = cleanSceneTurns(s, s.table.scene, s.table);
+      /* Older turn entries did not name their scene. Keep them tied to the
+         outgoing order so Undo cannot advance another scene accidentally. */
+      s.log.forEach(e => e.effects.forEach(fx => { if (fx.t === 'turn' && !fx.scene) fx.scene = s.table.scene; }));
+      const turns = cleanSceneTurns(s, sc.id, sceneTurns(s, sc.id));
+      s.table.order = turns.order.slice(); s.table.idx = turns.idx;
+      Object.values(s.chars).forEach(ch => { ch.pushPending = false; });
+    }
+    s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {};
+  },
 
   orderSet(s, c) {
+    expectOrderScene(s, c);
     if (!Array.isArray(c.order)) fail('invalid', 'The order is a list.');
-    const seen = new Set(), order = c.order.filter((id) => s.cards[id] && !seen.has(id) && seen.add(id)); const cur = s.table.order[s.table.idx];
+    const seen = new Set(), order = c.order.filter((id) => inSceneOrder(s, id, s.table.scene) && !seen.has(id) && seen.add(id)); const cur = s.table.order[s.table.idx];
     s.table.order = order; const at = order.indexOf(cur); s.table.idx = at >= 0 ? at : clamp(s.table.idx, 0, Math.max(0, order.length - 1)); return {};
   },
-  turnSet(s, c) { s.table.idx = clamp(int(c.idx, 0), 0, Math.max(0, s.table.order.length - 1)); return {}; },
+  turnSet(s, c) { expectOrderScene(s, c); s.table.idx = clamp(int(c.idx, 0), 0, Math.max(0, s.table.order.length - 1)); return {}; },
   endTurn(s, c, a, ctx) {
     expectTurn(s, c);
     return advance(s, a, ctx, false);
@@ -966,7 +1018,7 @@ const HANDLERS = {
         const gear = ((s.chars[fx.char] || {}).gear || []).find(g => g.key === fx.key);
         if (!gear || gear.uses !== fx.after) fail('conflict', 'Undo later uses of this item first.');
       }
-      if (fx.t === 'turn' && (s.table.idx !== fx.to.idx || s.table.round !== fx.to.round)) fail('conflict', 'The turn has moved on since then, so it cannot be taken back.');
+      if (fx.t === 'turn' && ((fx.scene && fx.scene !== s.table.scene) || s.table.idx !== fx.to.idx || s.table.round !== fx.to.round)) fail('conflict', 'The turn has moved on since then, so it cannot be taken back.');
       if ((fx.t === 'delta' || fx.t === 'dying') && !s.cards[fx.card]) fail('conflict', 'That card is gone, so there is nothing to put back.');
     }
     /* Each number moves back by what that action moved it, clamped to its ends. If a later change has already taken it to an end, the part that no longer fits is lost. */
@@ -1009,7 +1061,7 @@ const HANDLERS = {
 /* A command that moves the turn says which turn the person was looking at. If it has moved since (someone else pressed first), nothing happens, so two clicks on
    the same turn can never advance it twice. */
 function expectTurn(s, c) {
-  if (c.expect && (c.expect.round !== s.table.round || c.expect.idx !== s.table.idx)) fail('conflict', 'The turn has already moved on.');
+  if (c.expect && ((c.expect.scene && c.expect.scene !== s.table.scene) || c.expect.round !== s.table.round || c.expect.idx !== s.table.idx)) fail('conflict', 'The turn has already moved on.');
 }
 
 /* Moving the turn on. A new round (the last place has just finished, or the GM pressed Next round) ticks every automatic timer down by one: see R.tickTimers. */
@@ -1018,7 +1070,7 @@ function advance(s, a, ctx, forceRound) {
   let to;
   if (forceRound || !s.table.order.length) to = { idx: 0, round: s.table.round + 1, newRound: true }; else to = R.nextTurn(s.table.order.length, s.table.idx, s.table.round);
   Object.values(s.chars).forEach((ch) => { ch.pushPending = false; });   /* a second action not taken by the end of the turn is gone */
-  s.table.idx = to.idx; s.table.round = to.round; effects.push({ t: 'turn', from, to: { idx: to.idx, round: to.round } });
+  s.table.idx = to.idx; s.table.round = to.round; effects.push({ t: 'turn', scene: s.table.scene, from, to: { idx: to.idx, round: to.round } });
   const ticked = [], alerts = [], dying = [];
   if (to.newRound) {
     const cards = Object.values(s.cards).filter((c) => c.timer);
