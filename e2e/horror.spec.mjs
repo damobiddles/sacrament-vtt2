@@ -79,10 +79,9 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   test.setTimeout(90000);
   const gm = await newPage(browser), ann = await newPage(browser, { width: 360, height: 640 });
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
-  const thorne = Object.values((await state(gm)).chars).find((c) => c.name === 'Thorne');
   /* the GM hands Thorne the grimoire with no title (a find: only the GM can) on Thorne's sheet */
-  await gm.locator('[data-do=gmstrip]').click(); await gm.locator('#actAs').selectOption(thorne.id);
-  await gm.locator('#strip [data-do=sheet]').click(); await gm.locator('#sheetOverlay #shAdd').selectOption('untitled'); await gm.locator('#sheetOverlay [data-sh=add]').click();
+  await gm.locator('#cards .c', {hasText: 'Thorne'}).click();
+  await gm.locator('#panel [data-do=sheet]').click(); await gm.locator('#sheetOverlay #shAdd').selectOption('untitled'); await gm.locator('#sheetOverlay [data-sh=add]').click();
   await gm.locator('#sheetOverlay [data-sh=close]').click(); await saved(gm);
   await gmSet(gm, 12);
   const box = await meter(ann).boundingBox(); expect(box).not.toBeNull();

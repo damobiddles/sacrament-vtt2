@@ -35,7 +35,7 @@ With no card selected, the tray has **Play**, **Scene**, **Loot** and **Table** 
 - **Loot:** roll catalogue loot, design your own items and award them.
 - **Table:** invitations, recovery, players and house rules.
 
-Select a hero or use **Roll as …** when you need to help a player or cover an absent player. **GM dice** in the footer rolls d4, d6, d8, d10, d12, d20 or d100, with a choice of shared or GM-only results. These standalone rolls do not alter HP.
+The **GM view** badge marks your controls; players see **Player view**. Select an enemy or obstacle and choose **Attack a hero…** to attack. To help a player or cover an absent player, select their hero, open their sheet, and use **Roll for** or **Ready to use**. Hero rolls stay in the sheet, leaving the main GM controls clear. In a narrow window, scroll the map and controls area to reach the rest of the tray. **GM dice** in the footer rolls d4, d6, d8, d10, d12, d20 or d100, with a choice of shared or GM-only results. These standalone rolls do not alter HP.
 
 ## Checks and Effort
 

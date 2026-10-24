@@ -200,7 +200,7 @@
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
     UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
-    UI.attackChoice = null; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.gmStrip = false; UI.adding = false;
+    UI.attackChoice = null; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.gmDiceOpen = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
     UI.notice = null; clearTimeout(UI.noticeTimer); UI.arrivalSeen = false;
@@ -221,10 +221,9 @@
     if (gm()) return S.chars[UI.actAs] || cs[0] || null;
     return cs.filter(function (c) { return c.owner === S.you.pid; })[0] || null;
   }
-  /* "Your hero" is the one a player owns. A GM owns none: the GM *acts as* one, chosen in the strip, and that is marked differently. (Before, an unowned hero was "(you)" to the GM because
-     null === null: a GM has no player id and an unassigned hero has no owner.) */
+  /* Only a player's owned hero is marked as theirs. The GM stays in GM view;
+     selecting a hero chooses the sheet used for occasional checks and item actions. */
   function ownsHero(c) { return !!(S.you.pid && c && c.charId && S.chars[c.charId] && S.chars[c.charId].owner === S.you.pid); }
-  function actingHero(c) { var ch = gm() && myChar(); return !!(ch && c && c.charId === ch.id); }
   function onTable(c) { return !c.owner && (gm() ? (c.sceneId == null || c.sceneId === viewScene()) : true); }
   function viewScene() { return UI.view || (S && S.table.scene.id); }
   function canMove(c) { return gm() || (c.charId && S.chars[c.charId] && S.chars[c.charId].owner === S.you.pid); }
@@ -242,6 +241,8 @@
     if (!S) return;
     if (UI.pressing) { UI.renderLate = true; return; }   /* a button is held down: redrawing now would replace it between the press and the release, and the click would be lost */
     $('entry').hidden = true; $('app').hidden = false;
+    $('app').dataset.role = gm() ? 'gm' : 'player';
+    $('panel').setAttribute('aria-label', gm() ? 'GM controls and selected card' : 'Selected card and player help');
     renderTop(); renderTable(); renderPanelSoon(); renderFeed(); renderStrip(); renderStatus(); renderSheet(); renderLoot();
   }
 
@@ -253,6 +254,7 @@
       var card = S.cards[ch.cardId], G = gm(), mine = ch.owner === S.you.pid, hasHp = !!(card && card.hp && !card.hp.hidden);
       return { hero: heroOf(ch), hp: hasHp ? { cur: shownHp(card), max: card.hp.max } : null, canEdit: G || mine, canHp: (G || mine) && hasHp, gm: G, live: true, dice: S.settings.dice, title: mine ? 'your hero' : G ? 'seen as the GM' : '' };
     },
+    roll: function (stat, adj, physical) { if (!gm()) return; UI.adj = adj; UI.phys = physical; closeSheet(); doRoll(stat, true, false); },
     use: function (index, spellId, done, gearKey) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey); done(true); },
     act: function (op, done) { UI.lastError = ''; send({ type: 'sheet', charId: UI.sheet, op: op }, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); },
     hp: function (d) { var ch = S.chars[UI.sheet], card = ch && S.cards[ch.cardId]; if (card && card.hp) hpQueue(card.id, { d: d }, function (done) { send({ type: 'adjust', cardId: card.id, field: 'hp', delta: d }, done); }); },
@@ -293,6 +295,7 @@
 
   function renderTop() {
     var t = S.table, G = gm(), cur = turnCardId() && S.cards[turnCardId()];
+    put($('tRole'), G ? 'GM view' : 'Player view');
     put($('tTarget'), '<span class="lbl">Target</span>' + (G ? '<button class="chip" data-do="target" data-d="-1" aria-label="Lower the Target">−</button>' : '') +
       '<span class="big" id="tgtv">' + t.target + '</span>' + (G ? '<button class="chip" data-do="target" data-d="1" aria-label="Raise the Target">+</button>' : ''));
     put($('tRound'), '<span class="lbl">Round</span><span class="big">' + t.round + '</span>' + (G ? '<button class="chip" data-do="nextRound" title="Start the next round: every running timer loses 1">Next round</button>' : ''));
@@ -379,12 +382,12 @@
     var html = '', want = [], turnId = turnCardId(), aim = aimId();
     cardList().filter(onTable).sort(function (a, b) { return ((S.layout[a.id] || {}).z || 0) - ((S.layout[b.id] || {}).z || 0); }).forEach(function (c) {
       var l = S.layout[c.id]; if (!l) return;
-      var tok = c.kind === 'token' || c.kind === 'pc', own = ownsHero(c), acting = actingHero(c), mine = own || acting;
+      var tok = c.kind === 'token' || c.kind === 'pc', own = ownsHero(c), mine = own;
       var cls = 'c ' + (tok ? 'tok ' : '') + (c.id === UI.sel ? 'sel ' : '') + (c.id === aim ? 'aim ' : '') + (mine ? 'mine ' : '') + (c.id === turnId ? 'turn ' : '') + (!c.visible ? 'hid ' : '') + (c.kind === 'pc' && c.hp && !c.hp.hidden && c.hp.cur === 0 ? 'down ' : '');
       var inner = '';
       if (tok) {
         inner += c.img ? '<div class="cimg" style="background-image:' + bgUrl(c.img) + '"></div>' : '<div class="init">' + esc((c.name || '?').charAt(0)) + '</div>';
-        inner += '<div class="tag">' + esc(c.name) + (own ? ' (you)' : acting ? ' (acting)' : '') + (downMark(c) ? ' · ' + downMark(c) : '') + (c.hp ? (c.hp.hidden ? ' · HP ?' : ' ' + heartsHtml(c.hp.cur, c.hp.max, 'sm')) : '') + (c.timer && !c.timer.hidden ? ' · ⏱' + c.timer.cur : '') + '</div>';
+        inner += '<div class="tag">' + esc(c.name) + (own ? ' (you)' : '') + (downMark(c) ? ' · ' + downMark(c) : '') + (c.hp ? (c.hp.hidden ? ' · HP ?' : ' ' + heartsHtml(c.hp.cur, c.hp.max, 'sm')) : '') + (c.timer && !c.timer.hidden ? ' · ⏱' + c.timer.cur : '') + '</div>';
       } else {
         if (c.img) inner += '<div class="cimg" style="background-image:' + bgUrl(c.img) + '"></div>';
         inner += '<div class="ct">' + esc(c.name) + '</div>' + (c.desc ? '<div class="cd">' + esc(c.desc) + '</div>' : '<div class="cd"></div>');
@@ -867,22 +870,25 @@
   }
   function queuedBadge(card) { var n = hpQueued(card.id); return n ? '<span class="queued" role="status" title="These changes have been sent and are not yet confirmed">saving ' + n + ': ' + card.hp.cur + ' → ' + shownHp(card) + '</span>' : ''; }
   /* Selecting a card. For the GM, selecting a hero's token also makes that hero the one the roll bar controls, and opens the bar. */
-  function pickCard(id) { UI.sel = id; var c = S && S.cards[id]; if (gm() && c && c.charId && S.chars[c.charId]) { UI.actAs = c.charId; UI.gmStrip = true; } }
+  function pickCard(id) { UI.sel = id; var c = S && S.cards[id]; if (gm() && c && c.charId && S.chars[c.charId]) { UI.actAs = c.charId; } }
   function gmDiceView() {
     var out = '<div class="gm-dice' + (UI.gmDiceOpen ? ' open' : '') + '"><button class="chip" data-do="gmDiceToggle" aria-expanded="' + !!UI.gmDiceOpen + '">GM dice</button>';
     if (UI.gmDiceOpen) out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span role="status">' + esc(UI.gmDiceResult || 'For damage or any other roll. Apply results by hand.') + '</span>';
     return out + '</div>';
   }
   function renderStrip() {
-    var el = $('strip'), ch = myChar(), G = gm(), h = G ? gmDiceView() : '';
+    var el = $('strip'), ch = myChar(), G = gm(), h = '';
+    el.classList.toggle('myturn', !G && myTurn());
+    el.setAttribute('aria-label', G ? 'GM dice' : 'Your character');
+    if (G) { put(el, gmDiceView()); return; }
+    el._h = null;   /* player markup is written below; a later GM session must replace it */
     if (!ch) {
       var anyFree = Object.keys(S.chars).some(function (k) { return !S.chars[k].owner; });
-      h += G ? '<span class="note">No heroes yet. Nobody has taken up the road.</span>' : anyFree ? '<b>Pick a hero to play.</b> <span class="note">Then your stats appear here.</span>' : Object.keys(S.chars).length ? '<b>No hero is free.</b> <span class="note">Ask the GM to add one. You can watch the table.</span>' : '<b>No heroes yet.</b> <span class="note">Nobody has taken up the road. Ask the GM to add one for you. You can watch the table.</span>';
+      h += anyFree ? '<b>Pick a hero to play.</b> <span class="note">Then your stats appear here.</span>' : Object.keys(S.chars).length ? '<b>No hero is free.</b> <span class="note">Ask the GM to add one. You can watch the table.</span>' : '<b>No heroes yet.</b> <span class="note">Nobody has taken up the road. Ask the GM to add one for you. You can watch the table.</span>';
       el.innerHTML = h; return;
     }
-    if (G && !UI.gmStrip) { el.innerHTML = h + '<button class="chip" data-do="gmstrip" aria-expanded="false" title="Roll for a hero">Roll as ' + esc(ch.name) + '…</button>'; return; }
     var card = S.cards[ch.cardId], hp = card && card.hp, keep = UI.phys || '';
-    h += '<div class="me' + (G ? ' gm' : '') + '">' + (G ? '<button class="chip" data-do="gmstrip" aria-expanded="true">Hide</button><label class="actas"><span class="note">Acting as</span><select id="actAs" aria-label="Acting as (the hero the strip below controls)">' + Object.keys(S.chars).map(function (k) { return '<option value="' + k + '"' + (k === ch.id ? ' selected' : '') + '>' + esc(S.chars[k].name) + '</option>'; }).join('') + '</select></label>' : '<b title="Your hero">' + esc(ch.name) + '</b>') + '</div>';
+    h += '<div class="me"><b title="Your hero">' + esc(ch.name) + '</b></div>';
     if (hp) h += '<div class="hp"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md' + (hpQueued(card.id) ? ' pend' : ''), true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '" aria-label="' + shownHp(card) + ' of ' + hp.max + ' hit points' + (hpQueued(card.id) ? ' (saving)' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + '</div>';
     h += '<span class="def" title="A monster must roll this or more to hit you">Defence <b>' + ch.defence + '</b></span>';
     if (downMark(card)) h += downMark(card, true).replace('<b ', '<b role="status" ');
@@ -897,15 +903,14 @@
         '</div>';
     }
     h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
-    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">' + (G ? 'Character sheet' : 'My character') + '</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
+    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">My character</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
       (UI.optMore ? '<div class="opt row2"><button class="chip" data-do="toggle" data-key="effort" aria-expanded="' + !!UI.optEffort + '">Effort</button><button class="chip" data-do="toggle" data-key="dice" aria-expanded="' + !!UI.optDice + '">My dice</button></div>' : '');
-    var gear = cardList().filter(function (c) { return c.owner && (G ? false : c.owner === S.you.pid); });
+    var gear = cardList().filter(function (c) { return c.owner && c.owner === S.you.pid; });
     if (gear.length) h += '<div class="gear"><span class="note">Gear</span>' + gear.map(function (c) { return '<button class="chip" data-do="select" data-id="' + c.id + '">' + esc(c.name) + '</button>'; }).join('') + '</div>';
     if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Effort bonuses"><span class="note">Roll Effort on its own:</span><input id="physF" type="number" min="1" max="20" inputmode="numeric" placeholder="own die" aria-label="Result of your own physical die, optional">' + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '" title="Roll ' + R.CAT_NAMES[k] + ' Effort on its own">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
     if (UI.optDice) h += '<div class="phys row2">' + diceSwitch() + '</div>';
     if (UI.optDice) h += '<div class="phys row2"><label>Physical d20 for the next roll<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="—" value="' + esc(keep) + '"></label><span class="note">Type what your own die shows, then click a stat. Effort has its own box when you roll it.</span></div>';
     el.innerHTML = h; el.classList.toggle('myturn', !G && myTurn());
-    var sel = $('actAs'); if (sel) sel.onchange = function () { UI.actAs = sel.value; render(); };
     var pi = el.querySelector('input[data-phys]'); if (pi) pi.oninput = function () { UI.phys = pi.value; };
   }
   /* What pressing a Use button does, in words, for its hover text. */
@@ -982,7 +987,6 @@
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
-      case 'gmstrip': UI.gmStrip = !UI.gmStrip; render(); break;
       case 'select': pickCard(d.id); render(); break;
       case 'gmDiceToggle': UI.gmDiceOpen = !UI.gmDiceOpen; renderStrip(); break;
       case 'gmDiceRoll': {
@@ -1246,7 +1250,7 @@
     e.preventDefault(); var version = sessionVersion, mb = this.querySelector('button[type=submit]'); if (mb.disabled) return; mb.disabled = true; $('makeMsg').textContent = '';
     call('POST', { op: 'create', key: $('makeKey').value, sample: $('makeSample').checked }).then(function (r) {
       if (version !== sessionVersion || r.stale) return;
-      if (r.status === 200) { enter({ code: r.body.code, token: r.body.token, role: 'gm' }, r.body.state); if (UI.trying) { try { localStorage.setItem(KEY + 'try', r.body.code); } catch {} toast('This is a sample table and you are the GM. Click a hero to roll for them, or copy the invite link to bring a friend.', 9000); } }
+      if (r.status === 200) { enter({ code: r.body.code, token: r.body.token, role: 'gm' }, r.body.state); if (UI.trying) { try { localStorage.setItem(KEY + 'try', r.body.code); } catch {} toast('This is a sample table and you are the GM. Select an enemy to attack, use GM dice for other rolls, or invite a friend from the Table tab.', 9000); } }
       else { $('makeMsg').textContent = (r.body.error && r.body.error.message) || 'Could not make a table.'; if (r.status === 403) $('keyRow').hidden = false; }
     }, function () { if (version !== sessionVersion) return; $('makeMsg').textContent = 'Could not reach the server.'; }).then(function () { mb.disabled = false; });
   });

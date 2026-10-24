@@ -277,17 +277,17 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await gm.click('[data-do=drawClear]'); await until(A, () => window.__vtt.state().draw.length === 0); check('the GM can clear the drawing', (await A.$$('#ink polyline')).length === 0);
   await A.click('[data-do=tool][data-tool=select]'); await gm.click('[data-do=tool][data-tool=select]');
 
-  console.log('--- 14. who is “you”: a player’s own hero, and the hero the GM is acting as, are marked differently and agree with the strip');
+  console.log('--- 14. who is “you”: a player’s own hero is marked; the GM stays in GM view and opens individual sheets');
   const tagsOf = (p) => p.$$eval('#cards .c.tok .tag', (e) => e.map((x) => x.innerText.replace(/\s+/g, ' ').trim()));
   await gm.keyboard.press('Escape'); await addBtn(gm, 'addHero'); await gm.waitForSelector('[data-edit=name]'); await gm.fill('[data-edit=name]', 'Orla'); await gm.press('[data-edit=name]', 'Tab'); await idle(gm);
   await gm.keyboard.press('Escape'); await addBtn(gm, 'addHero'); await gm.waitForSelector('[data-edit=name]'); await gm.fill('[data-edit=name]', 'Pike'); await gm.press('[data-edit=name]', 'Tab'); await idle(gm); await gm.keyboard.press('Escape');
   await until(A, () => Object.values(window.__vtt.state().cards).some((c) => c.name === 'Pike'));
-  await gm.waitForFunction(() => { if (!document.querySelector('#actAs')) { const b = document.querySelector('[data-do=gmstrip]'); if (b) b.click(); } return !!document.querySelector('#actAs'); }, null, { timeout: 8000 });   /* the GM's roll bar opens when asked (or when a hero token is selected) */
-  const acting = await gm.$eval('#actAs', (e) => e.options[e.selectedIndex].text), gtags = await tagsOf(gm);
-  check('for the GM, exactly one hero is marked, as “acting”, and it is the one named in the strip; no hero is called “you”', gtags.filter((t) => /\(acting\)/.test(t)).length === 1 && gtags.some((t) => t.startsWith(acting + ' (acting)')) && !gtags.some((t) => /\(you\)/.test(t)), acting + ' | ' + gtags.join(' | '));
-  const other = await gm.$$eval('#actAs option', (e) => e.map((x) => x.text).filter((t) => t !== document.getElementById('actAs').options[document.getElementById('actAs').selectedIndex].text)[0]);
-  await gm.selectOption('#actAs', { label: other }); await gm.waitForFunction((n) => document.querySelector('#strip .actas select').options[document.querySelector('#strip .actas select').selectedIndex].text === n, other);
-  const g2 = await tagsOf(gm); check('choosing another hero in the strip moves the “acting” mark to it', g2.filter((t) => /\(acting\)/.test(t)).length === 1 && g2.some((t) => t.startsWith(other + ' (acting)')), g2.join(' | '));
+  const gtags = await tagsOf(gm);
+  check('the GM has no acting hero or player strip; no hero is called “you”', !gtags.some((t) => /\((acting|you)\)/.test(t)) && !(await gm.$('#actAs, [data-do=gmstrip], #strip .stat')), gtags.join(' | '));
+  await gm.click('#cards .c:has-text("Pike")'); await gm.click('#panel [data-do=cardEditDone]'); await gm.click('#panel [data-do=sheet]'); await gm.waitForSelector('#sheetOverlay:not([hidden])');
+  const sheetName = await gm.innerText('#sheetOverlay .sh-head h2');
+  check('selecting a hero opens that hero’s sheet with GM checks', sheetName.includes('Pike') && (await gm.$$('#sheetOverlay [data-sh=gmRoll]')).length === 6, sheetName);
+  await gm.keyboard.press('Escape');
   const atags = await tagsOf(A);
   check('for a player, only their own hero says “you”, and the strip names that hero', atags.filter((t) => /\(you\)/.test(t)).length === 1 && atags.some((t) => t.startsWith('Thorne (you)')) && (await A.innerText('#strip .me')).trim() === 'Thorne', atags.join(' | '));
 

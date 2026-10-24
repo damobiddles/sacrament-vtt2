@@ -16,6 +16,6 @@ test('a player chooses who to heal, HP updates for everyone, limits are enforced
 }
 test('scene danger is explicit and custom Effort dice are labelled consistently in live sheets and loot previews',async({browser})=>{
  const gm=await newPage(browser);await makeTable(gm);await gm.locator('[data-setting=sceneDanger]').check();await saved(gm);expect((await state(gm)).settings.sceneDanger).toBe(true);
- await cmd(gm,{type:'settings',patch:{dice:{weapons:8}}});await gm.locator('[data-do=gmstrip]').click();await gm.locator('#strip [data-do=sheet]').click();await expect(gm.locator('#sheetOverlay')).toContainText('Weapons d8');await gm.keyboard.press('Escape');
+ await cmd(gm,{type:'settings',patch:{dice:{weapons:8}}});await gm.locator('#cards .c',{hasText:'Thorne'}).click();await gm.locator('#panel [data-do=sheet]').click();await expect(gm.locator('#sheetOverlay')).toContainText('Weapons d8');await gm.keyboard.press('Escape');await gm.locator('#panel [data-do=deselect]').click();
  await gm.locator('[data-do=gmtab][data-t=loot]').click();await gm.locator('[data-do=designLoot]').click();await gm.locator('[data-lf=category]').selectOption('Weapon');await expect(gm.locator('#ltPrev')).toContainText('d8');expect(gm.errors).toEqual([]);
 });

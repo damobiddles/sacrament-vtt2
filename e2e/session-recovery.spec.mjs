@@ -1,5 +1,5 @@
 import { test, expect } from './helpers.mjs';
-import { newPage, makeTable, saved } from './helpers.mjs';
+import { newPage, makeTable, joinTable, claimHero, saved } from './helpers.mjs';
 
 test('a delayed reply from a previous table cannot replace the new table', async ({ browser }) => {
   const p = await newPage(browser); await makeTable(p);
@@ -50,8 +50,8 @@ test('storage failure gives the GM a persistent recovery link that reopens the s
 });
 
 test('queued gameplay waits until checking the saved state has finished', async ({ browser }) => {
-  const p = await newPage(browser); await makeTable(p);
-  await p.locator('#cards .c', { hasText: 'Thorne' }).click();
+  const gm = await newPage(browser), code = await makeTable(gm), p = await newPage(browser);
+  await joinTable(p, code, 'Ann'); await claimHero(p, 'Thorne');
   let changes = 0, checking, releaseFirst;
   const first = new Promise(resolve => { releaseFirst = resolve; });
   await p.route('**/.netlify/functions/vtt**', async route => {

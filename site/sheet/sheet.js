@@ -73,6 +73,9 @@
       var ready = acts.filter(function (a) { return a.ok; });
       out += '<section class="sh-sec sh-actions" aria-label="Quick actions"><h3>Ready to use</h3><div class="sh-quick">' + (ready.map(function (a) { return useBtn(a, a.spellId, a.name, true); }).join('') || '<p class="sh-note">No equipped actions are ready. Manage your equipment below.</p>') + '</div></section>';
     }
+    if (d.live && gm && host.roll) {
+      out += '<section class="sh-sec sh-gm-rolls" aria-label="GM hero checks"><h3>Roll for ' + esc(h.name) + '</h3><p class="sh-note">Use these checks when helping a player. Use Ready to use for weapons, spells and items.</p><div class="sh-row">' + R.STATS.map(function (k) { return '<button type="button" class="sh-b" data-sh="gmRoll" data-stat="' + k + '">Roll ' + k + ' ' + sgn(h.stats[k]) + '</button>'; }).join('') + '</div><div class="sh-row"><label class="sh-f">Difficulty<select id="shGmAdj"><option value="normal">Normal</option><option value="easy">Easy −3</option><option value="hard">Hard +3</option></select></label><label class="sh-f">Own d20 (optional)<input id="shGmD20" type="number" min="1" max="20" inputmode="numeric" placeholder="Roll digitally"></label></div></section>';
+    }
     var left1 = '<section class="sh-sec"><h3>Who</h3><div class="sh-row">' + field('Name', 'name', h.name, edit, false, C.TEXT_LIMITS.name) + field('Calling', 'calling', h.calling, edit, false, C.TEXT_LIMITS.calling) + '</div>' + field('Vow', 'vow', h.vow, edit, false, C.TEXT_LIMITS.vow) + '</section>';
     left1 += '<section class="sh-sec"><h3>Health and Defence</h3><div class="sh-row sh-hpline">' + (hp ? hearts(hp.cur, hp.max) + '<b class="sh-hpn">' + hp.cur + ' / ' + hp.max + '</b>' + (d.canHp ? '<span class="sh-step"><button type="button" data-sh="hp" data-d="-1" aria-label="Lose 1 hit point">−</button><button type="button" data-sh="hp" data-d="1" aria-label="Gain 1 hit point">+</button></span>' : '') + (hp.cur === 0 ? '<b class="sh-zero">AT 0</b>' : '') : '<span class="sh-note">No hit points yet.</span>') +
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
@@ -130,7 +133,8 @@
       var d = host.get(), k = b.dataset.sh;
       if (k === 'close') { if (host.close) host.close(); return; }
       if (!d) return; d = effective(d);
-      if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, delta: +b.dataset.d });
+      if (k === 'gmRoll' && d.live && d.gm && host.roll && R.STATS.indexOf(b.dataset.stat) >= 0) { host.roll(b.dataset.stat, el.querySelector('#shGmAdj').value, el.querySelector('#shGmD20').value); }
+      else if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, delta: +b.dataset.d });
       else if (k === 'effort') attempt({ op: 'effort', cat: b.dataset.k, delta: +b.dataset.d });
       else if (k === 'add') { var sel = el.querySelector('#shAdd'); if (sel) attempt({ op: 'add', id: sel.value }); }
       else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });

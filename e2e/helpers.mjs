@@ -64,3 +64,10 @@ export async function emptyPacks(gm) {
   }), 15000, 'emptying the sample heroes’ packs');
   await expect.poll(() => gm.evaluate(() => Object.values(window.__vtt.state().chars).every((c) => !(c.gear || []).length))).toBe(true);
 }
+
+/** GM hero actions live in the selected hero's sheet, separate from GM dice. */
+export async function openGmHeroSheet(page, name = 'Thorne') {
+  await page.locator('#cards .c', { hasText: name }).click();
+  await page.locator('#panel [data-do=sheet]').click();
+  await expect(page.locator('#sheetOverlay')).toBeVisible();
+}
