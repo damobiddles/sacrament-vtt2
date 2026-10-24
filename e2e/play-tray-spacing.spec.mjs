@@ -23,3 +23,21 @@ test('Play tray keeps long turn names, order controls and session fields inside 
  await gm.locator('#nextAt').fill('2026-11-01T19:30');await gm.locator('#nextNote').fill('Bring dice');await gm.locator('[data-do=nextSet]').click();await saved(gm);await expect(gm.locator('.tabbody')).toContainText('Bring dice');
  await gm.screenshot({path:info.outputPath('play-edited.png')});expect(gm.errors).toEqual([]);
 });
+
+for(const role of ['gm','player'])test(`${role}: target chooser has breathing room and its controls fit the tray`,async({browser},info)=>{
+ const {joinTable,claimHero,openGmHeroSheet}=await import('./helpers.mjs');
+ const gm=await newPage(browser),code=await makeTable(gm),page=role==='gm'?gm:await newPage(browser);
+ if(role==='player'){await joinTable(page,code,'Ann');await claimHero(page,'Thorne');await page.locator('#strip [data-do=sheet]').click();}
+ else await openGmHeroSheet(page);
+ await page.locator('#sheetOverlay [data-sh=quickUse]').first().click();await expect(page.locator('#attackTarget')).toBeVisible();
+ await page.locator('#attackTarget').selectOption({label:'Pit Ghoul'});await page.locator('#attackTarget').focus();
+ for(const width of [1366,1024,683]){
+  await page.setViewportSize({width,height:800});
+  const spacing=await bounded(page.locator('#attackTarget').evaluate(select=>{
+   const sec=select.closest('.sec'),row=sec.querySelector('.row'),s=select.getBoundingClientRect(),r=row.getBoundingClientRect(),panel=document.querySelector('#panel'),p=panel.getBoundingClientRect(),cs=getComputedStyle(panel),left=p.left+parseFloat(cs.paddingLeft),right=p.right-parseFloat(cs.paddingRight);
+   return {gap:r.top-s.bottom,overflow:[...sec.querySelectorAll('button,select,label')].filter(el=>{const b=el.getBoundingClientRect();return b.left<left-1||b.right>right+1;}).map(el=>el.tagName)};
+  }),5000,'checking target chooser spacing');
+  expect(spacing.gap,'the focused target selector needs space before the action buttons').toBeGreaterThanOrEqual(8);expect(spacing.overflow).toEqual([]);
+ }
+ await page.screenshot({path:info.outputPath(role+'-target-spacing.png')});await page.locator('[data-do=cancelAttack]').click();await expect(page.locator('#attackTarget')).toHaveCount(0);expect(page.errors).toEqual([]);
+});
