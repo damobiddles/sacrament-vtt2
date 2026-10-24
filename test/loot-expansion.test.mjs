@@ -19,9 +19,9 @@ test('the expansion doubles each item category with stable catalogue definitions
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
-  // This fingerprint locks the reviewed definitions; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '907d07d9c3099971a77867bcc63496d0c34e119d2c2ec5a376305e9fd766c4ac');
-  assert.equal(hash(G.spells), '610d1269f51438a6de13a156d321dae42d0154b648cfca4ca1a2db9143005698');
+  // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '25a4a2b7af84ae80592f77cdfa93863a2215cb65736230499429ed202b2f57e8');
+  assert.equal(hash(G.spells), 'e1e9b6f5eac046a9a724fd578392a2d77ea5ecb1308c868e8ee7bb5b24324b5d');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {

@@ -3,12 +3,13 @@ import { bounded } from './contrast-lib.mjs';
 
 test.setTimeout(60000);
 
-test('current role guides have working contents and the earlier draft is clearly separated', async ({ browser }, testInfo) => {
+test('current role guides have working contents and public rules omit the obsolete draft', async ({ browser }, testInfo) => {
   const page = await newPage(browser);
   await page.goto('/rules/');
   await expect(page.getByRole('link', { name: 'Player guide', exact: true })).toBeVisible();
-  await expect(page.locator('.earlier-draft')).not.toHaveAttribute('open');
-  await expect(page.locator('.earlier-draft summary')).toContainText('not the current VTT rules');
+  await expect(page.locator('.earlier-draft')).toHaveCount(0);
+  await expect(page.locator('.range-reference tbody tr')).toHaveCount(4);
+  await expect(page.locator('#current-rule-values')).toContainText('d10 per 2 living heroes');
   for (const path of ['/player-guide/', '/gm-guide/']) {
     await page.goto(path);
     const nav = page.getByRole('navigation', { name: 'On this page', exact: true });

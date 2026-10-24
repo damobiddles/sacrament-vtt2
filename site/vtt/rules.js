@@ -10,6 +10,13 @@
   var CATS = ['basic', 'weapons', 'guns', 'magic', 'ultimate'];
   var CAT_NAMES = { basic: 'Basic', weapons: 'Weapons', guns: 'Guns', magic: 'Magic', ultimate: 'Ultimate' };
   var DEFAULT_DICE = { basic: 4, weapons: 6, guns: 8, magic: 10, ultimate: 12 };
+  var RANGES = { close: { name: 'Close', description: "Within sword’s reach: melee distance." }, near: { name: 'Near', description: 'Beyond melee reach, up to 30 feet: throwing distance.' }, far: { name: 'Far', description: 'Ordinary ranged distance beyond 30 feet: bows, crossbows and guns.' }, veryfar: { name: 'Very Far', description: 'Longer shots requiring a longbow, rifle or an ability that explicitly reaches this far. The GM judges distance and line of sight.' } };
+  function rangeBand(v) { return v === 'engaged' ? 'close' : Object.prototype.hasOwnProperty.call(RANGES, v) || v === 'self' || v === 'special' ? v : ''; }
+  function rangeText(src) {
+    if (src.kind === 'grimoire' || src.category === 'Grimoire') return 'Range: see each spell';
+    var band = rangeBand(src.band), label = band === 'self' ? 'Self' : band === 'special' ? 'Special — GM ruling' : band ? RANGES[band].name : '';
+    return label ? 'Range: ' + label + (src.thrownBand ? ' · Thrown: ' + (RANGES[src.thrownBand] || { name: 'GM ruling' }).name : '') : '';
+  }
   var HEART = 10; /* 1 Heart is 10 hit points, or 10 points of Effort on a task */
   var ADJ = { easy: -3, normal: 0, hard: 3 }; /* applied to the Target, so Easy makes it lower */
   var MAX_BONUS = 10; /* a single stat or Effort bonus never passes +10 */
@@ -69,7 +76,7 @@
     var left = clamp(int(st.left, 0) + int(d, 0), 0, DYING.maxLeft); return { left: left, stable: left > 0 && !!st.stable, dead: left === 0 };
   }
 
-  /* The party's rest: every living hero recovers a Heart, and the Horror falls by a d6 for every two living heroes (1 or 2: 1d6; 3 or 4: 2d6; 5 or 6: 3d6). */
+  /* Party rest heals a Heart and lowers Horror by d10 per two living heroes, rounded up. */
   var REST = { heal: HEART, horrorDie: 10, perDie: 2 };
   function restDice(living) { return Math.ceil(Math.max(0, int(living, 0)) / REST.perDie); }
 
@@ -159,7 +166,7 @@
     return out;
   }
 
-  return { STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+  return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
     HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

@@ -6,6 +6,8 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { esc, parse, fmt } from './lib/markdown.mjs';
+import { rangeTable, ruleValues } from './lib/current-rules.mjs';
+import '../site/vtt/rules.js';
 import { lootCatalogue } from './lib/loot-catalogue.mjs';
 import '../site/sheet/gear.js';
 import '../site/nav.js';
@@ -23,6 +25,7 @@ const PAGES = [
   { slug: 'the-game', path: '/the-game/', label: 'The game' },
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
+  { slug: 'rules', path: '/rules/', label: 'Rules' },
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'blog', path: '/news/', label: 'News' },
@@ -148,6 +151,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   const text = (slug, label, extraAfter = '') => {
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
     let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
+    html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules));
     if (meta.guide) {
       const sections = [];
       html = html.replace(/<h2>(.*?)<\/h2>/g, (_, title) => {
@@ -167,6 +171,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('the-game', NAME, '<aside class="site-next"><h2>Ready to play?</h2><p><a class="btn" href="/how-to-play/">Start your first game</a> <a href="/setting/">Explore the setting</a></p></aside>');
   text('setting', NAME, '<aside class="site-next"><h2>Take a hero into this world</h2><p><a class="btn" href="/character/">Create a hero</a> <a href="/how-to-play/">Learn how to play</a></p></aside>');
   text('how-to-play', NAME);
+  text('rules', NAME);
   text('player-guide', NAME);
   text('gm-guide', NAME);
   text('resources', NAME, resources());

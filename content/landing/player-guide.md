@@ -57,7 +57,7 @@ The damage target stays attached to that attack. Looking at another card does no
 
 ## Equipment and magic
 
-You have **10 equipped slots and 10 pack slots**. Each item lists its size. Equipped gear is ready to use; supplies work from the pack. Keep spare weapons and armour in the pack. One body armour, one helmet and one shield can contribute at a time. Put your shield in the pack before using a two-handed weapon. Ask the GM about swapping gear during a fight.
+You have **10 equipped slots and 10 pack slots**. Each item lists its size. Equipped gear is ready to use; supplies work from the pack. Keep spare weapons and armour in the pack. The current VTT allows at most three carried items marked as tempting Horror, including relics, grimoires and supernatural curios; packed items count too. One body armour, one helmet and one shield can contribute at a time. Put your shield in the pack before using a two-handed weapon. Ask the GM about swapping gear during a fight.
 
 Every **grimoire takes three slots and contains three spells**. Damage, Healing and Esoteric labels distinguish what each spell does. Esoteric means an effect such as light, movement or influence: the GM resolves its description rather than automatically deducting HP. The starting equipment choices allow a grimoire; relics and found loot are awarded by the GM.
 
@@ -92,3 +92,8 @@ Reopen the same table address in the same browser to return with your saved acce
 You can move your own token and use **Point** to show the group a place. Drawing is GM-only. Your character's private gear and notes are visible to you and the GM, not the other players. Card descriptions may be public; do not put private information there.
 
 Ask your GM when an effect, distance or consequence needs a ruling. Use [Feedback](/feedback/) for bugs or suggestions; never include a private GM recovery link.
+
+
+## Distance and range
+
+{{RANGES}}

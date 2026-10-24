@@ -291,7 +291,7 @@ function fixArmour(s, ctx) {
 const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; const item = SC.makeCustom(raw); if (item.kind === 'grimoire' && item.spells.length !== 3) fail('invalid', 'A grimoire must have three different spells.'); return Object.assign(SC.designOf(item), { notes: str(raw.notes, 1000) }); };
 const libOf = (s) => (s.lootLib = s.lootLib || []);
 /* What players read on a revealed loot card: the description, then what it does. */
-const lootText = (d) => [d.flavour, d.does, SC.horrorText(d)].filter(Boolean).join('\n\n');
+const lootText = (d) => [d.flavour, d.does, SC.rangeText(d), d.rangeNote, SC.horrorText(d)].filter(Boolean).join('\n\n');
 /* The item a loot command means: one from the library, the one behind a card, or one sent whole (a rolled find, perhaps edited first). */
 function lootSource(s, c) {
   if (c.libId) return { d: libOf(s).find((x) => x.id === c.libId) || fail('not_found', 'That item is no longer in the library.') };
@@ -405,6 +405,7 @@ function natOne(s, a, ctx, ch, chk) {
   if (!chk.nat1) return null;
   return moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
 }
+function standingHero(s, ch) { const card = s.cards[ch.cardId]; if (card && card.hp && card.hp.cur === 0) fail('invalid', 'A fallen hero at 0 HP cannot act. Ask someone else to tend or heal them.'); }
 /* Why a roll cannot be pushed now, or '' when it can. A push follows a failed attack: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
 function pushBlock(s, r) {
   if (!r || !r.check || r.attack || r.void) return 'There is nothing to push.';
@@ -414,6 +415,7 @@ function pushBlock(s, r) {
   if (r.fromPush) return 'A pushed action cannot be pushed again.';
   if (s.rollOrder.slice(s.rollOrder.indexOf(r.id) + 1).some((id) => s.rolls[id] && s.rolls[id].charId === r.charId)) return 'Only the latest roll can be pushed.';
   const ch = s.chars[r.charId]; if (!ch) return 'That hero is no longer at the table.';
+  if (s.cards[ch.cardId] && s.cards[ch.cardId].hp && s.cards[ch.cardId].hp.cur === 0) return 'A fallen hero at 0 HP cannot act.';
   if (ch.pushTurn && ch.pushTurn === turnKey(s, ch)) return 'You have pushed once this turn already.';
   return '';
 }
@@ -658,7 +660,7 @@ const HANDLERS = {
   },
 
   roll(s, c, a, ctx) {
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
     if (!R.STATS.includes(c.stat)) fail('invalid', 'Choose a stat.');
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal'; const manual = c.d20 != null && c.d20 !== '';
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
@@ -675,7 +677,7 @@ const HANDLERS = {
   },
   useItem(s, c, a, ctx) { /* a hero uses an item: a check with the item's stat; on a success the player then rolls the item's own Effort die (see `effort`), plus their bonus in that kind. No Effort kind, no Effort roll;
      no stat either (a spell said without a check), no roll at all. Whatever it is, if it tempts the Horror the meter rises by its amount. */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
     const index = gearIndex(ch, c.gearKey);
     let u = SC.useOf(ch, index, c.spellId); if (!u.ok) fail('invalid', u.why);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal', manual = c.d20 != null && c.d20 !== '';
@@ -844,6 +846,7 @@ const HANDLERS = {
     if (!roll.effort) roll.cat = pendingWeaponCat(s, roll);
     const ult = c.cat === 'ultimate' && roll.check.offerUltimate;
     const ch = charOf(s, roll.charId), cat = roll.cat && !ult ? roll.cat : R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
+    if (!(isGM(a) && c.force)) standingHero(s, ch);
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
     e.weaponBonus = roll.weaponBonus === 2 && roll.cat === 'weapons' ? 2 : 0; e.total += e.weaponBonus;
@@ -852,7 +855,7 @@ const HANDLERS = {
     return { rollId: roll.id };
   },
   freeEffort(s, c, a, ctx) { /* Effort on its own, with no check before it: a standing blow, a physical roll, a task the GM has already allowed */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
     const cat = R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }

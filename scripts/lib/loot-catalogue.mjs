@@ -1,3 +1,4 @@
+import '../../site/vtt/rules.js';
 import { esc } from './markdown.mjs';
 
 const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies, tools and curios', relic: 'Relics', grimoire: 'Grimoires' };
@@ -19,6 +20,8 @@ export function lootCatalogue(g) {
   }).join('');
   const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${items.filter(i => i.kind === kind).map(i => {
     const details = [`${i.slots} ${i.slots === 1 ? 'slot' : 'slots'}`, i.use || 'GM resolves use'];
+    if (globalThis.SacramentRules.rangeText(i)) details.push(globalThis.SacramentRules.rangeText(i));
+    if (i.rangeNote) details.push(i.rangeNote);
     if (kind !== 'grimoire') {
       if (i.weaponStyle) details.push(i.weaponStyle === 'single' ? 'One hand' : 'Two hands');
       if (i.weaponStyle === 'heavy' && i.cat === 'weapons') details.push('+2 heavy damage');
@@ -32,7 +35,7 @@ export function lootCatalogue(g) {
     }
     const spellList = kind === 'grimoire' ? `<ul class="loot-spells">${i.spells.map(id => {
       const s = spells.get(id);
-      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(s.band || 'GM decides range')} · ${cost(s)}</p></li>`;
+      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(globalThis.SacramentRules.rangeText(s) || 'Range: GM ruling')} · ${cost(s)}</p></li>`;
     }).join('')}</ul>` : '';
     return `<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}${spellList}</article>`;
   }).join('')}</section>`).join('');

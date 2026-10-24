@@ -28,6 +28,7 @@
 
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
+    if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
     if (it.weaponStyle) b.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand');
     if (C.damageBonus(it)) b.push('+2 heavy damage');
@@ -58,9 +59,9 @@
     var spells = it.kind === 'grimoire' ? C.spellsOf(it) : [];
     var act = function (spellId) { return acts.filter(function (a) { return a.index === i && (a.spellId || '') === (spellId || ''); })[0]; };
     return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + ' left</span>' : '') +
-      (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + (it.pickDie || it.pick) + ': the die chooses one of its ' + it.pick + ' spells.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
+      (it.rangeNote ? '<p class="sh-note">' + esc(it.rangeNote) + '</p>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + (it.pickDie || it.pick) + ': the die chooses one of its ' + it.pick + ' spells.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
       (it.kind === 'grimoire' && !spells.length ? '<p class="sh-note">No spells are written in it yet.</p>' : '') +
-      (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">' + esc(C.horrorText(s)) + '</span>' + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
+      (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span> <span class="sh-pill">' + esc(C.rangeText(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">' + esc(C.horrorText(s)) + '</span>' + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
       '<div class="sh-btns">' + (it.kind === 'grimoire' && !it.pick ? '' : useBtn(act(''), '', it.pick ? 'Read' : '')) + (edit ? (C.canEquip(it) ? '<button type="button" class="sh-b" data-sh="move" data-i="' + i + '" data-gear="' + esc(g.key || '') + '" data-eq="' + (g.eq ? '0' : '1') + '">' + (g.eq ? 'To the pack' : 'Equip') + '</button>' : '<span class="sh-supply" title="' + (it.kind === 'supply' ? 'A supply works from the pack, so it is never equipped.' : 'This works from the pack, so it is never equipped.') + '">' + (it.kind === 'supply' ? 'Supply' : 'Pack only') + '</span>') + '<button type="button" class="sh-b" data-sh="remove" data-i="' + i + '" data-gear="' + esc(g.key || '') + '">Drop</button>' : '') + '</div></div>';
   }
 

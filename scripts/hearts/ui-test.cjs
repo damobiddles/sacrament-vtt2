@@ -28,11 +28,9 @@ server.listen(0, async () => {
 
   console.log('--- 1. the rules page');
   let p = await open('/rules/');
-  /* The earlier draft is retained behind an explicit disclosure; open it before checking its examples. */
-  await p.click('.earlier-draft > summary'); await p.waitForSelector('#trackdemo', { state: 'visible' });
-  check('the rules page draws its tables from the data (items, foes, aftershocks)', (await p.$$eval('#lib .icard', (e) => e.length)) >= 20 && (await p.$$eval('#foes tbody tr', (e) => e.length)) === 7 && (await p.$$eval('#aftertables tr', (e) => e.length)) === 21);
-  check('it shows the four Target Numbers and a Horror track', (await p.$$eval('#scenes tbody tr', (e) => e.map((x) => x.cells[0].textContent))).join() === 'TN 10,TN 12,TN 14,TN 16' && /12 \/ 21/.test(await txt(p, '#trackdemo')));
-  check('the rules page carries none of the replaced mechanics (twelve boxes, armour dice, durability) outside the legacy note', !/12 boxes|armour dice|durability/i.test((await txt(p, 'body')).replace(/The earlier rules, with ability trees and twelve boxes of harm[^.]*\./, '')));
+  check('current rules show the shared range definitions and link to both role guides', (await p.$$eval('.range-reference [data-range]', es=>es.map(e=>e.dataset.range))).join() === 'close,near,far,veryfar' && !!(await p.$('a[href="/player-guide/"]')) && !!(await p.$('a[href="/gm-guide/"]')));
+  check('current rules show d10 rest, shared Horror and ordinary weapon dice', /one d10 per 2 living heroes/.test(await txt(p, '#current-rule-values')) && /thresholds 7, 14, 21/.test(await txt(p, '#current-rule-values')) && /Weapons d6; Guns d8/.test(await txt(p, '#current-rule-values')));
+  check('obsolete proposed rules are absent from the public reference', !(await p.$('.earlier-draft, #aftertables, #trackdemo')) && /Ultimate replaces/.test((await txt(p, 'body')).replace(/\s+/g,' ')));
   check('the rules page is indexable and canonical', !(await p.$('meta[name=robots]')) && /playsacrament.com\/rules\//.test(await p.getAttribute('link[rel=canonical]', 'href')));
   await p.setViewportSize({ width: PW, height: 800 }); await noScroll(p, 'the rules page at phone width');
 

@@ -20,7 +20,7 @@ Your browser remembers tables under **Your tables** on the VTT entry page. Retur
 
 Send them to [My heroes](/character/) and suggest Fighter for a straightforward weapon user, Scout for ranged weapons, Scholar for magic or Healer for healing prayers. Each generates a legal starting allocation and kit. These are editable starting choices, not permanent classes.
 
-The sheet has **six score points**, **four Effort points**, **10 equipped slots and 10 pack slots**. New heroes start with 10 HP, plus Hearts from gear. Grimoires cost three slots and hold three spells. Ordinary ranged weapons use Weapons, not Guns. Only one body armour, helmet and shield contributes; a two-handed weapon needs the shield packed.
+The sheet has **six score points**, **four Effort points**, **10 equipped slots and 10 pack slots**. New heroes start with 10 HP, plus Hearts from gear. Grimoires cost three slots and hold three spells. The current VTT counts all carried Horror-tempting items, including supernatural curios, toward its three-item magic limit. Ordinary ranged weapons use Weapons, not Guns. Only one body armour, helmet and shield contributes; a two-handed weapon needs the shield packed.
 
 A player can instead start blank and allocate points with the sheet controls. Do not assume an empty sheet is ready: review scores, Effort and equipment together. The Table tab lets you add a blank hero and assign existing heroes to players. Use the character sheet to fill in their scores and gear.
 
@@ -100,3 +100,8 @@ If saving or connection problems appear, leave the page open while it retries. R
 ## Delete a scene
 
 In Scene, a scene that is not live has a **Delete** button. Read the confirmation and press **Delete this scene** to permanently remove its table cards and drawings. Heroes and items held by players are kept. To delete the live scene, show a different scene first. You cannot remove the last scene. Uploaded pictures are kept because other scenes may use them.
+
+
+## Distance and range
+
+{{RANGES}}

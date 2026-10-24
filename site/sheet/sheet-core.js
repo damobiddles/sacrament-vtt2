@@ -19,6 +19,7 @@
   var plural = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
   var sum = function (o, keys) { return keys.reduce(function (a, k) { return a + (o[k] || 0); }, 0); };
 
+  var rangeBand = R.rangeBand, rangeText = R.rangeText;
   function item(id) { return BY[id] || null; }
   /* ---------- items the GM designs ---------- */
   /* A designed item travels with the hero as a copy of its details ("def") on the gear entry, so a later change to the GM's library never changes what a hero holds. Whatever
@@ -34,6 +35,7 @@
       name: text(raw.name, 60).trim() || 'Unnamed find', slots: clamp(int(raw.slots, 1), 1, 4),
       flavour: text(raw.flavour, 400), does: text(raw.does, 600), equippable: kind === 'supply' ? raw.equippable === true : true,
       horrorReason: text(raw.horrorReason, 240), temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
+    o.band = rangeBand(raw.band); o.rangeNote = text(raw.rangeNote, 240);
     o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
     if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged', 'firearm'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
     if (kind === 'weapon' && o.weaponStyle !== 'single') o.slots = Math.max(2, o.slots);
@@ -181,7 +183,7 @@
   function designOf(it) {
     if (!it) return null;
     var cat = it.kind === 'relic' ? 'Relic' : CUSTOM_CATS.indexOf(it.category) >= 0 ? it.category : it.kind === 'weapon' ? 'Weapon' : it.kind === 'armour' ? 'Armour' : 'Curio';
-    var out = { name: it.name, category: cat, cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, horrorReason: it.horrorReason || '', flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
+    var out = { name: it.name, category: cat, band: it.band || '', rangeNote: it.rangeNote || '', cat: it.cat || '', roll: it.roll || '', slots: it.slots || 1, horrorReason: it.horrorReason || '', flavour: it.flavour || '', does: it.does || '', equippable: canEquip(it), temptsHorror: !!it.temptsHorror, horror: it.horror || 0, defence: it.defence || 0, uses: it.uses || 0 };
     var source = BY[it.healingSource || it.id]; if (source && healingOf(source)) out.healingSource = source.id;
     if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
     if (it.kind === 'armour') out.armourPart = armourPart(it);
@@ -336,5 +338,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });
