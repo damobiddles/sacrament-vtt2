@@ -4,7 +4,7 @@
 (function () {
   var PAGES = [
     ['Home', '/'],
-    ['The Basic Rules', '/rules/'],
+    ['Rules and guides', '/rules/'],
     ['Resources', '/resources/'],
     ['Updates', '/blog/']
   ];

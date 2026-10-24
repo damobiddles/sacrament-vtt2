@@ -128,3 +128,10 @@ blockquote.todo::first-line{font-weight:700}
 .loot-roller h2{margin-top:0}
 #loot-result:not(:empty){border-top:1px solid var(--line);margin-top:20px;padding-top:16px}
 .loot-result-item h3{margin-top:0}
+
+.guide-contents{border:1px solid var(--edge);padding:16px 20px;margin-bottom:28px}
+.guide-contents h2{margin-top:0}
+.guide-contents ul{columns:2;column-gap:32px}
+.guide-contents li{break-inside:avoid;margin-bottom:8px}
+.ic-body h2[id]{scroll-margin-top:90px}
+@media(max-width:650px){.guide-contents ul{columns:1}}

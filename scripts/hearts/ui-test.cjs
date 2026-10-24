@@ -28,6 +28,8 @@ server.listen(0, async () => {
 
   console.log('--- 1. the rules page');
   let p = await open('/rules/');
+  /* The earlier draft is retained behind an explicit disclosure; open it before checking its examples. */
+  await p.click('.earlier-draft > summary'); await p.waitForSelector('#trackdemo', { state: 'visible' });
   check('the rules page draws its tables from the data (items, foes, aftershocks)', (await p.$$eval('#lib .icard', (e) => e.length)) >= 20 && (await p.$$eval('#foes tbody tr', (e) => e.length)) === 7 && (await p.$$eval('#aftertables tr', (e) => e.length)) === 21);
   check('it shows the four Target Numbers and a Horror track', (await p.$$eval('#scenes tbody tr', (e) => e.map((x) => x.cells[0].textContent))).join() === 'TN 10,TN 12,TN 14,TN 16' && /12 \/ 21/.test(await txt(p, '#trackdemo')));
   check('the rules page carries none of the replaced mechanics (twelve boxes, armour dice, durability) outside the legacy note', !/12 boxes|armour dice|durability/i.test((await txt(p, 'body')).replace(/The earlier rules, with ability trees and twelve boxes of harm[^.]*\./, '')));

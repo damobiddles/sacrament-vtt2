@@ -32,3 +32,5 @@ The Feedback page uses Netlify Forms (`vtt-feedback`). The owner reads messages 
 ## Current Loot Tables
 
 `/loot/` is generated from `site/sheet/gear.js`, the same catalogue the VTT reads. Introductory text lives in `loot.md`. Add or edit loot in the catalogue, then build/publish; do not maintain a second item list. Private GM loot notes never appear on this page.
+
+Current VTT rules are in `player-guide.md` and `gm-guide.md`, published at `/player-guide/` and `/gm-guide/`. The first-game checklist links both. Update these alongside rules or control changes; distinguish automatic mechanics from GM rulings. They are public pages and must never include private setting material.

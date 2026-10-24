@@ -87,7 +87,7 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 * **Quick checks and feature work skip phones.** Do not write, run or screenshot phone layouts while building something, and do not add phone mockups to plans, unless the owner asks. New phone-only tests are tagged `@phone` in their title so the regular runs leave them out (`--grep-invert @phone`).
 * **Before each deploy: `npm run phone-check`** (under 30 seconds). It loads the home page and the table (as GM and as a player) at 360×640 and fails if anything is broken (script errors, a page that scrolls sideways), overlapping buttons, or controls off-screen. It is a smoke test, not a layout review.
 * **The phone suite** (`npm run phone-suite`) holds the full phone tests. Run it only when the owner asks for "the phone suite". After a full pass, empty the list below and write the date.
-* **Last full automated phone suite:** 2026-10-24, the owner-authorised backlog pass. Pending phone-review queue: empty. This is simulated Chromium phone testing; physical devices, Safari and real assistive technology remain unverified.
+* **Last full automated phone suite:** 2026-10-24, the owner-authorised backlog pass. Pending phone-review queue: guided My heroes creation, new-player table help, current player/GM guide pages and Rules hub (routine phone smoke check required before publication). This is simulated Chromium phone testing; physical devices, Safari and real assistive technology remain unverified.
 
 
 

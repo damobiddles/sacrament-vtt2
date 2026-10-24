@@ -586,7 +586,7 @@
   /* heroes built on the My heroes page in this browser can be brought to the table: the table checks them against the rules and makes them yours */
   function bringBox() {
     var list = window.SacramentHeroes ? window.SacramentHeroes.read().heroes : [];
-    return '<h4>Bring a hero from My heroes</h4>' + (list.length ? list.map(function (x, i) { return '<div class="hero"><b>' + esc(x.name) + '</b>' + (x.calling ? ' <span class="note">' + esc(x.calling) + '</span>' : '') + '<p><button class="btn small" data-do="bring" data-i="' + i + '">Bring ' + esc(x.name) + ' to this table</button></p></div>'; }).join('') : '<p class="note">You have no heroes saved in this browser yet.</p>') +
+    return '<h4>Bring a hero from My heroes</h4><p class="note">Choose a saved hero below, or create one in a new tab and return here. This makes a separate table copy; later edits on My heroes do not update it.</p>' + (list.length ? list.map(function (x) { return '<div class="hero"><b>' + esc(x.name) + '</b>' + (x.calling ? ' <span class="note">' + esc(x.calling) + '</span>' : '') + '<p><button class="btn small" data-do="bring" data-id="' + esc(x.id) + '">Bring ' + esc(x.name) + ' to this table</button></p></div>'; }).join('') : '<p class="note">You have no heroes saved in this browser yet.</p>') +
       '<p class="note"><a href="/character/" target="_blank" rel="noopener">Make or edit heroes on the My heroes page</a> (opens in a new tab; this table stays open).</p>';
   }
   /* What a fallen hero's player can do, in the Rules page's words */
@@ -601,12 +601,12 @@
     var ch = myChar(), own = cardList().filter(function (c) { return c.owner === S.you.pid; });
     if (!ch) {
       var free = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (c) { return !c.owner; });
-      return '<div class="sec"><h3>Choose your hero</h3>' + (free.length ? '<p class="hint">Pick a hero to play.</p>' : Object.keys(S.chars).length ? '<p>Every hero already has a player. Ask the GM to add another hero for you. You can watch the table meanwhile.</p>' : '<p>There are no heroes yet. Ask the GM to add one for you. You can watch the table meanwhile.</p>') +
-        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '</div>';
+      return '<div class="sec"><h3>Choose your hero</h3>' + (free.length ? '<p class="hint">Pick a hero to play.</p>' : Object.keys(S.chars).length ? '<p>Every hero already has a player. Bring your own hero below or ask the GM to add another. You can watch the table meanwhile.</p>' : '<p>There are no heroes yet. Bring one from My heroes below, or ask the GM to add one. You can watch the table meanwhile.</p>') +
+        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
     }
     var cur = turnCardId() && S.cards[turnCardId()];
     return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + downHelp(S.cards[ch.cardId]) +
-      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Press End turn at the top when you are done.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Tap a card or token to look at it, then a stat below to roll. Drag your token to move it.</p>') + '</div>' +
+      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Press End turn at the top when you are done.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then use a weapon below or in My character.</p>') + '<details class="player-first-turn"><summary>Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Open My character for your sheet and Ready to use actions.</li><li>After a successful attack, roll damage and Apply to the named target.</li><li>Press End turn when finished.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
   /* HP as hearts: each Heart is 10 points, filled one after another from the first. A last Heart that holds fewer than 10 is drawn smaller, so no capacity is implied that is not
@@ -1033,7 +1033,7 @@
         send({ type: 'lootRoll', ns: own ? own.split(/[ ,]+/).map(Number) : undefined }, function (b) { if (b) UI.loot = b.result; render(); }); break; }
       case 'lootCard': { var L0 = UI.loot; if (!L0) break; send({ type: 'cardCreate', card: { kind: 'loot', name: L0.name, desc: L0.flavour, gmNotes: [L0.category, L0.tempts ? 'Tempts the Horror.' : '', L0.gmNote].filter(Boolean).join(' · '), visible: false } }); toast('Added "' + L0.name + '" to the table, hidden. Reveal it when the party finds it.', 5000); break; }
       case 'lootGive': { var L1 = UI.loot, lootSel = $('lootHero'); if (!L1 || !lootSel || !lootSel.value) break; var lootTo = lootSel.value; send({ type: 'sheet', charId: lootTo, op: { op: 'add', id: L1.itemId } }, function (b) { if (b) toast('Gave "' + L1.name + '" to ' + (S.chars[lootTo] ? S.chars[lootTo].name : 'the hero') + '.', 4000); }); break; }
-      case 'bring': { var mine = window.SacramentHeroes && window.SacramentHeroes.read().heroes[+d.i]; if (mine) send({ type: 'bringHero', hero: mine }); break; }
+      case 'bring': { var mine = window.SacramentHeroes && window.SacramentHeroes.read().heroes.filter(function (h) { return h.id === d.id; })[0]; if (mine) send({ type: 'bringHero', hero: mine }); break; }
       case 'undo': send({ type: 'undo', logId: d.id }); break;
       case 'feed': UI.feedOpen = !UI.feedOpen; $('feed').dataset.h = ''; renderFeed(); break;
       case 'copy': { var link = location.origin + '/vtt/?room=' + S.code; if (navigator.clipboard) navigator.clipboard.writeText(link).then(function () { toast('Link copied: ' + link); }, function () { toast(link); }); else toast(link); break; }
@@ -1322,6 +1322,10 @@
     else { $('makeSample').checked = true; $('entry').hidden = false; var mf = $('makeForm'); if (mf.requestSubmit) mf.requestSubmit(); else mf.querySelector('button[type=submit]').click(); }
   }
   if (!(last && resume(last)) && !UI.trying) $('entry').hidden = false;
+  /* A player can create a local hero in the linked second tab while this table is idle. */
+  function refreshLocalHeroes() { if (S && !gm() && !myChar()) render(); }
+  window.addEventListener('storage', function (e) { if (window.SacramentHeroes && (e.key === window.SacramentHeroes.KEY || e.key === null)) refreshLocalHeroes(); });
+  window.addEventListener('focus', refreshLocalHeroes);
   window.addEventListener('online', function () { poll(true); });
   window.__vtt = { state: function () { return S; }, ui: UI, net: function () { return UI.netlog.slice(); } };
 })();

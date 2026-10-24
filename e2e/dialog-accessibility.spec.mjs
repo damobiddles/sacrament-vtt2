@@ -12,7 +12,7 @@ test('sheet and loot dialogs keep keyboard focus inside and restore it when clos
   await controls.last().focus();await gm.keyboard.press('Tab');await expect(controls.first()).toBeFocused();
   await gm.keyboard.press('Shift+Tab');await expect(controls.last()).toBeFocused();
   await gm.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(gm.locator('#app')).not.toHaveAttribute('inert','');
-  expect(await bounded(gm.evaluate(()=>document.activeElement!==document.body),5000,'checking restored keyboard focus')).toBe(true);
+  await expect(gm.locator(kind==='sheet'?'#strip [data-do=sheet]':'[data-do=designLoot]')).toBeFocused();
  }
  expect(gm.errors).toEqual([]);
 });

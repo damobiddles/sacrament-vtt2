@@ -26,7 +26,7 @@
   <a class="vtt-home-link vtt-home-entry" href="/" aria-label="Return to Sacrament website home page">← Back to website</a>
   <h1>Sacrament RPG Table</h1>
   <p class="lead">One screen: the table stays in view while you roll, apply Effort and end your turn.</p>
-  <p class="note"><a href="/how-to-play/">First game? Read the quick start</a> · <a href="/feedback/">Report a problem</a></p>
+  <nav class="note entry-help" aria-label="Help"><a href="/how-to-play/">First game? Read the quick start</a><a href="/player-guide/">Player rules</a><a href="/gm-guide/">GM rules</a><a href="/feedback/">Report a problem</a></nav>
   <p class="invite" id="inviteMsg" hidden></p>
   <div class="entry-grid">
     <form id="makeForm" class="card-box" autocomplete="off">
@@ -39,6 +39,7 @@
     </form>
     <form id="joinForm" class="card-box" autocomplete="off">
       <h2>Join a table</h2>
+      <p class="note">Use the invitation or six-letter code from your GM. Enter your own name here; choose your hero after joining.</p>
       <label>Table code<input id="joinCode" maxlength="8" autocapitalize="characters" required></label>
       <label>Your name<input id="joinName" maxlength="30" required></label>
       <button class="btn" type="submit">Join</button>

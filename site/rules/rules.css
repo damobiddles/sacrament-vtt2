@@ -46,3 +46,5 @@
   .rhead{padding-block:44px 28px}
 }
 @media(max-width:600px){.ref th{white-space:normal}.ref th,.ref td{padding-right:12px}}
+
+.earlier-draft{margin-top:32px;margin-bottom:32px}.earlier-draft>summary{cursor:pointer;padding:16px;border:1px solid var(--edge)}

@@ -2,7 +2,7 @@ import { test, expect, newPage } from './helpers.mjs';
 
 test('reading pages offer a keyboard-accessible back-to-top shortcut with reduced-motion support', async ({ browser }) => {
   const page = await newPage(browser);
-  for (const path of ['/loot/', '/rules/', '/news/a-steadier-table/']) {
+  for (const path of ['/loot/', '/player-guide/', '/gm-guide/', '/news/a-steadier-table/']) {
     await page.goto(path);
     const button = page.getByRole('button', { name: '↑ Back to top', exact: true });
     await expect(button).toBeHidden();

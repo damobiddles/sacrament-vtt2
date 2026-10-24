@@ -14,25 +14,36 @@
 </head>
 <body>
 <div class="hwrap">
-<p class="proto">Create a hero here, then open your game and choose <b>Bring a hero</b>. Heroes are saved in this browser on this device. Download a backup to keep them safe or move them to another browser. <a href="/rules/">Rules</a> &middot; <a href="/vtt/?join">Join a game</a></p>
 <div class="label">Sacrament RPG</div>
 <h1>My heroes</h1>
+<p>Create a hero without learning every rule first. Your starting focus is a suggestion, not a permanent class.</p>
+<ol class="hero-steps" aria-label="Getting into your first game"><li><b>Generate</b> a starting hero below.</li><li><b>Keep</b> the one you like, then customise the sheet.</li><li><b>Join</b> your GM’s table and choose <b>Bring a hero</b>.</li></ol>
+<p class="note">Saved on this browser and device. <a href="#heroStorage">Download or restore a private backup</a> to keep your heroes safe. <a href="/player-guide/">New player? Read the player guide</a> · <a href="/how-to-play/">First game checklist</a></p>
 
 <section class="panel hero-tools" aria-labelledby="generatorTitle">
-  <h2 id="generatorTitle">Roll a new hero</h2>
-  <p>Discover a name, a vow and a complete starting kit. Reroll until someone catches your imagination, then keep the hero and make them your own.</p>
-  <div class="row"><label>Starting focus<select id="generatorFocus"><option value="random">Surprise me</option><option value="fighter">Fighter</option><option value="scout">Scout</option><option value="scholar">Scholar (magic)</option><option value="healer">Healer (prayers)</option></select></label><button class="btn" type="button" id="generateHero">Generate a hero</button></div>
+  <h2 id="generatorTitle">1. Create your starting hero</h2>
+  <p>Discover a name, a vow and a complete starting kit. Generate another suggestion whenever you like. Nothing is saved until you press Keep this hero.</p>
+  <div class="row"><label>Starting focus<select id="generatorFocus" aria-describedby="focusHelp"><option value="random">Surprise me</option><option value="fighter">Fighter</option><option value="scout">Scout</option><option value="scholar">Scholar (magic)</option><option value="healer">Healer (prayers)</option></select></label><button class="btn" type="button" id="generateHero">Generate a hero</button></div>
+  <p class="note" id="focusHelp">Not sure? Surprise me chooses a complete, playable starting kit for you.</p>
   <div id="generatorPreview" aria-live="polite"></div>
   <div class="row"><button class="btn" type="button" id="keepGenerated" hidden>Keep this hero</button></div>
   <p class="note" id="generatorStatus" role="status">Generating a suggestion does not change your saved heroes. Each one uses the current starting rules.</p>
 </section>
 
 <div class="panel" id="pick">
-  <h3>Your heroes</h3>
+  <h2>2. Your saved heroes</h2>
   <div class="row"><label>Hero<select id="heroSel" aria-label="Choose a hero"></select></label>
-    <button class="btn small" id="newHero" type="button">New hero</button><button class="btn small ghost" id="delHero" type="button">Delete</button></div>
+    <button class="btn small" id="newHero" type="button">New hero (blank sheet)</button><button class="btn small ghost" id="delHero" type="button">Delete</button></div>
 </div>
 
+<section class="panel hero-next" id="heroNext" hidden aria-labelledby="heroNextTitle">
+<h2 id="heroNextTitle">3. Bring your hero to a game</h2>
+<p id="heroReadiness" role="status"></p>
+<p>Open your GM’s invitation link in this browser, or join with their six-letter code. After joining, choose <b>Bring a hero</b> and select your hero. Joining uses your player name; you choose your hero afterwards.</p>
+<p><a class="btn" href="/vtt/?join">Join a game</a> <a href="#sheetHere">Customise this hero</a></p>
+<p class="note">Bringing a hero makes a separate copy at that table. Later changes here do not update the table’s copy. Keep a backup before changing browser or device.</p>
+</section>
+<div id="sheetHere"></div>
 <div class="panel" id="heroStorage" role="status" aria-live="polite">
   <p id="heroSaveStatus"></p>
   <p id="heroLimitStatus"></p>
@@ -45,7 +56,6 @@
   <div class="row"><button class="btn" type="button" id="restoreHeroes" hidden>Restore backup</button><button class="btn ghost" type="button" id="cancelRestore" hidden>Cancel</button></div>
   <p id="restoreStatus" role="status" aria-live="polite"></p>
 </div>
-<div id="sheetHere"></div>
 </div>
 <script src="/vtt/rules.js"></script>
 <script src="/sheet/gear.js"></script>
@@ -92,6 +102,13 @@
     $('delHero').disabled = !cur();
     $('newHero').disabled = !H.canAdd(S);
     renderStorage();
+    var h = cur(); $('heroNext').hidden = !h;
+    if (h) {
+      var left = C.pointsLeft(h), effort = C.effortLeft(h), problems = C.equipmentProblems(h);
+      $('heroReadiness').textContent = S.saveError ? 'Your latest changes are not safely saved. Download a backup below before leaving this page.' :
+        left || effort || problems.length ? 'Before your first game: ' + (left ? left + ' score points left. ' : '') + (effort ? effort + ' Effort points left. ' : '') + problems.join(' ') + ' Review the sheet below with your GM.' :
+        h.name + ' has a complete starting allocation: 6 score points, 4 Effort points and equipment within the slot limits. Review your choices with your GM.';
+    }
   }
   function render() { renderPick(); if (cur()) view.draw(true); else $('sheetHere').innerHTML = S.readOnly ? '<div class="panel"><p>Saved heroes could not be read. See the backup notice above. You can make a temporary hero here without replacing the existing saved data.</p></div>' : '<div class="panel"><p>You have no heroes saved in this browser yet. Press <b>New hero</b> to make one (you have 6 points for the six scores and 4 for Effort), or generate a suggestion above and keep it.</p></div>'; }
   function add(h) { if (!H.canAdd(S)) { renderStorage(); return null; } S.heroes.push(h); S.current = h.id; save(); render(); return h; }

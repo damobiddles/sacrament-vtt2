@@ -12,3 +12,12 @@
 #restorePreview ul{padding-left:1.3em}
 #restoreStatus:empty{display:none}
 @media(max-width:650px){.hero-preview-grid{grid-template-columns:minmax(0,1fr)}.hero-tools .row{flex-wrap:wrap}.hero-tools label{width:100%}.hero-tools select{width:100%}}
+
+.hero-steps{display:flex;flex-wrap:wrap;gap:12px 32px;padding-left:24px;margin-bottom:24px}
+.hero-steps li{flex:1 1 180px;padding-right:12px}
+.hero-preview-field{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.hero-preview-field input{width:100%;box-sizing:border-box}
+.hero-preview details{margin-top:16px}
+.hero-preview summary{cursor:pointer;padding:8px 0}
+.hero-next h2,#pick h2{margin-top:0}
+#heroNextTitle{scroll-margin-top:80px}

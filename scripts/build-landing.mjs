@@ -22,6 +22,8 @@ const PAGES = [
   { slug: 'the-game', path: '/the-game/', label: 'The game' },
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
+  { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
+  { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'blog', path: '/news/', label: 'News' },
   { slug: 'loot', path: '/loot/', label: 'Loot' },
   { slug: 'feedback', path: '/feedback/', label: 'Feedback' },
@@ -34,7 +36,7 @@ const todo = (html) => html
   .replace(/<blockquote>(YOUR TEXT HERE)/g, '<blockquote class="todo">$1')
   .replace(/\[\[(.*?)\]\]/g, '<mark class="todo-inline">$1</mark>');
 
-const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><ul>${PAGES.filter((p) => !p.footerOnly).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul><div class="ic-kofi" aria-label="Support Sacrament on Ko-fi"><script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script><script>if (window.kofiwidget2) { kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'J4M02969C2'); kofiwidget2.draw(); }</script><noscript><a href="https://ko-fi.com/J4M02969C2" rel="noopener noreferrer">Support me on Ko-fi</a></noscript></div></div></nav>`;
+const nav = (current) => `<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><ul>${PAGES.filter((p) => !p.footerOnly && !p.guide).map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ''}>${p.label}</a></li>`).join('')}</ul><div class="ic-kofi" aria-label="Support Sacrament on Ko-fi"><script src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script><script>if (window.kofiwidget2) { kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'J4M02969C2'); kofiwidget2.draw(); }</script><noscript><a href="https://ko-fi.com/J4M02969C2" rel="noopener noreferrer">Support me on Ko-fi</a></noscript></div></div></nav>`;
 const footer = () => `<footer class="ic-foot"><div class="wrap"><p><b>${esc(NAME)}</b>. Keep to the consecrated roads.</p><p><a href="/privacy/">Privacy Policy</a> &middot; <a href="/terms/">Terms of Use</a></p><p>&copy; ${new Date().getFullYear()} Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>`;
 
 const postImage = (p) => ({
@@ -128,12 +130,24 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   /* the text pages */
   const text = (slug, label, extraAfter = '') => {
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
+    let html = todo(p.html);
+    if (meta.guide) {
+      const sections = [];
+      html = html.replace(/<h3>(.*?)<\/h3>/g, (_, title) => {
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        sections.push({ id, title });
+        return '<h2 id="' + id + '">' + title + '</h2>';
+      });
+      html = '<nav class="guide-contents" aria-label="On this page"><h2>On this page</h2><ul>' + sections.map(s => '<li><a href="#' + s.id + '">' + s.title + '</a></li>').join('') + '</ul></nav>' + html;
+    }
     write(meta.path, page(p.title + ' | ' + NAME, p.summary, meta.path,
-      `${head(label, p.title, p.summary)}<main class="wrap post ic-body"><div class="body">${todo(p.html)}${extraAfter}</div></main>`));
+      `${head(label, p.title, p.summary)}<main class="wrap post ic-body"><div class="body">${html}${extraAfter}</div></main>`));
   };
   text('the-game', NAME);
   text('setting', NAME);
   text('how-to-play', NAME);
+  text('player-guide', NAME);
+  text('gm-guide', NAME);
   text('loot', NAME, lootCatalogue(globalThis.SACRAMENT_GEAR));
   text('feedback', NAME, feedbackForm);
   write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>Thank you for helping improve the table.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
