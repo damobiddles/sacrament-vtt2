@@ -82,19 +82,18 @@ test('ready actions appear above the sheet fields and use the selected equipment
   await expect(ann.locator('#panel')).toContainText(name);
 });
 
-test('Fill width uses a narrow desktop viewport without changing shared token positions', async ({ browser },info) => {
-  const gm=await newPage(browser,{width:877,height:863}); await makeTable(gm);
-  await gm.locator('#cards .c',{hasText:'The Sealed Gate'}).click();
-  const before=await gm.locator('#table').boundingBox(), layout=(await state(gm)).layout;
-  const position=()=>gm.locator('#cards .c').first().evaluate(el=>{
-    const r=el.getBoundingClientRect(),t=document.getElementById('table').getBoundingClientRect();
-    return {x:(r.x+r.width/2-t.x)/t.width,y:(r.y+r.height/2-t.y)/t.height};
-  });
-  const old=await position(); await gm.locator('#mapWidthToggle').click();
-  const after=await gm.locator('#table').boundingBox(),wrap=await gm.locator('#mapViewport').boundingBox(),next=await position();
-  expect(after.width).toBeGreaterThan(before.width+10); expect(after.width).toBeGreaterThan(wrap.width-22);
-  expect(after.width/after.height).toBeCloseTo(1.6,2); expect(next.x).toBeCloseTo(old.x,4); expect(next.y).toBeCloseTo(old.y,4);
-  expect((await state(gm)).layout).toEqual(layout);
-  await gm.screenshot({path:info.outputPath('map-fill-width.png')});
-  await gm.locator('#mapWidthToggle').click(); expect((await gm.locator('#table').boundingBox()).width).toBeCloseTo(before.width,0);
+test('the map stays fitted in desktop windows without a width toggle or shared-position changes', async ({ browser }, info) => {
+  const gm = await newPage(browser, { width: 877, height: 863 }); await makeTable(gm);
+  const layout = (await state(gm)).layout;
+  await expect(gm.locator('#mapWidthToggle, #mapWidthHint, [data-do=mapWidth]')).toHaveCount(0);
+  for (const viewport of [{ width: 877, height: 863 }, { width: 1366, height: 800 }, { width: 1000, height: 500 }]) {
+    await gm.setViewportSize(viewport);
+    const map = await gm.locator('#table').boundingBox(), space = await gm.locator('#mapViewport').boundingBox();
+    expect(map.width / map.height).toBeCloseTo(1.6, 2);
+    expect(map.x).toBeGreaterThanOrEqual(space.x - 1); expect(map.y).toBeGreaterThanOrEqual(space.y - 1);
+    expect(map.x + map.width).toBeLessThanOrEqual(space.x + space.width + 1);
+    expect(map.y + map.height).toBeLessThanOrEqual(space.y + space.height + 1);
+    expect((await state(gm)).layout).toEqual(layout);
+  }
+  await gm.screenshot({ path: info.outputPath('map-fitted.png') }); expect(gm.errors).toEqual([]);
 });

@@ -29,7 +29,7 @@ On **My heroes**, a failed save is now made visible, with a retry and a way to d
 
 ## Live now: more room to play
 
-The map has an optional **Fill width** view. It gives the battlefield more space without stretching the artwork or changing token positions. Choose **Fit map** when you want the whole scene back in view.
+The map fits the available space without stretching the artwork or changing token positions.
 
 Drawings and pointers now belong to their own scenes. Preparing a scene as GM should not put its markings onto the players' current scene, and changing scenes no longer carries the old scene's drawings along with it.
 

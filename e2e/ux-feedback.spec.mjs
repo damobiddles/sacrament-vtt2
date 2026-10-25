@@ -8,12 +8,14 @@ const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: SH
 const card = (page, name) => page.locator('#cards .c', { hasText: name }).first();
 const endTurn = async (page) => { await page.locator('#top [data-do=endTurn]').click(); await saved(page); };
 
-test('a new GM has concise help leading to Table; the help goes once a player has a hero', async ({ browser }) => {
+test('a new GM starts with turn order and uses Table for invitations and character setup', async ({ browser }) => {
   test.setTimeout(60000);
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm, { sample: false });
-  const box = gm.locator('#panel .start');
-  await expect(box).toContainText('Invite players in Table'); await expect(box.locator('[data-do=copy]')).toHaveCount(0);
+  await expect(gm.locator('#panel h3').first()).toHaveText('Turn order');
+  await expect(gm.locator('#panel')).not.toContainText('Live encounter:');
+  await expect(gm.locator('#panel')).not.toContainText('Invite players in Table');
+  await expect(gm.locator('#panel a[href="/gm-guide/"]')).toHaveCount(0);
   await gm.getByRole('tab',{name:'Table',exact:true}).click();await expect(gm.locator('#panel')).toContainText(code);await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(1);
   await expect(gm.locator('#panel [data-do=addHero]')).toBeVisible();
   await shot(gm, '1-gm-getting-started');

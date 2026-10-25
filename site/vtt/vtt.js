@@ -205,7 +205,7 @@
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
-    UI.mapWide = false; UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
+    UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
     UI.attackChoice = null; UI.areaTargets = []; UI.powerResetAsk = false; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
@@ -378,11 +378,6 @@
     if (UI.drag) { UI.dirty = true; return; }
     var G = gm(), view = viewScene(), tbl = $('table');
     tbl.className = 't-' + UI.tool;
-    $('mapViewport').classList.toggle('wide', !!UI.mapWide);
-    $('mapWidthHint').hidden = !UI.mapWide || tbl.offsetHeight <= $('mapViewport').clientHeight + 1;
-    $('mapWidthToggle').textContent = UI.mapWide ? 'Fit map' : 'Fill width';
-    $('mapWidthToggle').setAttribute('aria-pressed', String(!!UI.mapWide));
-    $('mapWidthToggle').title = UI.mapWide ? 'Show the whole map' : 'Use the available width; scroll to see the rest of the map';
     var sc = (S.scenes || []).filter(function (x) { return x.id === view; })[0] || S.table.scene;
     $('bg').style.backgroundImage = bgUrl(sc.bg);
     var html = '', want = [], turnId = turnCardId(), aim = aimId();
@@ -765,7 +760,7 @@
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = '<p class="hint">Live encounter: ' + esc(S.table.scene.name) + '</p>' + startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
@@ -777,13 +772,6 @@
     if (!living) UI.restAsk = false;
     return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
       '<p class="hint">Safe rest: +10 HP to living heroes; Horror −' + (nd || 1) + 'd' + R.REST.horrorDie + '; healing allowances refresh.</p></section>' + encounterControls();
-  }
-  /* A new table: until a player has taken up a hero, the first thing in the GM's tray is how to get them in. */
-  function startBox() {
-    var heroes = Object.keys(S.chars), playing = heroes.some(function (k) { return S.chars[k].owner; });
-    if (playing) return '';
-    return '<p class="hint start">Invite players in Table. They can bring a hero or claim one here. <a href="/gm-guide/" target="_blank" rel="noopener">First session help</a>.</p>';
-
   }
   function encounterControls() {
     if (viewScene() !== S.table.scene.id) return '<p class="hint">Preparing another scene. Open the live scene to run or refresh its encounter.</p>';
@@ -1056,7 +1044,6 @@
         if (damageButton) { damageButton.focus({ preventScroll: true }); damageButton.click(); }
         break;
       }
-      case 'mapWidth': UI.mapWide = !UI.mapWide; renderTable(); break;
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;

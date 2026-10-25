@@ -79,7 +79,7 @@ Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide wh
 
 In Scene, add a named scene and **Open** it to prepare it privately. Add and move cards, change its picture and rename it without losing its contents. **Show to players** makes it live for everyone. Prepared enemies cannot attack live heroes: show their scene first. Unfinished monster attacks cannot carry damage into a different live scene. Prepared scenes and their names stay private until shown. The Target is a table setting; changing scenes does not give each scene its own saved Target.
 
-**Fill width** and **Fit map** change only your own view, not token positions or another person's view. **Point** shows people looking at the same scene where you mean. Drawing, undoing lines and clearing drawing are GM-only.
+The map automatically fits the available space without stretching the artwork. **Point** shows people looking at the same scene where you mean. Drawing, undoing lines and clearing drawing are GM-only.
 
 A hidden card is not sent to players. **Hide the numbers from players** shows the card without its HP or counters. Public descriptions are visible when the card is shown; private GM notes are not. Character gear and private notes are shared with their owner and the GM. Never put GM secrets in a public description or a shared dice result.
 
