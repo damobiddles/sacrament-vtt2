@@ -781,12 +781,12 @@
     var live = S.table.scene.id, view = viewScene(), bg = (S.scenes.filter(function (x) { return x.id === view; })[0] || {}).bg || '';
     var h = '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
       var isLive = x.id === live, isView = x.id === view;
-      var right = isLive ? '<span class="pill">Live</span>' : '';
+      var status = isLive ? '<span class="pill">Live</span>' : isView ? '<span class="pill">Preparing</span>' : '', right = '';
       if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '">Open</button>';
-      else if (!isLive) right += '<span class="pill">Preparing</span><button class="btn small main" data-do="reveal" data-scene="' + x.id + '">Show to players</button>';
+      else if (!isLive) right += '<button class="btn small main" data-do="reveal" data-scene="' + x.id + '">Show to players</button>';
       if (!isLive) right += '<button type="button" class="btn small danger" data-do="deleteScene" data-scene="' + x.id + '" aria-label="Delete scene: ' + esc(x.name) + '">Delete</button>';
       right += '<button type="button" class="btn small" data-do="renameScene" data-scene="' + x.id + '" aria-label="Rename scene: ' + esc(x.name) + '">Rename</button>';
-      return '<li class="' + (isView ? 'cur' : '') + '"><span class="n">' + esc(x.name) + '</span>' + right + '</li>';
+      return '<li class="' + (isView ? 'cur' : '') + '"><div class="scene-heading"><span class="n">' + esc(x.name) + '</span>' + status + '</div><div class="scene-actions" role="group" aria-label="Actions for ' + esc(x.name) + '">' + right + '</div></li>';
     }).join('') + '</ul><p class="hint">Show another scene to players before deleting the live scene. Heroes and items held by players are kept.</p>';
     var deleting = S.scenes.filter(function (x) { return x.id === UI.sceneDelete; })[0];
     if (deleting) h += '<div class="sec scene-delete"><h4>Delete ' + esc(deleting.name) + '?</h4><p>This permanently removes this scene, its table cards and its drawings. Heroes and items held by players are kept. This cannot be undone. Uploaded pictures are kept in case another scene uses them.</p><div class="row"><button class="btn small danger" data-do="confirmSceneDelete" data-scene="' + deleting.id + '"' + (UI.sceneDeleting ? ' disabled aria-busy="true"' : '') + '>Delete this scene</button><button class="btn small" data-do="cancelSceneDelete">Cancel</button></div></div>';
