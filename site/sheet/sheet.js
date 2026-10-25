@@ -68,11 +68,11 @@
   }
 
   function render(d, msg, host, pick) {
-    var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h), acts = host.use && edit ? C.actions(h) : [];
+    var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h), acts = host.use && edit && d.canUse !== false ? C.actions(h) : [];
     var out = '<div class="sh-head"><h2>' + esc(h.name) + ' <span class="sh-sub">' + (d.title || '') + '</span></h2>' + (d.live ? '<span class="sh-live" role="status">At the table · changes show for everyone</span>' : '') + (host.close ? '<button type="button" class="sh-b close" data-sh="close">Close sheet</button>' : '') + '</div>';
     out += C.equipmentProblems(h).map(function (warning) { return '<p class="sh-note" role="status"><b>' + esc(warning) + '</b></p>'; }).join('');
     out += '<div class="sh-msg" role="status" aria-live="polite">' + (msg ? '<b>' + esc(msg) + '</b>' : '') + '</div>';
-    if (d.live && host.use && edit) {
+    if (d.live && host.use && edit && d.canUse !== false) {
       var ready = acts.filter(function (a) { return a.ok; });
       out += '<section class="sh-sec sh-actions" aria-label="Quick actions"><h3>Ready to use</h3><div class="sh-quick">' + (ready.map(function (a) { return useBtn(a, a.spellId, a.name, true); }).join('') || '<p class="sh-note">No equipped actions are ready. Manage your equipment below.</p>') + '</div></section>';
     }
@@ -86,7 +86,7 @@
       (edit ? '<p class="sh-note">' + B.points + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
     left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
     if (C.weaponEffortNote(h)) left1 += '<p class="sh-note" role="note">' + esc(C.weaponEffortNote(h)) + '</p>';
-    var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, acts, d.dice)); });
+    var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, d.live ? [] : acts, d.dice)); });
     var option = function (it) { return '<option value="' + it.id + '"' + (pick === it.id ? ' selected' : '') + '>' + esc(optionText(it)) + '</option>'; };
     var group = function (label, list) { return list.length ? '<optgroup label="' + label + '">' + list.map(option).join('') + '</optgroup>' : ''; };
     /* a player is offered the starter list and one grimoire; finds (the loot table and relics) are the GM's to give, so only the GM sees them here */
@@ -143,7 +143,7 @@
       else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });
       else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, gearKey: b.dataset.gear || undefined, eq: b.dataset.eq === '1' });
       else if (k === 'hp' && d.canHp && host.hp) { host.hp(+b.dataset.d); }
-      else if ((k === 'use' || k === 'quickUse') && host.use && d.canEdit) {
+      else if ((k === 'use' || k === 'quickUse') && host.use && d.canEdit && d.canUse !== false) {
         var useIndex = b.dataset.gear ? d.hero.gear.findIndex(function (g) { return g.key === b.dataset.gear; }) : +b.dataset.i;
         var u = C.useOf(d.hero, useIndex, b.dataset.spell || '', b.dataset.mode || '');
         if (!u.ok) { msg = u.why; draw(true); return; }

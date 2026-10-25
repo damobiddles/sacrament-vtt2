@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared,basicAttack} from './helpers.mjs';
 // The 2026-10-21 UX pass, in real browsers: a new GM is shown how to invite players, a player is told whose turn it is, when their hero is hit and what dying means,
 // a GM's d100 gift reaches the player, finished rolls are put away when the turn moves on, and the GM's cards lead with the right button.
 import { test, expect } from './helpers.mjs';
@@ -36,13 +37,13 @@ test('the turn reaching a player is announced to them; a finished roll is put aw
   await expect(ann.locator('#panel .turnline.mine')).toContainText('Your turn.');
   await expect(ann.locator('#strip')).toHaveClass(/myturn/); await expect(bo.locator('#strip')).not.toHaveClass(/myturn/);
   /* Wisp rolls out of turn with her own die, and misses */
-  await bo.locator('#strip [data-do=toggle][data-key=more]').click(); await bo.locator('#strip [data-do=toggle][data-key=dice]').click();
-  await card(bo, 'Pit Ghoul').click(); await bo.locator('#strip input[data-phys]').fill('2'); await bo.locator('#strip .stat', { hasText: 'STR' }).click(); await bo.locator('#strip [data-noitem]').click();
-  await expect(bo.locator('#panel .calc.bad')).toContainText('Miss'); await expect(bo.locator('#panel [data-do=push]')).toHaveCount(0);
+
+  await card(bo, 'Pit Ghoul').click(); await basicAttack(bo,2);
+  await expect(bo.locator('#feed li.failure .tx')).toContainText('Miss'); await expect(bo.locator('#panel [data-do=push]')).toHaveCount(0);
   await expect(bo.locator('#panel')).toContainText('Push is available on your turn');
   await bo.locator('#panel [data-do=deselect]').click();  // look at the play panel while leaving the failed attack open
   await endTurn(gm);
-  await expect(bo.locator('#banner .notice.turn')).toHaveText('Your turn, Wisp.');
+  await expect(bo.locator('#feed')).toContainText('Wisp’s turn.');
   await expect(bo.locator('#strip')).toHaveClass(/myturn/);
   await expect(bo.locator('#panel [data-do=push]')).toHaveCount(0);   /* the old miss and its Push offer are put away */
   await expect(bo.locator('#panel .turnline.mine')).toContainText('Your turn.');
@@ -60,10 +61,10 @@ test('a hit on a player\'s hero is told to them; a dying hero is told what can s
     await card(gm, 'Pit Ghoul').click(); if (await gm.locator('[data-do=attackToggle]', { hasText: 'Attack a hero' }).count()) await gm.locator('[data-do=attackToggle]').click();
     await gm.locator('#atkHero').selectOption({ index: 0 }); await gm.locator('#physA').fill('20'); await gm.locator('[data-do=monsterAttack]').click();
     await expect(gm.locator('[data-do=monsterEffort]')).toBeVisible(); if (await gm.locator('[data-do=monCat][data-cat=ultimate]').count()) await gm.locator('[data-do=monCat][data-cat=ultimate]').click(); await gm.locator('#physE').fill(String(damage)); await gm.locator('[data-do=monsterEffort][data-cat=ultimate]').click(); await saved(gm);
-    await gm.locator('[data-do=dismissRoll]').click();
+    if(await gm.locator('[data-do=dismissRoll]').count()) await gm.locator('[data-do=dismissRoll]').click();
   };
   await hit(4);
-  await expect(ann.locator('#banner .notice.hit')).toHaveText('Pit Ghoul hits you: −4 HP (now 6 of 10).');
+  await expect(ann.locator('#feed')).toContainText('HP -4 (now 6/10)');
   await expect(gm.locator('#banner .notice')).toHaveCount(0);   /* the GM rolled it: no notice for them */
   await shot(ann, '3-player-hit');
   await hit(6);
@@ -85,18 +86,17 @@ test('the GM\'s d100 gift reaches the player; damage is called damage; the Effor
   await expect(gm.locator('#feed')).toContainText('to Thorne.');
   /* a stat roll at the gate with the player's own die: the Effort kinds come with a line saying which is which */
   await card(ann, 'Sealed Gate').click();
-  await ann.locator('#strip [data-do=toggle][data-key=more]').click(); await ann.locator('#strip [data-do=toggle][data-key=dice]').click(); await ann.locator('#strip input[data-phys]').fill('19');
+   await ann.locator('#strip input[data-phys]').fill('19');
   await ann.locator('#strip .stat', { hasText: 'STR' }).click();
-  await ann.locator('#strip [data-do=roll][data-noitem]').click();
-  await expect(ann.locator('#panel .cats')).toBeVisible();
-  await expect(ann.locator('#panel')).toContainText('Pick what you did it with');
+
+  await expect(ann.locator('#strip .cats')).toBeVisible();
+  await expect(ann.locator('#strip .cats')).toContainText('Basic d4');
   /* the hatchet at the ghoul: the result says damage */
-  await ann.locator('[data-do=dismissRoll]').click(); await card(ann, 'Pit Ghoul').click();
+  await ann.locator('[data-do=ordinaryCheck]').click(); await card(ann, 'Pit Ghoul').click();
   await ann.locator('#strip input[data-phys]').fill('19');
-  await ann.locator('#strip [data-do=sheet]').click();
-  await ann.locator('#sheetOverlay .sh-item [data-sh=use]').first().click();
-  await ann.locator('#panel [data-do=effort]').first().click();
-  await expect(ann.locator('#panel .calc').last()).toContainText(/= \d+ damage\./);
+  await prepareItem(ann);await rollPrepared(ann);
+  await ann.locator('#strip [data-do=effort]').first().click();
+  await expect(ann.locator('#feed')).toContainText(/= \d+ damage\./);
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);
 });
 
@@ -125,9 +125,9 @@ test('a hero with nothing to use is not told to choose an item', async ({ browse
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   await card(ann, 'Pit Ghoul').click();
-  await expect(ann.locator('#panel .hint')).toContainText('choose what you are using below');
-  await ann.locator('#strip [data-do=sheet]').click(); await ann.locator('[data-sh=remove]').first().click(); await ann.locator('[data-sh=close]').first().click(); await saved(ann);
+  await expect(ann.locator('#panel')).toContainText('choose an action in Play');
+  await ann.locator('#panel [data-do=sheet]').click(); await ann.locator('[data-sh=remove]').first().click(); await ann.locator('[data-sh=close]').first().click(); await saved(ann);
   await card(ann, 'Pit Ghoul').click();
-  await expect(ann.locator('#panel .hint')).toHaveText('To attack or try this, tap a stat below to roll against it.');
+  await expect(ann.locator('#panel')).toContainText('tap a stat below to roll against it.');
   expect(ann.errors).toEqual([]);
 });

@@ -37,8 +37,8 @@ test('the turn reaching a player in another tab marks the tab’s title and play
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Wisp');
   await ann.locator('#strip .stat').first().hover(); await ann.mouse.down(); await ann.mouse.up();   /* a press on the page readies the sound */
-  await ann.locator('#strip [data-do=toggle][data-key=more]').click(); await ann.locator('#strip [data-do=toggle][data-key=dice]').click();
-  await expect(ann.locator('#strip input[data-sound]')).toBeChecked();
+
+  await ann.locator('.player-actions details').last().locator('summary').click();await expect(ann.locator('#panel input[data-sound]')).toBeChecked();
   /* Ann looks at another tab */
   await ann.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); });
   await gm.locator('[data-do=gmtab][data-t=play]').click();await gm.locator('#panel [data-do=endTurn]').click(); await saved(gm);
@@ -48,7 +48,7 @@ test('the turn reaching a player in another tab marks the tab’s title and play
   await ann.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
   await expect(ann).toHaveTitle('Sacrament RPG Table');
   /* turned off, it stays quiet */
-  await ann.locator('#strip input[data-sound]').uncheck();
+  await ann.locator('#panel input[data-sound]').uncheck();
   expect(await ann.evaluate(() => localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-sound'))))).toBe('0');
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });
@@ -62,7 +62,7 @@ test('the home page has no sample-table button; the existing sample address stil
   await page.goto('/vtt/?try');
   await expect(page.locator('#app')).toBeVisible();
   const first = await state(page); expect(first.you.role).toBe('gm'); expect(first.table.scene.name).toBe('The Sealed Gate');
-  await expect(page.locator('#toast')).toContainText('This is a sample table');
+  await expect(page.locator('#feed')).toContainText('This is a sample table');
   await shot(page, '3b-try-table');
   await page.goto('/vtt/?try'); await expect(page.locator('#app')).toBeVisible();
   expect((await state(page)).code).toBe(first.code);
@@ -76,7 +76,7 @@ test('the GM saves a monster and adds it to another table, hidden and in the tur
   await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).first().click();
   await gm.locator('#panel [data-do=cardEdit]').click();
   await gm.locator('#panel [data-do=saveMonster]').click();
-  await expect(gm.locator('#toast')).toContainText('Saved Pit Ghoul to your monsters');
+  await expect(gm.locator('#feed')).toContainText('Saved Pit Ghoul to your monsters');
   /* a second table in the same browser */
   await gm.goto('/vtt/?run'); await gm.locator('#makeSample').uncheck(); await gm.locator('#makeForm button[type=submit]').click(); await expect(gm.locator('#app')).toBeVisible();
   await gm.locator('[data-do=gmtab][data-t=scene]').click();

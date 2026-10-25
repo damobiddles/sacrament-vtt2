@@ -1,3 +1,4 @@
+import {basicAttack} from './helpers.mjs';
 // Readability of buttons and text (the site has one theme, the dark one), on a laptop and a phone: every page, and the Sacrament RPG Table in its main screens
 // (before a table, GM, player, panels and folds open, tools selected, a roll with Effort, the activity feed, a message pop-up).
 // It fails if any text is under 4.5:1, or any button's label is under 4.5:1 in any state (normal, hover, pressed, keyboard focus, selected, disabled: 3:1),
@@ -106,18 +107,16 @@ for (const theme of ['dark']) {
       await claimHero(ann, 'Thorne'); if (!QUICK) await visit(ctx, 'table player: hero claimed', ann);
       await press(ann.locator('#strip .stat').first());
       await ann.waitForTimeout(500); await landed(ann); await openAll(ann); await visit(ctx, 'table player: after a roll', ann);
-      if (!QUICK) { await press(ann.locator('#strip [data-do=toggle][data-key=more]')); await press(ann.locator('#strip [data-do=toggle][data-key=effort]')); await visit(ctx, 'table player: Effort options open', ann); }
-      if (!QUICK) { await press(ann.locator('#strip [data-do=toggle][data-key=dice]')); await visit(ctx, 'table player: dice options open', ann); }
-      await press(ann.locator('[data-do=effort]').first()); await ann.waitForTimeout(500); await landed(ann); await visit(ctx, 'table player: an Effort result', ann);
-      // a failed roll (a physical 2) with the offer to push, then pushed
+      await press(ann.locator('#panel [data-do=standaloneEffort]'));await visit(ctx, 'table player: Effort options open', ann);
+      await press(ann.locator('[data-do=freeEffort]').first()); await ann.waitForTimeout(500); await landed(ann); await visit(ctx, 'table player: an Effort result', ann);
       if (!QUICK) {
-        if (!(await ann.locator('#strip input[data-phys]').count())) { await press(ann.locator('#strip [data-do=toggle][data-key=more]')); await press(ann.locator('#strip [data-do=toggle][data-key=dice]')); }
+        await press(ann.locator('#panel [data-do=ordinaryCheck]'));
         await press(ann.locator('#cards .c', {hasText:'Pit Ghoul'}));
-        await ann.locator('#strip input[data-phys]').fill('2', { timeout: 4000 }).catch(() => {}); await press(ann.locator('#strip .stat').first());
-        await ann.waitForTimeout(500); await landed(ann); if (await ann.locator('#strip [data-noitem]').count()) await press(ann.locator('#strip [data-noitem]'));
-        await visit(ctx, 'table player: a failed roll, the offer to push', ann);
-        await press(ann.locator('#panel [data-do=push]')); await ann.waitForTimeout(500); await visit(ctx, 'table player: pushed', ann);
+        await basicAttack(ann,2);await landed(ann);
+        await visit(ctx, 'table player: a failed attack, the offer to push', ann);
+        await press(ann.locator('#panel [data-do=push]')); await visit(ctx, 'table player: pushed', ann);
       }
+
 
       }
 

@@ -281,3 +281,17 @@ The GM tabs now stay visible on selected-card, edit and roll views, with standar
 A prepared enemy cannot attack live heroes. The server also refuses unfinished monster damage after the live scene changes; hidden enemies in the live scene can still attack. Refreshing powers is restricted to the live encounter and its UI is not offered while preparing another scene.
 
 **Back to my tables** retains GM authority in this browser. Intentional Forget remains on Your tables. Player Leave keeps its existing two-press departure. Recovery copy/download actions are grouped together. Applied damage offers **Undo this damage** bound to the existing damage event and existing permission/conflict checks; unrelated later actions are retained. No game rules, storage names or saved history are migrated. This section supersedes the earlier tray-layout descriptions above.
+
+
+## Activity and player actions — 25 October 2026
+
+**Release preparation.** This replaces the earlier descriptions below. The player dice footer retains the compact-laptop height limit, and shared updates preserve typed physical dice, open preferences and keyboard focus. Publication follows the required release checks.
+
+This supersedes earlier descriptions of player sheet actions, footer HP controls and central roll reveals. Players choose items, spells, targets, difficulty or an unarmed attack in Play, then commit the prepared action in the bottom strip. That strip also holds ordinary stat checks, pending damage and standalone Effort. The sheet manages scores, equipment and notes; its player Use buttons have been removed. Manual player HP edits live in Play. The GM keeps standalone footer dice, enemy attacks in Play and one selected-hero sheet route for covering an absent player.
+
+Activity is the home for checks and their server-authorised outcomes, damage, healing, Horror, confirmations and event-specific Undo. Its expanded history replaces the collapsed preview. Browser-only feedback stays local to the current session and never becomes a shared entry. Connection/saving and recovery warnings remain visible separately. Validation stays beside sheet fields and the target chooser. Numeric dice animate in the bottom strip without a result pop-up or damage shortcut. Prepared items retain their gear key and target; missing or replaced equipment cannot silently become a different item. No game rules or saved-data names changed.
+
+Coverage includes physical critical dice during another person's update, preparation without spending an action, replacement equipment safety, player and GM assistance routes, attack-to-damage target retention, Push, healing/rest limits, dying, reduced motion and interrupted-roll recovery. Run the release suite and routine phone smoke before publication; real devices and Safari remain separate checks.
+
+
+Release validation for this change: lint/type checks and all 475 unit tests passed. The full laptop browser run passed 157 cases; its two obsolete sheet-control expectations were updated and passed on rerun, alongside the new spectator-to-GM regression (160 browser cases passed in total, with the existing live-only skip retained). Both full contrast sets, quick contrast, all 65 table checks, 75 reliability checks, 26 character/conversion checks and the routine 360×640 phone smoke passed. The former 72px footer now meets the unchanged 70px laptop limit. No test thresholds or time limits were increased. Production file/server verification follows publication; real phones, Safari and live browser automation remain unverified here.

@@ -71,3 +71,20 @@ export async function openGmHeroSheet(page, name = 'Thorne') {
   await page.locator('#panel [data-do=sheet]').click();
   await expect(page.locator('#sheetOverlay')).toBeVisible();
 }
+
+/** Choices in Play prepare an action; the footer alone commits the roll. */
+export async function prepareItem(page, selector = '') {
+  const actions = page.locator('.player-actions details').first();
+  if (!(await actions.getAttribute('open') !== null)) await actions.locator('summary').click();
+  await actions.locator('[data-do=prepareUse]' + selector).first().click();
+}
+export async function rollPrepared(page) {
+  await page.locator('#strip [data-do=commitUse]').click();
+}
+export async function basicAttack(page, n, stat = 'STR') {
+  await page.locator('#panel [data-do=basicAttack]').click();
+  await page.locator('#basicStat').selectOption(stat);
+  await page.locator('[data-do=prepareBasic]').click();
+  await page.locator('#strip input[data-phys]').fill(String(n));
+  await page.locator('#strip [data-do=commitCheck]').click();
+}

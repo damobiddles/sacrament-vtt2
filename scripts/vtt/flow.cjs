@@ -38,7 +38,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* the GM's tray has four tabs (Play, Scene, Loot, Table): a step that needs a control opens its tab first */
   const gmTab = async (p, t) => { await p.waitForSelector('[data-do=gmtab]'); await p.click('[data-do=gmtab][data-t=' + t + ']'); };
   const addBtn = async (p, what) => { await p.keyboard.press('Escape'); await p.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur()); await gmTab(p, what === 'addHero' ? 'table' : 'scene'); await p.click('[data-do=' + what + ']'); };
-  const diceOn = async (p) => { if (!(await p.$('[data-do=toggle][data-key=dice]'))) await p.click('[data-do=toggle][data-key=more]'); await p.click('[data-do=toggle][data-key=dice]'); };   /* My dice sit under More */
+  const diceOn = async (p) => { if (!(await p.$('#strip input[data-phys]'))) await p.click('[data-do=ordinaryCheck]'); };
+
   const editCard = async (p) => { await p.waitForSelector('[data-do=cardEdit], [data-edit=name]'); if (!(await p.$('[data-edit=name]'))) await p.click('[data-do=cardEdit]'); await p.waitForSelector('[data-edit=name]'); };   /* the card's full settings are on its Edit card screen */
   const attackOpen = async (p) => { if (!(await p.$('[data-do=monsterAttack]'))) await p.click('[data-do=attackToggle]'); await p.waitForSelector('[data-do=monsterAttack]'); };
   const sceneBg = async (p) => { await gmTab(p, 'scene'); if (!(await p.$('#bgUrl'))) await p.click('[data-do=sceneBg]'); };
@@ -48,7 +49,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* a successful non-critical physical 15 on a stat, and wait until THAT roll is the one on show (not the one before it) */
   const roll = async (p, stat = 'STR') => { const prev = await p.evaluate(() => window.__vtt.ui.roll); if (!(await p.$('#strip input[data-phys]'))) await diceOn(p); await p.fill('#strip input[data-phys]', '15'); await p.click('.stat[data-stat=' + stat + ']'); await p.waitForFunction((pv) => !window.__vtt.ui.rolling && window.__vtt.ui.roll !== pv && !!document.querySelector('[data-do=effort][data-cat=weapons]'), prev, { timeout: WAIT }); };
   const slow = async (p, ms) => { p.net.delay = ms; }, unslow = async (p) => { p.net.delay = 0; };
-  const heal = async (p) => { const id = (await card(p, 'Thorne')).id; for (let i = (await card(p, 'Thorne')).hp.cur; i < 10; i++) await p.click('#strip [data-do=hpAdj][data-d="1"]'); await idle(p); await until(p, ([i2]) => window.__vtt.state().cards[i2].hp.cur === 10, [id]); };
+  const heal = async (p) => { const id = (await card(p, 'Thorne')).id; for (let i = (await card(p, 'Thorne')).hp.cur; i < 10; i++) await p.click('#panel [data-do=hpAdj][data-d="1"]'); await idle(p); await until(p, ([i2]) => window.__vtt.state().cards[i2].hp.cur === 10, [id]); };
 
   console.log('--- set up: a GM, Ann (Thorne) and Bob (Wisp)');
   const gm = await mk('gm'); await gm.goto(base + '/vtt/'); await gm.click('#makeForm button[type=submit]'); await gm.waitForSelector('#app:not([hidden])');
@@ -75,7 +76,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
     const got = await A.waitForFunction(() => { const s = window.__vtt.state(), r = s.rolls.filter((x) => x.id === window.__vtt.ui.roll)[0]; return r && r.effort ? true : false; }, null, { timeout: 6000 }).then(() => true, () => false);
     if (!got) lost++;
     /* start again with a fresh check: Done, then roll */
-    await A.click('[data-do=dismissRoll]').catch(() => {}); await A.click('#cards .c[data-id="' + gate.id + '"]'); await roll(A);
+    await A.click('[data-do=ordinaryCheck]'); await A.click('#cards .c[data-id="' + gate.id + '"]'); await roll(A);
   }
   check('six Effort clicks, each typed-into and pressed for a human’s time while the table changes, all produced an Effort', lost === 0, lost + ' lost');
   churn = false; await idle(A);
@@ -83,7 +84,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('--- 2. rapid −1 clicks while the table keeps changing');
   await heal(A); churn = true;
   const hp0 = (await card(A, 'Thorne')).hp.cur; let n = 0;
-  for (let i = 0; i < 6; i++) { await press(A, '#strip [data-do=hpAdj][data-d="-1"]', 30 + (i % 3) * 40); n++; }
+  for (let i = 0; i < 6; i++) { await press(A, '#panel [data-do=hpAdj][data-d="-1"]', 30 + (i % 3) * 40); n++; }
   await idle(A); churn = false; await until(gm, ([id, v]) => window.__vtt.state().cards[id].hp.cur === v, [(await card(A, 'Thorne')).id, hp0 - 6]).catch(() => {});
   const hp1 = (await card(gm, 'Thorne')).hp.cur;
   check('six distinct presses took exactly six points, none lost and none doubled', hp1 === hp0 - 6, hp0 + ' → ' + hp1);
@@ -91,19 +92,19 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('--- 3. slow responses (1.5 s each way): rapid clicks are kept, and the page says it is working');
   await heal(A); await slow(A, 1500);
   const idT = (await card(A, 'Thorne')).id, hp2 = (await card(A, 'Thorne')).hp.cur; A.reqs.length = 0;
-  for (let i = 0; i < 4; i++) await A.click('#strip [data-do=hpAdj][data-d="-1"]');
-  await A.waitForFunction((n) => document.querySelector('#strip .hp .v').innerText.trim() === n, (hp2 - 4) + '/10'); const shown = await A.innerText('#strip .hp .v'); const pill = await A.innerText('#tStatus .pill:first-child');
-  check('at once the strip shows the points taken, marked as pending, and the status says Saving', shown.trim() === (hp2 - 4) + '/10' && /Saving/.test(pill) && (await A.$('#strip .hp .v.pend')) !== null, shown + ' / ' + pill);
+  for (let i = 0; i < 4; i++) await A.click('#panel [data-do=hpAdj][data-d="-1"]');
+  await A.waitForFunction((n) => document.querySelector('#panel .hp .v').innerText.trim() === n, (hp2 - 4) + '/10'); const shown = await A.innerText('#panel .hp .v'); const pill = await A.innerText('#tStatus .pill:first-child');
+  check('at once the strip shows the points taken, marked as pending, and the status says Saving', shown.trim() === (hp2 - 4) + '/10' && /Saving/.test(pill) && (await A.$('#panel .hp .v.pend')) !== null, shown + ' / ' + pill);
   await idle(A); await unslow(A);
   const adj = A.reqs.filter((c) => c.type === 'adjust'); const ids = new Set(adj.map((c) => c.actionId));
   check('four distinct clicks became four distinct actions (a resend after a transient answer reuses its id, so it is not a fifth)', ids.size === 4, adj.length + ' requests, ' + ids.size + ' ids');
   await until(gm, ([id, v]) => window.__vtt.state().cards[id].hp.cur === v, [idT, hp2 - 4]);
-  check('and the table’s HP fell by exactly four, for the GM too', (await card(gm, 'Thorne')).hp.cur === hp2 - 4 && (await card(A, 'Thorne')).hp.cur === hp2 - 4 && !(await A.$('#strip .hp .v.pend')));
+  check('and the table’s HP fell by exactly four, for the GM too', (await card(gm, 'Thorne')).hp.cur === hp2 - 4 && (await card(A, 'Thorne')).hp.cur === hp2 - 4 && !(await A.$('#panel .hp .v.pend')));
 
   console.log('--- 4. a reply that is lost after the server has applied the change: the retry applies it once');
   A.net.drop = 1;
   const hp3 = (await card(A, 'Thorne')).hp.cur; A.reqs.length = 0;
-  await A.click('#strip [data-do=hpAdj][data-d="-1"]');
+  await A.click('#panel [data-do=hpAdj][data-d="-1"]');
   await A.waitForFunction(() => /Offline/.test(document.querySelector('#tStatus').innerText), null, { timeout: WAIT }).catch(() => {});
   await idle(A); const dropped = A.net.dropped;
   const sent = A.reqs.filter((c) => c.type === 'adjust');
@@ -113,25 +114,25 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('--- 5. a refused action says so, and puts things back');
   A.net.refuse = true;
   const hp4 = (await card(A, 'Thorne')).hp.cur;
-  await A.click('#strip [data-do=hpAdj][data-d="-1"]'); await A.waitForSelector('#toast div'); const msg = await A.innerText('#toast');
+  await A.click('#panel [data-do=hpAdj][data-d="-1"]'); await A.waitForSelector('#feed .local'); const msg = await A.innerText('#feed');
   await idle(A); A.net.refuse = false;
-  check('the person is told what happened and that nothing changed, and the strip is back to the real HP', /cannot change that/.test(msg) && /Nothing was changed/i.test(msg) && (await A.innerText('#strip .hp .v')).trim() === hp4 + '/10', msg + ' | ' + await A.innerText('#strip .hp .v'));
+  check('the person is told what happened and that nothing changed, and the strip is back to the real HP', /cannot change that/.test(msg) && /Nothing was changed/i.test(msg) && (await A.innerText('#panel .hp .v')).trim() === hp4 + '/10', msg + ' | ' + await A.innerText('#panel .hp .v'));
 
   console.log('--- 6. Effort and Apply on a slow line: processing is shown, extra clicks do nothing');
   await slow(A, 1500);
-  await A.click('#cards .c[data-id="' + gate.id + '"]'); await A.fill('#strip input[data-phys]', '15'); A.reqs.length = 0; await roll(A);
+  await A.click('[data-do=ordinaryCheck]'); await A.click('#cards .c[data-id="' + gate.id + '"]'); A.reqs.length = 0; await roll(A);
   await A.fill('#physE', '4'); await A.evaluate(() => { const b = document.querySelector('[data-do=effort][data-cat=weapons]'); b.click(); b.click(); b.click(); });
-  check('while the Effort is on its way the panel says so and the Effort buttons are off', /Rolling (Effort|damage)/i.test(await A.innerText('#panel')) && (await A.$$('[data-do=effort]:not([disabled])')).length === 0);
-  await A.waitForSelector('[data-do=apply]').catch(async (e) => { console.log('PANEL: ' + (await A.innerText('#panel')).slice(0, 300) + ' | ' + JSON.stringify(A.reqs.map((c) => c.type + ':' + c.actionId.split('.')[1])) + ' | ' + await A.innerText('#toast') + ' | ' + JSON.stringify(await A.evaluate(() => { const S = window.__vtt.state(), u = window.__vtt.ui; return { v: S.v, roll: u.roll, rolls: S.rolls.slice(-2), work: u.working, pend: u.pending, press: u.pressing }; })).slice(0, 900)); throw e; }); const efforts = A.reqs.filter((c) => c.type === 'effort');
+  check('while the Effort is on its way the panel says so and the Effort buttons are off', /Rolling (Effort|damage)/i.test(await A.innerText('#strip')) && (await A.$$('[data-do=effort]:not([disabled])')).length === 0);
+  await A.waitForSelector('[data-do=apply]').catch(async (e) => { console.log('PANEL: ' + (await A.innerText('#panel')).slice(0, 300) + ' | ' + JSON.stringify(A.reqs.map((c) => c.type + ':' + c.actionId.split('.')[1])) + ' | ' + await A.innerText('#feed') + ' | ' + JSON.stringify(await A.evaluate(() => { const S = window.__vtt.state(), u = window.__vtt.ui; return { v: S.v, roll: u.roll, rolls: S.rolls.slice(-2), work: u.working, pend: u.pending, press: u.pressing }; })).slice(0, 900)); throw e; }); const efforts = A.reqs.filter((c) => c.type === 'effort');
   const effortIds = new Set(efforts.map((c) => c.actionId));   /* a resend of the SAME action (after a transient answer) is one action, by design */
   check('triple-clicking made one Effort action (a resend of it keeps its id)', effortIds.size === 1, efforts.length + ' requests, ids: ' + [...effortIds].join());
   const gp0 = (await card(A, 'The Sealed Gate')).progress.cur; A.reqs.length = 0;
   await A.evaluate(() => { const b = document.querySelector('[data-do=apply]'); b.click(); b.click(); b.click(); });
-  check('while Apply is on its way the button says Applying and cannot be pressed again', /Applying/i.test(await A.innerText('#panel')) && (await A.$$('[data-do=apply]')).length === 0);
-  await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText), null, { timeout: WAIT }); await idle(A); await unslow(A);
+  check('while Apply is on its way the button says Applying and cannot be pressed again', /Applying/i.test(await A.innerText('#panel')) && (await A.$$('[data-do=apply]:not([disabled])')).length === 0);
+  await A.waitForFunction(() => !!window.__vtt.state().rolls.find(r=>r.id===window.__vtt.ui.roll)?.applied, null, { timeout: WAIT }); await idle(A); await unslow(A);
   await until(gm, ([id, v]) => window.__vtt.state().cards[id].progress.cur === v, [gate.id, gp0 + 7]).catch(() => {});
   check('one Apply, once: the gate moved by the Effort and no more', new Set(A.reqs.filter((c) => c.type === 'apply').map((c) => c.actionId)).size === 1 && (await card(gm, 'The Sealed Gate')).progress.cur === gp0 + 7, gp0 + ' → ' + (await card(gm, 'The Sealed Gate')).progress.cur);
-  await A.click('[data-do=dismissRoll]');
+  await A.click('[data-do=ordinaryCheck]');
 
   console.log('--- 7. the target of a pending Effort is stable, can be changed on purpose, and the mark, the label and the recipient agree');
   const aimed = () => A.evaluate(() => ({ mark: [...document.querySelectorAll('.c.aim')].map((e) => e.dataset.id), btn: [...document.querySelectorAll('[data-do=apply]')].map((e) => e.dataset.card + '|' + e.textContent) }));
@@ -146,13 +147,13 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const gh0 = (await card(A, 'Pit Ghoul')).hp.cur, gate0 = (await card(A, 'The Sealed Gate')).progress.cur;
   await A.click('#cards .c[data-id="' + gate.id + '"]'); await T(500); let a4 = await aimed();
   check('looking at the gate afterwards does not move it back', a4.mark.join() === ghoul.id && a4.btn[0].startsWith(ghoul.id + '|'), JSON.stringify(a4));
-  await A.click('[data-do=apply]'); await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText)); churn = false; await idle(A);
+  await A.click('[data-do=apply]'); await A.waitForFunction(() => !!window.__vtt.state().rolls.find(r=>r.id===window.__vtt.ui.roll)?.applied); churn = false; await idle(A);
   await until(gm, ([id, v]) => window.__vtt.state().cards[id].hp.cur === v, [ghoul.id, gh0 - 7]).catch(() => {});
   check('the recipient is the ghoul: its HP fell by 7 once and the gate did not move', (await card(gm, 'Pit Ghoul')).hp.cur === gh0 - 7 && (await card(gm, 'The Sealed Gate')).progress.cur === gate0, gh0 + ' → ' + (await card(gm, 'Pit Ghoul')).hp.cur);
 
   console.log('--- 8. HP as hearts: 10 points a Heart, filled in order, nothing shown for hidden numbers');
   await idle(A); const hpNow = (await card(A, 'Thorne')).hp.cur;
-  const hs = await A.$$eval('#strip .hearts .ht', (e) => e.map((x) => x.className.replace('ht ', '')));
+  const hs = await A.$$eval('#panel .hearts .ht', (e) => e.map((x) => x.className.replace('ht ', '')));
   check('a hero with ' + hpNow + ' of 10 HP shows one Heart, partly filled' + (hpNow === 10 ? '' : ''), hs.length === 1 && hs[0] === (hpNow === 10 ? 'f' : hpNow === 0 ? 'e' : 'p'), hpNow + ' ' + hs);
   await gm.click('#cards .c[data-id="' + ghoul.id + '"]'); await editCard(gm); await gm.click('[data-do=hideNumbers]'); await until(A, (id) => window.__vtt.state().cards[id].hp.hidden === true, ghoul.id);
   check('a card whose numbers are hidden shows no hearts to players, only that it has HP', (await A.$$('#cards .c[data-id="' + ghoul.id + '"] .ht')).length === 0 && /HP \?/.test(await A.innerText('#cards .c[data-id="' + ghoul.id + '"]')));
@@ -176,7 +177,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const before = (await st(gm)).table.scene.bg;
   await gm.keyboard.press('Escape'); await sceneBg(gm);
   await gm.setInputFiles('input[data-upload=bg]', { name: 'x.png', mimeType: 'image/png', buffer: Buffer.from('this is not a picture') });
-  await gm.waitForFunction(() => /Nothing was changed/i.test(document.getElementById('toast').innerText));
+  await gm.waitForFunction(() => /Nothing was changed/i.test(document.getElementById('feed').innerText));
   check('something that is not a picture is refused with a message, and the background is unchanged', (await st(gm)).table.scene.bg === before);
   check('a player has no upload control', (await A.$$('input[type=file]')).length === 0);
 
@@ -238,7 +239,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('…the ghoul is where it was, with the HP it had (unchanged by the trip), and the GM’s private notes on it', JSON.stringify(gmSt.layout[ghoul0.id]) === lay0 && ghoulBack.hp.cur === ghoul0.hp.cur && /SECRET/.test(ghoulBack.gmNotes), JSON.stringify([gmSt.layout[ghoul0.id], lay0, ghoulBack.hp, ghoul0.hp]));
   check('…and the countdown card keeps its value', (await card(gm, 'The Ceiling Groans')).timer.cur === timer0, timer0 + ' → ' + (await card(gm, 'The Ceiling Groans')).timer.cur);
   /* reload and reconnect */
-  await gm.reload(); await gm.waitForSelector('#app:not([hidden])'); await A.reload(); await A.waitForSelector('#app:not([hidden])'); await A.waitForSelector('.stat');
+  await gm.reload(); await gm.waitForSelector('#app:not([hidden])'); await A.reload(); await A.waitForSelector('#app:not([hidden])'); await A.waitForSelector('#stripControls > b, #stripControls .roll-next');
   check('after reloading both screens the table is on the first scene for everyone and the Crypt still exists for the GM', (await liveOf(A)) === liveName && (await liveOf(gm)) === liveName && (await st(gm)).scenes.some((x) => x.name === 'Crypt') && !(await gm.$('.preview')));
 
   console.log('--- 13. cards: make, edit, move, duplicate, send to another scene, remove; and drawing');
@@ -289,7 +290,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('selecting a hero opens that hero’s sheet with GM checks', sheetName.includes('Pike') && (await gm.$$('#sheetOverlay [data-sh=gmRoll]')).length === 6, sheetName);
   await gm.keyboard.press('Escape');
   const atags = await tagsOf(A);
-  check('for a player, only their own hero says “you”, and the strip names that hero', atags.filter((t) => /\(you\)/.test(t)).length === 1 && atags.some((t) => t.startsWith('Thorne (you)')) && (await A.innerText('#strip .me')).trim() === 'Thorne', atags.join(' | '));
+  check('for a player, only their own hero says “you”, and the strip names that hero', atags.filter((t) => /\(you\)/.test(t)).length === 1 && atags.some((t) => t.startsWith('Thorne (you)')) && /^Thorne(?: →|$)/.test((await A.innerText('#stripControls > b, #stripControls .roll-next > b')).trim()), atags.join(' | '));
 
   console.log('--- 15. pending HP beside the controls (GM card panel too), and no fresh attempt until the table has been read again');
   const wisp = await card(gm, 'Wisp'); await gm.keyboard.press('Escape'); await gm.click('#cards .c[data-id="' + wisp.id + '"]'); await gm.waitForSelector('[data-do=track][data-field=hp][data-d="-1"]'); await idle(gm);
@@ -307,7 +308,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('after giving up, the page says it is checking what was saved, and shows why on the status (hover text)', /Checking what was saved/i.test(await gm.innerText('#tStatus')) || true);
   gm.net.down = false; await gm.waitForFunction(() => window.__vtt.ui.reconcile === false, null, { timeout: 20000 }); await idle(gm);
   const truth = (await card(gm, 'Wisp')).hp.cur;
-  check('once the table has been read again the figure on screen is what was saved, with no queued badge, and a new press works', (await gm.$('#panel .queued')) === null && (await gm.inputValue('#panel input[data-set=hp]')) === String(truth) && (await gm.$$('#toast div')).length > 0, truth + ' ' + (await gm.innerText('#toast')));
+  check('once the table has been read again the figure on screen is what was saved, with no queued badge, and a new press works', (await gm.$('#panel .queued')) === null && (await gm.inputValue('#panel input[data-set=hp]')) === String(truth) && (await gm.$$('#feed .local')).length > 0, truth + ' ' + (await gm.innerText('#feed')));
   await gm.evaluate(() => { window.__vtt.ui.maxTries = 12; }); await gm.click('[data-do=track][data-field=hp][data-d="1"]'); await idle(gm);
   check('and a fresh press after that is accepted', (await card(gm, 'Wisp')).hp.cur === Math.min(10, truth + 1), truth + ' → ' + (await card(gm, 'Wisp')).hp.cur);
   check('the page kept a log of its recent requests, for finding out what a slow or failed moment was', (await gm.evaluate(() => window.__vtt.net())).some((x) => x.status === 503) && (await gm.evaluate(() => window.__vtt.net())).every((x) => 'ms' in x));
@@ -324,7 +325,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* an empty table: no heroes at all */
   const g3 = await mk('gm3'); await g3.goto(base + '/vtt/'); await g3.click('#makeSample'); await g3.click('#makeForm button[type=submit]'); await g3.waitForSelector('#app:not([hidden])'); const code3 = (await g3.evaluate(() => window.__vtt.state().code));
   const p3 = await mk('p3'); await p3.goto(base + '/vtt/?room=' + code3); await p3.fill('#joinName', 'Dee'); await p3.click('#joinForm button[type=submit]'); await p3.waitForSelector('#app:not([hidden])');
-  await p3.waitForFunction(() => /no heroes yet/i.test(document.getElementById('panel').innerText) && /no heroes yet/i.test(document.getElementById('strip').innerText));
+  await p3.waitForFunction(() => /no heroes yet/i.test(document.getElementById('panel').innerText) && /Choose your hero in Play/i.test(document.getElementById('strip').innerText));
   check('on a table with no heroes at all the player is told there are none yet (and not that every hero has a player)', !/Every hero already has a player/i.test(await p3.innerText('#panel')));
   /* the roll hint and the disclosure marks, on the main table */
   await A.click('[data-do=tool][data-tool=select]'); await A.keyboard.press('Escape'); await A.evaluate(() => { window.__vtt.ui.hintSeen = false; }); await A.click('#cards .c[data-id="' + ghoul.id + '"]');   /* the instruction shows until the first roll; this player has rolled, so it is switched back on */ await A.waitForSelector('#panel .note.hint');
@@ -367,14 +368,16 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('after the maximum is lowered to 2 the “now” box says 2 as well, even though a checkbox has focus (it used to keep showing 4)', (await gm.inputValue('input[data-set=timer]')) === '2', await gm.inputValue('input[data-set=timer]'));
 
   console.log('--- 20. the players are moved to another scene: nothing from the old scene is left open in their panel');
-  await A.keyboard.press('Escape'); await A.click('#cards .c[data-id="' + ghoul.id + '"]'); await roll(A); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText));
-  await A.waitForFunction(() => /Applied/.test(document.getElementById('panel').innerText)); await idle(A);
-  check('(before the move) the player’s panel shows the roll as applied', /Applied/.test(await A.innerText('#panel')));
+  const beforeMoveLogs = (await st(A)).log.map(e => e.id);
+  await A.keyboard.press('Escape'); await A.click('#cards .c[data-id="' + ghoul.id + '"]'); await roll(A); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => !!window.__vtt.state().rolls.find(r=>r.id===window.__vtt.ui.roll)?.applied);
+  await A.waitForFunction(previous => { const e = window.__vtt.state().log.filter(e => e.kind === 'apply' && e.mine && !previous.includes(e.id)).at(-1); return e && document.querySelector('#feed [data-event="' + e.id + '"]'); }, beforeMoveLogs); await idle(A);
+  const appliedLog = (await st(A)).log.filter(e => e.kind === 'apply' && e.mine && !beforeMoveLogs.includes(e.id)).at(-1).id;
+  check('(before the move) Activity shows the damage event and the recorded roll is applied', /Pit Ghoul/.test(await A.innerText('#feed [data-event="' + appliedLog + '"]')) && !!(await st(A)).rolls.at(-1).applied);
   await gm.keyboard.press('Escape'); await gmTab(gm, 'scene');
   await gm.fill('#newScene', 'Elsewhere'); await gm.click('[data-do=newScene]'); await gm.waitForSelector('[data-do=reveal]'); await gm.click('[data-do=reveal]');
   await A.waitForFunction(() => window.__vtt.state().table.scene.name === 'Elsewhere'); await idle(gm);
   const pan = await A.innerText('#panel');
-  check('after the move the old roll is gone: no “Not applied yet”, no Effort buttons, no old card', !/Not applied yet|Roll (Effort|damage)|Applied/i.test(pan) && !/Pit Ghoul/.test(pan) && (await A.evaluate(() => window.__vtt.ui.roll)) === null, pan.replace(/\s+/g, ' ').slice(0, 160));
+  check('after the move the old roll is gone: no “Not applied yet”, no Effort buttons, no old card', !/Not applied yet|Roll (Effort|damage)|Applied/i.test(pan) && !/Pit Ghoul/.test(pan) && (await A.evaluate(() => window.__vtt.ui.roll)) === null && (await A.$$('[data-do=effort]')).length === 0, pan.replace(/\s+/g, ' ').slice(0, 160));
 
   await b.close(); if (srv) srv.server.close();
   console.log('\n' + ok.length + ' passed, ' + bad.length + ' failed' + (errs.length ? '\nPage errors: ' + errs.join(' | ') : '')); process.exit(bad.length ? 1 : 0);

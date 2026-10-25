@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared} from './helpers.mjs';
 import { test, expect, newPage, makeTable, emptyPacks, joinTable, claimHero, saved, state } from './helpers.mjs';
 import { bounded } from './contrast-lib.mjs';
 
@@ -56,23 +57,21 @@ test('a player must put away their shield before a heavy attack and sees the ext
       if (!response.ok) throw Error('Could not give disposable equipment');
     }
   }), 15000, 'giving test equipment');
-  await ann.locator('#strip [data-do=toggle][data-key=more]').click();
-  await ann.locator('#strip [data-do=toggle][data-key=dice]').click();
+
   await ann.locator('#strip input[data-phys]').fill('15');
-  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#panel [data-do=sheet]').click();
   const sheet = ann.locator('#sheetOverlay');
   const heavy = sheet.locator('.sh-item', { hasText: 'Tithe Barn Maul' });
   await expect(heavy).toBeVisible();
-  await heavy.locator('[data-sh=use]').click();
-  await expect(sheet.locator('.sh-msg')).toContainText('Move your shield to the pack first');
+  await ann.locator('[data-sh=close]').click();
+  await prepareItem(ann);await expect(ann.locator('#feed')).toContainText('Move your shield to the pack first');
+  await ann.locator('#panel [data-do=sheet]').click();
   await sheet.locator('.sh-item', { hasText: 'Heater Shield' }).getByRole('button', { name: 'To the pack', exact: true }).click();
-  await heavy.locator('[data-sh=use]').click();
-  await expect(sheet).toBeHidden();
-  await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();
-  await expect(ann.locator('#panel .calc.ok')).toContainText('Success');
-  await expect(ann.locator('#panel [data-do=effort][data-cat=weapons]')).toContainText('+2 heavy');
-  await ann.locator('#panel [data-do=effort][data-cat=weapons]').click();
-  await expect(ann.locator('#panel')).toContainText('+ 2 heavy weapon');
+  await ann.locator('[data-sh=close]').click();await prepareItem(ann);
+  await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();await rollPrepared(ann);
+  await expect(ann.locator('#feed li.success .tx')).toContainText('Success');
+  await ann.locator('#strip [data-do=effort][data-cat=weapons]').click();
+  await expect(ann.locator('#feed')).toContainText('heavy weapon');
   await expect.poll(async () => (await state(gm)).rolls.at(-1)?.effort?.weaponBonus).toBe(2);
   await ann.locator('#panel').screenshot({ path: '/workspace/sacrament-audit/equipment-damage-preview.png' });
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);

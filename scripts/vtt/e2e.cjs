@@ -26,7 +26,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* the GM's tray has four tabs (Play, Scene, Loot, Table): a step that needs a control opens its tab first */
   const gmTab = async (p, t) => { await p.waitForSelector('[data-do=gmtab]'); await p.click('[data-do=gmtab][data-t=' + t + ']'); };
   const addBtn = async (p, what) => { await p.keyboard.press('Escape'); await p.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur()); await gmTab(p, what === 'addHero' ? 'table' : 'scene'); await p.click('[data-do=' + what + ']'); };
-  const diceOn = async (p) => { if (!(await p.$('[data-do=toggle][data-key=dice]'))) await p.click('[data-do=toggle][data-key=more]'); await p.click('[data-do=toggle][data-key=dice]'); };   /* My dice sit under More */
+  const diceOn = async (p) => { if (!(await p.$('#strip input[data-phys]'))) await p.click('[data-do=ordinaryCheck]'); };
+
   const editCard = async (p) => { await p.waitForSelector('[data-do=cardEdit], [data-edit=name]'); if (!(await p.$('[data-edit=name]'))) await p.click('[data-do=cardEdit]'); await p.waitForSelector('[data-edit=name]'); };   /* the card's full settings are on its Edit card screen */
   const attackOpen = async (p) => { if (!(await p.$('[data-do=monsterAttack]'))) await p.click('[data-do=attackToggle]'); await p.waitForSelector('[data-do=monsterAttack]'); };
   const sceneBg = async (p) => { await gmTab(p, 'scene'); if (!(await p.$('#bgUrl'))) await p.click('[data-do=sceneBg]'); };
@@ -43,7 +44,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   for (const [p, n] of [[A, 'Ann'], [B, 'Bob']]) { await p.goto(base + '/vtt/?room=' + code); await p.fill('#joinName', n); await p.click('#joinForm button[type=submit]'); await p.waitForSelector('#app:not([hidden])'); }
   await A.click('[data-do=claim]:has-text("Thorne")'); await settle(A, () => !!document.querySelector('.stat'));
   await B.click('[data-do=claim]:has-text("Wisp")'); await settle(B, () => !!document.querySelector('.stat'));
-  check('each player has a hero and the six stats in a strip under the table', (await A.$$('.stat')).length === 6 && (await B.$$('.stat')).length === 6 && /Thorne/.test(await txt(A, '#strip .me')) && /Wisp/.test(await txt(B, '#strip .me')));
+  check('each player has a hero and the six stats in a strip under the table', (await A.$$('.stat')).length === 6 && (await B.$$('.stat')).length === 6 && /Thorne/.test(await txt(A, '#stripControls > b')) && /Wisp/.test(await txt(B, '#stripControls > b')));
   check('the GM sees every card (eight, one of them hidden) and the players seven', (await gm.$$('#cards .c')).length === 8 && (await A.$$('#cards .c')).length === 7 && (await gm.$$('#cards .c.hid')).length === 1);
   check('the same layout for everyone: top strip, table, panel, feed, strip', await Promise.all([gm, A].map((p) => p.evaluate(() => ['top', 'table', 'panel', 'feed', 'strip'].every((i) => document.getElementById(i) && document.getElementById(i).offsetHeight > 0)))).then((r) => r.every(Boolean)));
   check('the top strip shows Target, round, turn and the countdown', /12/.test(await txt(A, '#tTarget')) && /Round 1/i.test(await txt(A, '#tRound')) && /Thorne/.test(await txt(A, '#tTurn')) && /Ceiling Groans|roof/i.test(await txt(A, '#tTimers')), await txt(A, '#top'));
@@ -58,10 +59,10 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const gate = await card(A, 'The Sealed Gate');
   await click(A, '.c[data-id="' + gate.id + '"]'); check('selecting the gate keeps the table visible and shows the gate in the panel', /Sealed Gate/.test(await txt(A, '#panel')) && (await A.$eval('#table', (e) => e.offsetWidth)) > 600);
   await diceOn(A); await A.fill('#strip input[data-phys]', '12'); await click(A, '.stat[data-stat=STR]');
-  await A.waitForSelector('.calc');
-  check('the calculation is shown: dice, bonus, total, Target', /12 \+ 3 STR = 15 against Target 12\. Success\./.test(await txt(A, '#panel .calc')), await txt(A, '#panel .calc'));
+  await A.waitForSelector('#feed .outcome');
+  check('the calculation is shown: dice, bonus, total, Target', /12 \+ 3 STR = 15 against Target 12\. Success\./.test(await txt(A, '#feed .tx')), await txt(A, '#feed .tx'));
   await A.fill('#physE', '4'); await click(A, '[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]');
-  check('Effort is rolled in the same panel, with the character’s bonus', /d6 4 \+ 3 Weapons = 7 Effort\./.test(await txt(A, '#panel')), await txt(A, '#panel'));
+  check('Effort is rolled in the same panel, with the character’s bonus', /d6 4 \+ 3 Weapons = 7 Effort\./.test(await txt(A, '#feed')), await txt(A, '#feed'));
   check('the button names the object it will change before anything is applied', /Apply to The Sealed Gate: \+7 Effort/i.test(await txt(A, '[data-do=apply]')), await txt(A, '[data-do=apply]'));
   check('nothing has changed yet', (await card(gm, 'The Sealed Gate')).progress.cur === 0);
   await click(A, '[data-do=apply][data-field=progress]'); await settle(gm, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'The Sealed Gate').progress.cur === 7);
@@ -99,11 +100,11 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await settle(gm, () => window.__vtt.state().table.round === 4);
   await settle(A, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'The Ceiling Groans').timer.cur === 1);
   check('three new rounds take the countdown from 4 to 1, for everyone', (await card(A, 'The Ceiling Groans')).timer.cur === 1 && /roof fails 1|1/.test(await txt(A, '#tTimers')));
-  check('no alert yet', !(await gm.$('.alert')));
-  await gm.click('[data-do=nextRound]'); await settle(gm, () => !!document.querySelector('.alert')); await settle(A, () => /NOW/.test(document.getElementById('cards').innerText));
+  check('no alert yet', !(await gm.$('#feed [data-do=ack]')));
+  await gm.click('[data-do=nextRound]'); await settle(gm, () => !!document.querySelector('#feed [data-do=ack]')); await settle(A, () => /NOW/.test(document.getElementById('cards').innerText));
   check('at 0 the GM is alerted and the players see it is time', /TIME: The Ceiling Groans/.test(await txt(gm, '.alert')) && /NOW/.test(await txt(A, '#cards .c[data-id="' + clock.id + '"]')), await txt(gm, '#banner'));
-  await gm.click('.alert [data-do=ack]'); await settle(gm, () => !document.querySelector('.alert'));
-  check('the GM resolves it and the alert goes', !(await gm.$('.alert')));
+  await gm.click('.alert [data-do=ack]'); await settle(gm, () => !document.querySelector('#feed [data-do=ack]'));
+  check('the GM resolves it and the alert goes', !(await gm.$('#feed [data-do=ack]')));
 
   console.log('--- 7. loot: reveal and give');
   const bell = await card(gm, 'Warden’s Bell');
@@ -111,8 +112,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await gm.click('[data-do=cardEditDone]'); await gm.click('[data-do=visible]'); await settle(A, () => !!Object.values(window.__vtt.state().cards).find((c) => c.name === 'Warden’s Bell'));
 
   check('revealed: now on the players’ table', !!(await card(A, 'Warden’s Bell')));
-  await editCard(gm); await gm.selectOption('#giveTo', { label: 'Bob' }); await gm.click('[data-do=give]'); await settle(B, () => !!document.querySelector('#strip .gear')); await settle(A, () => !Object.values(window.__vtt.state().cards).find((c) => c.name === 'Warden’s Bell'));
-  check('given to Bob: in his gear, off the table, and Ann no longer sees it', /Warden/.test(await txt(B, '#strip .gear')) && !(await B.$('#cards .c[data-id="' + bell.id + '"]')) && !(await card(A, 'Warden’s Bell')), (await txt(B, '#strip')).slice(0, 160));
+  await editCard(gm); await gm.selectOption('#giveTo', { label: 'Bob' }); await gm.click('[data-do=give]'); await settle(B, () => !!document.querySelector('#panel .gear')); await settle(A, () => !Object.values(window.__vtt.state().cards).find((c) => c.name === 'Warden’s Bell'));
+  check('given to Bob: in his gear, off the table, and Ann no longer sees it', /Warden/.test(await txt(B, '#panel .gear')) && !(await B.$('#cards .c[data-id="' + bell.id + '"]')) && !(await card(A, 'Warden’s Bell')), (await txt(B, '#panel')).slice(0, 160));
 
   console.log('--- 8. the GM at work: add, edit, move');
   await addBtn(gm, 'addCard'); await gm.waitForFunction(() => { const i = document.querySelector('[data-edit=name]'); return i && i.value === 'Unmarked Card'; }); await gm.fill('[data-edit=name]', 'Rickety Crate');   /* wait for the NEW card's panel, not the previous card's name box that is still on screen for a moment */ await gm.press('[data-edit=name]', 'Tab'); await gm.click('#panel [data-do=visible]');   /* new cards start hidden */ await settle(A, () => !!Object.values(window.__vtt.state().cards).find((c) => c.name === 'Rickety Crate'));
@@ -135,20 +136,20 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await A.ctx.setOffline(false); await settle(gm, () => true); await T(2500);
   check('it catches up by itself: the change was applied once, and the status is back to saved', (await card(gm, 'Thorne')).hp.cur === hpNow + 1 && /Saved/.test(await txt(A, '#tStatus')), (await card(gm, 'Thorne')).hp.cur + ' ' + await txt(A, '#tStatus'));
   await B.reload(); await B.waitForSelector('#app:not([hidden])'); await settle(B, () => !!document.querySelector('.stat'));
-  check('a player who reloads is back at the table with their hero', /Wisp/.test(await txt(B, '#strip .me')) && (await B.$$('#cards .c')).length >= 4);
+  check('a player who reloads is back at the table with their hero', /Wisp/.test(await txt(B, '#stripControls > b')) && (await B.$$('#cards .c')).length >= 4);
 
   console.log('--- 10. ' + (LIVE ? 'reloading both pages (the server is not restarted on a live site)' : 'the server restarts'));
   const snapshot = JSON.stringify((await st(gm)).cards);
   if (srv) { await new Promise((r) => { srv.server.close(r); srv.server.closeAllConnections(); }); await T(300); srv = await startServer({ port, dir }); } await gm.reload(); await gm.waitForSelector('#app:not([hidden])');
   check('the GM reloads and finds the table as it was', JSON.stringify((await st(gm)).cards) === snapshot);
-  await A.reload(); await A.waitForSelector('#app:not([hidden])'); check('and so does a player', /Thorne/.test(await txt(A, '#strip .me')));
+  await A.reload(); await A.waitForSelector('#app:not([hidden])'); check('and so does a player', /Thorne/.test(await txt(A, '#stripControls > b')));
 
   console.log('--- 12. stabilisation: first impressions, quick adds, hidden numbers, joining twice, resuming');
   const gm2 = await mk('gm2'); await gm2.goto(base + '/vtt/'); await gm2.click('#makeForm button[type=submit]'); await gm2.waitForSelector('#app:not([hidden])'); const code2 = await gm2.evaluate(() => window.__vtt.state().code);
   const D = await mk('dee'); await D.goto(base + '/vtt/?room=' + code2); await D.fill('#joinName', 'Dee');
   await D.evaluate(() => { const b = document.querySelector('#joinForm button[type=submit]'); b.click(); b.click(); b.click(); }); await D.waitForSelector('#app:not([hidden])'); await T(1200);
   check('pressing Join three times makes one player', (await st(gm2)).players.filter((p) => p.name === 'Dee').length === 1, JSON.stringify((await st(gm2)).players));
-  check('a new player is told what to do: heroes are described, with stats, and one button to play each', (await D.$$('#panel .hero')).length >= 1 && /Play /i.test(await txt(D, '#panel')) && /STR|DEX|INT/.test(await txt(D, '#panel .hero')) && /Pick a hero to play/i.test(await txt(D, "#strip")), await txt(D, '#panel'));
+  check('a new player is told what to do: heroes are described, with stats, and one button to play each', (await D.$$('#panel .hero')).length >= 1 && /Play /i.test(await txt(D, '#panel')) && /STR|DEX|INT/.test(await txt(D, '#panel .hero')) && /Choose your hero in Play/i.test(await txt(D, "#strip")), await txt(D, '#panel'));
   await D.reload(); await D.waitForSelector('#app:not([hidden])'); await T(900);
   check('and after a reload still one Dee', (await st(gm2)).players.filter((p) => p.name === 'Dee').length === 1);
 
@@ -160,9 +161,9 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await gm.click('#cards .c[data-id="' + rat.id + '"]'); await editCard(gm); await gm.click('[data-do=hideNumbers]'); await settle(A, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'Cellar Rat').hp.hidden === true);
   await A.waitForFunction((id) => /HP \?/.test(document.querySelector('#cards .c[data-id="' + id + '"]').textContent), rat.id, { timeout: 8000 });
   check('the GM can show the rat but hide its numbers: the player is sent no HP, only that it has some', JSON.stringify((await card(A, 'Cellar Rat')).hp) === '{"hidden":true}' && /HP \?/.test(await txt(A, '#cards .c[data-id="' + rat.id + '"]')));
-  await A.click('#cards .c[data-id="' + rat.id + '"]'); if (!(await A.$('#strip input[data-phys]'))) await diceOn(A); await A.fill('#strip input[data-phys]', '19'); await A.click('.stat[data-stat=STR]'); await A.waitForSelector('.calc'); await T(300);
-  const succeeded = /Success/.test(await txt(A, '#panel .calc'));
-  if (succeeded) { await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText)); check('rolling damage applied it to the chosen hidden-number target without another click', !(await A.$('[data-do=apply]')) && /Applied/.test(await txt(A, '#panel')));
+  await A.click('#cards .c[data-id="' + rat.id + '"]'); if (!(await A.$('#strip input[data-phys]'))) await diceOn(A); await A.fill('#strip input[data-phys]', '19'); await A.click('.stat[data-stat=STR]'); await A.waitForSelector('#feed .outcome'); await T(300);
+  const succeeded = /Success/.test(await txt(A, '#feed .tx'));
+  if (succeeded) { await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => !!window.__vtt.state().rolls.find(r=>r.id===window.__vtt.ui.roll)?.applied); check('rolling damage applied it to the chosen hidden-number target without another click', !(await A.$('[data-do=apply]')) && !!(await st(A)).rolls.at(-1)?.applied);
     await T(1200); const sA = await st(A), rat2 = Object.values(sA.cards).find((c) => c.name === 'Cellar Rat'), ent = sA.log.filter((e) => /Cellar/.test(e.text)), mine = sA.rolls.at(-1);
     check('after the hit, nothing the player holds shows how much HP the rat has left: the card, the feed lines and her own roll record', JSON.stringify(rat2.hp) === '{"hidden":true}' && ent.length >= 1 && ent.every((e) => !/\(now|\d+\/\d+/.test(e.text)) && mine.applied && mine.applied.applied === undefined, JSON.stringify([rat2.hp, ent.map((e) => e.text), mine.applied])); }
   else check('the player rolled and missed (the Effort step is covered elsewhere)', true);
@@ -188,7 +189,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const mara = Object.values((await st(gm2)).chars).find((c) => c.name === 'Mara');
   check('+ Hero makes a blank hero the GM names and fills in: no stats invented, 10 HP, in the turn order', mara && Object.values(mara.stats).filter((v) => v).length === 1 && mara.stats.DEX === 2 && Object.values(mara.effort).every((v) => !v) && (await st(gm2)).cards[mara.cardId].hp.cur === 10 && (await st(gm2)).table.order.some((o) => o.id === mara.cardId), JSON.stringify(mara));
   await settle(D, () => /Mara/.test(document.getElementById('panel').innerText) && /DEX \+2/.test(document.getElementById('panel').innerText)); check('a waiting player sees the new hero offered, with its stats', /Mara/.test(await txt(D, '#panel')) && /DEX \+2/.test(await txt(D, '#panel')), await txt(D, '#panel'));
-  await D.click('[data-do=claim]:has-text("Mara")'); await settle(D, () => !!document.querySelector('.stat')); check('and takes it up: the strip shows Mara’s stats', /Mara/.test(await txt(D, '#strip .me')) && /DEX\s*\+2/.test(await txt(D, '#strip')), await txt(D, '#strip'));
+  await D.click('[data-do=claim]:has-text("Mara")'); await settle(D, () => !!document.querySelector('.stat')); check('and takes it up: the strip shows Mara’s stats', /Mara/.test(await txt(D, '#stripControls > b')) && /DEX\s*\+2/.test(await txt(D, '#strip')), await txt(D, '#strip'));
   await gm2.evaluate(() => document.activeElement && document.activeElement.blur()); await gm2.keyboard.press('Escape'); await gm2.waitForSelector('[data-assign]');
   await settle(gm2, () => Object.values(window.__vtt.state().chars).some((c) => c.name === 'Mara' && c.owner)); await T(400);
   const assigns = await gm2.$$eval('[data-assign]', (e) => e.map((x) => x.selectedOptions[0].textContent));
@@ -206,6 +207,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('the second request overtook the first: both were applied, once each, and sent again they are repeats', reversed.out.every((o) => o[0] === 200) && reversed.again.every(Boolean) && (await card(gm, 'Pit Ghoul')).hp.cur === hpBefore - 3, JSON.stringify(reversed) + ' ' + (await card(gm, 'Pit Ghoul')).hp.cur);
 
   /* the pointer going at the same time as a roll: the pointer's own requests are slow, and a stat is clicked while they are still in flight */
+  await A.click('[data-do=ordinaryCheck]');
   await A.context().route(/netlify\/functions\/vtt/, async (r) => { if ((r.request().postData() || '').includes('"type":"point"')) await T(900); r.continue(); });
   await A.click('[data-do=tool][data-tool=point]'); const rollsBefore = (await st(A)).rolls.length;
   const tb = await A.$eval('#table', (e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y }; });
@@ -213,6 +215,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await A.click('.stat[data-stat=DEX]'); await T(1800); await A.context().unroute(/netlify\/functions\/vtt/);
   check('a roll made while the pointer’s slow requests are still in flight works, once', (await st(A)).rolls.length === rollsBefore + 1 && (await st(gm)).pointers && true, (await st(A)).rolls.length + ' vs ' + rollsBefore);
   await A.click('[data-do=tool][data-tool=select]');
+  await A.click('[data-do=ordinaryCheck]');
   check('and a second click on a stat while the first is on its way makes one roll', await (async () => { const n0 = (await st(A)).rolls.length; await A.evaluate(() => { const b = document.querySelector('.stat[data-stat=CON]'); b.click(); b.click(); b.click(); }); await T(1500); return (await st(A)).rolls.length === n0 + 1; })());
 
   console.log('--- 15. attacking the ghoul: what is marked is what is applied to, and the HP changes once');
@@ -228,11 +231,11 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await A.click('[data-do=aim]'); await A.waitForFunction((id) => { const a = document.querySelectorAll('.c.aim'); return a.length === 1 && a[0].dataset.id === id; }, ghoulC.id);
   check('after Change target the ghoul is the marked target and the button says Apply to Pit Ghoul with HP', /Apply to Pit Ghoul: −7 HP/i.test(await txt(A, '[data-do=apply]')), (await A.$$eval('.c.aim', (e) => e.length)) + ' ' + (await txt(A, '[data-do=apply]')));
   await A.evaluate(() => { const b = document.querySelector('[data-do=apply]'); b.click(); b.click(); b.click(); });   /* a nervous triple click */
-  await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText));
+  await A.waitForFunction(() => !!window.__vtt.state().rolls.find(r=>r.id===window.__vtt.ui.roll)?.applied);
   await gm.waitForFunction((v) => Object.values(window.__vtt.state().cards).find((c) => c.name === 'Pit Ghoul').hp.cur === v, ghoulHp0 - 7);
   const ghoulAfter = await card(gm, 'Pit Ghoul'), gateAfter = await card(gm, 'The Sealed Gate');
   check('one click on Apply lowered the ghoul’s HP by the Effort, once, even when clicked three times; the gate did not move; no hand editing was needed', ghoulAfter.hp.cur === ghoulHp0 - 7 && gateAfter.progress.cur === gateProg0 && (await card(A, 'Pit Ghoul')).hp.cur === ghoulAfter.hp.cur, ghoulHp0 + ' → ' + ghoulAfter.hp.cur + ', gate ' + gateProg0 + ' → ' + gateAfter.progress.cur);
-  check('and the panel says it was applied, with nothing left to apply', /Applied/.test(await txt(A, '#panel')) && !(await A.$('[data-do=apply]')) && !(await A.$('.c.aim')), await txt(A, '#panel'));
+  check('and the panel says it was applied, with nothing left to apply', !!(await st(A)).rolls.at(-1)?.applied && !(await A.$('[data-do=apply]')) && !(await A.$('.c.aim')), await txt(A, '#panel'));
   const hitEntry = (await st(gm)).log.filter((e) => /→ Pit Ghoul: HP -7/.test(e.text)); check('the feed has the one hit, once', hitEntry.length === 1, hitEntry.length);
   await A.keyboard.press('Escape');
 

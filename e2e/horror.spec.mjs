@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared} from './helpers.mjs';
 // The Rising Horror on the screen: the meter in the top bar for everyone, rising when a spell is cast, the GM's alert at a threshold, the arrival at 21 for
 // everyone, and the GM's controls (players have none). A GM and a player in separate windows. Set HORROR_SHOTS=<folder> to keep pictures of each step.
 import { test, expect } from './helpers.mjs';
@@ -10,16 +11,13 @@ async function setup(browser, viewport) {
   const gm = await newPage(browser), ann = await newPage(browser, viewport);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   /* Ann takes the Ashen Psalter on her sheet (a player may choose one grimoire) */
-  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#panel [data-do=sheet]').click();
   await ann.locator('#sheetOverlay #shAdd').selectOption('embers'); await ann.locator('#sheetOverlay [data-sh=add]').click();
   await expect(ann.locator('#sheetOverlay .sh-item', { hasText: 'The Ashen Psalter' })).toContainText('Pillar of Ash');
   await ann.locator('#sheetOverlay [data-sh=close]').click(); await saved(ann);
   return { gm, ann };
 }
-async function castKindle(ann) {
-  await ann.locator('#strip [data-do=sheet]').click();
-  await ann.locator('#sheetOverlay .sh-spells li', { hasText: 'Kindle' }).locator('[data-sh=use]').click(); await saved(ann);
-}
+async function castKindle(ann) { await prepareItem(ann,'[data-spell=kindle]');await rollPrepared(ann);await saved(ann); }
 async function gmSet(gm, n) {
   await gm.locator('[data-do=gmtab][data-t=table]').click();
   await gm.locator('#hzSet').fill(String(n)); await gm.locator('[data-do=horrorSet]').click(); await saved(gm);
@@ -42,11 +40,11 @@ test('The Horror: everyone sees one meter; a spell raises it; the GM is alerted 
 
   await gmSet(gm, 6); await castKindle(ann);
   await expect(meter(gm)).toHaveAttribute('aria-valuenow', '7');
-  await expect(gm.locator('#banner .alert.hz')).toContainText('The Horror stirs.');
-  await expect(ann.locator('#banner .alert.hz')).toHaveCount(0);   // the players read it in the feed; the alert is the GM's
+  await expect(gm.locator('#feed .alert.hz')).toContainText('The Horror stirs.');
+  await expect(ann.locator('#feed .alert.hz')).toHaveCount(0);   // the players read it in the feed; the alert is the GM's
   await expect(ann.locator('#feed')).toContainText('The Horror stirs.');
   await shot(gm, '2-gm-threshold-alert');
-  await gm.locator('[data-do=horrorAck]').click(); await saved(gm); await expect(gm.locator('#banner .alert.hz')).toHaveCount(0);
+  await gm.locator('[data-do=horrorAck]').click(); await saved(gm); await expect(gm.locator('#feed .alert.hz')).toHaveCount(0);
 
   /* the GM's Undo on the rise puts it back */
   await gm.locator('[data-do=feed]').click();
@@ -60,11 +58,11 @@ test('The Horror: everyone sees one meter; a spell raises it; the GM is alerted 
   const afterRoll = (await state(gm)).horror.cur; expect(afterRoll).toBeLessThan(7); await expect(meter(ann)).toHaveAttribute('aria-valuenow', String(afterRoll));
   await shot(gm, '5-gm-lowered-by-d6');
   await gmSet(gm, 21);
-  await expect(ann.locator('#banner .alert.hz')).toContainText('The Horror has arrived.');
-  await expect(gm.locator('#banner .alert.hz')).toContainText('The Horror has arrived.');
+  await expect(ann.locator('#feed .alert.hz')).toContainText('The Horror has arrived.');
+  await expect(gm.locator('#feed .alert.hz')).toContainText('The Horror has arrived.');
   await expect(meter(ann)).toHaveClass(/arrived/);
   await shot(ann, '3-player-arrived'); await shot(gm, '4-gm-arrived-controls');
-  await ann.locator('[data-do=arrivalSeen]').click(); await expect(ann.locator('#banner .alert.hz')).toHaveCount(0);
+  await ann.locator('[data-do=arrivalSeen]').click(); await expect(ann.locator('#feed .alert.hz')).toHaveCount(0);
   /* reset asks first: the first press only turns the button into "Sure?" */
   await gm.locator('[data-do=horrorReset]').click(); await expect(gm.locator('[data-do=horrorReset]')).toHaveText('Sure? Reset to 0'); await shot(gm, '6-gm-reset-asks');
   expect((await state(gm)).horror.cur).toBe(21);
@@ -88,11 +86,11 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(360);
   expect(await ann.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   await expect(ann.locator('#tHorror')).toContainText('12/21');
-  await ann.locator('#strip [data-do=sheet]').click();
+  await ann.locator('#panel [data-do=sheet]').click();
   const read = ann.locator('#sheetOverlay [data-sh=quickUse]', { hasText: 'Read Grimoire with no title' }); await expect(read).toHaveCount(1);
   await expect(ann.locator('#sheetOverlay')).toContainText('rolls d6');
   await read.click(); await saved(ann);
-  await expect(ann.locator('#toast')).toContainText(/The die shows [1-6]: /);
+  await expect(ann.locator('#feed')).toContainText(/The die shows [1-6]: /);
   await expect(meter(ann)).toHaveAttribute('aria-valuenow', '13');
   await shot(ann, '5-player-phone-after-reading');
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);

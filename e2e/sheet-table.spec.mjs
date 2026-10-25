@@ -9,7 +9,7 @@ async function two(browser, viewport) {
   await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne'); await joinTable(bob, code, 'Bob'); await claimHero(bob, 'Wisp');
   return { gm, ann, bob };
 }
-const openSheet = async (page) => { await page.locator('#strip [data-do=sheet]').click(); await expect(page.locator('#sheetOverlay')).toBeVisible(); };
+const openSheet = async (page) => { await page.locator('#panel [data-do=sheet]').click(); await expect(page.locator('#sheetOverlay')).toBeVisible(); };
 
 test('the Sheet button opens the hero over the table, and closing it returns straight to play', async ({ browser }) => {
   const { ann } = await two(browser);
@@ -57,7 +57,9 @@ test('limits: the sheet says why, in plain words, and sends nothing', async ({ b
 test('permissions: a player has a Sheet button only for their own hero; the GM can open and edit every hero', async ({ browser }) => {
   const { gm, ann, bob } = await two(browser);
   await ann.locator('#cards .c', { hasText: 'Wisp' }).click();
-  await expect(ann.locator('#panel [data-do=sheet]')).toHaveCount(0);                // nothing for someone else's hero
+  const ownId = (await hero(ann, 'Thorne')).id, otherId = (await hero(ann, 'Wisp')).id;
+  await expect(ann.locator('#panel [data-do=sheet][data-id="' + otherId + '"]')).toHaveCount(0); // no access to someone else's sheet
+  await expect(ann.locator('#panel [data-do=sheet][data-id="' + ownId + '"]')).toHaveCount(1); // own sheet remains reachable
   await ann.locator('#cards .c', { hasText: 'Thorne' }).click(); await expect(ann.locator('#panel [data-do=sheet]')).toHaveCount(1);
   await gm.locator('#cards .c', { hasText: 'Wisp' }).click(); await gm.locator('#panel [data-do=sheet]').click();
   await expect(gm.locator('#sheetOverlay')).toContainText('Wisp'); await expect(gm.locator('#sheetOverlay')).toContainText('Relics');   // the GM may give a relic
@@ -72,7 +74,8 @@ test('live: what happens at the table shows on an open sheet, and the sheet\'s n
   await gm.locator(`#cards .c[data-id="${thorneCard}"]`).click();
   await gm.locator('#panel [data-do=track][data-field=hp][data-d="-5"]').click(); await saved(gm);
   await expect(ann.locator('#sheetOverlay .sh-hpn')).toHaveText('5 / 10');
-  await ann.locator('#sheetOverlay [data-sh=hp][data-d="1"]').click(); await saved(ann);
+  await expect(ann.locator('#sheetOverlay [data-sh=hp]')).toHaveCount(0);
+  await ann.locator('[data-sh=close]').click();await ann.locator('#panel [data-do=hpAdj][data-d="1"]').click();await saved(ann);await openSheet(ann);await expect(ann.locator('#sheetOverlay .sh-hpn')).toHaveText('6 / 10');
   await expect.poll(async () => (await state(gm)).cards[thorneCard].hp.cur).toBe(6);
   await ann.locator('#sheetOverlay [data-text=name]').fill('Thorne of Grimsby Fold'); await ann.locator('#sheetOverlay [data-text=name]').blur(); await saved(ann);
   await expect(gm.locator('#cards .c', { hasText: 'Thorne of Grimsby Fold' })).toHaveCount(1);

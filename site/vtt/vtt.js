@@ -18,7 +18,12 @@
   /* Every command is "<this page's id>.<its number>": numbered in the order sent, once, so the server can tell a repeat from something new however old it is. */
   var clientId = rid(12);
   var gm = function () { return S && S.you.role === 'gm'; };
-  var toast = function (msg, ms) { var d = document.createElement('div'); d.textContent = msg; $('toast').appendChild(d); setTimeout(function () { d.remove(); }, ms || 4500); };
+  /* Feedback stays in this browser and this session: private GM confirmations never become shared log entries. */
+  var toast = function (msg) {
+    UI.feedback = UI.feedback || [];
+    UI.feedback.push({id: 'local-' + (++UI.feedbackSeq || (UI.feedbackSeq = 1)), at: Date.now(), who: 'This screen', text: String(msg).replace(/#key=[^\s]+/g, '#key=[private]'), kind: 'local'});
+    UI.feedback = UI.feedback.slice(-30); if (S) renderFeed();
+  };
   var memorySessions = {};
   var save = function () {
     if (!sess) return false;
@@ -54,7 +59,7 @@
       if (!st.draw) { if (S && S.draw && S.drawV === st.drawV) st.draw = S.draw; else { st.draw = (S && S.draw) || []; UI.drawStale = true; setTimeout(function () { poll(true); }, 0); } }
       else UI.drawStale = false;
       /* The players have been moved to another scene: what was open (a roll, a selected card, a marked target) belonged to the old one, and a roll about a card they can no longer see would read as "not applied yet". */
-      if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { D.clear(); UI.roll = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
+      if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { D.clear(); UI.roll = null; UI.readyAction = null; UI.attackChoice = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
       S = st; UI.dirty = false; spin(st.log); var fresh = UI.freshLog || [];
@@ -81,14 +86,11 @@
     var fresh = UI.seenLog ? log.filter(function (e) { return !UI.seenLog[e.id]; }) : []; UI.freshLog = fresh;
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
     var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
-    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome); return; }
+    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine); return; }
     fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3).forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
   }
   D.onLand = function () { if (S) render(); };
-  D.canDamage = function (id) {
-    var r = S && S.rolls.filter(function (x) { return x.id === id; })[0];
-    return !!(r && (!r.attack || (S.cards[r.targetCardId] && S.cards[r.targetCardId].hp && S.cards[r.targetCardId].hp.cur > 0)) && r.check && r.check.success && !r.void && !r.nonDamage && !r.effort && !r.applied && (r.cat || r.attack));
-  };
+
 
   /* Telling a player what has just happened to them, so nothing important lives only in the one-line feed:
      the turn reaching them (a short banner and a lit strip), a blow on their hero (a short banner once the dice have landed),
@@ -105,10 +107,7 @@
   }
   /* A notice on the table for a few seconds. It waits for the dice to land, so it never tells the number before the die shows it. */
   function notice(kind, text) {
-    var tries = 0, version = sessionVersion; chime(kind); flagTab(kind === 'turn' ? 'Your turn' : 'You are hit');
-    (function show() { if (version !== sessionVersion) return; if (D.busy() && tries++ < 20) { setTimeout(show, 150); return; }
-      UI.notice = { kind: kind, text: text, until: Date.now() + 6000 }; if (S) renderTable();
-      clearTimeout(UI.noticeTimer); UI.noticeTimer = setTimeout(function () { UI.notice = null; if (S) render(); }, 6000); })();
+    chime(kind); flagTab(kind === 'turn' ? 'Your turn' : 'You are hit');
   }   /* the result panel and the activity line waited for the dice; they can show the result now */
 
   /* Reaching a player who is in another tab: the tab's title says what happened until they come back, and a soft chime sounds (it can be turned off under My dice).
@@ -204,11 +203,12 @@
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
     clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
     pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
+    UI.feedback = []; UI.feedbackSeq = 0; UI.readyAction = null; UI.targetError = ''; UI.basicAttack = null; UI.optEffort = false;
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
-    UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
+    UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.loot = null; UI.lootBusy = false;
     UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null; UI.drawColor = DRAW_COLORS[0][0]; UI.strokeColor = null;
-    UI.attackChoice = null; UI.areaTargets = []; UI.powerResetAsk = false; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
+    UI.attackChoice = null; UI.areaTargets = []; UI.powerResetAsk = false; UI.gmDiceBusy = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
     UI.notice = null; clearTimeout(UI.noticeTimer); UI.arrivalSeen = false;
@@ -260,10 +260,10 @@
     get: function () {
       var ch = S && UI.sheet && S.chars[UI.sheet]; if (!ch) return null;
       var card = S.cards[ch.cardId], G = gm(), mine = ch.owner === S.you.pid, hasHp = !!(card && card.hp && !card.hp.hidden);
-      return { hero: heroOf(ch), hp: hasHp ? { cur: shownHp(card), max: card.hp.max } : null, canEdit: G || mine, canHp: (G || mine) && hasHp, gm: G, live: true, dice: S.settings.dice, title: mine ? 'your hero' : G ? 'seen as the GM' : '' };
+      return { hero: heroOf(ch), hp: hasHp ? { cur: shownHp(card), max: card.hp.max } : null, canEdit: G || mine, canHp: false, canUse: G, gm: G, live: true, dice: S.settings.dice, title: mine ? 'your hero' : G ? 'seen as the GM' : '' };
     },
     roll: function (stat, adj, physical) { if (!gm()) return; UI.adj = adj; UI.phys = physical; closeSheet(); doRoll(stat, true, false); },
-    use: function (index, spellId, done, gearKey, mode) { var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey, undefined, mode); done(true); },
+    use: function (index, spellId, done, gearKey, mode) { if (!gm()) return; var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey, undefined, mode); done(true); },
     act: function (op, done) { UI.lastError = ''; send({ type: 'sheet', charId: UI.sheet, op: op }, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); },
     hp: function (d) { var ch = S.chars[UI.sheet], card = ch && S.cards[ch.cardId]; if (card && card.hp) hpQueue(card.id, { d: d }, function (done) { send({ type: 'adjust', cardId: card.id, field: 'hp', delta: d }, done); }); },
     close: function () { closeSheet(); }
@@ -414,9 +414,7 @@
       (UI.tool === 'point' ? '<span class="note tip">Press and hold on the table, then move: everyone sees where you point.</span>' : UI.tool === 'draw' ? '<span class="note tip">Press and drag on the table to draw.</span>' : '') +
       (UI.tool === 'draw' ? drawPalette() + '<button class="chip" data-do="drawUndo">Undo line</button>' + (G ? '<button class="chip" data-do="drawClear">Clear drawing</button>' : '') : ''));
     var b = '';
-    if (G && S.alerts && S.alerts.length) b += S.alerts.map(function (a) { return '<div class="alert">TIME: ' + esc(a.name) + ' has reached 0 <button class="chip" data-do="ack" data-id="' + a.cardId + '">Resolved</button></div>'; }).join('');
-    b += horrorBanner();
-    if (UI.notice && UI.notice.until > Date.now()) b += '<div class="notice ' + UI.notice.kind + '" role="status">' + esc(UI.notice.text) + '</div>';
+
     if (G && view !== S.table.scene.id) b += '<div class="preview">Preparing: players do not see this scene</div>';
     put($('banner'), b);
     renderPointers();
@@ -460,112 +458,61 @@
   document.addEventListener('pointerup', release, true); document.addEventListener('pointercancel', release, true);
 
   /* The GM's monster attack, in the same panel as a player's roll: the roll against Defence, then (on a hit) "Roll damage" rolls it and takes it off the hero. The die it uses can be changed and is remembered. */
-  function attackRollView(r, ch) {
-    var hero = S.cards[r.targetCardId], hn = hero ? hero.name : 'the hero', h = r.attack.sceneBonus ? '<p class="note">Base attack ' + sgn(r.attack.baseBonus) + ' + scene danger ' + r.attack.sceneBonus + '.</p>' : '';
-    h += '<p class="note">attacks ' + esc(hn) + '</p><div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayAttack(ch)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
-    var attacker = S.cards[r.attack.cardId];
-    if (!r.applied && (viewScene() !== S.table.scene.id || (r.sceneId && r.sceneId !== S.table.scene.id) || (attacker && attacker.sceneId != null && attacker.sceneId !== S.table.scene.id))) return h + '<p class="hint">This attack belongs to the live encounter where it began. Open that scene as the live scene before rolling damage.</p><button class="btn small" data-do="dismissRoll">Done</button></div>';
-    var downH = hero && hero.kind === 'pc' && hero.hp && hero.hp.cur === 0 ? hero.dying || { none: true } : null;
-    if (!ch.success) h += '<p>Missed. No damage to roll.</p>';
-    else if (r.blow && r.applied) h += '<p><b>Struck.</b> ' + downMark(hero, true) + '</p>' + damageUndo(r);
-    else if (!r.effort && downH) {   /* a blow on a hero who is down: no damage, the countdown moves instead */
-      var busyB = UI.working === 'effort:' + r.id;
-      h += downH.dead ? '<p>' + esc(hn) + ' is dead.</p>' : '<p><b>A hit</b> on ' + esc(hn) + ', who is down. No damage is rolled.</p>' + (busyB ? '<p class="note" role="status">Striking…</p>' : '') +
-        '<div class="row col"><button class="btn main" data-do="monsterEffort" data-cat="weapons" data-roll="' + r.id + '"' + (busyB ? ' disabled aria-busy="true"' : '') + '>' + (downH.none ? esc(hn) + ' falls: roll the d4' : downH.stable ? 'Hurt again: ' + esc(hn) + ' rolls a new d4' : 'Take a round off ' + esc(hn) + '’s countdown') + '</button></div>';
-    }
-    else if (!r.effort) {
-      var busyE = UI.working === 'effort:' + r.id, mk = UI.monCat || 'weapons';
-      h += '<p><b>A hit.</b> Now roll the damage.</p>' + (busyE ? '<p class="note" role="status">Rolling damage…</p>' : '') +
-        '<div class="row col"><button class="btn main" data-do="monsterEffort" data-cat="' + mk + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + ' title="Rolls it and takes it off ' + esc(hn) + ' now">Roll damage: ' + R.CAT_NAMES[mk] + ' d' + S.settings.dice[mk] + '</button></div>' +
-        '<div class="opt row2" role="group" aria-label="Die for the damage"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== mk; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + '</button>'; }).join('') + '</div>' + physical('physE', 'Own die for damage');
-    } else {
-      h += '<div class="calc">' + esc(R.sayEffort(r.effort, 'damage')) + '</div>';
-      if (r.applied) h += '<p><b>Applied</b> to ' + esc(hn) + ': HP ' + r.applied.applied + (downMark(hero) ? '. ' + esc(hn) + ' is down: ' + downMark(hero, true) : '.') + '</p>' + damageUndo(r);
-      else h += '<p class="note"><b>Undone.</b> ' + esc(hn) + ' has the points back.</p><div class="row col"><button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + r.targetCardId + '" data-field="hp">Apply again to ' + esc(hn) + ': −' + r.effort.total + ' HP</button></div>';
-    }
-    return h + '<div class="row" style="margin-top:8px"><button class="btn small" data-do="dismissRoll">Done</button></div></div>';
-  }
   function automaticDamage(r) {
     var target = r && r.targetCardId && S.cards[r.targetCardId];
     return !!(r && (r.area || r.isAttack || (r.targetCardId && (r.cat || (target && target.hp)))));
   }
-  function damageUndo(r) {
-    var event = r.applied && S.log.filter(function (e) { return e.id === r.applied.log; })[0];
-    return event && event.undoable ? '<div class="row"><button class="btn small" data-do="undoDamage" data-id="' + event.id + '">Undo this damage</button></div>' : '';
-  }
   function criticalPrompt(r) {
-    return r.criticalRule === 'extra' && r.check && r.check.success && r.check.offerUltimate && !r.effort ? '<p class="hint">Critical: your normal Effort plus an extra Ultimate d' + S.settings.dice.ultimate + '. Each bonus is counted once.</p>' + physical('physCritical', 'Own extra Ultimate die (optional)') : '';
+    return r.criticalRule === 'extra' && r.check && r.check.success && r.check.offerUltimate && !r.effort ? '<p class="hint">Includes an extra Ultimate d' + S.settings.dice.ultimate + '.</p>' + physical('physCritical', 'Own extra Ultimate die (optional)') : '';
   }
-  function areaRollView(r) {
-    var ids = (r.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; });
-    var h = '<div class="sec"><h3>' + esc(r.charName) + ' · ' + esc(r.item) + '</h3><p>Targets: ' + ids.map(function (id) { return esc(S.cards[id].name); }).join(', ') + '.</p>';
-    if (r.void) return h + '<p>This attempt was undone. Its damage cannot be applied.</p></div>';
-    if (r.check) h += '<p>' + esc(R.sayCheck(r.check, r.stat)) + '</p>';
-    if (r.check && !r.check.success) h += '<p>The spell missed. Its scene use and Horror cost were spent.</p>' + pushView(r);
-    else if (!r.effort) h += '<div class="row"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Roll area damage: ' + R.CAT_NAMES[r.cat] + ' d' + S.settings.dice[r.cat] + '</button></div><p class="hint">Damage applies to all selected foes when rolled.</p>' + physical('physE', 'Own die for area damage') + criticalPrompt(r);
-    else {
-      h += '<p>' + esc(R.sayEffort(r.effort, 'damage to each target')) + '</p>';
-      if (r.applied) h += '<p><b>Applied</b> to the selected targets. One Undo restores all damage.</p>' + damageUndo(r);
-      else if (ids.length) h += '<p>The GM confirms range and eligible foes. Targets that have left view will be skipped.</p><button class="btn main" data-do="applyArea" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Apply to ' + ids.length + ' selected ' + (ids.length === 1 ? 'foe' : 'foes') + '</button>';
-      else h += '<p>No selected target is still in view. Ask the GM to resolve this roll.</p>';
-    }
-    return h + '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
+  function currentRoll() { return UI.roll && S.rolls.filter(function (r) { return r.id === UI.roll; })[0]; }
+  function targetChoiceView() {
+    var pending = UI.attackChoice; if (!pending) return '';
+    var targets = cardList().filter(function (c) { return onTable(c) && (pending.healing ? !!c.hp : canTake(c)); });
+    var h = '<div class="sec"><h3>' + (pending.area ? 'Choose affected foes' : pending.healing ? 'Choose who to heal' : 'Choose a target') + '</h3><p>' + esc(pending.name) + '</p>';
+    if (pending.range) h += '<p class="note">' + esc(pending.range) + '. The GM confirms range and eligible targets.</p>';
+    if (pending.area) h += '<fieldset class="area-targets"><legend>Targets</legend>' + targets.filter(function (c) { return c.kind !== 'pc' && c.hp; }).map(function (c) { return '<label class="check"><input type="checkbox" data-area-target="' + c.id + '"' + ((UI.areaTargets || []).indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') + '</fieldset>';
+    else h += '<label class="field">' + (pending.healing ? 'Healing target' : 'Attack target') + '<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>';
+    return h + (UI.targetError ? '<p class="hint" role="alert">' + esc(UI.targetError) + '</p>' : '') + '<div class="row"><button class="btn main" data-do="confirmAttack">' + (pending.prepareOnly ? 'Choose target' : pending.healing ? 'Heal selected target' : pending.area ? 'Cast at selected foes' : 'Attack selected target') + '</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">' + (pending.prepareOnly ? 'Choose here, then roll in the bottom strip. Nothing has been used yet.' : 'Results appear in Activity. Damage keeps this target.') + '</p></div>';
   }
-  function rollCard() {
-    if (UI.attackChoice) {
-      var pending = UI.attackChoice, targets = cardList().filter(function (c) { return onTable(c) && (pending.healing ? !!c.hp : canTake(c)); });
-      if (pending.area) return '<div class="sec"><h3>Choose affected foes</h3><p>' + esc(pending.name) + '</p><p class="note">' + esc(pending.range) + '. The GM confirms range and eligible targets. One roll affects every selected foe.</p><fieldset class="area-targets"><legend>Targets</legend>' + targets.filter(function (c) { return c.kind !== 'pc' && c.hp && (c.sceneId == null || c.sceneId === S.table.scene.id); }).map(function (c) { return '<label class="check"><input type="checkbox" data-area-target="' + c.id + '"' + ((UI.areaTargets || []).indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + esc(c.name) + '</label>'; }).join('') + '</fieldset><div class="row"><button class="btn main" data-do="confirmAttack">Cast at selected foes</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">The scene use and Horror are spent when you attempt the spell, even on a miss.</p></div>';
-      return '<div class="sec"><h3>' + (pending.healing ? 'Choose who to heal' : 'Choose a target') + '</h3><p>' + esc(pending.name) + '</p>' + (pending.range ? '<p class="note">' + esc(pending.range) + '. The GM checks distance and line of sight.</p>' : '') + '<label class="field">' + (pending.healing ? 'Healing target' : 'Attack target') + '<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label><div class="row"><button class="btn main" data-do="confirmAttack">' + (pending.healing ? 'Heal selected target' : 'Attack selected target') + '</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">' + (pending.healing ? 'Healing is applied automatically after a successful check, within the listed rest limit.' : 'Damage will apply to this target when rolled. Nothing has been rolled yet.') + '</p></div>';
+  /* Pending decisions stay in Play; the player's roll buttons have one home in the footer. */
+  function rollFlow() {
+    var out = {tray: targetChoiceView(), dice: ''}, r = currentRoll();
+    if (UI.attackChoice || UI.readyAction || UI.rolling || D.busy() || !r || r.void) return out;
+    var target = r.targetCardId && S.cards[r.targetCardId], actor = r.attack && S.cards[r.attack.cardId];
+    if (!r.applied && r.attack && (viewScene() !== S.table.scene.id || (r.sceneId && r.sceneId !== S.table.scene.id) || (actor && actor.sceneId != null && actor.sceneId !== S.table.scene.id))) { out.tray += '<p class="hint">Open the original live scene to finish this attack.</p>'; return out; }
+    if (!r.attack && !S.chars[r.charId]) { out.tray += '<p class="hint">' + esc(r.charName) + ' is no longer at the table. Choose another hero below.</p>'; return out; }
+    var h = '', busy = UI.working ? ' disabled aria-busy="true"' : '', ch = r.check;
+    if (!r.applied && !r.effort && !r.healingResolved && !r.nonDamage && (!ch || ch.success)) {
+      var cat = r.attack ? (UI.monCat || 'weapons') : r.cat, down = r.attack && target && target.hp && target.hp.cur === 0;
+      var word = r.area ? 'area damage' : r.isAttack || r.attack || (target && target.hp) ? 'damage' : 'Effort';
+      h += '<div class="roll-next">' + (UI.working ? '<span role="status">Rolling ' + word + '…</span>' : '') + '<b>' + esc(r.charName || (actor && actor.name) || 'Attack') + (target ? ' → ' + esc(target.name) : '') + '</b>';
+      if (down) h += '<button class="btn main" data-do="monsterEffort" data-cat="weapons" data-roll="' + r.id + '"' + busy + '>Resolve hit on downed hero</button>';
+      else {
+        h += '<div class="cats">' + (cat ? [cat] : R.CATS.filter(function (k) { return k !== 'ultimate' || r.criticalRule !== 'extra'; })).map(function (k) { return '<button class="btn main" data-do="' + (r.attack ? 'monsterEffort' : 'effort') + '" data-cat="' + k + '" data-roll="' + r.id + '"' + busy + '>Roll ' + word + ': ' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 heavy' : '') + '</button>'; }).join('') + '</div>';
+        if (r.attack) h += '<div class="row"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== cat; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 heavy' : '') + '</button>'; }).join('') + '</div>';
+        else if (cat && ch && ch.offerUltimate && r.criticalRule !== 'extra' && cat !== 'ultimate') h += '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + busy + '>Roll Ultimate instead</button>';
+        h += physical('physE', 'Own die for ' + word) + criticalPrompt(r);
+      }
+      h += '</div>';
+      if (gm()) out.tray += h; else out.dice = h;
+    } else if (r.effort && !r.applied) {
+      var tgt = r.attack ? target : applyTarget(r);
+      if (r.area) out.tray += '<button class="btn" data-do="applyArea" data-roll="' + r.id + '"' + busy + '>Apply again to selected foes</button>';
+      else if (tgt) {
+        out.tray += '<button class="btn" data-do="apply" data-roll="' + r.id + '" data-card="' + tgt.id + '" data-field="' + (tgt.hp ? 'hp' : 'progress') + '"' + busy + '>' + (UI.working ? 'Applying…' : 'Apply to ' + esc(tgt.name) + ': ' + (tgt.hp ? '−' : '+') + r.effort.total + (tgt.hp ? ' HP' : ' Effort')) + '</button>';
+        var other = UI.sel && S.cards[UI.sel]; if (other && other.id !== tgt.id && canTake(other)) out.tray += '<button class="chip" data-do="aim" data-roll="' + r.id + '" data-card="' + other.id + '">Change target to ' + esc(other.name) + '</button>';
+      } else out.tray += '<p class="hint">Select a card with HP or an Effort bar to apply this roll.</p>';
     }
-    if (UI.rolling || D.busy()) return '<div class="sec"><h3>' + esc(UI.rolling || 'Rolling') + '</h3><p class="note" role="status">Rolling…</p></div>';   /* the previous roll is not offered while a new one is on its way, and a new one waits until its dice have landed */
-    var r = UI.roll && S.rolls.filter(function (x) { return x.id === UI.roll; })[0]; if (!r) return '';
-    if (r.area) return areaRollView(r);
-    if (r.void) return '<div class="sec"><p>This attempt was undone. It cannot be used again.</p></div>';
-    var ch = r.check, h = '<div class="sec"><h3>' + esc(r.charName) + (r.item ? ' · ' + esc(r.item) : '') + (r.stat ? ' · ' + r.stat : r.attack ? ' · attack' : ' · Effort') + '</h3>';
-    var tgt = applyTarget(r);
-    if (r.attack) return h + attackRollView(r, ch);
-    if (!S.chars[r.charId]) return h + '<p>' + esc(r.charName) + ' is no longer at the table, so this roll has nothing more to do.</p><div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';   /* the hero was taken off the table while the roll was open */
-    if (r.targetCardId && S.cards[r.targetCardId]) h += '<p class="note">Target: ' + esc(S.cards[r.targetCardId].name) + '</p>';
-    if (ch) {
-      h += '<div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayCheck(ch, r.stat)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
-      if (ch.nat20 && !r.nonDamage) h += '<p class="note">Natural 20. Ultimate Effort is on offer' + (S.settings.nat20Ultimate ? '' : ' (switched off at this table)') + '.</p>';
-      if (ch.nat1) h += '<p class="note">Natural 1. The Horror rises by 1.</p>';
-      if (r.fromPush && !ch.success) h += '<p class="note">That was your pushed second action.</p>';
+    if (ch) out.tray += pushView(r);
+    if (r.pushed && !S.rolls.some(function (x) { return x.charId === r.charId && x.at > r.at; })) {
+      h = '<button class="btn main" data-do="again" data-roll="' + r.id + '"' + busy + '>Same again: ' + esc(r.item || r.stat) + '</button>';
+      if (gm()) out.tray += h; else out.dice = h;
     }
-    if (r.accuracy) h += '<p class="hint">Includes +' + r.accuracy + ' crossbow accuracy.</p>';
-    if (r.healing && r.healing.stable) h += '<p>The patient is stable. Their dying countdown has stopped.</p>';
-    else if (r.healingAttempt && !r.healing) h += '<p>Healing check failed. No healing was applied.</p>';
-    else if (r.healing) h += '<p>Healing rolled: <b>' + r.healing.amount + '</b>. ' + (r.applied ? 'Applied to ' + esc(S.cards[r.applied.cardId] ? S.cards[r.applied.cardId].name : 'the patient') + '.' : 'Undone. The healing and its rest allowance have been restored.') + '</p>';
-    else if (r.nonDamage) h += '<p>' + (ch && ch.success ? 'Success. ' : 'The check failed. ') + 'The GM resolves this effect. No damage to roll.</p>';
-    else if (ch && !ch.success && !gm()) h += '<p>Missed. No damage to roll.</p>';
-    else if (!r.effort) {
-      var c = S.chars[r.charId], dice = S.settings.dice;
-      var busyE = UI.working === 'effort:' + r.id, word = (r.isAttack || (tgt ? tgt.hp : r.cat)) ? 'damage' : 'Effort';   /* against a foe (or with a weapon, spell or tool in hand) it is damage; against an obstacle's Effort bar, or a plain check, it is Effort */
-      if (r.cat) {   /* an item: its own die, one button, rolled when the player is ready */
-        h += (ch && ch.success ? '<p><b>' + (word === 'damage' ? 'A hit!' : 'Success!') + '</b> Roll the ' + word + '; the result applies to the chosen target.</p>' : '') + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') +
-          '<div class="row col"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Roll ' + word + ': ' + R.CAT_NAMES[r.cat] + ' d' + dice[r.cat] + (c.effort[r.cat] ? ' ' + sgn(c.effort[r.cat]) : '') + (r.weaponBonus ? ' +2 heavy' : '') + '</button>' +
-          (ch && ch.offerUltimate && r.criticalRule !== 'extra' && r.cat !== 'ultimate' ? '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + '>Natural 20: roll Ultimate d' + dice.ultimate + (c.effort.ultimate ? ' ' + sgn(c.effort.ultimate) : '') + (r.weaponBonus ? ' +2 heavy' : '') + ' instead</button>' : '') + '</div>' + physical('physE', 'Physical die for ' + word);
-      } else
-      h += '<h4>Roll ' + word + '</h4><p class="hint">Pick what you did it with: Basic for bare hands or a clumsy tool, Weapons for melee weapons, bows, crossbows or slings; Guns for guns and gunpowder weapons; Magic for a spell.</p>' + (busyE ? '<p class="note" role="status">Rolling ' + word + '…</p>' : '') + '<div class="cats">' + R.CATS.filter(function (k) { return k !== 'ultimate' || r.criticalRule !== 'extra'; }).map(function (k) { return '<button data-do="effort" data-cat="' + k + '" data-roll="' + r.id + '"' + (busyE ? ' disabled aria-busy="true"' : '') + (k === 'ultimate' && ch && ch.nat20 ? ' class="hint"' : '') + '>' + R.CAT_NAMES[k] + ' d' + dice[k] + '<b>' + sgn(c.effort[k]) + '</b></button>'; }).join('') + '</div>' + physical('physE', 'Physical die for ' + word);
-      h += criticalPrompt(r);
-    } else {
-      var ef = r.applied ? r.applied.field === 'hp' : tgt ? !!tgt.hp && !tgt.progress : false;
-      h += '<div class="calc">' + esc(R.sayEffort(r.effort, ef ? 'damage' : 'Effort')) + '</div>';
-      if (r.applied) { var ac = S.cards[r.applied.cardId]; h += '<p><b>Applied</b> to ' + esc(ac ? ac.name : 'a card that is no longer in view') + (r.applied.applied == null ? '.' : ': ' + (r.applied.field === 'hp' ? 'HP ' : 'Effort ') + (r.applied.applied > 0 ? '+' : '') + r.applied.applied + '.') + '</p>'; }
-      else if (tgt && (tgt.hp || tgt.progress)) {
-        var sel2 = UI.sel && S.cards[UI.sel], other = sel2 && sel2.id !== tgt.id && canTake(sel2) ? sel2 : null;
-        h += '<p class="note"><b>Not applied yet.</b> Target: ' + esc(tgt.name) + '.' + (other ? '' : ' Looking at another card does not change it.') + '</p>' +
-          (other ? '<div class="row"><button class="btn small" data-do="aim" data-roll="' + r.id + '" data-card="' + other.id + '">Change target to ' + esc(other.name) + '</button></div>' : '') + '<div class="row col">' +
-          (UI.working === 'apply:' + r.id ? '<button class="btn" disabled aria-busy="true">Applying to ' + esc(tgt.name) + '…</button>' : '') +  (UI.working === 'apply:' + r.id ? '' : tgt.hp ? '<button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + tgt.id + '" data-field="hp">Apply to ' + esc(tgt.name) + ': −' + r.effort.total + ' HP</button>' : '') +
-           (UI.working === 'apply:' + r.id ? '' : tgt.progress ? '<button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + tgt.id + '" data-field="progress">Apply to ' + esc(tgt.name) + ': +' + r.effort.total + ' Effort</button>' : '') + '</div>';
-      } else h += (UI.sel && canTake(S.cards[UI.sel]) ? '<button class="btn" data-do="aim" data-roll="' + r.id + '" data-card="' + UI.sel + '">Set target to ' + esc(S.cards[UI.sel].name) + '</button>' : '') + '<p class="note"><b>Not applied yet.</b> Select a card with HP or an Effort bar on the table, then apply this to it. Nothing changes until you do.</p>';
-    }
-    if (ch) h += pushView(r);
-    if (r.applied && !r.healing) h += damageUndo(r);
-    if (r.applied) h += '<p class="hint">' + (gm() ? 'Use Next turn in Play when everyone is ready.' : 'Tell the GM when you are finished. The GM advances turns.') + '</p>';
-    h += '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
-    return h;
+    if (gm() && (out.tray || out.dice)) out.tray += '<div class="row"><button class="link" data-do="dismissRoll">Choose another action</button></div>';
+    return out;
   }
+  function rollCard() { return rollFlow().tray; }
   /* After a failed check: the offer to push for a second action (the Horror rises by 1), and once pushed, a quick way to try the same thing again. Only to the one who rolled. */
   function pushView(r) {
     if (gm() && r.by !== 'gm') return '';
@@ -576,8 +523,7 @@
         '<button class="btn push-go" data-do="push" data-roll="' + r.id + '"' + (busy ? ' disabled aria-busy="true"' : '') + '>' + (busy ? 'Pushing…' : 'Push: act again <span>' + (full ? 'the Horror is at ' + S.horror.max : '+1 Horror') + '</span>') + '</button>' +
         '<p class="note">A second action, now: try again or do something else. Or let the failure stand.</p></div>';
     }
-    if (r.pushed && latest) return '<div class="push done"><p><b>You pushed.</b> Take your second action: the same again, or choose a stat or item below.</p>' +
-      '<button class="btn main" data-do="again" data-roll="' + r.id + '">Same again: ' + esc(r.item ? r.item : r.stat) + '</button></div>';
+    if (r.pushed && latest) return '<p class="hint">Roll the same action again below, or choose a different action in Play.</p>';
     if (r.isAttack && r.check && !r.check.success && r.pushReason) return '<p class="hint">' + esc(r.pushReason) + '</p>';
     return '';
   }
@@ -590,16 +536,18 @@
   var physical = function (id, label) { return '<div class="phys"><label>' + label + '<input id="' + id + '" type="number" min="1" max="20" inputmode="numeric" placeholder="optional"></label></div>'; };
 
   function renderPanel() {
-    var P = $('panel'), c = UI.sel && S.cards[UI.sel], h = rollCard(), focused = document.activeElement;
-    var keepFocus = focused && P.contains(focused) && focused.matches('input[type=checkbox], [role=tab], button[data-do=renameScene]') ? { id: focused.id, tag: focused.tagName, data: Object.assign({}, focused.dataset) } : null;
+    var P = $('panel'), c = UI.sel && S.cards[UI.sel], h = rollCard(), focused = document.activeElement, details = {};
+    P.querySelectorAll('details[data-detail]').forEach(function (el) { details[el.dataset.detail] = el.open; });
+    var keepFocus = focused && P.contains(focused) && focused.matches('input[type=checkbox], [role=tab], button[data-do=renameScene], summary[data-detail]') ? { id: focused.id, tag: focused.tagName, data: Object.assign({}, focused.dataset) } : null;
     if (UI.adding) { var adding = h + '<div class="sec"><p class="note">Adding…</p></div>'; P.innerHTML = gm() ? gmTable(adding, true) : adding; return; }   /* the panel must not show the old card, with its name box, while the new one is on its way */
     if (c && !(gm() ? true : cardVisibleToMe(c))) { UI.sel = null; c = null; }
     if (UI.cardEdit && UI.cardEdit !== UI.sel) UI.cardEdit = null; if (UI.atk && UI.atk !== UI.sel) UI.atk = null;
-    if (gm()) h = gmTable(h + (c ? gmCard(c) : gmTabBody()), !!c); else h += c ? playerCard(c) : playerTable();
+    if (gm()) h = gmTable(h + (c ? gmCard(c) : gmTabBody()), !!c); else h += (c && (!myChar() || c.id !== myChar().cardId) ? playerCard(c) : '') + playerTable();
     /* On a phone the panel can be put away, so that the scene and the controls under it stay in reach. It opens again by itself when something new is selected or rolled. */
     P.innerHTML = h; P.classList.toggle('empty', !h.trim());
+    P.querySelectorAll('details[data-detail]').forEach(function (el) { if (Object.prototype.hasOwnProperty.call(details, el.dataset.detail)) el.open = details[el.dataset.detail]; });
     if (keepFocus) {
-      var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab], button[data-do=renameScene]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
+      var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab], button[data-do=renameScene], summary[data-detail]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
       if (replacement) replacement.focus({ preventScroll: true });
     }
   }
@@ -631,8 +579,8 @@
   function playerCard(c) {
     var mine = c.owner === S.you.pid;
     return '<div class="row"><button type="button" class="link" data-do="deselect">Back</button></div><div class="sec"><h3>' + esc(c.name) + '</h3>' + (c.img ? '<div style="height:120px;background:' + bgUrl(c.img) + ' center/cover"></div>' : '') + (c.desc ? '<p>' + esc(c.desc) + '</p>' : '') + trackerView(c) +
-      (c.kind !== 'pc' && (c.hp || c.progress) && myChar() && !c.owner && !UI.hintSeen ? '<p class="note hint">' + (window.SacramentSheetCore.actions(heroOf(myChar())).length ? 'To attack or try this, choose what you are using below, or tap a stat to roll against it.' : 'To attack or try this, tap a stat below to roll against it.') + '</p>' : '') +
-      (ownsHero(c) ? '<p><button class="btn small" data-do="sheet" data-id="' + c.charId + '">Open your sheet</button></p>' : '') + (mine ? '<p class="hint">Given to you by the GM.</p>' : '') + '</div>';
+      (c.kind !== 'pc' && (c.hp || c.progress) && myChar() && !c.owner && !UI.hintSeen ? '<p class="note hint">' + (window.SacramentSheetCore.actions(heroOf(myChar())).length ? 'To attack or try this, choose an action in Play, then roll below.' : 'To attack or try this, tap a stat below to roll against it.') + '</p>' : '') +
+      (mine ? '<p class="hint">Given to you by the GM.</p>' : '') + '</div>';
   }
   /* heroes built on the My heroes page in this browser can be brought to the table: the table checks them against the rules and makes them yours */
   function bringBox() {
@@ -656,9 +604,9 @@
         free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
     }
     var cur = turnCardId() && S.cards[turnCardId()];
-    return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + downHelp(S.cards[ch.cardId]) +
-      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Tell the GM when you are finished.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then use a weapon below or in My character.</p>') + '<details class="player-first-turn"><summary>Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Open My character for your sheet and Ready to use actions.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Tell the GM when you are finished; the GM moves to the next turn.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
-      (own.length ? '<div class="sec"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
+    return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
+      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Tell the GM when you are finished.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon in Play and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action in Play, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Tell the GM when you are finished; the GM moves to the next turn.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
+      (own.length ? '<div class="sec gear"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
   /* HP as hearts: each Heart is 10 points, filled one after another from the first. A last Heart that holds fewer than 10 is drawn smaller, so no capacity is implied that is not
      there. Fill rises from the bottom in proportion to the points left in that Heart. Hidden numbers never reach here: the caller shows "HP ?" instead. */
@@ -821,10 +769,10 @@
   function addMonster(m) {
     var card = { kind: m.kind === 'token' ? 'token' : 'card', name: m.name, desc: m.desc, gmNotes: m.gmNotes, img: m.img, hp: { cur: m.hp || 10, max: m.hp || 10 }, attack: m.attack, hideNumbers: !!m.hideNumbers, sceneId: viewScene(), visible: false };
     card.w = m.w || 9; card.h = m.h || 9; var at = freeSpot(card.w, card.kind === 'token' ? card.w : card.h); card.x = at.x; card.y = at.y;
-    send({ type: 'cardCreate', card: card, addToOrder: true }, function (b) { if (b) { UI.sel = b.result.id; render(); toast('Added ' + m.name + ', hidden. Show it when the players should see it.', 6000); } });
+    send({ type: 'cardCreate', card: card, addToOrder: true }, function (b) { if (b) { UI.sel = b.result.id; render();  } });
   }
   function tabTable() {
-    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in House rules. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
+    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in House rules. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + in a hero’s Play tray or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
     var h = '<h3>Invite players</h3><div class="row"><b class="code">' + esc(S.code) + '</b><button class="btn main grow" data-do="copy">Copy invite link</button></div>';
     h += horrorControls();
     h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li class="player-row"><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small danger" data-do="removePlayer" data-pid="' + p.id + '"' + (UI.removeBusy === p.id ? ' disabled' : '') + ' aria-label="' + (UI.removePlayerAsk === p.id ? 'Confirm removal of ' : 'Remove ') + esc(p.name) + '">' + (UI.removeBusy === p.id ? 'Removing…' : UI.removePlayerAsk === p.id ? 'Confirm removal' : 'Remove') + '</button>' + (UI.removePlayerAsk === p.id ? '<p class="hint player-warning">Their current access will stop and their hero becomes available. Private possessions return hidden to the GM. They can join again with the invitation code.</p><button class="btn small" data-do="cancelRemovePlayer">Cancel</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
@@ -905,13 +853,24 @@
     return h;
   }
   function renderFeed() {
-    var L = S.log, last = L[L.length - 1], open = UI.feedOpen;
-    /* The line does not give the number away while the dice are still in the air: it names the roll in the air, even when a line about its result (a natural 1 raising the Horror) came after it. */
-    var air = D.rolling() && L.filter(function (e) { return e.dice && !e.undone; }).pop(), said = air ? air.who + ': ' + String(air.text).split(/ · |: /)[0] + ' rolls…' : last ? last.who + ': ' + last.text : '';
-    var h = '<div class="bar1"><button class="chip" data-do="feed" aria-expanded="' + open + '">' + (open ? 'Hide activity' : 'Activity') + '</button><span class="last" aria-live="polite">' + (last ? esc(said) : 'Nothing written yet.') + '</span></div>';
-    if (open) h += '<ol>' + L.slice(-30).map(function (e) { return '<li class="' + (e.undone ? 'undone ' : '') + e.kind + '"><span class="w">' + esc(e.who) + '</span><span class="tx">' + esc(e.text) + '</span>' + (e.undoable ? '<button class="chip" data-do="undo" data-id="' + e.id + '" aria-label="Undo">Undo</button>' : '') + '</li>'; }).reverse().join('') + '</ol>';
-    else if (last && last.undoable) h = h.replace('</div>', '<button class="chip" data-do="undo" data-id="' + last.id + '">Undo last</button></div>');
-    var f = $('feed'); if (f.dataset.h !== h) { f.innerHTML = h; f.dataset.h = h; }
+    var L = S.log.concat(UI.feedback || []).sort(function (a, b) { return a.at - b.at; }), last = L[L.length - 1], open = UI.feedOpen;
+    var air = D.rolling() && L.filter(function (e) { return e.dice && !e.undone; }).pop();
+    function entry(e) {
+      var o = e.outcome, label = o && !e.undone && e !== air ? '<strong class="outcome">' + esc(o.label) + '</strong> ' : '';
+      return '<li data-event="' + esc(e.id) + '" class="' + (e.undone ? 'undone ' : '') + (o ? o.success ? 'success ' : 'failure ' : '') + esc(e.kind) + '"><span class="w">' + esc(e.who) + ': </span><span class="tx">' + label + esc(e === air ? 'Rolling…' : e.text) + '</span>' + (e.undoable ? '<button class="chip" data-do="undo" data-id="' + esc(e.id) + '" aria-label="Undo">Undo</button>' : '') + '</li>';
+    }
+    var h = '<div class="bar1"><button class="chip" data-do="feed" aria-expanded="' + open + '">' + (open ? 'Hide activity' : 'Activity') + '</button>';
+    if (!open) h += '<ol class="latest last" aria-live="polite" aria-atomic="true">' + (last ? L.filter(function (e) { return e.at === last.at; }).map(entry).join('') : '<li>Nothing written yet.</li>') + '</ol>';
+    h += '</div>';
+    if (open) h += '<ol class="history" aria-live="polite">' + L.slice(-30).reverse().map(entry).join('') + '</ol>';
+    h += horrorBanner();
+    if (gm()) h += (S.alerts || []).map(function (a) { return '<div class="alert">TIME: ' + esc(a.name) + ' has reached 0 <button class="chip" data-do="ack" data-id="' + a.cardId + '">Resolved</button></div>'; }).join('');
+    var f = $('feed'); if (f.dataset.h !== h) {
+      var list = f.querySelector('.history'), scroll = list && list.scrollTop, height = list && list.scrollHeight, active = document.activeElement, action = f.contains(active) && active.dataset;
+      f.innerHTML = h; f.dataset.h = h;
+      list = f.querySelector('.history'); if (list && scroll) list.scrollTop = scroll + list.scrollHeight - height;
+      if (action) { var replacement = Array.prototype.find.call(f.querySelectorAll('button'), function (b) { return b.dataset.do === action.do && b.dataset.id === action.id; }); if (replacement) replacement.focus({preventScroll:true}); }
+    }
   }
 
   /* HP clicks that have been sent but not confirmed, per card, in order. What the table holds (confirmed) and what it will hold when they are saved (shown) are told apart everywhere HP can be changed. */
@@ -926,89 +885,94 @@
   function pickCard(id) { UI.sel = id; var c = S && S.cards[id]; if (gm() && c && c.charId && S.chars[c.charId]) { UI.actAs = c.charId; } }
   function gmDiceView() {
     var out = '<div class="gm-dice open"><strong class="gm-dice-title">GM dice</strong>';
-    out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span role="status">' + esc(UI.gmDiceResult || 'Extra GM rolls; no card values change.') + '</span>';
+    out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span class="note">No card values change.</span>';
     return out + '</div>';
   }
+  function playerHealth(ch) {
+    var card = S.cards[ch.cardId], hp = card && card.hp; if (!hp) return '';
+    return '<div class="hp row"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md', true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + downMark(card) + '<span>Defence ' + ch.defence + '</span></div>';
+  }
+  function playerActions(ch) {
+    var foe = aimFoe(), ready = UI.readyAction;
+    return '<section class="player-actions"><h4>' + (foe ? 'How are you going to deal with <b>' + esc(foe.name) + '</b>?' : 'Choose an action') + '</h4>' +
+      (ready ? '<p class="hint">Ready: ' + esc(ready.name) + (ready.targetName ? ' → ' + esc(ready.targetName) : '') + '. Use the bottom strip to roll.</p>' : '') +
+      '<details data-detail="playerActions"' + (!ready && !currentRoll() ? ' open' : '') + '><summary data-detail="playerActions">Weapons, spells and items</summary><div class="action-options">' + itemButtons(window.SacramentSheetCore.actions(heroOf(ch))) + '</div></details>' +
+      '<div class="row"><button class="chip" data-do="ordinaryCheck">Ordinary check</button>' + (foe ? '<button class="chip" data-do="basicAttack" data-card="' + foe.id + '">Attack without an item</button>' : '') + '<button class="chip" data-do="standaloneEffort">Standalone Effort</button></div>' +
+      (UI.basicAttack ? '<label>Attack using<select id="basicStat">' + R.STATS.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><button class="btn" data-do="prepareBasic">Prepare attack</button>' : '') +
+      '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div><details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
+  }
+  function putStrip(el, h, context) {
+    var active = document.activeElement, keep = el.dataset.context === context;
+    var fields = keep ? Array.prototype.map.call(el.querySelectorAll('input[type=number],select'), function (field) { return {id:field.id, physical:field.hasAttribute('data-phys'), value:field.value, focused:field === active}; }) : [];
+    var changed = el._h !== h; put(el, h); el.dataset.context = context;
+    if (changed) fields.forEach(function (field) {
+      var replacement = field.id ? el.querySelector('#' + field.id) : field.physical ? el.querySelector('[data-phys]') : null;
+      if (replacement) { replacement.value = field.value; if (field.focused) replacement.focus({preventScroll:true}); }
+    });
+  }
   function renderStrip() {
-    var el = $('strip'), ch = myChar(), G = gm(), h = '';
-    el.classList.toggle('myturn', !G && myTurn());
-    el.setAttribute('aria-label', G ? 'GM dice' : 'Your character');
-    if (G) { put(el, gmDiceView()); return; }
-    el._h = null;   /* player markup is written below; a later GM session must replace it */
-    if (!ch) {
-      var anyFree = Object.keys(S.chars).some(function (k) { return !S.chars[k].owner; });
-      h += anyFree ? '<b>Pick a hero to play.</b> <span class="note">Then your stats appear here.</span>' : Object.keys(S.chars).length ? '<b>No hero is free.</b> <span class="note">Ask the GM to add one. You can watch the table.</span>' : '<b>No heroes yet.</b> <span class="note">Nobody has taken up the road. Ask the GM to add one for you. You can watch the table.</span>';
-      el.innerHTML = h; return;
-    }
-    var card = S.cards[ch.cardId], hp = card && card.hp, keep = UI.phys || '';
-    h += '<div class="me"><b title="Your hero">' + esc(ch.name) + '</b></div>';
-    if (hp) h += '<div class="hp"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md' + (hpQueued(card.id) ? ' pend' : ''), true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '" aria-label="' + shownHp(card) + ' of ' + hp.max + ' hit points' + (hpQueued(card.id) ? ' (saving)' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + '</div>';
-    h += '<span class="def" title="A monster must roll this or more to hit you">Defence <b>' + ch.defence + '</b></span>';
-    if (downMark(card)) h += downMark(card, true).replace('<b ', '<b role="status" ');
-    h += '<div class="stats" role="group" aria-label="Roll a stat">' + R.STATS.map(function (k) { return '<button class="stat" data-do="roll" data-stat="' + k + '" aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
-    var foe = aimFoe(), choices = foe && window.SacramentSheetCore.actions(heroOf(ch)).some(function (a) { return a.ok; });
-    if (choices) {
-      /* Keep the map visible when an enemy or obstacle is selected. */
-      h += '<div class="aim-prompt" role="group" aria-label="Selected target">' +
-        '<span class="q">How are you going to deal with <b>' + esc(foe.name) + '</b>?</span>' +
-        '<button class="chip" data-do="sheet" data-id="' + ch.id + '" aria-label="Open your character sheet to choose an action">Open character sheet</button>' +
-        (UI.askItem && UI.askItem.card === foe.id ? '<button class="chip" data-do="roll" data-stat="' + UI.askItem.stat + '" data-noitem="1"' + (foe.hp ? ' data-attack="1"' : '') + '>Roll ' + UI.askItem.stat + ' with no item' + (foe.hp ? ' (attack)' : '') + '</button>' + (foe.hp ? '<button class="chip" data-do="check" data-stat="' + UI.askItem.stat + '">Roll ' + UI.askItem.stat + ' check</button>' : '') : '') +
-        '</div>';
-    }
-    h += '<div class="seg" role="group" aria-label="Next roll">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>';
-    h += '<div class="opt">' + (choices ? '' : '<button class="chip" data-do="sheet" data-id="' + ch.id + '" title="Your hero\u2019s sheet: scores, gear, notes">My character</button>') + '<button class="chip" data-do="toggle" data-key="more" aria-expanded="' + !!UI.optMore + '" title="Roll Effort on its own, or use your own dice">More</button></div>' +
-      (UI.optMore ? '<div class="opt row2"><button class="chip" data-do="toggle" data-key="effort" aria-expanded="' + !!UI.optEffort + '">Effort</button><button class="chip" data-do="toggle" data-key="dice" aria-expanded="' + !!UI.optDice + '">My dice</button></div>' : '');
-    var gear = cardList().filter(function (c) { return c.owner && c.owner === S.you.pid; });
-    if (gear.length) h += '<div class="gear"><span class="note">Gear</span>' + gear.map(function (c) { return '<button class="chip" data-do="select" data-id="' + c.id + '">' + esc(c.name) + '</button>'; }).join('') + '</div>';
-    if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Effort bonuses"><span class="note">Roll Effort on its own:</span><input id="physF" type="number" min="1" max="20" inputmode="numeric" placeholder="own die" aria-label="Result of your own physical die, optional">' + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '" title="Roll ' + R.CAT_NAMES[k] + ' Effort on its own">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
-    if (UI.optDice) h += '<div class="phys row2">' + diceSwitch() + '</div>';
-    if (UI.optDice) h += '<div class="phys row2"><label>Physical d20 for the next roll<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="—" value="' + esc(keep) + '"></label><span class="note">Type what your own die shows, then click a stat. Effort has its own box when you roll it.</span></div>';
-    el.innerHTML = h; el.classList.toggle('myturn', !G && myTurn());
+    var root = $('strip'), el = $('stripControls'), ch = myChar(), G = gm(), h;
+    root.classList.toggle('myturn', !G && myTurn()); root.setAttribute('aria-label', G ? 'GM dice' : 'Roll dice');
+    if (G) { putStrip(el, gmDiceView(), 'gm'); return; }
+    if (!ch) { putStrip(el, '<span class="note">Choose your hero in Play to roll.</span>', 'spectator'); return; }
+    var flow = rollFlow(), ready = UI.readyAction, waiting = UI.rolling || UI.working || D.busy();
+    h = flow.dice ? '' : '<b>' + esc(ch.name) + '</b>';
+    if (UI.attackChoice) h += '<span class="note">Choose the target in Play.</span>';
+    else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>Roll ' + esc(ready.name) + '</button>';
+    else if (flow.dice) h += flow.dice;
+    else if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Standalone Effort">' + physical('physF', 'Own Effort die') + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '"' + (waiting ? ' disabled' : '') + '>' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
+    else h += '<div class="stats" role="group" aria-label="Roll an ordinary check">' + R.STATS.map(function (k) { return '<button class="stat" data-do="check" data-stat="' + k + '"' + (waiting ? ' disabled' : '') + ' aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
+    if (!UI.attackChoice && (!flow.dice || (currentRoll() && currentRoll().pushed)) && !UI.optEffort) h += '<label class="phys">Own d20 (optional)<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="Roll digitally" value="' + esc(UI.phys || '') + '"></label>';
+    var context = ch.id + ':' + (ready ? ready.kind + ':' + (ready.gearKey || ready.stat) + ':' + ready.target : UI.roll || 'check');
+    putStrip(el, h, context);
     var pi = el.querySelector('input[data-phys]'); if (pi) pi.oninput = function () { UI.phys = pi.value; };
   }
   /* What pressing a Use button does, in words, for its hover text. */
   /* The aim of the hero's next roll: a selected card on the table that is not a hero and has HP or an Effort bar */
   function aimFoe() { var c = UI.sel && S.cards[UI.sel]; return c && c.kind !== 'pc' && onTable(c) && (c.hp || c.progress) ? c : null; }
   function itemButtons(usable) {
-    return usable.map(function (a) { return '<button class="ef' + (a.ok ? '' : ' dim') + '" data-do="useItem" data-i="' + a.index + '"' + (a.spellId ? ' data-spell="' + esc(a.spellId) + '"' : '') + ' title="' + esc(!a.ok ? a.why : useHow(a)) + '">' + esc(a.name) + ' · ' + (a.pick ? 'd' + a.pick + ' spell' : a.cat ? R.CAT_NAMES[a.cat] + ' d' + S.settings.dice[a.cat] : a.stat ? a.stat + ' check' : 'no roll') + (a.horror ? ' · Horror ' + R.sayHorrorAmount(a.horror) : '') + '</button>'; }).join('');
+    return usable.map(function (a) { return '<button class="ef' + (a.ok ? '' : ' dim') + '" data-do="prepareUse" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (a.mode ? ' data-mode="' + esc(a.mode) + '"' : '') + (a.spellId ? ' data-spell="' + esc(a.spellId) + '"' : '') + ' title="' + esc(!a.ok ? a.why : useHow(a)) + '">' + esc(a.name) + ' · ' + (a.pick ? 'd' + a.pick + ' spell' : a.cat ? R.CAT_NAMES[a.cat] + ' d' + S.settings.dice[a.cat] : a.stat ? a.stat + ' check' : 'no roll') + (a.horror ? ' · Horror ' + R.sayHorrorAmount(a.horror) : '') + '</button>'; }).join('');
   }
   function useHow(a) {
     var how = a.pick ? 'Roll d' + a.pick + ' and cast the spell that comes up' : a.cat ? 'Check with ' + a.stat + ', then on a success you roll its ' + R.CAT_NAMES[a.cat] + ' die for damage' : a.stat ? 'Check with ' + a.stat + ' (no Effort)' : 'No roll';
     return how + (a.horror ? '. The Horror rises ' + R.sayHorrorAmount(a.horror) + '.' : a.pick ? '. The Horror rises by that spell\u2019s amount.' : '.');
   }
   function physVal(id) { var i = $(id); var v = i && i.value.trim(); if (i) i.value = ''; return v ? +v : undefined; }
-  function doRoll(stat, noItem, attack) {
+  function doRoll(stat, noItem, attack, chosenTarget) {
     var ch = myChar(); if (!ch || UI.rolling) return;   /* one click, one roll: a second click while the first is on its way is ignored */
-    /* Aimed at a foe with an item to hand: the first click on a stat asks first, so nobody swings bare-handed by mistake. "Roll with no item" (or the same stat again) goes ahead. */
-    var foe = aimFoe(), asked = UI.askItem && foe && UI.askItem.card === foe.id && UI.askItem.stat === stat;
-    if (foe && !noItem && !asked && window.SacramentSheetCore.actions(heroOf(ch)).some(function (a) { return a.ok; })) { UI.askItem = { card: foe.id, stat: stat }; renderStrip(); return; }
-    UI.askItem = null;
     UI.rolling = 'Rolling ' + stat; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
-    renderPanel();
-    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
+    render();
+    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
   /* Using an item: one click makes the check with the item's stat. On a success the panel offers "Roll damage" with the item's own die; it applies to the recorded target automatically. */
-  function doUseItem(charId, index, spellId, gearKey, chosenTarget, mode) {
+  function focusNextRoll() { setTimeout(function () { var next = document.querySelector('#strip [data-do=commitUse], #strip [data-do=commitCheck], #attackTarget, .area-targets input'); if (next) next.focus({preventScroll:true}); }, 0); }
+  function doUseItem(charId, index, spellId, gearKey, chosenTarget, mode, prepareOnly) {
     var ch = S.chars[charId]; if (!ch || UI.rolling) return;
+    if (gearKey) index = ch.gear.findIndex(function (g) { return g.key === gearKey; });
     gearKey = gearKey || (ch.gear[index] && ch.gear[index].key);
-    if (!gearKey) { toast('That item is no longer available. Open your sheet again.'); return; }
+    if (!gearKey || index < 0) { toast('That item is no longer available. Open your sheet again.'); return; }
     var use = window.SacramentSheetCore.useOf(heroOf(ch), index, spellId, mode);
     if (!use.ok) { toast(use.why); return; }
     var areaIds = use.area && Array.isArray(chosenTarget) ? chosenTarget : null;
-    if (use.area && !areaIds) { UI.areaTargets = []; UI.attackChoice = { charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, area: true, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.source || use.item) }; render(); return; }
+    if (use.area && !areaIds) { UI.areaTargets = []; UI.attackChoice = { charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, prepareOnly: prepareOnly, area: true, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.source || use.item) }; render(); focusNextRoll(); return; }
     if (areaIds) chosenTarget = areaIds[0];
     var selected = use.healing && use.healing.self ? S.cards[ch.cardId] : chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
     function usableTarget(card) { return card && onTable(card) && (use.healing ? !!card.hp : canTake(card)); }
     if (chosenTarget && !usableTarget(selected)) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
-    if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.item), healing: !!use.healing}; render(); return; }
-    UI.attackChoice = null;
-    UI.askItem = null; UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
+    if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, prepareOnly: prepareOnly, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.item), healing: !!use.healing}; render(); focusNextRoll(); return; }
+    UI.attackChoice = null; UI.targetError = '';
+    if (prepareOnly) {
+      UI.roll = null; UI.optEffort = false;
+      UI.readyAction = {charId: charId, index:index, spellId:spellId, gearKey:gearKey, mode:mode, target:areaIds || (selected && selected.id), name:use.name, targetName: areaIds ? areaIds.map(function (id) { return S.cards[id] ? S.cards[id].name : ''; }).join(', ') : selected && selected.name}; render(); focusNextRoll(); return;
+    }
+    UI.readyAction = null;
+    UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
     var target = selected && onTable(selected) && (use.healing || !use.cat || selected.kind !== 'pc') ? selected.id : undefined;
-    renderPanel();
-    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, mode: mode || undefined, targetCardIds: areaIds || undefined, adj: UI.adj, d20: d20, targetCardId: target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; if (b.result.healing && !b.result.rollId) toast(b.result.healing.stable ? 'The patient is stable.' : 'Healing applied: ' + (b.result.healing.applied == null ? b.result.healing.amount : b.result.healing.applied) + ' HP.'); if (b.result.picked) toast('The die shows ' + b.result.picked.n + ': ' + b.result.picked.name + '.', 6000); } render(); });
+    render();
+    send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, mode: mode || undefined, targetCardIds: areaIds || undefined, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal';  } render(); });
   }
   function reorder(i, d) { var o = S.table.order.map(function (e) { return e.id; }); if (o.some(function (x) { return !x; })) return; var j = i + d; if (j < 0 || j >= o.length) return; var x = o[i]; o[i] = o[j]; o[j] = x; send({ type: 'orderSet', sceneId: S.table.scene.id, order: o }); }
   /* a place on the table where a new card of this size overlaps nothing, nearest the middle; units are those of the table's width (it is 100 wide and 62.5 high) */
@@ -1040,14 +1004,6 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-do]'); if (!b || !S) return; var d = b.dataset, c = S.cards[d.id];
     switch (d.do) {
-      case 'revealDamage': {
-        var revealed = S.rolls.filter(function (r) { return r.id === d.roll; })[0];
-        if (!revealed || !D.canDamage(d.roll) || UI.working || UI.rolling) { D.clear(); break; }
-        D.clear(); UI.roll = d.roll; renderPanel();
-        var damageButton = document.querySelector('#panel [data-do=' + (revealed.attack ? 'monsterEffort' : 'effort') + '][data-roll="' + d.roll + '"]');
-        if (damageButton) { damageButton.focus({ preventScroll: true }); damageButton.click(); }
-        break;
-      }
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }); break;
       case 'endTurn': send({ type: 'endTurn', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }, function () { UI.roll = null; render(); }); break;
@@ -1056,14 +1012,14 @@
         if (!gm() || UI.gmDiceBusy) break;
         UI.gmDie = +$('gmDie').value; UI.gmDiceCount = +$('gmDiceCount').value; UI.gmDicePrivate = $('gmDicePrivate').checked;
         UI.gmDiceBusy = true;
-        send({type:'gmDice', sides:UI.gmDie, count:UI.gmDiceCount, private:UI.gmDicePrivate}, function (b) { UI.gmDiceBusy = false; if (b) UI.gmDiceResult = (UI.gmDicePrivate ? 'GM only: ' : 'Shared: ') + b.result.dice.map(function (x) { return x.n; }).join(' + ') + ' = ' + b.result.total; render(); });
+        send({type:'gmDice', sides:UI.gmDie, count:UI.gmDiceCount, private:UI.gmDicePrivate}, function (b) { UI.gmDiceBusy = false; render(); });
         renderStrip(); break;
       }
-      case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'), chosen = choice && choice.area ? (UI.areaTargets || []) : targetChoice && targetChoice.value; if (!choice || !chosen || (Array.isArray(chosen) && !chosen.length)) { toast('Choose a target first.'); break; } doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, chosen, choice.mode); break; }
+      case 'confirmAttack': { var choice = UI.attackChoice, targetChoice = $('attackTarget'), chosen = choice && choice.area ? (UI.areaTargets || []) : targetChoice && targetChoice.value; if (!choice || !chosen || (Array.isArray(chosen) && !chosen.length)) { UI.targetError = 'Choose a target first.'; renderPanel(); break; } UI.targetError = ''; doUseItem(choice.charId, choice.index, choice.spellId, choice.gearKey, chosen, choice.mode, choice.prepareOnly); break; }
       case 'cancelAttack': UI.attackChoice = null; render(); break;
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
-      case 'adj': UI.adj = d.adj; renderStrip(); break;
+      case 'adj': UI.adj = d.adj; render(); break;
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
       case 'leave': UI.sceneRename = null; leaveTable(); break;
@@ -1072,11 +1028,10 @@
       case 'openScene': UI.sceneRename = null; UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
       case 'sceneBg': UI.sceneBg = !UI.sceneBg; renderPanel(); break;
       case 'gmsub': UI.sub = d.s || null; renderPanel(); break;
-      case 'roll': doRoll(d.stat, !!d.noitem, d.attack === '1'); break;
       case 'monCat': UI.monCat = d.cat; renderPanel(); break;
       case 'check': doRoll(d.stat, true, false); break;
-      case 'freeEffort': { var ch = myChar(); if (ch) { var v = physVal('physF'); send({ type: 'freeEffort', charId: ch.id, cat: d.cat, rolled: v }, function (bd) { if (bd) { UI.roll = bd.result.rollId; render(); } }); } break; }
-      case 'effort': { if (UI.working) break; var damageRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; renderPanel(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE, autoApply: automaticDamage(damageRoll) }, function () { UI.working = null; render(); }); break; }
+      case 'freeEffort': { var ch = myChar(); if (ch && !UI.working) { var v = physVal('physF'); UI.working = 'freeEffort'; renderStrip(); send({ type: 'freeEffort', charId: ch.id, cat: d.cat, rolled: v }, function (bd) { UI.working = null; if (bd) UI.roll = bd.result.rollId; render(); }); } break; }
+      case 'effort': { if (UI.working) break; var damageRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; render(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE, autoApply: automaticDamage(damageRoll) }, function () { UI.working = null; render(); }); break; }
       case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }
       case 'allowPush': if (!UI.working) { UI.working = 'push:' + d.roll; send({ type: 'pushOverride', rollId: d.roll }, function () { UI.working = null; render(); }); } break;
       case 'scenePowerReset': if (viewScene() !== S.table.scene.id || d.scene !== S.table.scene.id) { toast('Open the live scene to refresh its encounter.'); break; } if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
@@ -1089,28 +1044,33 @@
         send({ type: 'monsterAttack', cardId: d.id, targetCardId: hs.value, d20: d20a }, function (b) { UI.rolling = false; if (b) UI.roll = b.result.rollId; render(); }); break; }
       case 'monsterEffort': { if (UI.working) break; var keyM = 'effort:' + d.roll, rolledM = physVal('physE'); UI.working = keyM; renderPanel(); send({ type: 'monsterEffort', rollId: d.roll, cat: d.cat, rolled: rolledM }, function () { UI.working = null; render(); }); break; }
       case 'aim': UI.aim[d.roll] = d.card; render(); break;
-      case 'dismissRoll': UI.roll = null; render(); break;
+      case 'dismissRoll': UI.roll = null; UI.readyAction = null; render(); break;
       case 'hpAdj': { if (c && c.hp) hpQueue(d.id, { d: +d.d }, function (done) { send({ type: 'adjust', cardId: d.id, field: 'hp', delta: +d.d }, done); }); break; }
       case 'claim': send({ type: 'claim', charId: d.id }); break;
       case 'cardEdit': UI.cardEdit = d.id; renderPanel(); { var tb2 = $('panel'); if (tb2) tb2.scrollTop = 0; } break;
       case 'cardEditDone': UI.cardEdit = null; renderPanel(); break;
       case 'attackToggle': UI.atk = UI.atk === d.id ? null : d.id; renderPanel(); break;
       case 'sheet': openSheet(d.id); break;
-      case 'useItem': { var uch = myChar(); if (!uch) break; var uu = window.SacramentSheetCore.useOf(heroOf(uch), +d.i, d.spell || ''); if (!uu.ok) { toast(uu.why, 6000); break; } doUseItem(uch.id, +d.i, d.spell || ''); break; }
+      case 'prepareUse': { var uch = myChar(); if (!uch || gm()) break; doUseItem(uch.id, +d.i, d.spell || '', d.gear, undefined, d.mode, true); break; }
+      case 'commitUse': { var ready = UI.readyAction; if (!ready || gm()) break; doUseItem(ready.charId, ready.index, ready.spellId, ready.gearKey, ready.target, ready.mode); break; }
+      case 'ordinaryCheck': UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = false; UI.basicAttack = null; render(); break;
+      case 'standaloneEffort': UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = true; render(); break;
+      case 'basicAttack': UI.basicAttack = d.card; renderPanel(); break;
+      case 'prepareBasic': { var basicTarget = S.cards[UI.basicAttack]; if (!basicTarget || !onTable(basicTarget)) { toast('Select an available target.'); break; } UI.readyAction = {kind:'check', name:$('basicStat').value + ' attack', stat:$('basicStat').value, target:basicTarget.id, targetName:basicTarget.name}; UI.roll = null; UI.optEffort = false; UI.basicAttack = null; render(); focusNextRoll(); break; }
+      case 'commitCheck': { var rc = UI.readyAction, readyTarget = rc && S.cards[rc.target]; if (!rc || !readyTarget || !onTable(readyTarget)) { toast('Choose an available target in Play.'); UI.readyAction = null; render(); break; } UI.readyAction = null; doRoll(rc.stat, true, true, rc.target); break; }
       case 'designLoot': openLoot({ fresh: true }); break;
       case 'libEdit': { var le = (S.lootLib || []).filter(function (x) { return x.id === d.id; })[0]; if (le) openLoot({ item: le, id: le.id }); break; }
-      case 'libPlace': lootOnce({ type: 'lootPlace', libId: d.id }, function (b) { if (b) toast('Put on the table, hidden. Reveal it from its card.'); }); break;
-      case 'libGive': { var lgs = $('lootHero'); if (!lgs || !lgs.value) break; var lgn = S.chars[lgs.value] && S.chars[lgs.value].name; lootOnce({ type: 'lootGive', libId: d.id, charId: lgs.value }, function (b) { if (b) toast('Given to ' + lgn + '.'); }); break; }
+      case 'libPlace': lootOnce({ type: 'lootPlace', libId: d.id }, function () {}); break;
+      case 'libGive': { var lgs = $('lootHero'); if (!lgs || !lgs.value) break; lootOnce({ type: 'lootGive', libId: d.id, charId: lgs.value }); break; }
       case 'rollEdit': if (UI.loot && UI.loot.design) openLoot({ item: UI.loot.design, mode: 'copy' }); break;
-      case 'rollPlace': if (UI.loot && UI.loot.design) lootOnce({ type: 'lootPlace', item: UI.loot.design }, function (b) { if (b) toast('Put on the table, hidden. Reveal it from its card.'); }); break;
-      case 'cardGive': { var cgs = $('cardHero'); if (!cgs || !cgs.value) break; var cgn = S.chars[cgs.value] && S.chars[cgs.value].name; lootOnce({ type: 'lootGive', cardId: d.id, charId: cgs.value }, function (b) { if (b) { UI.sel = null; toast('Given to ' + cgn + '.'); render(); } }); break; }
+      case 'rollPlace': if (UI.loot && UI.loot.design) lootOnce({ type: 'lootPlace', item: UI.loot.design }, function () {}); break;
+      case 'cardGive': { var cgs = $('cardHero'); if (!cgs || !cgs.value) break; lootOnce({ type: 'lootGive', cardId: d.id, charId: cgs.value }, function (b) { if (b) { UI.sel = null; render(); } }); break; }
       case 'cardEditLoot': if (c && c.loot) openLoot({ item: c.loot, mode: 'card', cardId: c.id }); break;
       case 'lootRoll': { var pl = $('physL'), own = pl ? pl.value.trim() : ''; if (pl) pl.value = ''; if (own && !/^[0-9]+([ ,]+[0-9]+)*$/.test(own)) { toast('Type the numbers your own dice show, such as 87, or 87 4 for a sub-table.'); break; }
         send({ type: 'lootRoll', ns: own ? own.split(/[ ,]+/).map(Number) : undefined }, function (b) { if (b) UI.loot = b.result; render(); }); break; }
       case 'lootCard': { var L0 = UI.loot; if (!L0) break; send({ type: 'cardCreate', card: { kind: 'loot', name: L0.name, desc: L0.flavour, gmNotes: [L0.category, L0.tempts ? 'Tempts the Horror.' : '', L0.gmNote].filter(Boolean).join(' · '), visible: false } }); toast('Added "' + L0.name + '" to the table, hidden. Reveal it when the party finds it.', 5000); break; }
-      case 'lootGive': { var L1 = UI.loot, lootSel = $('lootHero'); if (!L1 || !lootSel || !lootSel.value) break; var lootTo = lootSel.value; send({ type: 'sheet', charId: lootTo, op: { op: 'add', id: L1.itemId } }, function (b) { if (b) toast('Gave "' + L1.name + '" to ' + (S.chars[lootTo] ? S.chars[lootTo].name : 'the hero') + '.', 4000); }); break; }
+      case 'lootGive': { var L1 = UI.loot, lootSel = $('lootHero'); if (!L1 || !lootSel || !lootSel.value) break; var lootTo = lootSel.value; send({ type: 'sheet', charId: lootTo, op: { op: 'add', id: L1.itemId } }, function () {}); break; }
       case 'bring': { var mine = window.SacramentHeroes && window.SacramentHeroes.read().heroes.filter(function (h) { return h.id === d.id; })[0]; if (mine) send({ type: 'bringHero', hero: mine }); break; }
-      case 'undoDamage':
       case 'undo': send({ type: 'undo', logId: d.id }); break;
       case 'feed': UI.feedOpen = !UI.feedOpen; $('feed').dataset.h = ''; renderFeed(); break;
       case 'copy': { var link = location.origin + '/vtt/?room=' + S.code; if (navigator.clipboard) navigator.clipboard.writeText(link).then(function () { toast('Link copied: ' + link); }, function () { toast(link); }); else toast(link); break; }
@@ -1122,18 +1082,18 @@
         if (UI.forgetMon !== +d.i) { UI.forgetMon = +d.i; renderPanel(); UI.forgetMonTimer = setTimeout(function () { UI.forgetMon = null; if (S) renderPanel(); }, 5000); break; }
         UI.forgetMon = null; keepMonsters(monsters().filter(function (x, i) { return i !== +d.i; })); renderPanel(); break;
       }
-      case 'nextSet': { var na = $('nextAt') && $('nextAt').value, ms = na ? new Date(na).getTime() : NaN; if (!Number.isFinite(ms)) { toast('Choose a date and a time first.'); break; } send({ type: 'nextSession', at: ms, note: $('nextNote').value }, function (b) { if (b) toast('The next session is set. Every player can see it.'); }); break; }
+      case 'nextSet': { var na = $('nextAt') && $('nextAt').value, ms = na ? new Date(na).getTime() : NaN; if (!Number.isFinite(ms)) { toast('Choose a date and a time first.'); break; } send({ type: 'nextSession', at: ms, note: $('nextNote').value }, function () {}); break; }
       case 'nextClear': send({ type: 'nextSession', at: null }); break;
       case 'copyRecap': { var rt = recapLines().join('\n'); if (navigator.clipboard) navigator.clipboard.writeText(rt).then(function () { toast('The recap is copied.'); }, function () { toast('Could not copy. Select the text and copy it instead.'); }); else toast('Select the text and copy it instead.'); break; }
       case 'recapReset': {   /* asked twice, like Reset */
         clearTimeout(UI.recapTimer);
         if (!UI.recapAsk) { UI.recapAsk = true; renderPanel(); UI.recapTimer = setTimeout(function () { UI.recapAsk = false; if (S) renderPanel(); }, 5000); break; }
-        UI.recapAsk = false; send({ type: 'recapReset' }, function (b) { if (b) toast('A new session: the recap starts again.'); }); break;
+        UI.recapAsk = false; send({ type: 'recapReset' }, function () {}); break;
       }
       case 'showRecovery': UI.recoveryOpen = true; renderRecovery(); break;
       case 'copyKey': { if (!gm()) break; var kl = location.origin + '/vtt/?room=' + S.code + '#key=' + sess.token; if (navigator.clipboard) navigator.clipboard.writeText(kl).then(function () { toast('Your GM link is copied. Keep it private.'); }, function () { UI.recoveryOpen = true; renderRecovery(); }); else { UI.recoveryOpen = true; renderRecovery(); } break; }
       case 'horrorAck': send({ type: 'horrorAck' }); break;
-      case 'arrivalSeen': UI.arrivalSeen = true; renderTable(); break;
+      case 'arrivalSeen': UI.arrivalSeen = true; renderFeed(); break;
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
       case 'horrorSet': { var hv = $('hzSet') && $('hzSet').value.trim(); if (!/^[0-9]+$/.test(hv || '')) { toast('Type a number from 0 to ' + S.horror.max + '.'); break; } send({ type: 'horror', mode: 'set', value: +hv }); break; }
       case 'horrorRoll': send({ type: 'horror', mode: 'lowerRoll' }); break;

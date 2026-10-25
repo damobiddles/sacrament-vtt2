@@ -23,9 +23,9 @@ test('damage Undo remains attached to its result after someone else acts',async(
  const gm=await newPage(browser),p=await newPage(browser),code=await makeTable(gm);await joinTable(p,code,'Ann');await claimHero(p,'Thorne');
  await gm.locator('#cards .c',{hasText:'Pit Ghoul'}).click();await gm.locator('[data-do=attackToggle]').click();
  const s=await state(gm),h=Object.values(s.chars).find(c=>c.name==='Thorne');await gm.locator('#atkHero').selectOption(h.cardId);await gm.locator('#physA').fill('15');await gm.locator('[data-do=monsterAttack]').click();await expect(gm.locator('[data-do=monsterEffort]')).toBeVisible();await gm.locator('#physE').fill('4');await gm.locator('[data-do=monsterEffort]').click();await saved(gm);
- await expect(gm.locator('#panel [data-do=undoDamage]')).toBeVisible();const id=await gm.locator('#panel [data-do=undoDamage]').getAttribute('data-id');
- await p.locator('#strip [data-do=hpAdj][data-d="-1"]').click();await saved(p);await expect.poll(async()=>(await state(gm)).cards[h.cardId].hp.cur).toBe(5);
- await gm.locator('#panel [data-do=undoDamage][data-id="'+id+'"]').click();await saved(gm);await expect.poll(async()=>(await state(p)).cards[h.cardId].hp.cur).toBe(9);
+ await expect(gm.locator('#feed [data-do=undo]')).toBeVisible();const id=await gm.locator('#feed [data-do=undo]').getAttribute('data-id');
+ await p.locator('#panel [data-do=hpAdj][data-d="-1"]').click();await saved(p);await expect.poll(async()=>(await state(gm)).cards[h.cardId].hp.cur).toBe(5);
+ await gm.locator('#feed [data-do=feed]').click();await gm.locator('#feed [data-do=undo][data-id="'+id+'"]').click();await saved(gm);await expect.poll(async()=>(await state(p)).cards[h.cardId].hp.cur).toBe(9);
  expect(gm.errors.concat(p.errors)).toEqual([]);
 });
 

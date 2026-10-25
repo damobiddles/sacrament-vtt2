@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared,basicAttack} from './helpers.mjs';
 import {test,expect,newPage,makeTable,joinTable,claimHero,state,saved} from './helpers.mjs';import {bounded} from './contrast-lib.mjs';
 test.setTimeout(60000);
 async function cmd(page,c){return bounded(page.evaluate(async c=>{const s=window.__vtt.state(),entry=Object.entries(localStorage).find(([k])=>k.endsWith(s.code)&&!k.includes('join-')),token=JSON.parse(entry[1]).token;const r=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{...c,actionId:'automation'+Math.random().toString(36).slice(2,8)+'.1'}})});return {status:r.status,body:await r.json()};},c),15000,'updating a disposable test table');}
@@ -6,11 +7,11 @@ test('a player chooses who to heal, HP updates for everyone, limits are enforced
  const gm=await newPage(browser),code=await makeTable(gm),p=await newPage(browser,viewport);await joinTable(p,code,'Healer');await claimHero(p,'Thorne');const ch=Object.values((await state(gm)).chars).find(c=>c.name==='Thorne');
  await cmd(gm,{type:'sheet',charId:ch.id,op:{op:'add',id:'litany'}});await cmd(gm,{type:'adjust',cardId:ch.cardId,field:'hp',delta:-8});
  await expect(p.getByRole('button',{name:'My character',exact:true})).toBeVisible();await expect.poll(async()=>Object.values((await state(p)).chars).find(c=>c.id===ch.id).gear.length).toBe(2);
- await p.locator('#strip [data-do=toggle][data-key=more]').click();await p.locator('#strip [data-do=toggle][data-key=dice]').click();
- async function cast(){await p.locator('#strip input[data-phys]').fill('15');await p.locator('#strip [data-do=sheet]').click();await p.locator('#sheetOverlay [data-sh=quickUse][data-spell=mend]').click();await expect(p.locator('#panel')).toContainText('Choose who to heal');await p.locator('#attackTarget').selectOption(ch.cardId);await p.locator('[data-do=confirmAttack]').click();await saved(p);}
- await cast();await expect(p.locator('#panel')).toContainText('Healing rolled:');await expect.poll(async()=>(await state(gm)).cards[ch.cardId].hp.cur).toBeGreaterThan(2);expect((await state(p)).horror.cur).toBe(0);
- await cmd(gm,{type:'adjust',cardId:ch.cardId,field:'hp',delta:-1});await cast();await expect(p.locator('#toast')).toContainText('already received this healing');
- await cmd(gm,{type:'rest'});await cmd(gm,{type:'adjust',cardId:ch.cardId,field:'hp',delta:-5});await cast();await expect(p.locator('#panel')).toContainText('Healing rolled:');
+
+ async function cast(){await p.locator('#strip input[data-phys]').fill('15');await prepareItem(p,'[data-spell=mend]');await expect(p.locator('#panel')).toContainText('Choose who to heal');await p.locator('#attackTarget').selectOption(ch.cardId);await p.locator('[data-do=confirmAttack]').click();await rollPrepared(p);await saved(p);}
+ await cast();await expect(p.locator('#feed')).toContainText('heals');await expect.poll(async()=>(await state(gm)).cards[ch.cardId].hp.cur).toBeGreaterThan(2);expect((await state(p)).horror.cur).toBe(0);
+ await cmd(gm,{type:'adjust',cardId:ch.cardId,field:'hp',delta:-1});await cast();await expect(p.locator('#feed')).toContainText('already received this healing');
+ await cmd(gm,{type:'rest'});await cmd(gm,{type:'adjust',cardId:ch.cardId,field:'hp',delta:-5});await cast();await expect(p.locator('#feed')).toContainText('heals');
  await p.screenshot({path:info.outputPath('healing-automatic.png'),fullPage:true});expect(p.errors).toEqual([]);expect(gm.errors).toEqual([]);
 });
 }

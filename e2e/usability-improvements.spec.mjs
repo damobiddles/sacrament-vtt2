@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared} from './helpers.mjs';
 import { readFile } from 'node:fs/promises';
 import { test, expect, newPage, makeTable, joinTable, claimHero, state } from './helpers.mjs';
 
@@ -73,13 +74,9 @@ test('drawing on a prepared scene stays private until that scene is shown', asyn
   await expect(ann.locator('#ink polyline')).toHaveCount(1);
 });
 
-test('ready actions appear above the sheet fields and use the selected equipment', async ({ browser }) => {
-  const gm=await newPage(browser),code=await makeTable(gm),ann=await newPage(browser); await joinTable(ann,code,'Ann'); await claimHero(ann,'Thorne');
-  await ann.locator('#cards .c',{hasText:'Pit Ghoul'}).click(); await ann.locator('#strip [data-do=sheet]').click();
-  const action=ann.locator('#sheetOverlay [data-sh=quickUse]').first(), name=await action.textContent();
-  expect((await action.boundingBox()).y).toBeLessThan((await ann.locator('#sheetOverlay [data-text=name]').boundingBox()).y);
-  await action.click(); await expect(ann.locator('#sheetOverlay')).toBeHidden(); await expect(ann.locator('#panel .calc')).toBeVisible();
-  await expect(ann.locator('#panel')).toContainText(name);
+test('ready actions in Play prepare the selected equipment without rolling until the footer press',async({browser})=>{
+ const gm=await newPage(browser),code=await makeTable(gm),ann=await newPage(browser);await joinTable(ann,code,'Ann');await claimHero(ann,'Thorne');await ann.locator('#cards .c',{hasText:'Pit Ghoul'}).click();
+ await prepareItem(ann);expect((await state(ann)).rolls).toHaveLength(0);await expect(ann.locator('#strip [data-do=commitUse]')).toBeVisible();await rollPrepared(ann);await expect(ann.locator('#feed .outcome')).toBeVisible();
 });
 
 test('the map stays fitted in desktop windows without a width toggle or shared-position changes', async ({ browser }, info) => {

@@ -12,7 +12,7 @@ These are the **current VTT rules**, checked against the application on 25 Octob
 2. Open [My heroes](/character/) in the same browser. Choose a focus and press **Generate a hero**. The suggestion already has scores, Effort and equipment.
 3. Change the name and vow if you like, then press **Keep this hero**. You can customise the saved sheet afterwards. A focus is a starting kit, not a permanent class.
 4. Open the invitation link, enter your player name and join. Choose **Bring a hero** to copy your saved hero into this table. Alternatively, choose **Play** beside an available hero the GM has supplied.
-5. Open **My character** during play to see your sheet and its **Ready to use** actions. Tell the group what you want to do; the GM tells you whether a roll is needed.
+5. Choose weapons, spells, items and targets in **Play**, then roll in the bottom strip. Open **My character** in Play to manage your sheet. Tell the group what you want to do; the GM tells you whether a roll is needed.
 
 **Two copies:** My heroes saves to this browser and device. Bringing a hero creates a separate table copy. Later edits on My heroes do not update that table copy. Download a private heroes backup before changing browser or device. Restore it on My heroes by choosing the downloaded JSON file, reviewing it and pressing **Restore backup**. Existing heroes are kept.
 
@@ -44,10 +44,10 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 ## Attacks: target, roll, damage, apply
 
 1. Select the enemy's card or token first.
-2. Use your equipped weapon or spell from **Ready to use**, or your character's item actions. If you have not selected a target, choose one when asked. A stat roll can also offer an attack without an item; choose an ordinary check for other tasks.
+2. Choose your equipped weapon, spell or item in **Play**, then choose its target if asked. Roll the prepared action in the bottom strip. For an unarmed attack, choose **Attack without an item** in Play; for other tasks, choose **Ordinary check**.
 3. The table rolls the check and compares the total with the Target.
-4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. **Undo this damage** beside the result corrects that damage; Activity retains the full history.
-5. Tell the GM when you are finished; the GM advances turns. **Undo last** can take back your own mistaken action when it is still safe to undo.
+4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. **Undo** beside the damage event in **Activity** corrects it. Open Activity to see earlier outcomes.
+5. Tell the GM when you are finished; the GM advances turns. **Undo** beside an Activity event can take back your own mistaken action when it is still safe to undo.
 
 The damage target stays attached to that attack. Looking at another card does not redirect it. Choose the correct target before attacking. To correct a mistaken hit, Undo its damage in Activity first; the recorded result can then be deliberately reassigned using **Change target**.
 
@@ -104,3 +104,5 @@ Ask your GM when an effect, distance or consequence needs a ruling. Use [Feedbac
 Rend the Veil asks you to select the affected foes before rolling. The GM confirms range and eligibility. Roll once; damage applies to the selected foes together automatically. Once-per-scene powers spend their allowance on the attempt, even on a miss, and copies do not grant extra uses. Rest and reloading the page do not reset them. The GM can refresh scene abilities for a new encounter, or Undo a mistaken attempt after undoing its damage. The Executioner's Blade offers a separate final blow with its own 3-Horror cost and scene limit.
 
 Standalone Effort and ordinary task checks can still use Apply when the GM needs to choose where the result belongs. Attacks and targeted item actions apply their rolled result automatically.
+
+During play, **Activity** at the bottom shows checks, damage, healing, Horror and other outcomes. Open it for earlier events and use **Undo** beside an event when permitted. Roll controls appear only in the bottom strip; Play holds your choices. Connection and saving messages stay beside the table status.

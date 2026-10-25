@@ -6,7 +6,7 @@ test('only the GM advances turns and obstacles can attack heroes', async ({ brow
  await expect(p.locator('[data-do=endTurn]')).toHaveCount(0);
  await expect(gm.locator('#top [data-do=endTurn]')).toHaveCount(0);await expect(gm.locator('#panel [data-do=endTurn]')).toBeVisible();
  await gm.locator('#cards .c',{hasText:'The Sealed Gate'}).click();await gm.locator('[data-do=attackToggle]').click();await gm.locator('#physA').fill('20');await gm.locator('[data-do=monsterAttack]').click();
- await expect(gm.locator('#panel')).toContainText('A hit.');await gm.locator('[data-do=monsterEffort]').click();await saved(gm);
+ await expect(gm.locator('#feed')).toContainText('HIT');await gm.locator('[data-do=monsterEffort]').click();await saved(gm);
  await expect.poll(async()=>(await state(p)).cards[Object.values((await state(p)).chars).find(h=>h.name==='Thorne').cardId].hp.cur).toBeLessThan(10);
  await gm.locator('[data-do=gmtab][data-t=play]').click();await gm.locator('#panel [data-do=endTurn]').click();await saved(gm);await expect.poll(async()=>(await state(p)).table.idx).toBe(1);
  await gm.screenshot({path:info.outputPath('gm-view.png')});await p.screenshot({path:info.outputPath('player-view.png')});

@@ -1,3 +1,4 @@
+import {prepareItem} from './helpers.mjs';
 import {test,expect,newPage,makeTable,saved} from './helpers.mjs';
 import {bounded} from './contrast-lib.mjs';
 test.setTimeout(60000);
@@ -27,9 +28,9 @@ test('Play tray keeps long turn names, order controls and session fields inside 
 for(const role of ['gm','player'])test(`${role}: target chooser has breathing room and its controls fit the tray`,async({browser},info)=>{
  const {joinTable,claimHero,openGmHeroSheet}=await import('./helpers.mjs');
  const gm=await newPage(browser),code=await makeTable(gm),page=role==='gm'?gm:await newPage(browser);
- if(role==='player'){await joinTable(page,code,'Ann');await claimHero(page,'Thorne');await page.locator('#strip [data-do=sheet]').click();}
+ if(role==='player'){await joinTable(page,code,'Ann');await claimHero(page,'Thorne');await prepareItem(page);}
  else await openGmHeroSheet(page);
- await page.locator('#sheetOverlay [data-sh=quickUse]').first().click();await expect(page.locator('#attackTarget')).toBeVisible();
+ if(role==='gm') await page.locator('#sheetOverlay [data-sh=quickUse]').first().click();await expect(page.locator('#attackTarget')).toBeVisible();
  await page.locator('#attackTarget').selectOption({label:'Pit Ghoul'});await page.locator('#attackTarget').focus();
  for(const width of [1366,1024,683]){
   await page.setViewportSize({width,height:800});

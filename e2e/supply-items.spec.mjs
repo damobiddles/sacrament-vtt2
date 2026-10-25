@@ -11,7 +11,7 @@ async function setup(browser, viewport) {
 async function addOnSheet(page, ...ids) { for (const id of ids) { await page.locator('#shAdd').selectOption(id); await page.locator('[data-sh=add]').click(); } }
 
 test('at the table: a supply on the sheet has a Supply label and no Equip button; a weapon keeps its button and Equip still works', async ({ browser }) => {
-  const { ann } = await setup(browser); await ann.locator('#strip [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword', 'cloak');
+  const { ann } = await setup(browser); await ann.locator('#panel [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword', 'cloak');
   for (const name of ['Linen Bandages', "Pilgrim's Cloak"]) {
     const it = item(ann, name); await expect(it.locator('.sh-supply')).toHaveText('Supply');
     await expect(it.locator('[data-sh=move]')).toHaveCount(0); await expect(it.getByRole('button', { name: /equip/i })).toHaveCount(0);
@@ -26,7 +26,7 @@ test('at the table: a supply on the sheet has a Supply label and no Equip button
 });
 
 test('nowhere else at the table offers Equip for a supply: the hero strip, its Items row, the side panel, and the GM\'s own sheet and panels', async ({ browser }) => {
-  const { gm, ann } = await setup(browser); await ann.locator('#strip [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword', 'lantern');
+  const { gm, ann } = await setup(browser); await ann.locator('#panel [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword', 'lantern');
   await ann.locator('#sheetOverlay [data-sh=close]').click(); await saved(ann);
   await expect(ann.locator('[data-do=toggle][data-key=items]')).toHaveCount(0);
   await expect(ann.locator('#strip').getByText(/\bEquip\b/)).toHaveCount(0);
@@ -62,7 +62,7 @@ test('a hero saved with a supply equipped is put right on My heroes, and the pag
 });
 
 test('on a phone @phone the label fits and nothing scrolls sideways', async ({ browser }) => {
-  const { ann } = await setup(browser, { width: 390, height: 844 }); await ann.locator('#strip [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword');
+  const { ann } = await setup(browser, { width: 390, height: 844 }); await ann.locator('#panel [data-do=sheet]').click(); await addOnSheet(ann, 'bandages', 'sword');
   await expect(item(ann, 'Linen Bandages').locator('.sh-supply')).toBeVisible();
   const wide = await ann.evaluate(() => { const o = document.querySelector('#sheetOverlay'); return o.scrollWidth - o.clientWidth; }); expect(wide).toBeLessThanOrEqual(1);
 });

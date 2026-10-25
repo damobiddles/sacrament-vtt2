@@ -65,8 +65,8 @@ test('queued gameplay waits until checking the saved state has finished', async 
   });
   await p.evaluate(() => {
     window.__vtt.ui.maxTries = 0;
-    document.querySelector('#strip [data-do=hpAdj][data-d="-1"]').click();
-    document.querySelector('#strip [data-do=hpAdj][data-d="-1"]').click();
+    document.querySelector('#panel [data-do=hpAdj][data-d="-1"]').click();
+    document.querySelector('#panel [data-do=hpAdj][data-d="-1"]').click();
   });
   releaseFirst(); await expect.poll(() => !!checking).toBe(true);
   expect(changes).toBe(1);

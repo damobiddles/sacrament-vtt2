@@ -60,11 +60,11 @@ test('a player claims a hero and rolls a stat: the sum, and whether it beats the
   await claimHero(ann, 'Thorne');
 
   // a physical die, so the answer is known: 12 + Thorne's +3 STR = 15 against the sample's Target 12
-  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click();
+
   await ann.locator('#strip input[data-phys]').fill('12');
   await ann.locator('.stat[data-stat=STR]').click();
-  await expect(ann.locator('#panel .calc')).toContainText('12 + 3 STR = 15 against Target 12');
-  await expect(ann.locator('#panel .calc')).toContainText('Success');
+  await expect(ann.locator('#feed .tx')).toContainText('12 + 3 STR = 15 against Target 12');
+  await expect(ann.locator('#feed .tx')).toContainText('Success');
   expect(ann.errors).toEqual([]);
 });
 
@@ -81,7 +81,7 @@ test('a roll with the server’s own dice always lands between 1 and 20, plus th
     expect(r.check.d20).toBeGreaterThanOrEqual(1);
     expect(r.check.d20).toBeLessThanOrEqual(20);
     expect(r.check.total).toBe(r.check.d20 + r.check.mod);
-    await ann.locator('[data-do=dismissRoll]').click().catch(() => {});
+    await ann.locator('#panel [data-do=ordinaryCheck]').click();
   }
 });
 
@@ -95,15 +95,14 @@ test('Effort is rolled and applied to the selected enemy once, and its hearts go
   const hp0 = (await state(ann)).cards[id].hp.cur;
 
   await ghoul.click();
-  await ann.locator('[data-do=toggle][data-key=more]').click(); await ann.locator('[data-do=toggle][data-key=dice]').click();
+
   await ann.locator('#strip input[data-phys]').fill('15');
   await ann.locator('.stat[data-stat=STR]').click();
-  await ann.locator('#strip [data-do=roll][data-noitem]').click();   /* Thorne holds his hatchet, so the strip asks first */
   await ann.locator('#physE').fill('4');
   await ann.locator('[data-do=effort][data-cat=weapons]').click();
   await expect(ann.locator('[data-do=apply]')).toHaveCount(0);
   await expect(ann.locator('#panel')).toContainText('Pit Ghoul');
-  await expect(ann.locator('#panel')).toContainText('Applied');
+  await expect(ann.locator('#feed')).toContainText('HP -');
   await saved(ann);
 
   const hp1 = (await state(ann)).cards[id].hp.cur;
@@ -118,5 +117,5 @@ test('reloading the page puts a player back at the table as the same hero', asyn
   await claimHero(ann, 'Thorne');
   await ann.goto('/vtt/');                                            // no code: it remembers the table
   await expect(ann.locator('#app')).toBeVisible();
-  await expect(ann.locator('#strip .me')).toContainText('Thorne');
+  await expect(ann.locator('#stripControls > b')).toContainText('Thorne');
 });

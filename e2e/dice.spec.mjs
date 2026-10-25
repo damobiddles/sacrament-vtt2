@@ -16,14 +16,14 @@ test('a player\'s roll tumbles on their screen and on the GM\'s, and lands on th
   const { gm, ann } = await setup(browser);
   await ann.locator('#strip .stat').first().click();
   await expect(ann.locator('#dice .die')).toBeVisible();
-  await expect(ann.locator('#panel')).toContainText('Rolling…');
-  await expect(ann.locator('#feed .last')).toHaveText('Ann: Thorne rolls…');   /* the activity line does not give the number away yet */
+  await expect(ann.locator('#feed')).toContainText('Rolling…');
+  await expect(ann.locator('#feed .last')).toContainText('Rolling…');   /* the activity line does not give the number away yet */
   if (SHOTS) await ann.screenshot({ path: SHOTS + '/1-tumbling.png' });
   await expect(ann.locator('#dice .die.landed')).toBeVisible();
   const line = await lastRoll(ann); expect(line.dice[0].die).toBe(20);
   await expect(ann.locator('#dice .die.landed b')).toHaveText(String(line.dice[0].n));
-  await expect(ann.locator('#dice .who')).toHaveText('Thorne');
-  await expect(ann.locator('#panel .calc')).toContainText(String(line.dice[0].n) + ' ');
+  await expect(ann.locator('#strip')).toContainText('Thorne');
+  await expect(ann.locator('#feed .tx')).toContainText(String(line.dice[0].n) + ' ');
   /* landed, the line tells the result; on a natural 1 the line after it (the Horror rising) is the last one */
   await expect(ann.locator('#feed .last')).toContainText(line.dice[0].n === 1 ? 'rolled a natural 1' : 'against Target');
   if (SHOTS) await ann.screenshot({ path: SHOTS + '/2-landed.png' });
@@ -37,10 +37,11 @@ test('a player\'s roll tumbles on their screen and on the GM\'s, and lands on th
 test('the dice can be switched off for one screen, and the result then shows at once', async ({ browser }) => {
   test.setTimeout(60000);
   const { gm, ann } = await setup(browser);
-  await ann.locator('#strip [data-key=more]').click(); await ann.locator('#strip [data-key=dice]').click();
-  const sw = ann.locator('#strip [data-diceanim]'); await expect(sw).toBeChecked(); await sw.uncheck();
+
+  await ann.locator('.player-actions details').last().locator('summary').click();
+  const sw = ann.locator('#panel [data-diceanim]'); await expect(sw).toBeChecked(); await sw.uncheck();
   await ann.locator('#strip .stat').first().click(); await saved(ann);
-  await expect(ann.locator('#panel .calc')).toBeVisible();
+  await expect(ann.locator('#feed .tx')).toBeVisible();
   await expect(gm.locator('#dice .die')).toBeVisible();   /* the GM still has theirs */
   expect(await ann.locator('#dice .die').count()).toBe(0);
 });
@@ -50,6 +51,6 @@ test('a device that asks for less motion is never shown the dice', async ({ brow
   const { gm, ann } = await setup(browser);
   await ann.emulateMedia({ reducedMotion: 'reduce' });
   await ann.locator('#strip .stat').first().click(); await saved(ann);
-  await expect(ann.locator('#panel .calc')).toBeVisible();
+  await expect(ann.locator('#feed .tx')).toBeVisible();
   expect(await ann.locator('#dice .die').count()).toBe(0);
 });

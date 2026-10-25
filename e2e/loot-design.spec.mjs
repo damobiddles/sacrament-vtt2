@@ -48,7 +48,7 @@ test('give from the library: it lands on the hero\'s sheet once with its details
   await expect.poll(async () => (await heroGear(gm, 'Thorne')).length).toBe(1);
   await gm.waitForTimeout(800); expect((await heroGear(gm, 'Thorne')).length, 'a double click gave it once').toBe(1);
   await expect.poll(async () => (await heroGear(ann, 'Thorne')).length).toBe(1);
-  await ann.locator('#strip [data-do=sheet]').click(); const it = ann.locator('#sheetOverlay .sh-item').filter({ hasText: 'Sexton Lantern' });
+  await ann.locator('#panel [data-do=sheet]').click(); const it = ann.locator('#sheetOverlay .sh-item').filter({ hasText: 'Sexton Lantern' });
   await expect(it).toContainText('Oil-black glass.', { timeout: 15000 }); await expect(it).toContainText('Shows what hides.'); await expect(it.locator('.sh-supply')).toHaveText('Supply'); await expect(it.getByRole('button', { name: /equip/i })).toHaveCount(0);
   const raw = JSON.stringify(await state(ann)); expect(raw).not.toMatch(/SECRETNOTE|lootLib/);
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);

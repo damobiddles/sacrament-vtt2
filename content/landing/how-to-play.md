@@ -9,7 +9,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 1. **Get an invitation.** Ask the GM for their invitation link or six-letter table code.
 2. **Create a hero.** Open [My heroes](/character/) in this browser, choose a starting focus and press **Generate a hero**. Change the name and vow if you like; press **Keep this hero** to save it. The generator supplies scores, Effort and a starting kit.
 3. **Join the table.** Open the invitation or [enter the code](/vtt/?join), then enter your player name. Choose **Bring a hero** to copy your saved hero into this game, or **Play** beside a hero your GM has provided.
-4. **Find your actions.** Open **My character**, then **Ready to use**. Select an enemy before using a weapon. A successful attack leads to **Roll damage**; the result applies to the chosen target automatically. Tell the group what you are doing and let the GM guide your first roll.
+4. **Find your actions.** Choose an action in **Play**, then roll in the bottom strip. **My character** opens your sheet for managing scores, equipment and notes. Select an enemy before using a weapon. A successful attack leads to **Roll damage**; the result applies to the chosen target automatically. Tell the group what you are doing and let the GM guide your first roll.
 
 [Read the player guide: scores, equipment, attacks, healing and Horror](/player-guide/)
 

@@ -1,3 +1,4 @@
+import {prepareItem,rollPrepared} from './helpers.mjs';
 // The fast phone check, run before every deploy (npm run phone-check): the home page and the table at 360×640 must not be broken, overlapping or off-screen.
 // It is a smoke test, not a layout review. The full phone tests are the "phone suite" (npm run phone-suite).
 import { test, expect } from './helpers.mjs';
@@ -48,8 +49,10 @@ test('the home page and the table at 360×640 are not broken, overlapping or off
   await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).click(); await problems(gm, 'a monster selected, as the GM');
   await joinTable(ann, code, 'Ann'); await problems(gm, 'the table after a player joined');
   await problems(ann, 'the table as a player choosing a hero'); await claimHero(ann, 'Thorne'); await problems(ann, 'the table as a player with a hero');
-  await ann.locator('#cards .c', { hasText: 'Pit Ghoul' }).click(); await ann.locator('#strip .stat', { hasText: 'STR' }).click();
-  /* Thorne carries a hatchet, so a stat press first asks what he is using */
-  await expect(ann.locator('#strip [data-do=roll][data-noitem]')).toBeVisible(); await problems(ann, 'a player choosing what to use'); await ann.locator('#strip [data-do=roll][data-noitem]').click(); await expect(ann.locator('#panel .calc')).toBeVisible(); await problems(ann, 'a player after a roll');
+  await ann.locator('#cards .c', { hasText: 'Pit Ghoul' }).click();
+  await prepareItem(ann);await problems(ann,'a player choosing what to use');
+  await ann.locator('#strip input[data-phys]').fill('15');await rollPrepared(ann);
+  await expect(ann.locator('#strip [data-do=effort]')).toBeVisible();await problems(ann,'a player rolling damage');
+  await ann.locator('#strip [data-do=effort]').click();await expect(ann.locator('#feed')).toContainText('HP -');await problems(ann,'a player after damage');
   expect(gm.errors, 'script errors (GM)').toEqual([]); expect(ann.errors, 'script errors (player)').toEqual([]);
 });
