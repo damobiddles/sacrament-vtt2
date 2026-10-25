@@ -32,7 +32,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 
 ## Returning, backups and help
 
-Return to the same table address in the same browser to resume. **Your tables** on the VTT entry page lists games remembered on that device. On another browser, players rejoin and ask the GM to reassign their existing hero; GMs use their private recovery link.
+Return to the same table address in the same browser to resume. **Your tables** on the VTT entry page lists games remembered on that device. GMs can use **Back to my tables** without forgetting their access; **Forget** is a separate action. On another browser, players rejoin and ask the GM to reassign their existing hero; GMs use their private recovery link.
 
 My heroes saves locally, not to an account. Download a private heroes backup before clearing browser data or changing device. On My heroes, select that JSON file under **Restore a heroes backup**, review the preview and press **Restore backup**. Your existing heroes are kept. Bringing a hero into a game creates a separate copy; later changes to the local hero do not update it.
 

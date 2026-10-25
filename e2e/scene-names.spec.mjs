@@ -47,7 +47,7 @@ test('pending renames are protected before leaving and renaming works at the nex
   await gm.locator('[data-do=saveSceneName]').click();await expect.poll(()=>held).toBe(true);
   await gm.locator('[data-do=gmtab][data-t=table]').click();await gm.locator('[data-do=leave]').first().click();await expect(gm.locator('#app')).toBeVisible();await expect(gm.locator('#toast')).toContainText('Wait for Saved');
   release();await saved(gm);await expect.poll(async()=>(await state(gm)).table.scene.name).toBe('Pending name');
-  await gm.locator('[data-do=leave]').first().click();await gm.locator('[data-do=leave]').first().click();await expect(gm.locator('#entry')).toBeVisible();
+  await gm.locator('[data-do=leave]').first().click();await expect(gm.locator('#entry')).toBeVisible();
   await gm.locator('#makeForm button[type=submit]').click();await expect(gm.locator('#app')).toBeVisible();expect((await state(gm)).code).not.toBe(first);
   release();await sceneTab(gm).click();await gm.locator('[data-do=renameScene]').first().click();await expect(gm.locator('#sceneName')).toBeVisible();
   await gm.locator('#sceneName').fill('Next table name');await gm.locator('[data-do=saveSceneName]').click();await expect.poll(async()=>(await state(gm)).table.scene.name).toBe('Next table name');expect(gm.errors).toEqual([]);

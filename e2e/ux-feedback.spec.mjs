@@ -8,21 +8,21 @@ const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: SH
 const card = (page, name) => page.locator('#cards .c', { hasText: name }).first();
 const endTurn = async (page) => { await page.locator('#top [data-do=endTurn]').click(); await saved(page); };
 
-test('a new GM sees the code and the invite link first; the box goes once a player has a hero', async ({ browser }) => {
+test('a new GM has concise help leading to Table; the help goes once a player has a hero', async ({ browser }) => {
   test.setTimeout(60000);
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm, { sample: false });
-  const box = gm.locator('#panel .sec.start');
-  await expect(box).toContainText('Getting started'); await expect(box.locator('[data-do=copy]')).toHaveCount(0);
-  await gm.getByRole('tab',{name:'Table',exact:true}).click();await expect(gm.locator('#panel')).toContainText(code);await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(1);await gm.locator('[data-do=gmtab][data-t=play]').click();
-  await expect(box.locator('[data-do=addHero]')).toBeVisible();
+  const box = gm.locator('#panel .start');
+  await expect(box).toContainText('Invite players in Table'); await expect(box.locator('[data-do=copy]')).toHaveCount(0);
+  await gm.getByRole('tab',{name:'Table',exact:true}).click();await expect(gm.locator('#panel')).toContainText(code);await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(1);
+  await expect(gm.locator('#panel [data-do=addHero]')).toBeVisible();
   await shot(gm, '1-gm-getting-started');
-  await box.locator('[data-do=addHero]').click(); await saved(gm);
+  await gm.locator('#panel [data-do=addHero]').click(); await saved(gm);
   await gm.locator('[data-do=deselect], [data-do=cardEditDone]').first().click(); await gm.locator('[data-do=deselect]').first().click().catch(() => {});
   await joinTable(ann, code, 'Ann');
   await expect(gm.locator('#feed')).toContainText('Ann: Joined the table.');
   await ann.locator('[data-do=claim]').first().click(); await expect(ann.locator('#strip .stat').first()).toBeVisible();
-  await expect(gm.locator('#panel .sec.start')).toHaveCount(0);
+  await gm.locator('[data-do=gmtab][data-t=play]').click();await expect(gm.locator('#panel .start')).toHaveCount(0);
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });
 

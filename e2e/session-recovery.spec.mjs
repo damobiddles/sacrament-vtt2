@@ -10,7 +10,7 @@ test('a delayed reply from a previous table cannot replace the new table', async
   });
   await expect.poll(() => !!held).toBe(true);
   await p.locator('[data-do=gmtab][data-t=table]').click();
-  await p.locator('#panel [data-do=leave]').click(); await p.locator('#panel [data-do=leave]').click();
+  await p.locator('#panel [data-do=leave]').click();
   await p.locator('#makeForm button[type=submit]').click(); await expect(p.locator('#app')).toBeVisible();
   const next = await p.evaluate(() => window.__vtt.state().code); expect(next).not.toBe(old.code);
   await held.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ state: old, v: old.v }) });

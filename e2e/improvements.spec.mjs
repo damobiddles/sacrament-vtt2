@@ -74,6 +74,7 @@ test('the GM saves a monster and adds it to another table, hidden and in the tur
   const gm = await newPage(browser);
   await makeTable(gm);
   await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).first().click();
+  await gm.locator('#panel [data-do=cardEdit]').click();
   await gm.locator('#panel [data-do=saveMonster]').click();
   await expect(gm.locator('#toast')).toContainText('Saved Pit Ghoul to your monsters');
   /* a second table in the same browser */
@@ -97,6 +98,7 @@ test('the next session: the GM sets it, the player sees it in their panel with c
   test.setTimeout(90000);
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
+  await gm.locator('[data-do=gmtab][data-t=table]').click();
   await gm.locator('#panel #nextAt').fill('2026-10-30T19:30'); await gm.locator('#panel #nextNote').fill('Beyond the gate');
   await gm.locator('#panel [data-do=nextSet]').click(); await saved(gm);
   await expect(gm.locator('#panel')).toContainText('Beyond the gate');

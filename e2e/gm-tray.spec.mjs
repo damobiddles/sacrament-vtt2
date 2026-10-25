@@ -5,7 +5,7 @@ import { newPage, makeTable, joinTable, claimHero } from './helpers.mjs';
 const tab = (page, t) => page.locator(`#panel [data-do=gmtab][data-t=${t}]`);
 const body = (page) => page.locator('#panel .tabbody');
 
-test('the GM has four tabs when nothing is selected and a short card view when a monster is, and a player has neither', async ({ browser }) => {
+test('the GM has four persistent tabs and a short card view when a monster is, and a player has neither', async ({ browser }) => {
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   await expect(gm.locator('#panel [data-do=gmtab]')).toHaveCount(4);
@@ -14,7 +14,7 @@ test('the GM has four tabs when nothing is selected and a short card view when a
   await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).click();
   await expect(gm.locator('#panel [data-do=deselect]')).toBeVisible(); await expect(gm.locator('#panel .cardname')).toHaveText('Pit Ghoul');
   await expect(gm.locator('#panel [data-do=attackToggle]')).toBeVisible(); await expect(gm.locator('#panel [data-do=visible]')).toBeVisible(); await expect(gm.locator('#panel [data-do=cardEdit]')).toBeVisible();
-  await expect(gm.locator('#panel [data-do=gmtab]')).toHaveCount(0); await expect(gm.locator('#panel [data-edit=name]'), 'the settings are one tap away, not on the card').toHaveCount(0);
+  await expect(gm.locator('#panel [data-do=gmtab]')).toHaveCount(4); await expect(gm.locator('#panel [data-edit=name]'), 'the settings are one tap away, not on the card').toHaveCount(0);
   await expect(ann.locator('#panel [data-do=gmtab]')).toHaveCount(0);
   await ann.locator('#cards .c', { hasText: 'Pit Ghoul' }).click(); await expect(ann.locator('#panel [data-do=gmtab], [data-do=cardEdit], [data-do=attackToggle]')).toHaveCount(0);
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
@@ -32,6 +32,7 @@ test('each tab holds what belongs to it, the chosen tab stays chosen while a car
   await expect(body(gm)).toContainText('House rules'); await expect(body(gm)).toContainText('Running things by hand');
   await tab(gm, 'scene').click(); await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).click(); await gm.locator('#panel [data-do=deselect]').click();
   await expect(tab(gm, 'scene')).toHaveAttribute('aria-selected', 'true');                    // back where the GM was
+  await expect(gm.locator('#panel .cardname')).toHaveCount(0);                              // persistent tabs can already be selected before the card closes
   const look = await gm.evaluate(() => { const b = document.querySelector('#panel [data-do=gmtab]'); return { caps: getComputedStyle(b).textTransform, icons: document.querySelectorAll('#panel svg, #gmbar svg').length }; });
   expect(look.caps).toBe('none'); expect(look.icons, 'no icon in the tray').toBe(0);
   expect(gm.errors).toEqual([]);
@@ -45,8 +46,8 @@ test('Play: the turn order shows who is up, Edit order reveals the move and remo
   const opts = await gm.locator('#addOrder option').allInnerTexts(); expect(opts, 'nobody who is already in the order is offered').not.toContain('Thorne'); expect(opts).not.toContain('Pit Ghoul');
   await gm.locator('[data-do=addOrder]').click(); await expect(body(gm).locator('li')).toHaveCount(6);
   await expect(async () => { const o = await gm.locator('#addOrder option').allInnerTexts(); expect(o).not.toContain('The Sealed Gate'); }).toPass();
-  await body(gm).locator('[data-do=editOrder]').click(); await expect(body(gm).locator('[data-do=up]')).toHaveCount(0);
   await body(gm).locator('li', { hasText: 'Wisp' }).locator('[data-do=turnTo]').click(); await expect(body(gm).locator('li.cur')).toContainText('Wisp');
+  await body(gm).locator('[data-do=editOrder]').click(); await expect(body(gm).locator('[data-do=up]')).toHaveCount(0);
   expect(gm.errors).toEqual([]);
 });
 
@@ -67,13 +68,13 @@ test('Scene: a new scene is prepared, shown to players with one button, and the 
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });
 
-test('Table: the invite link and the code are here (not in the top bar), Leave asks twice, and House rules open and close', async ({ browser }) => {
+test('Table: the invite link and the code are here (not in the top bar), safe return is labelled clearly, and House rules open and close', async ({ browser }) => {
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   await expect(gm.locator('#top [data-do=copy], #top [data-do=leave]')).toHaveCount(0); await expect(gm.locator('#tStatus .pill')).toHaveCount(1);   // only the Saved note is left of the GM's status
   await expect(ann.locator('#top [data-do=leave]')).toBeVisible(); await expect(ann.locator('#tStatus .pill')).toHaveCount(2);
   await tab(gm, 'table').click(); await expect(body(gm)).toContainText(code); await expect(body(gm).locator('li', { hasText: 'Ann' }).locator('select')).toHaveValue(/./);
-  await gm.locator('#panel [data-do=leave]').click(); await expect(gm.locator('#panel [data-do=leave]')).toContainText('Sure'); await expect(gm.locator('#app')).toBeVisible();   // the first press only asks
+  await expect(gm.locator('#panel [data-do=leave]')).toHaveText('Back to my tables');
   await body(gm).locator('[data-do=gmsub][data-s=rules]').click(); await expect(body(gm)).toContainText('House rules'); await expect(gm.locator('[data-setting=nat20Ultimate]')).toBeVisible();
   await body(gm).locator('[data-do=gmsub][data-s=""]').click(); await expect(body(gm)).toContainText('Invite players');
   expect(gm.errors).toEqual([]);

@@ -40,7 +40,7 @@ test('an area spell selects several visible foes, applies one critical roll, sur
  await ann.reload();await expect(ann.locator('#app')).toBeVisible();expect((await state(ann)).chars[h.id].usedPowers.rend).toBeTruthy();
  const log=(await state(gm)).rolls.find(x=>x.id===r.id).applied.log;await command(gm,{type:'undo',logId:log});
  await expect.poll(async()=> (await state(ann)).cards[made.result.id].hp.cur).toBe(20);expect((await state(ann)).cards[ghoul.id].hp.cur).toBe(20);
- await gm.locator('[data-do=gmtab][data-t=scene]').click();await gm.locator('[data-do=scenePowerReset]').click();
+ await gm.locator('[data-do=gmtab][data-t=play]').click();await gm.locator('[data-do=scenePowerReset]').click();
  await expect(gm.locator('[data-do=scenePowerReset]')).toContainText('Confirm');await gm.locator('[data-do=scenePowerReset]').click();await saved(gm);
  await expect.poll(async()=> Object.keys((await state(ann)).chars[h.id].usedPowers).length).toBe(0);
  expect(gm.errors).toEqual([]);expect(ann.errors).toEqual([]);

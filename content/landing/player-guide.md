@@ -2,7 +2,7 @@
 title: Player guide
 summary: Create your first hero, join a table and understand the rules used by the current Sacrament RPG Table.
 ---
-These are the **current VTT rules**, checked against the application on 24 October 2026. Sacrament is still being playtested. Your GM decides what happens in the fiction and explains any house rules before play. You do not need to memorise this page.
+These are the **current VTT rules**, checked against the application on 25 October 2026. Sacrament is still being playtested. Your GM decides what happens in the fiction and explains any house rules before play. You do not need to memorise this page.
 
 [First game checklist](/how-to-play/) · [Create a hero](/character/) · [Join a game](/vtt/?join) · [GM guide](/gm-guide/)
 
@@ -46,7 +46,7 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 1. Select the enemy's card or token first.
 2. Use your equipped weapon or spell from **Ready to use**, or your character's item actions. If you have not selected a target, choose one when asked. A stat roll can also offer an attack without an item; choose an ordinary check for other tasks.
 3. The table rolls the check and compares the total with the Target.
-4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. Undo in Activity corrects a mistake.
+4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. **Undo this damage** beside the result corrects that damage; Activity retains the full history.
 5. Tell the GM when you are finished; the GM advances turns. **Undo last** can take back your own mistaken action when it is still safe to undo.
 
 The damage target stays attached to that attack. Looking at another card does not redirect it. Choose the correct target before attacking. To correct a mistaken hit, Undo its damage in Activity first; the recorded result can then be deliberately reassigned using **Change target**.

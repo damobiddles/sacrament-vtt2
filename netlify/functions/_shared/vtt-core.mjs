@@ -839,6 +839,7 @@ const HANDLERS = {
     if (why) fail('invalid', why); return grantPush(s, r, ch, a, ctx);
   },
   scenePowerReset(s, c, a, ctx) {
+    if (c.id !== s.table.scene) fail('conflict', 'Only the live encounter can be refreshed.');
     const scene = own(s.scenes, c.id) && s.scenes[c.id] || fail('not_found', 'No such scene.'); scene.powers = {}; scene.powerEpoch = (scene.powerEpoch || 0) + 1;
     L(s, a, ctx, 'Refreshed scene abilities for a new encounter.', { private: true }); return {};
   },
@@ -901,10 +902,11 @@ const HANDLERS = {
   monsterAttack(s, c, a, ctx) { /* the GM's: a monster rolls d20 + its attack bonus against a hero's Defence */
     const att = cardOf(s, c.cardId), tgt = cardOf(s, c.targetCardId);
     if (att.kind === 'pc') fail('invalid', 'A hero attacks with its own rolls. Choose a monster.');
+    checkMonsterScene(s, att);
     const ch = tgt.kind === 'pc' && tgt.charId && s.chars[tgt.charId], hero = ch && tgt.hp ? ch : fail('invalid', 'Choose a hero to attack.');
     const manual = c.d20 != null && c.d20 !== '', d20 = manual ? int(c.d20, 0) : d(ctx, 20);
     let res; try { res = R.attack({ d20, bonus: (att.attack || 0) + (s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0), defence: SC.defence(hero) }); } catch (err) { fail('invalid', err.message); }
-    const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, attack: { cardId: att.id, baseBonus: att.attack || 0, sceneBonus: s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0 }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
+    const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, sceneId: s.table.scene, attack: { cardId: att.id, baseBonus: att.attack || 0, sceneBonus: s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0 }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
     s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     const who = attackerNames(s, roll), hide = numbersHidden(att), line = (n) => n + ' attacks ' + tgt.name + (hide ? (res.hit ? ': hit.' : ': miss.') : ' · ' + R.sayAttack(res)) + (manual ? ' [physical die]' : '');
     L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', rollId: roll.id, dice: diceOf(manual, 20, d20), diceGm: hide });
@@ -913,6 +915,7 @@ const HANDLERS = {
   monsterEffort(s, c, a, ctx) { /* on a hit: the monster's Effort is rolled and goes straight onto the hero's hit points */
     const roll = s.rolls[c.rollId] || fail('not_found', 'That roll is gone.'); if (roll.void) fail('invalid', 'That roll was undone.');
     if (!roll.attack) fail('invalid', 'That was not a monster attack.');
+    checkMonsterScene(s, s.cards[roll.attack.cardId], roll.sceneId);
     if (roll.effort || roll.blow) fail('conflict', 'Effort has already been rolled for this attack.');
     if (!roll.check.hit) fail('invalid', 'The attack missed, so there is no Effort to roll.');
     const hero = s.cards[roll.targetCardId] || fail('not_found', 'That hero is no longer on the table.'); if (!hero.hp) fail('invalid', hero.name + ' has no HP tracker.');
@@ -1102,6 +1105,10 @@ const HANDLERS = {
    the same turn can never advance it twice. */
 function expectTurn(s, c) {
   if (c.expect && ((c.expect.scene && c.expect.scene !== s.table.scene) || c.expect.round !== s.table.round || c.expect.idx !== s.table.idx)) fail('conflict', 'The turn has already moved on.');
+}
+
+function checkMonsterScene(s, card, sceneId) {
+  if (!card || (card.sceneId != null && card.sceneId !== s.table.scene) || (sceneId && sceneId !== s.table.scene)) fail('conflict', 'This attack belongs to another scene. Show that scene to players before attacking.');
 }
 
 /* Moving the turn on. A new round (the last place has just finished, or the GM pressed Next round) ticks every automatic timer down by one: see R.tickTimers. */

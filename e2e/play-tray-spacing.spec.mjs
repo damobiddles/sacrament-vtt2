@@ -20,7 +20,7 @@ test('Play tray keeps long turn names, order controls and session fields inside 
   }),10000,'measuring Play tray controls');
   expect(problems).toEqual([]);
  }
- await gm.locator('#nextAt').fill('2026-11-01T19:30');await gm.locator('#nextNote').fill('Bring dice');await gm.locator('[data-do=nextSet]').click();await saved(gm);await expect(gm.locator('.tabbody')).toContainText('Bring dice');
+ await gm.locator('[data-do=gmtab][data-t=table]').click();await gm.locator('#nextAt').fill('2026-11-01T19:30');await gm.locator('#nextNote').fill('Bring dice');await gm.locator('[data-do=nextSet]').click();await saved(gm);await expect(gm.locator('.tabbody')).toContainText('Bring dice');
  await gm.screenshot({path:info.outputPath('play-edited.png')});expect(gm.errors).toEqual([]);
 });
 

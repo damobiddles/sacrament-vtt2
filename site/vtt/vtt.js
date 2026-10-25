@@ -304,7 +304,7 @@
     put($('tRole'), G ? 'GM view' : 'Player view');
     put($('tTarget'), '<span class="lbl">Target</span>' + (G ? '<button class="chip" data-do="target" data-d="-1" aria-label="Lower the Target">−</button>' : '') +
       '<span class="big" id="tgtv">' + t.target + '</span>' + (G ? '<button class="chip" data-do="target" data-d="1" aria-label="Raise the Target">+</button>' : ''));
-    put($('tRound'), '<span class="lbl">Round</span><span class="big">' + t.round + '</span>' + (G ? '<button class="chip" data-do="nextRound" title="Start the next round: every running timer loses 1">Next round</button>' : ''));
+    put($('tRound'), '<span class="lbl">Round</span><span class="big">' + t.round + '</span>' + (G ? '<button class="link" data-do="nextRound" title="Manual round advance: running timers and dying countdowns lose 1">Next round</button>' : ''));
     put($('tTurn'), '<span class="lbl">Turn</span><span class="who">' + (cur ? esc(cur.name) : (t.order.length ? 'Unseen' : 'No one')) + '</span>' +
       (G && t.order.length ? '<button class="btn small main" data-do="endTurn">Next turn</button>' : ''));
     var tm = cardList().filter(function (c) { return c.timer && (gm() ? onTable(c) || true : true); });
@@ -317,7 +317,7 @@
   function renderHorror() {
     var el = $('tHorror'), H = S.horror; if (!el || !H) return;
     var ticks = ''; for (var i = 1; i <= H.max; i++) ticks += '<i class="' + (i <= H.cur ? 'on' : '') + (H.thresholds.indexOf(i) >= 0 ? ' th' : '') + '"></i>';
-    var h = '<span class="lbl">Horror</span><span class="hz-meter' + (H.cur >= H.max ? ' arrived' : '') + '" role="meter" aria-valuemin="0" aria-valuemax="' + H.max + '" aria-valuenow="' + H.cur + '" aria-label="The Rising Horror: ' + H.cur + ' of ' + H.max + '" title="The Rising Horror. It rises when a spell is cast or a relic used; marks at ' + H.thresholds.join(', ') + '.">' + ticks + '</span><span class="hz-n"><b>' + H.cur + '</b>/' + H.max + '</span>';
+    var h = '<span class="lbl">Horror</span><span class="hz-meter' + (H.cur >= H.max ? ' arrived' : '') + '" role="meter" aria-valuemin="0" aria-valuemax="' + H.max + '" aria-valuenow="' + H.cur + '" aria-label="The Rising Horror: ' + H.cur + ' of ' + H.max + '" title="The Rising Horror. Healing spells cost 0; other spells +1; items state their own costs. Marks at ' + H.thresholds.join(', ') + '.">' + ticks + '</span><span class="hz-n"><b>' + H.cur + '</b>/' + H.max + '</span>';
     if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; }
   }
   /* What the Horror says on the table: the GM is alerted at each threshold until they mark it dealt with; at 21 everyone is told it has arrived (a player may put the notice away). */
@@ -348,13 +348,13 @@
       '<button class="chip' + (UI.leaveAsk ? ' hot' : '') + '" data-do="leave" title="' + (gm() ? 'Leave this table. As the GM you can come back only with your GM link.' : 'Leave this table and go back to the start. You can join again with the code.') + '">' + (UI.leaveAsk ? 'Sure? Leave' : 'Leave') + '</button>');
     if (UI.storageProblem) el.insertAdjacentHTML('beforeend', '<button class="chip" data-do="showRecovery">Save recovery link</button>');
   }
-  /* Leaving: forget this table in this browser and return to the first screen, where a new table can be made or another joined. Two presses, because the GM's place cannot be got back. */
+  /* GM navigation retains saved authority. Intentional Forget remains on Your tables; player Leave still asks twice. */
   function leaveTable() {
     if (UI.pending > 0) { toast('Wait for Saved, then leave.'); return; }
-    if (!UI.leaveAsk) { UI.leaveAsk = true; renderStatus(); if (gm()) renderPanel(); clearTimeout(UI.leaveTimer); UI.leaveTimer = setTimeout(function () { UI.leaveAsk = false; if (S) { renderStatus(); if (gm()) renderPanel(); } }, 5000); return; }
+    if (!gm() && !UI.leaveAsk) { UI.leaveAsk = true; renderStatus(); if (gm()) renderPanel(); clearTimeout(UI.leaveTimer); UI.leaveTimer = setTimeout(function () { UI.leaveAsk = false; if (S) { renderStatus(); if (gm()) renderPanel(); } }, 5000); return; }
     clearTimeout(UI.leaveTimer); UI.leaveAsk = false;
-    delete memorySessions[sess.code];
-    try { localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch (e) {}
+    if (!gm()) delete memorySessions[sess.code];
+    try { if (!gm()) localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch (e) {}
     resetSession(); sess = null; S = null; UI.sel = null; UI.roll = null; UI.aim = {}; UI.hpOps = {}; UI.reconcile = false; UI.working = null; UI.rolling = false; UI.rollChecked = false; UI.seenLog = null; clearTimeout(timer);
     history.replaceState(null, '', '/vtt/'); $('app').hidden = true; $('entry').hidden = false; $('resume').hidden = true; $('joinCode').value = ''; $('makeMsg').textContent = '';
     listTables();
@@ -464,9 +464,11 @@
   function attackRollView(r, ch) {
     var hero = S.cards[r.targetCardId], hn = hero ? hero.name : 'the hero', h = r.attack.sceneBonus ? '<p class="note">Base attack ' + sgn(r.attack.baseBonus) + ' + scene danger ' + r.attack.sceneBonus + '.</p>' : '';
     h += '<p class="note">attacks ' + esc(hn) + '</p><div class="calc ' + (ch.success ? 'ok' : 'bad') + '">' + esc(R.sayAttack(ch)) + '</div>' + (r.manual ? '<p class="note">A physical die.</p>' : '');
+    var attacker = S.cards[r.attack.cardId];
+    if (!r.applied && (viewScene() !== S.table.scene.id || (r.sceneId && r.sceneId !== S.table.scene.id) || (attacker && attacker.sceneId != null && attacker.sceneId !== S.table.scene.id))) return h + '<p class="hint">This attack belongs to the live encounter where it began. Open that scene as the live scene before rolling damage.</p><button class="btn small" data-do="dismissRoll">Done</button></div>';
     var downH = hero && hero.kind === 'pc' && hero.hp && hero.hp.cur === 0 ? hero.dying || { none: true } : null;
     if (!ch.success) h += '<p>Missed. No damage to roll.</p>';
-    else if (r.blow && r.applied) h += '<p><b>Struck.</b> ' + downMark(hero, true) + ' Use Undo in the Activity feed to take it back.</p>';
+    else if (r.blow && r.applied) h += '<p><b>Struck.</b> ' + downMark(hero, true) + '</p>' + damageUndo(r);
     else if (!r.effort && downH) {   /* a blow on a hero who is down: no damage, the countdown moves instead */
       var busyB = UI.working === 'effort:' + r.id;
       h += downH.dead ? '<p>' + esc(hn) + ' is dead.</p>' : '<p><b>A hit</b> on ' + esc(hn) + ', who is down. No damage is rolled.</p>' + (busyB ? '<p class="note" role="status">Striking…</p>' : '') +
@@ -479,7 +481,7 @@
         '<div class="opt row2" role="group" aria-label="Die for the damage"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== mk; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + '</button>'; }).join('') + '</div>' + physical('physE', 'Own die for damage');
     } else {
       h += '<div class="calc">' + esc(R.sayEffort(r.effort, 'damage')) + '</div>';
-      if (r.applied) h += '<p><b>Applied</b> to ' + esc(hn) + ': HP ' + r.applied.applied + (downMark(hero) ? '. ' + esc(hn) + ' is down: ' + downMark(hero, true) : '.') + ' Use Undo in the Activity feed to take it back.</p>';
+      if (r.applied) h += '<p><b>Applied</b> to ' + esc(hn) + ': HP ' + r.applied.applied + (downMark(hero) ? '. ' + esc(hn) + ' is down: ' + downMark(hero, true) : '.') + '</p>' + damageUndo(r);
       else h += '<p class="note"><b>Undone.</b> ' + esc(hn) + ' has the points back.</p><div class="row col"><button class="btn main" data-do="apply" data-roll="' + r.id + '" data-card="' + r.targetCardId + '" data-field="hp">Apply again to ' + esc(hn) + ': −' + r.effort.total + ' HP</button></div>';
     }
     return h + '<div class="row" style="margin-top:8px"><button class="btn small" data-do="dismissRoll">Done</button></div></div>';
@@ -487,6 +489,10 @@
   function automaticDamage(r) {
     var target = r && r.targetCardId && S.cards[r.targetCardId];
     return !!(r && (r.area || r.isAttack || (r.targetCardId && (r.cat || (target && target.hp)))));
+  }
+  function damageUndo(r) {
+    var event = r.applied && S.log.filter(function (e) { return e.id === r.applied.log; })[0];
+    return event && event.undoable ? '<div class="row"><button class="btn small" data-do="undoDamage" data-id="' + event.id + '">Undo this damage</button></div>' : '';
   }
   function criticalPrompt(r) {
     return r.criticalRule === 'extra' && r.check && r.check.success && r.check.offerUltimate && !r.effort ? '<p class="hint">Critical: your normal Effort plus an extra Ultimate d' + S.settings.dice.ultimate + '. Each bonus is counted once.</p>' + physical('physCritical', 'Own extra Ultimate die (optional)') : '';
@@ -500,7 +506,7 @@
     else if (!r.effort) h += '<div class="row"><button class="btn main" data-do="effort" data-cat="' + r.cat + '" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Roll area damage: ' + R.CAT_NAMES[r.cat] + ' d' + S.settings.dice[r.cat] + '</button></div><p class="hint">Damage applies to all selected foes when rolled.</p>' + physical('physE', 'Own die for area damage') + criticalPrompt(r);
     else {
       h += '<p>' + esc(R.sayEffort(r.effort, 'damage to each target')) + '</p>';
-      if (r.applied) h += '<p><b>Applied</b> to the selected targets. One Undo in Activity restores all damage.</p>';
+      if (r.applied) h += '<p><b>Applied</b> to the selected targets. One Undo restores all damage.</p>' + damageUndo(r);
       else if (ids.length) h += '<p>The GM confirms range and eligible foes. Targets that have left view will be skipped.</p><button class="btn main" data-do="applyArea" data-roll="' + r.id + '"' + (UI.working ? ' disabled' : '') + '>Apply to ' + ids.length + ' selected ' + (ids.length === 1 ? 'foe' : 'foes') + '</button>';
       else h += '<p>No selected target is still in view. Ask the GM to resolve this roll.</p>';
     }
@@ -556,6 +562,7 @@
       } else h += (UI.sel && canTake(S.cards[UI.sel]) ? '<button class="btn" data-do="aim" data-roll="' + r.id + '" data-card="' + UI.sel + '">Set target to ' + esc(S.cards[UI.sel].name) + '</button>' : '') + '<p class="note"><b>Not applied yet.</b> Select a card with HP or an Effort bar on the table, then apply this to it. Nothing changes until you do.</p>';
     }
     if (ch) h += pushView(r);
+    if (r.applied && !r.healing) h += damageUndo(r);
     if (r.applied) h += '<p class="hint">' + (gm() ? 'Use Next turn above when everyone is ready.' : 'Tell the GM when you are finished. The GM advances turns.') + '</p>';
     h += '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
     return h;
@@ -584,13 +591,18 @@
   var physical = function (id, label) { return '<div class="phys"><label>' + label + '<input id="' + id + '" type="number" min="1" max="20" inputmode="numeric" placeholder="optional"></label></div>'; };
 
   function renderPanel() {
-    var P = $('panel'), c = UI.sel && S.cards[UI.sel], h = rollCard();
-    if (UI.adding) { P.innerHTML = h + '<div class="sec"><p class="note">Adding…</p></div>'; return; }   /* the panel must not show the old card, with its name box, while the new one is on its way */
+    var P = $('panel'), c = UI.sel && S.cards[UI.sel], h = rollCard(), focused = document.activeElement;
+    var keepFocus = focused && P.contains(focused) && focused.matches('input[type=checkbox], [role=tab]') ? { id: focused.id, tag: focused.tagName, data: Object.assign({}, focused.dataset) } : null;
+    if (UI.adding) { var adding = h + '<div class="sec"><p class="note">Adding…</p></div>'; P.innerHTML = gm() ? gmTable(adding, true) : adding; return; }   /* the panel must not show the old card, with its name box, while the new one is on its way */
     if (c && !(gm() ? true : cardVisibleToMe(c))) { UI.sel = null; c = null; }
     if (UI.cardEdit && UI.cardEdit !== UI.sel) UI.cardEdit = null; if (UI.atk && UI.atk !== UI.sel) UI.atk = null;
-    if (c) h += gm() ? gmCard(c) : playerCard(c); else h += gm() ? gmTable() : playerTable();
+    if (gm()) h = gmTable(h + (c ? gmCard(c) : gmTabBody()), !!c); else h += c ? playerCard(c) : playerTable();
     /* On a phone the panel can be put away, so that the scene and the controls under it stay in reach. It opens again by itself when something new is selected or rolled. */
     P.innerHTML = h; P.classList.toggle('empty', !h.trim());
+    if (keepFocus) {
+      var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
+      if (replacement) replacement.focus({ preventScroll: true });
+    }
   }
   /* The GM toolbar: one button for each section this view has, always at the top of the tray. A button opens (or closes) its section and brings it into view. */
   var cardVisibleToMe = function (c) { return !!c; };
@@ -662,26 +674,29 @@
     }
     return '<span class="hearts ' + (cls || '') + '"' + (silent ? ' aria-hidden="true"' : ' role="img" aria-label="' + cur + ' of ' + max + ' hit points" title="' + cur + '/' + max + '"') + '>' + out + '</span>';
   }
-  function stepper(label, id, field, t, extra) {
+  function stepper(label, id, field, t, extra, compact) {
     return '<div class="row"><b>' + label + '</b><span class="stepper"><button data-do="track" data-id="' + id + '" data-field="' + field + '" data-d="-5" aria-label="' + label + ' minus 5">−5</button><button data-do="track" data-id="' + id + '" data-field="' + field + '" data-d="-1" aria-label="' + label + ' minus 1">−1</button>' +
       '<input type="number" value="' + t.cur + '" data-set="' + field + '" data-id="' + id + '" aria-label="' + label + ' now"><button data-do="track" data-id="' + id + '" data-field="' + field + '" data-d="1" aria-label="' + label + ' plus 1">+1</button><button data-do="track" data-id="' + id + '" data-field="' + field + '" data-d="5" aria-label="' + label + ' plus 5">+5</button></span>' +
-      '<span>of <input type="number" value="' + t.max + '" data-max="' + field + '" data-id="' + id + '" aria-label="' + label + ' maximum"></span>' + (extra || '') + '<button class="chip" data-do="trackerRemove" data-id="' + id + '" data-field="' + field + '" aria-label="Remove ' + label + '">✕</button></div>';
+      (compact ? '<span>of ' + t.max + '</span></div>' : '<span>of <input type="number" value="' + t.max + '" data-max="' + field + '" data-id="' + id + '" aria-label="' + label + ' maximum"></span>' + (extra || '') + '<button class="chip" data-do="trackerRemove" data-id="' + id + '" data-field="' + field + '" aria-label="Remove ' + label + '">✕</button></div>');
   }
   /* A selected card, for the GM: what is needed during play (its numbers, the main action, whether players see it). Everything else is one tap away on the Edit card screen. */
-  function numbersBlock(c) {
+  function numbersBlock(c, compact) {
     var id = c.id, h = '';
-    if (c.hp) h += '<div class="row">' + heartsHtml(shownHp(c), c.hp.max, 'md' + (hpQueued(c.id) ? ' pend' : '')) + queuedBadge(c) + '</div>' + stepper('HP', id, 'hp', c.hp);
-    if (c.progress) h += stepper('Effort', id, 'progress', c.progress);
-    if (c.timer) h += stepper('Timer', id, 'timer', c.timer, '<label class="check"><input type="checkbox" data-tflag="auto" data-id="' + id + '"' + (c.timer.auto ? ' checked' : '') + '> each round</label><label class="check"><input type="checkbox" data-tflag="paused" data-id="' + id + '"' + (c.timer.paused ? ' checked' : '') + '> paused</label>');
+    if (c.hp) h += '<div class="row">' + heartsHtml(shownHp(c), c.hp.max, 'md' + (hpQueued(c.id) ? ' pend' : '')) + queuedBadge(c) + '</div>' + stepper('HP', id, 'hp', c.hp, '', compact);
+    if (c.progress) h += stepper('Effort', id, 'progress', c.progress, '', compact);
+    if (c.timer && compact) h += '<p class="hint">' + esc(c.timer.label || 'Timer') + ': ' + c.timer.cur + '/' + c.timer.max + (c.timer.paused ? ' · paused' : c.timer.auto ? ' · every table round, including hidden scenes' : ' · manual') + '. Change it in Edit card.</p>';
+    if (c.timer && !compact) h += stepper('Timer', id, 'timer', c.timer, '<label class="check"><input type="checkbox" data-tflag="auto" data-id="' + id + '"' + (c.timer.auto ? ' checked' : '') + '> every table round, even in hidden scenes</label><label class="check"><input type="checkbox" data-tflag="paused" data-id="' + id + '"' + (c.timer.paused ? ' checked' : '') + '> paused</label>', compact);
     return h;
   }
   function gmCard(c) {
     if (UI.cardEdit === c.id) return gmCardEdit(c);
-    var id = c.id, pc = c.kind === 'pc', h = '<div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
-    h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (c.gmNotes ? '<p class="note gmnote"><b>Your note:</b> ' + esc(c.gmNotes) + '</p>' : '') + numbersBlock(c) + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
+    var id = c.id, pc = c.kind === 'pc', current = S.table.order[S.table.idx], actor = current && S.cards[current.id], h = '<p class="hint turn-context">Live: ' + esc(S.table.scene.name) + ' · Turn: ' + esc(actor ? actor.name : 'No one') + '</p><div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
+    h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed attack. Its extra action cannot be pushed again.</p>'; }
     var fights = !pc && (c.kind === 'enemy' || c.kind === 'obstacle' || !!c.hp || !!c.progress);   /* Hazards and obstacles can attack heroes as well as enemies. */
-    if (fights) {
+    var liveAttack = viewScene() === S.table.scene.id && (c.sceneId == null || c.sceneId === S.table.scene.id);
+    if (fights && !liveAttack) h += '<p class="hint">Preparing this scene. Show it to players before attacking.</p>';
+    if (fights && liveAttack) {
       var heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (x) { var hc = S.cards[x.cardId]; return hc && hc.hp && !hc.hp.hidden; });
       if (UI.atk !== id) h += '<div class="row"><button class="btn main grow" data-do="attackToggle" data-id="' + id + '">Attack a hero…</button></div>';
       else h += '<div class="sec"><h4>Attack a hero</h4><div class="row"><label>Attack bonus<input type="number" min="-10" max="10" data-edit="attack" data-id="' + id + '" value="' + (c.attack == null ? '' : c.attack) + '" placeholder="+0"></label>' +
@@ -689,8 +704,9 @@
         (heroes.length ? physical('physA', 'Own d20 (optional)') + '<div class="row"><button class="btn main" data-do="monsterAttack" data-id="' + id + '"' + (UI.rolling ? ' disabled' : '') + '>Attack with ' + esc(c.name) + '</button><button type="button" class="link" data-do="attackToggle" data-id="' + id + '">Cancel</button></div>' : '<p class="hint">No hero with HP to attack.</p>') +
         '<p class="hint">d20 + the attack bonus against the hero’s Defence.' + (c.visible ? '' : ' This card is hidden, so players read “Something attacks…”.') + '</p></div>';
     }
+    h += numbersBlock(c, true) + (c.gmNotes ? '<p class="note gmnote"><b>Your note:</b> ' + esc(c.gmNotes) + '</p>' : '');
     if (c.loot) h += lootCardPanel(c);
-    h += '<div class="row"><button class="btn small' + (!fights && !c.visible ? ' main' : '') + '" data-do="visible" data-id="' + id + '">' + (c.visible ? 'Hide from players' : 'Show to players') + '</button><button class="btn small" data-do="cardEdit" data-id="' + id + '">Edit card</button>' + (fights ? '<button class="btn small" data-do="saveMonster" data-id="' + id + '" title="Keep this monster in this browser, to add it to any table you run">Save to my monsters</button>' : '') + '</div>';
+    h += '<div class="row"><button class="btn small' + (!fights && !c.visible ? ' main' : '') + '" data-do="visible" data-id="' + id + '">' + (c.visible ? 'Hide from players' : 'Show to players') + '</button><button class="btn small" data-do="cardEdit" data-id="' + id + '">Edit card</button>'  + '</div>';
     return h;
   }
   function gmCardEdit(c) {
@@ -705,6 +721,7 @@
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId];
       h += '<h4>Hero: ' + esc(ch.name) + '</h4><p class="hint">Defence ' + ch.defence + ' (10 + CON + armour, armour counting for at most +5).</p><div class="row">' + R.STATS.map(function (k) { return '<label>' + k + '<input type="number" min="-10" max="10" value="' + ch.stats[k] + '" data-stat="' + k + '" data-char="' + ch.id + '"></label>'; }).join('') + '</div>' +
         '<div class="row">' + R.CATS.map(function (k) { return '<label>' + R.CAT_NAMES[k] + ' Effort<input type="number" min="0" max="10" value="' + ch.effort[k] + '" data-eff="' + k + '" data-char="' + ch.id + '"></label>'; }).join('') + '<label>Armour<input type="number" min="0" max="10" value="' + ch.armour + '" data-armour="1" data-char="' + ch.id + '"></label></div>'; }
+    if (!pc && (c.hp || c.progress)) h += '<div class="row"><button class="btn small" data-do="saveMonster" data-id="' + id + '">Save to my monsters</button></div>';
     h += '<h4>Give, move, copy</h4>';
     if (!pc && S.players.length) h += '<div class="row"><select id="giveTo" aria-label="Give to">' + S.players.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select><button class="btn small" data-do="give" data-id="' + id + '">Give to player</button>' + (c.owner ? '<button class="btn small" data-do="take" data-id="' + id + '">Put back on table</button>' : '') + '</div>';
     if (S.scenes && S.scenes.length > 1 && !pc) h += '<label>Scene<select data-edit="sceneId" data-id="' + id + '">' + S.scenes.map(function (sc) { return '<option value="' + sc.id + '"' + (c.sceneId === sc.id ? ' selected' : '') + '>' + esc(sc.name) + '</option>'; }).join('') + '</select></label>';
@@ -737,32 +754,40 @@
   }
   /* The GM's tray when no card is selected: four tabs, grouped by when they are used. No fold-outs. */
   var TABS = [['play', 'Play'], ['scene', 'Scene'], ['loot', 'Loot'], ['table', 'Table']];
-  function gmTable() {
-    var tab = UI.tab || 'play', body = tab === 'scene' ? tabScene() : tab === 'loot' ? lootPanel() : tab === 'table' ? tabTable() : tabPlay();
-    return '<div class="tabs" role="tablist" aria-label="GM tray">' + TABS.map(function (t) { return '<button type="button" role="tab" data-do="gmtab" data-t="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</div><div class="tabbody' + (tab === 'play' ? ' play-tray' : '') + '">' + body + '</div>';
+  function gmTabBody() {
+    var tab = UI.tab || 'play';
+    return tab === 'scene' ? tabScene() : tab === 'loot' ? lootPanel() : tab === 'table' ? tabTable() : tabPlay();
+  }
+  function gmTable(body, cardView) {
+    var tab = UI.tab || 'play';
+    return '<div class="tabs" role="tablist" aria-label="GM tray">' + TABS.map(function (t) { return '<button type="button" role="tab" id="gm-tab-' + t[0] + '" aria-controls="gm-tab-panel" tabindex="' + (t[0] === tab ? '0' : '-1') + '" data-do="gmtab" data-t="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</div><div id="gm-tab-panel" role="tabpanel" aria-labelledby="gm-tab-' + tab + '" tabindex="0" class="tabbody' + (tab === 'play' && !cardView ? ' play-tray' : '') + '">' + body + '</div>';
   }
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<p class="hint">Live encounter: ' + esc(S.table.scene.name) + '</p>' + startBox() + '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
-      return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="turnTo" data-i="' + i + '" title="Make it this turn">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
-        (edit ? '<button class="chip" data-do="up" data-i="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>Up</button><button class="chip" data-do="down" data-i="' + i + '" aria-label="Move later"' + (i < t.order.length - 1 ? '' : ' disabled') + '>Down</button><button class="chip" data-do="outOrder" data-i="' + i + '" aria-label="Remove from the order">Remove</button>' : '') + '</li>';
+      return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
+        (edit ? '<button class="chip" data-do="turnTo" data-i="' + i + '"' + (now ? ' disabled' : '') + '>Set turn</button><button class="chip" data-do="up" data-i="' + i + '" aria-label="Move earlier"' + (i ? '' : ' disabled') + '>Up</button><button class="chip" data-do="down" data-i="' + i + '" aria-label="Move later"' + (i < t.order.length - 1 ? '' : ' disabled') + '>Down</button><button class="chip" data-do="outOrder" data-i="' + i + '" aria-label="Remove from the order">Remove</button>' : '') + '</li>';
     }).join('') + '</ul>' : '<p class="hint">Nobody is in the turn order yet.</p>';
     if (edit && addable.length) h += '<div class="row"><select id="addOrder" aria-label="Add to the order">' + addable.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small" data-do="addOrder">Add</button></div>';
-    h += '<p class="hint">This is the live scene’s order. Each scene remembers its order and whose turn it is. Tap a name to make it their turn.</p>';
+    h += '<p class="hint">Each scene remembers its order. Tap a name to inspect; use Edit order to set a different turn.</p>';
     var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, nd = R.restDice(living);
     if (!living) UI.restAsk = false;
     return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
-      '<p class="hint">For a rest in a safe place: every living hero recovers 1 Heart (the fallen stand up) and the Horror falls by ' + (nd || 1) + 'd' + R.REST.horrorDie + ' (a d' + R.REST.horrorDie + ' for every two living heroes). One Undo takes it back.</p></section><section class="play-section"><h3>Monster attacks</h3><label class="check"><input type="checkbox" data-setting="sceneDanger"' + (S.settings.sceneDanger ? ' checked' : '') + '> Add scene danger automatically</label><p class="hint">At Target ' + S.table.target + ', add +' + R.sceneDanger(S.table.target) + ' to monster attacks. Keep each monster’s Attack bonus as its base bonus. Remove any scene bonus you previously added by hand before switching this on.</p></section><section class="play-section">' + nextControls() + '</section>';
+      '<p class="hint">Safe rest: +10 HP to living heroes; Horror −' + (nd || 1) + 'd' + R.REST.horrorDie + '; healing allowances refresh.</p></section>' + encounterControls();
   }
   /* A new table: until a player has taken up a hero, the first thing in the GM's tray is how to get them in. */
   function startBox() {
     var heroes = Object.keys(S.chars), playing = heroes.some(function (k) { return S.chars[k].owner; });
     if (playing) return '';
-    return '<div class="sec start"><h3>Getting started</h3><p class="hint">Invite players from the Table tab.</p>' +
-      (heroes.length ? '<p class="hint">Each player picks a free hero when they join, or brings one from My heroes. This box goes away once someone has.</p>' : '<p class="hint">There are no heroes yet. Add a blank one for each player, or let them bring a hero from My heroes.</p><div class="row"><button class="btn small" data-do="addHero">Add a blank hero</button></div>') + '</div>';
+    return '<p class="hint start">Invite players in Table. They can bring a hero or claim one here. <a href="/gm-guide/" target="_blank" rel="noopener">First session help</a>.</p>';
+
+  }
+  function encounterControls() {
+    if (viewScene() !== S.table.scene.id) return '<p class="hint">Preparing another scene. Open the live scene to run or refresh its encounter.</p>';
+    return '<section class="play-section"><button class="btn small" data-do="scenePowerReset" data-scene="' + S.table.scene.id + '">' + (UI.powerResetAsk === S.table.scene.id ? 'Confirm: refresh scene abilities' : 'Refresh scene abilities') + '</button><p class="hint">New encounter in ' + esc(S.table.scene.name) + ' only. Spent scene abilities refresh; unfinished limited rolls expire.</p></section>';
   }
   function tabScene() {
     var live = S.table.scene.id, view = viewScene(), bg = (S.scenes.filter(function (x) { return x.id === view; })[0] || {}).bg || '';
@@ -779,7 +804,7 @@
     if (deleting) h += '<div class="sec scene-delete"><h4>Delete ' + esc(deleting.name) + '?</h4><p>This permanently removes this scene, its table cards and its drawings. Heroes and items held by players are kept. This cannot be undone. Uploaded pictures are kept in case another scene uses them.</p><div class="row"><button class="btn small danger" data-do="confirmSceneDelete" data-scene="' + deleting.id + '"' + (UI.sceneDeleting ? ' disabled aria-busy="true"' : '') + '>Delete this scene</button><button class="btn small" data-do="cancelSceneDelete">Cancel</button></div></div>';
     var renaming = S.scenes.filter(function (x) { return x.id === UI.sceneRename; })[0];
     if (renaming) h += '<div class="sec scene-rename"><h4>Rename ' + esc(renaming.name) + '</h4><label>Scene name<input id="sceneName" maxlength="60" required value="' + esc(UI.sceneName || '') + '"' + (UI.sceneRenameSaving ? ' disabled' : '') + '></label><div class="row"><button type="button" class="btn small main" data-do="saveSceneName"' + (UI.sceneRenameSaving ? ' disabled aria-busy="true"' : '') + '>' + (UI.sceneRenameSaving ? 'Saving…' : 'Save name') + '</button><button type="button" class="btn small" data-do="cancelSceneName"' + (UI.sceneRenameSaving ? ' disabled' : '') + '>Cancel</button></div></div>';
-    h += '<div class="row"><button class="btn small" data-do="scenePowerReset">' + (UI.powerResetAsk === S.table.scene.id ? 'Confirm: refresh scene abilities' : 'Refresh scene abilities') + '</button></div><p class="hint">For a new encounter in the live scene. Rest and switching scenes do not refresh spent scene abilities. Unfinished limited rolls from this encounter cannot be applied after a refresh.</p>';
+
     h += '<div class="row"><input id="newScene" placeholder="New scene name" maxlength="60" aria-label="New scene name"><button class="btn small" data-do="newScene">Add</button></div>';
     h += '<div class="row"><button type="button" class="link" data-do="sceneBg" aria-expanded="' + !!UI.sceneBg + '">' + (UI.sceneBg ? 'Hide picture settings' : 'Change the picture for this scene') + '</button></div>';
     if (UI.sceneBg) h += '<label>Picture address<input id="bgUrl" value="' + esc(bg) + '" placeholder="https://…"></label><label>Or upload one<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="bg"></label>';
@@ -799,7 +824,7 @@
     var list = monsters();
     return '<h3>Your monsters</h3>' + (list.length ? '<ul class="ol">' + list.map(function (m, i) {
       return '<li><span class="n">' + esc(m.name) + ' <span class="note">' + (m.hp ? m.hp + ' HP' : '') + (m.attack != null ? ' · attack ' + sgn(m.attack) : '') + '</span></span><button class="btn small" data-do="addMonster" data-i="' + i + '">Add</button><button class="btn small' + (UI.forgetMon === i ? ' danger' : '') + '" data-do="forgetMonster" data-i="' + i + '">' + (UI.forgetMon === i ? 'Sure?' : 'Forget') + '</button></li>';
-    }).join('') + '</ul>' : '<p class="hint">None yet. Select an enemy on the table and press Save to my monsters. They are kept in this browser, for every table you run here.</p>');
+    }).join('') + '</ul>' : '<p class="hint">None yet. Select an enemy, open Edit card and press Save to my monsters. They are kept in this browser, for every table you run here.</p>');
   }
   function addMonster(m) {
     var card = { kind: m.kind === 'token' ? 'token' : 'card', name: m.name, desc: m.desc, gmNotes: m.gmNotes, img: m.img, hp: { cur: m.hp || 10, max: m.hp || 10 }, attack: m.attack, hideNumbers: !!m.hideNumbers, sceneId: viewScene(), visible: false };
@@ -807,16 +832,16 @@
     send({ type: 'cardCreate', card: card, addToOrder: true }, function (b) { if (b) { UI.sel = b.result.id; render(); toast('Added ' + m.name + ', hidden. Show it when the players should see it.', 6000); } });
   }
   function tabTable() {
-    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in Play. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
+    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in House rules. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + on a hero’s strip or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
     var h = '<h3>Invite players</h3><div class="row"><b class="code">' + esc(S.code) + '</b><button class="btn main grow" data-do="copy">Copy invite link</button></div>';
     h += horrorControls();
     h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li class="player-row"><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small danger" data-do="removePlayer" data-pid="' + p.id + '"' + (UI.removeBusy === p.id ? ' disabled' : '') + ' aria-label="' + (UI.removePlayerAsk === p.id ? 'Confirm removal of ' : 'Remove ') + esc(p.name) + '">' + (UI.removeBusy === p.id ? 'Removing…' : UI.removePlayerAsk === p.id ? 'Confirm removal' : 'Remove') + '</button>' + (UI.removePlayerAsk === p.id ? '<p class="hint player-warning">Their current access will stop and their hero becomes available. Private possessions return hidden to the GM. They can join again with the invitation code.</p><button class="btn small" data-do="cancelRemovePlayer">Cancel</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
     h += '<div class="row"><button class="btn small" data-do="addHero" title="A blank hero: name it, then fill in its numbers by hand">Add a blank hero</button></div>';
     h += diceSwitch();
-    h += '<h3>Your GM link</h3><div class="row"><button class="btn small" data-do="copyKey">Copy your GM link</button></div><p class="hint">Keep it somewhere private, such as your notes. It brings you back to this table as the GM on any device, or after this browser forgets. Anyone who has it can run the table, so do not send it to players.</p>';
+    h += '<h3>GM recovery</h3><div class="row"><button class="btn small" data-do="copyKey">Copy your GM link</button><button class="btn small" data-do="showRecovery">Save recovery file</button></div><p class="hint">Keep it somewhere private, such as your notes. It brings you back to this table as the GM on any device, or after this browser forgets. Anyone who has it can run the table, so do not send it to players.</p>';
+    h += '<section class="table-schedule">' + nextControls() + '</section>';
     h += '<h3>More</h3><ul class="ol links"><li><button type="button" class="n" data-do="gmsub" data-s="rules">House rules</button></li><li><button type="button" class="n" data-do="gmsub" data-s="manual">Running things by hand</button></li><li><button type="button" class="n" data-do="gmsub" data-s="recap">Session recap</button></li></ul>';
-    h += '<div class="row"><button class="btn small" data-do="showRecovery">Save your recovery link</button></div>';
-    h += '<div class="row"><button class="btn small danger" data-do="leave">' + (UI.leaveAsk ? 'Sure? Only your GM link brings you back' : 'Leave table') + '</button></div>';
+    h += '<div class="row"><button class="btn small" data-do="leave">Back to my tables</button></div>';
     return h;
   }
   function diceSwitch() { return '<label class="check"><input type="checkbox" data-diceanim' + (D.off() ? '' : ' checked') + '> Show dice tumbling on this screen</label>' + (gm() ? '' : '<label class="check"><input type="checkbox" data-sound' + (UI.soundOff ? '' : ' checked') + '> A chime when it is your turn or you are hit</label>'); }
@@ -825,12 +850,12 @@
   function horrorControls() {
     var H = S.horror; if (!H) return '';
     if (!H.cur) UI.hzResetAsk = false;
-    return '<h3>The Horror</h3><div class="row hz-gm" role="group" aria-label="The Rising Horror"><span class="n"><b>' + H.cur + '</b> of ' + H.max + '</span>' +
-      '<button class="btn small" data-do="horrorRoll"' + (H.cur ? '' : ' disabled') + ' title="Roll a d' + R.HORROR.lowerDie + ' in front of the table and lower the Horror by what it shows">Lower by d' + R.HORROR.lowerDie + '</button>' +
+    return '<h3>Adjust Horror</h3><div class="row hz-gm" role="group" aria-label="The Rising Horror"><span class="n"><b>' + H.cur + '</b> of ' + H.max + '</span>' +
+      '<button class="btn small" data-do="horrorRoll"' + (H.cur ? '' : ' disabled') + ' title="Manual GM adjustment, not Party rest: roll a d' + R.HORROR.lowerDie + ' and lower Horror by the result">Lower by d' + R.HORROR.lowerDie + '</button>' +
       '<button class="btn small" data-do="horrorAdj" data-d="-1" aria-label="Lower the Horror by 1">−1</button><button class="btn small" data-do="horrorAdj" data-d="1" aria-label="Raise the Horror by 1">+1</button>' +
       (H.cur > 0 ? '<button class="btn small' + (UI.hzResetAsk ? ' danger' : '') + '" data-do="horrorReset">' + (UI.hzResetAsk ? 'Sure? Reset to 0' : 'Reset to 0') + '</button>' : '') +
       '<span class="hz-set"><label>Set to<input id="hzSet" type="number" min="0" max="' + H.max + '" inputmode="numeric" value="' + H.cur + '"></label><button class="btn small" data-do="horrorSet">Set</button></span></div>' +
-      '<p class="hint">It rises by itself when a spell is cast or a relic used, and is marked at ' + H.thresholds.join(', ') + '. It only falls when you lower it.</p>';
+      '<p class="hint">Healing spells cost 0; other spells +1; items list their own cost. Natural 1 and Push add 1 separately. Party rest lowers Horror with d10s. These controls are manual GM adjustments.</p>';
   }
   /* The next session: the GM sets it in the Play tab; everyone reads it in their own time, with links to put it in a calendar (three hours, by default). */
   function sayWhen(ms) { return new Date(ms).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -882,6 +907,7 @@
   }
   function rulesPanel() {
     var s = S.settings, h = '<p class="unv">House rules for this table. Everything else is a fixed rule.</p>';
+    h += '<h4>Monster attacks</h4><label class="check"><input type="checkbox" data-setting="sceneDanger"' + (s.sceneDanger ? ' checked' : '') + '> Add scene danger automatically</label><p class="hint">At Target ' + S.table.target + ', add +' + R.sceneDanger(S.table.target) + ' to monster attacks. Keep the monster’s base Attack bonus only; remove any danger bonus already added by hand before enabling.</p>';
     h += '<label class="check"><input type="checkbox" data-setting="nat20Ultimate"' + (s.nat20Ultimate ? ' checked' : '') + '> A natural 20 offers Ultimate Effort</label>';
     h += '<h4>Effort dice</h4><div class="row">' + R.CATS.map(function (k) { return '<label>' + R.CAT_NAMES[k] + '<select data-die="' + k + '">' + [4, 6, 8, 10, 12, 20].map(function (d) { return '<option' + (s.dice[k] === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select></label>'; }).join('') + '</div>';
     return h;
@@ -1050,7 +1076,7 @@
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
       case 'leave': UI.sceneRename = null; leaveTable(); break;
-      case 'gmtab': UI.tab = d.t; UI.sub = null; UI.editOrder = false; renderPanel(); { var tb = $('panel'); if (tb) tb.scrollTop = 0; } break;
+      case 'gmtab': UI.tab = d.t; UI.sub = null; UI.editOrder = false; UI.sel = null; UI.cardEdit = null; UI.atk = null; UI.powerResetAsk = false; renderPanel(); renderTable(); { var tb = $('panel'); if (tb) tb.scrollTop = 0; } break;
       case 'editOrder': UI.editOrder = !UI.editOrder; renderPanel(); break;
       case 'openScene': UI.sceneRename = null; UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
       case 'sceneBg': UI.sceneBg = !UI.sceneBg; renderPanel(); break;
@@ -1062,7 +1088,7 @@
       case 'effort': { if (UI.working) break; var damageRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; renderPanel(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE, autoApply: automaticDamage(damageRoll) }, function () { UI.working = null; render(); }); break; }
       case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }
       case 'allowPush': if (!UI.working) { UI.working = 'push:' + d.roll; send({ type: 'pushOverride', rollId: d.roll }, function () { UI.working = null; render(); }); } break;
-      case 'scenePowerReset': if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
+      case 'scenePowerReset': if (viewScene() !== S.table.scene.id || d.scene !== S.table.scene.id) { toast('Open the live scene to refresh its encounter.'); break; } if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
       case 'applyArea': { if (UI.working) break; var areaRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; if (!areaRoll) break; UI.working = 'apply:' + d.roll; var ids = (areaRoll.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; }); send({ type: 'applyArea', rollId: d.roll, cardIds: ids }, function () { UI.working = null; render(); }); break; }
       case 'again': { var ra = S.rolls.filter(function (x) { return x.id === d.roll; })[0]; if (ra) rollAgain(ra); break; }
       case 'apply': { if (UI.working) break; var key2 = 'apply:' + d.roll; UI.working = key2; renderPanel(); send({ type: 'apply', rollId: d.roll, cardId: d.card, field: d.field }, function () { UI.working = null; render(); }); break; }
@@ -1093,6 +1119,7 @@
       case 'lootCard': { var L0 = UI.loot; if (!L0) break; send({ type: 'cardCreate', card: { kind: 'loot', name: L0.name, desc: L0.flavour, gmNotes: [L0.category, L0.tempts ? 'Tempts the Horror.' : '', L0.gmNote].filter(Boolean).join(' · '), visible: false } }); toast('Added "' + L0.name + '" to the table, hidden. Reveal it when the party finds it.', 5000); break; }
       case 'lootGive': { var L1 = UI.loot, lootSel = $('lootHero'); if (!L1 || !lootSel || !lootSel.value) break; var lootTo = lootSel.value; send({ type: 'sheet', charId: lootTo, op: { op: 'add', id: L1.itemId } }, function (b) { if (b) toast('Gave "' + L1.name + '" to ' + (S.chars[lootTo] ? S.chars[lootTo].name : 'the hero') + '.', 4000); }); break; }
       case 'bring': { var mine = window.SacramentHeroes && window.SacramentHeroes.read().heroes.filter(function (h) { return h.id === d.id; })[0]; if (mine) send({ type: 'bringHero', hero: mine }); break; }
+      case 'undoDamage':
       case 'undo': send({ type: 'undo', logId: d.id }); break;
       case 'feed': UI.feedOpen = !UI.feedOpen; $('feed').dataset.h = ''; renderFeed(); break;
       case 'copy': { var link = location.origin + '/vtt/?room=' + S.code; if (navigator.clipboard) navigator.clipboard.writeText(link).then(function () { toast('Link copied: ' + link); }, function () { toast(link); }); else toast(link); break; }
@@ -1168,6 +1195,7 @@
       case 'cancelSceneDelete': UI.sceneDelete = null; render(); break;
       case 'confirmSceneDelete': { if (UI.sceneDeleting) break; UI.sceneDeleting = true; var sid = d.scene; render(); send({ type: 'sceneDelete', id: sid }, function (b) { UI.sceneDeleting = false; if (b) { if (UI.view === sid) UI.view = null; UI.sceneDelete = null; UI.sel = null; } render(); }); break; }
       case 'newScene': { var nm = $('newScene').value.trim(); if (nm) send({ type: 'sceneCreate', name: nm }, function (bd) { if (bd) { UI.view = bd.result.id; render(); } }); break; }
+      case 'inspectTurn': { var place = S.table.order[+d.i]; if (place && place.id) { pickCard(place.id); render(); } } break;
       case 'turnTo': send({ type: 'turnSet', sceneId: S.table.scene.id, idx: +d.i }); break;
       case 'up': reorder(+d.i, -1); break; case 'down': reorder(+d.i, 1); break;
       case 'outOrder': send({ type: 'orderSet', sceneId: S.table.scene.id, order: S.table.order.map(function (x) { return x.id; }).filter(function (x, i) { return i !== +d.i; }) }); break;
@@ -1227,6 +1255,10 @@
     else if (t.id === 'bgUrl') send({ type: 'sceneUpdate', id: viewScene(), bg: t.value.trim() });
   });
   document.addEventListener('keydown', function (e) {
+    if (e.target.matches && e.target.matches('[role=tab][data-do=gmtab]') && ['ArrowRight', 'ArrowLeft', 'Home', 'End'].indexOf(e.key) >= 0) {
+      e.preventDefault(); var at = TABS.map(function (t) { return t[0]; }).indexOf(e.target.dataset.t), next = e.key === 'Home' ? 0 : e.key === 'End' ? TABS.length - 1 : (at + (e.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length;
+      var targetTab = TABS[next][0]; document.querySelector('[data-do=gmtab][data-t="' + targetTab + '"]').click(); document.getElementById('gm-tab-' + targetTab).focus(); return;
+    }
     if (e.target.id === 'sceneName' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); var nameAction = document.querySelector('[data-do="' + (e.key === 'Enter' ? 'saveSceneName' : 'cancelSceneName') + '"]'); if (nameAction) nameAction.click(); return; }
     if (e.key === 'Escape' && $('lootOverlay') && !$('lootOverlay').hidden) { e.preventDefault(); closeLoot(); return; }
     if (e.key === 'Escape' && UI.sheet) { e.preventDefault(); closeSheet(); return; }
@@ -1326,6 +1358,7 @@
   function savedTables() {
     var out = [];
     try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k.indexOf(KEY) !== 0 || !/^[A-Z0-9]{4,10}$/.test(k.slice(KEY.length))) continue; var v = load(k.slice(KEY.length)); if (v && v.token && v.code) out.push(v); } } catch {}
+    Object.keys(memorySessions).forEach(function (code) { var t = memorySessions[code]; if (t && t.token && !out.some(function (x) { return x.code === code; })) out.push(t); });
     return out.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
   }
   function listTables() {

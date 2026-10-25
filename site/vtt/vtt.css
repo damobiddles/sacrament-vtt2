@@ -452,7 +452,7 @@ label.phys{align-items:flex-start}
 .turn-order li{min-width:0}
 .turn-order .n{display:block;overflow-wrap:anywhere}
 .turn-order .n .pill{display:inline-block;vertical-align:middle;margin-left:6px}
-.turn-order.editing li{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px 0}
+.turn-order.editing li{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px 0}
 .turn-order.editing .n{grid-column:1/-1;width:100%}
 
 .entry-help{display:flex;flex-wrap:wrap;gap:8px 16px}.entry-help a{display:inline-block;max-width:100%}
@@ -476,3 +476,9 @@ label.phys{align-items:flex-start}
 .result-roll.revealed.success{animation:result-seal .28s ease-out}
 @keyframes result-seal{from{box-shadow:0 0 0 4px #b8955a88}to{box-shadow:0 12px 60px #000c}}
 @media(prefers-reduced-motion:reduce){#dice.focused{display:flex}#dice .result-roll,#dice .result-roll *{animation:none!important;transition:none!important}}
+
+/* Keep the common action above configuration without shrinking controls. */
+#panel .turn-context{margin:0;padding:8px 0;border-bottom:1px solid var(--line)}
+.table-schedule{display:flex;flex-direction:column;gap:8px;min-width:0}
+.table-schedule .row>label{flex:1 1 100%;min-width:0}
+.table-schedule input{max-width:100%;box-sizing:border-box}

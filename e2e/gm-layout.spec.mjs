@@ -31,7 +31,7 @@ for(const viewport of [{width:683,height:500},{width:1000,height:500},{width:136
 
 test('changing between GM and player sessions in one page replaces the role and controls',async({browser})=>{
  const page=await newPage(browser),other=await newPage(browser);await makeTable(page);const code=await makeTable(other);
- await page.locator('[data-do=gmtab][data-t=table]').click();await page.locator('#panel [data-do=leave]').click();await page.locator('#panel [data-do=leave]').click();await expect(page.locator('#entry')).toBeVisible();
+ await page.locator('[data-do=gmtab][data-t=table]').click();await page.locator('#panel [data-do=leave]').click();await expect(page.locator('#entry')).toBeVisible();
  await page.locator('#joinCode').fill(code);await page.locator('#joinName').fill('Ann');await page.locator('#joinForm button[type=submit]').click();await claimHero(page,'Thorne');await expect(page.locator('#tRole')).toHaveText('Player view');
  await page.locator('#top [data-do=leave]').click();await page.locator('#top [data-do=leave]').click();await page.locator('#makeForm button[type=submit]').click();
  await expect(page.locator('#tRole')).toHaveText('GM view');await expect(page.locator('#strip .stat')).toHaveCount(0);await expect(page.locator('[data-do=gmDiceRoll]')).toBeVisible();expect(page.errors).toEqual([]);

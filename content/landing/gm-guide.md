@@ -2,7 +2,7 @@
 title: GM guide
 summary: Prepare a first session, run encounters and understand what the Sacrament RPG Table handles for you.
 ---
-This is a public guide to the **current VTT**, checked against the application on 24 October 2026. It contains controls and rules guidance, not private setting material. Read the [player guide](/player-guide/) for character creation, checks, Effort and player actions.
+This is a public guide to the **current VTT**, checked against the application on 25 October 2026. It contains controls and rules guidance, not private setting material. Read the [player guide](/player-guide/) for character creation, checks, Effort and player actions.
 
 [First game checklist](/how-to-play/) · [Run a table](/vtt/?run) · [Player guide](/player-guide/) · [Current Loot Tables](/loot/)
 
@@ -14,7 +14,7 @@ This is a public guide to the **current VTT**, checked against the application o
 4. Agree on the Target, table options and any house rules before rolling. Explain that ordinary weapons use d6, guns d8, healing spells have no casting Horror, and Push follows failed attacks only.
 5. Start with one visible enemy and one clear problem. Walk a player through choosing a target, using a weapon, rolling damage and seeing it applied automatically.
 
-Your browser remembers tables under **Your tables** on the VTT entry page. Returning in that browser normally restores your GM access. A table code alone does not restore GM authority on another device: use the private recovery link. There are no accounts. Keep the link before clearing browser data.
+Your browser remembers tables under **Your tables** on the VTT entry page. Returning in that browser normally restores your GM access. A table code alone does not restore GM authority on another device: use the private recovery link. There are no accounts. Keep the link before clearing browser data. **Back to my tables** returns to the saved list without forgetting your access. The separate **Forget** action intentionally removes this browser’s saved access.
 
 ## Help a new player create a hero
 
@@ -28,12 +28,12 @@ My heroes stores browser-local characters. **Bring a hero** creates a separate c
 
 ## Find the controls
 
-With no card selected, the tray has **Play**, **Scene**, **Loot** and **Table** tabs. Selecting a card replaces those tabs with the card's panel; use **Back** to return.
+The tray keeps **Play**, **Scene**, **Loot** and **Table** tabs visible while you inspect or edit a card. Choose a tab directly, or use **Back** to return to that tab's overview. The selected card is not necessarily the character whose turn it is: the panel names the live scene and current turn.
 
-- **Play:** turn order, Party rest, optional automatic scene danger and next-session notes.
+- **Play:** turn order, attacks and results, Party rest and refreshing abilities for a new live encounter.
 - **Scene:** add enemies, obstacles and cards; prepare, rename and show scenes.
 - **Loot:** roll catalogue loot, design your own items and award them.
-- **Table:** invitations, recovery, players and house rules.
+- **Table:** invitations, recovery, players, house rules, manual Horror adjustments and next-session notes.
 
 The **GM view** badge marks your controls; players see **Player view**. Select an enemy or obstacle and choose **Attack a hero…** to attack. To help a player or cover an absent player, select their hero, open their sheet, and use **Roll for** or **Ready to use**. Hero rolls stay in the sheet, leaving the main GM controls clear. In a narrow window, scroll the map and controls area to reach the rest of the tray. **GM dice** in the footer rolls d4, d6, d8, d10, d12, d20 or d100, with a choice of shared or GM-only results. These standalone rolls do not alter HP.
 
@@ -49,11 +49,11 @@ Players should select a target before attacking. A successful attack carries tha
 
 ## Turns and monster attacks
 
-The Play tab's **Turn order** lets you select the active character or edit the order. The GM’s **Next turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
+The Play tab's **Turn order** lets you inspect a character without changing whose turn it is. Use **Edit order** and **Set turn** for a deliberate turn jump; the same editor adds, removes and reorders entries. The GM’s **Next turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
 
-To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. Player attacks also apply their rolled damage automatically. Undo is available in Activity. A hidden attacker is presented to players as “Something”.
+To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. Player attacks also apply their rolled damage automatically. **Undo this damage** beside the result reverses that damage; Activity retains the full history. A hidden attacker is presented to players as “Something”.
 
-**Automatic scene danger is optional and off by default.** In Play, you can enable adding max(0, Target − 11) to monster attacks: Target 12 adds +1; Target 14 adds +3. It uses the current Target. If you have already included scene danger in a monster's base bonus, remove that part before enabling it to avoid counting it twice. Keeping the option off preserves manually prepared bonuses.
+**Automatic scene danger is optional and off by default.** In **Table → House rules**, you can enable adding max(0, Target − 11) to monster attacks: Target 12 adds +1; Target 14 adds +3. It uses the current Target. If you have already included scene danger in a monster's base bonus, remove that part before enabling it to avoid counting it twice. Keeping the option off preserves manually prepared bonuses.
 
 ## Healing, dying and Party rest
 
@@ -77,7 +77,7 @@ Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide wh
 
 ## Scenes, maps and privacy
 
-In Scene, add a named scene and **Open** it to prepare it privately. Add and move cards, change its picture and rename it without losing its contents. **Show to players** makes it live for everyone. Prepared scenes and their names stay private until shown. The Target is a table setting; changing scenes does not give each scene its own saved Target.
+In Scene, add a named scene and **Open** it to prepare it privately. Add and move cards, change its picture and rename it without losing its contents. **Show to players** makes it live for everyone. Prepared enemies cannot attack live heroes: show their scene first. Unfinished monster attacks cannot carry damage into a different live scene. Prepared scenes and their names stay private until shown. The Target is a table setting; changing scenes does not give each scene its own saved Target.
 
 **Fill width** and **Fit map** change only your own view, not token positions or another person's view. **Point** shows people looking at the same scene where you mean. Drawing, undoing lines and clearing drawing are GM-only.
 
@@ -109,11 +109,11 @@ In Scene, a scene that is not live has a **Delete** button. Read the confirmatio
 
 ## Tracked powers and critical damage
 
-Rend the Veil selects several foes, uses one check and one damage roll, and applies the result to those selected targets together. You confirm range and who is affected. Damage applies as soon as it is rolled. One Undo restores the whole damage event. Once-per-scene uses, including failed attempts, are tracked per caster and source across copies and reconnections. Returning to an old scene or resting does not reset them. In Scene, confirm **Refresh scene abilities** only when starting a new encounter there; this invalidates unfinished limited rolls from the old encounter. To correct a mistaken use, undo its damage first, then its attempt; undo Horror separately if appropriate. The Executioner's Blade has an automated final-blow action with its listed 3-Horror cost and scene limit.
+Rend the Veil selects several foes, uses one check and one damage roll, and applies the result to those selected targets together. You confirm range and who is affected. Damage applies as soon as it is rolled. One Undo restores the whole damage event. Once-per-scene uses, including failed attempts, are tracked per caster and source across copies and reconnections. Returning to an old scene or resting does not reset them. In Play, confirm **Refresh scene abilities** only when starting a new encounter in the named live scene; this invalidates unfinished limited rolls from the old encounter. To correct a mistaken use, undo its damage first, then its attempt; undo Horror separately if appropriate. The Executioner's Blade has an automated final-blow action with its listed 3-Horror cost and scene limit.
 
 For new hero checks, a successful natural 20 adds an extra Ultimate die to normal damage/Effort when enabled. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. The heavy +2 is also added only once. Earlier pending rolls retain their earlier rule. Monster natural rolls still govern hits and misses only. Crossbows have +2 accuracy, Weapons d6 and their reload Move; the GM still manages reloads and the Move budget.
 
 
 ## Turn orders belong to scenes
 
-Each scene remembers its own turn order and current actor. A scene visited for the first time starts with the heroes; enemies added while preparing it join that scene’s order. Switch scenes without clearing or rebuilding the list. Returning restores the order you left, including deliberate removals or an empty order. The Play tab edits the live scene’s order. Preparing another scene does not change it. Deleted enemies are removed from saved orders. Rounds remain shared across the table; simply switching scenes does not advance a round, timers or dying countdowns.
+Each scene remembers its own turn order and current actor. A scene visited for the first time starts with the heroes; enemies added while preparing it join that scene’s order. Switch scenes without clearing or rebuilding the list. Returning restores the order you left, including deliberate removals or an empty order. The Play tab edits the live scene’s order. Preparing another scene does not change it. Deleted enemies are removed from saved orders. Rounds remain shared across the table; simply switching scenes does not advance a round, timers or dying countdowns. Automatic, unpaused timers tick every table round, including on hidden scenes. Use the existing pause control in Edit card when a countdown should wait.
