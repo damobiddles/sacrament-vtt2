@@ -22,8 +22,10 @@ test('the expansion doubles each item category with stable catalogue definitions
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), 'f19e5159a0b92676297810a2ebc8d7250e3e301284207bdc6ab62cd81f03bb8f');
-  assert.equal(hash(G.spells), 'd325d1a01e5018630d10e8d54a34b866c2b18d65dbe83ded177c8b02e825d74c');
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '87a348eb6a96d9e13d11f65c9891de272f766188d788711c7ed9c5d1b82d9f77');
+  // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
+  assert.equal(hash(G.spells.slice(0,23)), 'd325d1a01e5018630d10e8d54a34b866c2b18d65dbe83ded177c8b02e825d74c');
+  assert.equal(hash(G.spells), 'b2fddfd3fa03107d93c67800a09c7e4628a38c0a7c97da0cc215634864a38ee6');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {

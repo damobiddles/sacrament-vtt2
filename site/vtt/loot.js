@@ -21,6 +21,7 @@
     /* the library column */
     function tags(it) {
       var t = ['<span class="sh-pill cat">' + esc(it.category) + '</span>'];
+      if (it.theme) t.push('<span class="sh-pill">' + esc(it.theme) + '</span>');
       if (C.rangeText(it)) t.push('<span class="sh-pill">' + esc(C.rangeText(it)) + '</span>');
       if (it.cat) t.push('<span class="sh-pill">' + esc(R.CAT_NAMES[it.cat]) + '</span>');
       t.push('<span class="sh-pill">' + (it.equippable ? 'Equippable' : 'Supply') + '</span>');
@@ -61,6 +62,7 @@
       if (f.healingSource) out += '<p class="sh-note">Automated healing uses the rules of ' + esc(C.item(f.healingSource).name) + '. Changing the description does not change its die, target or rest limit.</p>';
       out += field('Description (players see this)', 'flavour', true, 400) + field('Ability text (what it does)', 'does', true, 600);
       if (f.category === 'Grimoire') {
+        out += '<label class="sh-f">Theme<select data-lf="theme">' + opt('', 'Unspecified', f.theme || '') + (root.SACRAMENT_GEAR.grimoireThemes || []).map(function (theme) { return opt(theme, theme, f.theme); }).join('') + '</select></label>';
         out += '<p class="sh-note">Every grimoire takes three slots. Choose three different spells. Each spell keeps its own effect and Horror cost.</p>';
         for (var si = 0; si < 3; si++) out += '<label class="sh-f">Spell ' + (si + 1) + '<select data-lspell="' + si + '">' + opt('', 'Choose a spell', '') + root.SACRAMENT_GEAR.spells.map(function (sp) { return opt(sp.id, sp.name + ' · ' + C.effectLabel(sp), (f.spells || [])[si]); }).join('') + '</select></label>';
       }
@@ -75,6 +77,7 @@
     }
     function preview() {
       var it = C.makeCustom(ld.f), pills = [it.slots + (it.slots === 1 ? ' slot' : ' slots')];
+      if (it.theme) pills.push(it.theme);
       if (C.rangeText(it)) pills.push(C.rangeText(it));
       if (it.weaponStyle) pills.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand'); if (C.attackBonus(it)) pills.push('+2 crossbow accuracy'); if (C.damageBonus(it)) pills.push('+2 heavy damage'); if (it.armourPart) pills.push(it.armourPart === 'head' ? 'Helmet' : it.armourPart === 'shield' ? 'Shield' : 'Body armour');
       if (it.defence) pills.push('Defence +' + it.defence); if (it.cat) pills.push('Effort d' + ((host.dice && host.dice()[it.cat]) || R.DEFAULT_DICE[it.cat])); if (it.roll) pills.push(it.roll);

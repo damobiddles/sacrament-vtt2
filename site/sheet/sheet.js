@@ -28,6 +28,7 @@
 
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
+    if (it.theme) b.push(it.theme); if (it.legacyEdition) b.push('Original spells');
     if (it.once === 'scene') b.push('Once per scene');
     if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
@@ -40,7 +41,7 @@
     if (it.roll && it.kind !== 'grimoire') b.push(it.roll);
     return b.map(function (x) { return '<span class="sh-pill">' + esc(x) + '</span>'; }).join(' ') + (C.horrorText(it) ? ' <span class="sh-pill tempt">' + esc(C.horrorText(it)) + '</span>' : '');
   }
-  function optionText(it) { return it.name + ' (' + plural(it.slots, 'slot', 'slots') + (it.defence ? ', Defence ' + sgn(it.defence) : '') + (it.hearts ? ', +' + plural(it.hearts, 'Heart', 'Hearts') : '') + ')'; }
+  function optionText(it) { return it.name + (it.theme ? ' — ' + it.theme : '') + ' (' + plural(it.slots, 'slot', 'slots') + (it.defence ? ', Defence ' + sgn(it.defence) : '') + (it.hearts ? ', +' + plural(it.hearts, 'Heart', 'Hearts') : '') + ')'; }
 
   function stepper(kind, key, v, label) {
     return '<span class="sh-cell"><span class="sh-stat"><b>' + sgn(v) + '</b><small>' + esc(label) + '</small></span>' +

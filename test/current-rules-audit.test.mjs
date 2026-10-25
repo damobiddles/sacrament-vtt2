@@ -33,7 +33,8 @@ test('a fallen hero cannot start attacks, checks, item actions, Effort or Push; 
 // Reviewed power and equipment updates intentionally supersede the range-only snapshot.
 // The separate stable-catalogue fingerprint in powers-release protects IDs, odds, slots and spell assignments.
 test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
+ // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'ee304265b52e5b86d91f77064631498cdf08345571544aeb39e0fd0743196f57');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'1d4c7c5b62f1370bfbcba33c7fc8e51c0b9fba55ca8b14133f87a5122dcc55d2');
 });

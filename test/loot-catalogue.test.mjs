@@ -38,7 +38,7 @@ test('public loot reference lists every catalogue item, all tables and explicit 
   for (const item of C.items) assert.ok(html.includes('id="item-' + item.id + '"'), item.name);
   for (const t of G.tables) assert.ok(html.includes('id="table-' + t.id + '"'), t.name);
   for (const label of ['Damage', 'Healing', 'Esoteric effect']) assert.ok(html.includes(label));
-  assert.ok(html.includes('23 different spells'));
+  assert.ok(html.includes('43 different spells'));
   const hostile = structuredClone(G); hostile.items[0].name = '<script>bad()</script>';
   assert.ok(!lootCatalogue(hostile).includes('<script>bad()'));
 });

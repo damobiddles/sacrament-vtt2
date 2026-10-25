@@ -31,7 +31,7 @@
      That file calls the d8 Effort "guns", as the table does; this prototype's engine calls it "ranged", so the name is changed on the way in. */
   var GEAR = root.SACRAMENT_GEAR; if (!GEAR) throw new Error('Load /sheet/gear.js before /game/data.js.');
   var inName = function (o) { var c = JSON.parse(JSON.stringify(o)); if (c.cat === 'guns') c.cat = 'ranged'; c.band = ({ close: 'engaged', near: 'close', veryfar: 'distant', self: 'engaged', special: 'close' })[c.band] || c.band; return c; };
-  var ITEMS = GEAR.items.concat(GEAR.relics, GEAR.grimoires).map(inName);
+  var ITEMS = GEAR.items.concat(GEAR.relics, GEAR.grimoires, GEAR.retiredGrimoires || []).map(inName);
 
   /* The spells, as the Book of Dust and the others hold them. The prototype's Horror cost is paid once, when the casting roll is made. */
   /* Only the spells of books this prototype has (the found grimoires are the table's). A rolled Horror amount ("d4+2") counts here as its average, rounded up: the prototype has no dice for it. */

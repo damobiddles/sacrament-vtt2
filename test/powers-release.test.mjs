@@ -57,9 +57,10 @@ test('alternate relic modes and copied scene powers share their canonical limits
 });
 
 test('power completion preserves all catalogue IDs, slots, spell assignments and loot odds',async()=>{
+ // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
  const {createHash}=await import('node:crypto');
  const stable=Object.fromEntries(Object.entries(globalThis.SACRAMENT_GEAR).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>['id','kind','slots','table','loot','spells','pick','pickDie','die'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'c7aac234207412644db5bd609460307056796b8123b715480ee2f12db1cf009e');
+ assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'ca518935e211a75ee8130db80486a7890421457c00a20def0adff9811da9c960');
 });
 
 test('scene uses survive rest, reload and returning to a scene; reset invalidates pending limited damage',async()=>{

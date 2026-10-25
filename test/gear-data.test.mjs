@@ -39,7 +39,7 @@ test('every spell, every grimoire and every magic item can tempt the Horror, and
 test('every grimoire lists spells that exist, and every spell belongs to a grimoire', () => {
   const ids = new Set(G.spells.map((s) => s.id));
   for (const g of [...G.grimoires, ...(G.found || []).filter((x) => x.kind === 'grimoire')]) { assert.ok(Array.isArray(g.spells), g.name + ' needs a spells list (it may be empty while its spells are unwritten)'); for (const s of g.spells) assert.ok(ids.has(s), g.name + ' lists the spell "' + s + '", which is not in the spell list'); }
-  const books = [...G.grimoires, ...(G.found || []).filter((x) => x.kind === 'grimoire')];   // a grimoire found on the loot table holds spells too
+  const books = [...G.grimoires, ...(G.found || []).filter((x) => x.kind === 'grimoire'), ...(G.retiredGrimoires || [])];   // a grimoire found on the loot table holds spells too
   for (const s of G.spells) assert.ok(books.some((g) => g.id === s.from && g.spells.includes(s.id)), 'the spell ' + s.name + ' is not in the grimoire it says it is from');
 });
 

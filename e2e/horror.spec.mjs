@@ -79,7 +79,7 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   /* the GM hands Thorne the grimoire with no title (a find: only the GM can) on Thorne's sheet */
   await gm.locator('#cards .c', {hasText: 'Thorne'}).click();
-  await gm.locator('#panel [data-do=sheet]').click(); await gm.locator('#sheetOverlay #shAdd').selectOption('untitled'); await gm.locator('#sheetOverlay [data-sh=add]').click();
+  await gm.locator('#panel [data-do=sheet]').click(); await gm.locator('#sheetOverlay #shAdd').selectOption('namelesspact'); await gm.locator('#sheetOverlay [data-sh=add]').click();
   await gm.locator('#sheetOverlay [data-sh=close]').click(); await saved(gm);
   await gmSet(gm, 12);
   const box = await meter(ann).boundingBox(); expect(box).not.toBeNull();
@@ -87,7 +87,7 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   expect(await ann.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   await expect(ann.locator('#tHorror')).toContainText('12/21');
   await ann.locator('#panel [data-do=sheet]').click();
-  const read = ann.locator('#sheetOverlay [data-sh=quickUse]', { hasText: 'Read Grimoire with no title' }); await expect(read).toHaveCount(1);
+  const read = ann.locator('#sheetOverlay [data-sh=quickUse]', { hasText: 'Read The Book Without a Name' }); await expect(read).toHaveCount(1);
   await expect(ann.locator('#sheetOverlay')).toContainText('rolls d6');
   await read.click(); await saved(ann);
   await expect(ann.locator('#feed')).toContainText(/The die shows [1-6]: /);

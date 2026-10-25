@@ -76,7 +76,7 @@
       h.calling = pick(['Boundary scout', 'Road guide', 'Hunter']); primary = 'DEX'; secondary = 'WIS'; third = pick(['CON', 'INT', 'STR']); effort = 'weapons';
       kit = [pick(['bow', 'crossbow']), 'gambeson', 'knife', 'rope', 'lantern', 'picks', 'rations', 'tinder'];
     } else {
-      book = focus === 'healer' ? 'litany' : pick(['embers', 'dust']);
+      book = focus === 'healer' ? 'seventhpenance' : pick(['embers', 'quietmouths']);
       h.calling = focus === 'healer' ? pick(['Hospice keeper', 'Pilgrim physician']) : pick(['Forbidden scholar', 'Relic researcher', 'Exiled scribe']);
       primary = focus === 'healer' ? 'WIS' : 'INT'; secondary = 'CON'; third = pick(['DEX', 'CHA', focus === 'healer' ? 'INT' : 'WIS']);
       effort = C.spellsOf(C.item(book)).some(function (sp) { return sp.effect === 'damage'; }) ? 'magic' : 'weapons';

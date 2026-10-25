@@ -23,8 +23,8 @@ test('every generated focus uses legal starting gear, points and slots, without 
     assert.ok(h.gear.every(g=>!C.isFind(C.item(g.id))));
     assert.ok(!h.gear.some(g=>g.eq && C.weaponHands(C.item(g.id))===2) || !h.gear.some(g=>g.eq && C.armourPart(C.item(g.id))==='shield'));
     for(const g of h.gear) if(C.item(g.id).kind==='grimoire') assert.equal(C.item(g.id).slots,3);
-    if(focus==='scholar') assert.equal(h.effort.magic,3);
-    if(focus==='healer') {assert.equal(h.effort.weapons,3);assert.ok(h.gear.some(g=>g.id==='litany'));}
+    if(focus==='scholar') {const book=h.gear.find(g=>C.item(g.id).kind==='grimoire');const category={embers:'magic',quietmouths:'weapons'}[book.id];assert.ok(category,'scholar receives a current starter book');assert.equal(h.effort[category],3);}
+    if(focus==='healer') {assert.equal(h.effort.weapons,3);assert.ok(h.gear.some(g=>g.id==='seventhpenance'));}
   }
   assert.equal(data.get(H.KEY),undefined);
 });

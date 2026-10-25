@@ -46,7 +46,7 @@ test('limits: the sheet says why, in plain words, and sends nothing', async ({ b
   await ann.locator('#sheetOverlay [data-sh=score][data-k=DEX][data-d="1"]').click();
   await expect(ann.locator('#sheetOverlay .sh-msg')).toContainText('no points left');
   await ann.locator('#sheetOverlay #shAdd').selectOption('embers'); await ann.locator('#sheetOverlay [data-sh=add]').click();
-  await ann.locator('#sheetOverlay #shAdd').selectOption('litany'); await ann.locator('#sheetOverlay [data-sh=add]').click();
+  await ann.locator('#sheetOverlay #shAdd').selectOption('seventhpenance'); await ann.locator('#sheetOverlay [data-sh=add]').click();
   await expect(ann.locator('#sheetOverlay .sh-msg')).toContainText('one grimoire');
   await expect(ann.locator('#sheetOverlay #shAdd optgroup[label^="Relics"]')).toHaveCount(0);   // relics are not offered to a player
   expect(requests.length).toBe(1);                                                              // only the first grimoire was sent
@@ -108,7 +108,7 @@ test('on a slow connection quick clicks are judged against what you have already
   await sheet.locator('[data-sh=score][data-k=DEX][data-d="1"]').click();              // ...which the very next click uses, before the table has answered
   await expect(sheet.locator('.sh-msg')).not.toContainText('no points left');
   await sheet.locator('#shAdd').selectOption('embers'); await sheet.locator('[data-sh=add]').click();
-  await sheet.locator('#shAdd').selectOption('litany'); await sheet.locator('[data-sh=add]').click();
+  await sheet.locator('#shAdd').selectOption('seventhpenance'); await sheet.locator('[data-sh=add]').click();
   await expect(sheet.locator('.sh-msg')).toContainText('one grimoire');                 // refused at once, with the reason, because the first book is already counted
   await expect.poll(async () => { const h = await hero(gm, 'Thorne'); return h.stats.STR + '' + h.stats.DEX + '|' + h.gear.map((g) => g.id).join(); }, { timeout: 15000 }).toBe('21|embers');
   await expect(sheet).toContainText('0 of 6 points left');

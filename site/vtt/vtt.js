@@ -207,7 +207,7 @@
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
     clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
     pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
-    UI.feedback = []; UI.feedbackSeq = 0; UI.readyAction = null; UI.targetError = ''; UI.basicAttack = null; UI.optEffort = false;
+    UI.feedback = []; UI.feedbackSeq = 0; UI.phys = ''; UI.readyAction = null; UI.targetError = ''; UI.basicAttack = null; UI.optEffort = false;
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.loot = null; UI.lootBusy = false;
@@ -925,16 +925,26 @@
       '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div><details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
   }
   function putStrip(el, h, context) {
-    var active = document.activeElement, keep = el.dataset.context === context;
-    var fields = keep ? Array.prototype.map.call(el.querySelectorAll('input[type=number],select'), function (field) { return {id:field.id, physical:field.hasAttribute('data-phys'), value:field.value, focused:field === active}; }) : [];
-    var changed = el._h !== h; put(el, h); el.dataset.context = context;
+    var active = document.activeElement, sameSession = el.dataset.session === String(sessionVersion), keep = sameSession && el.dataset.context === context;
+    /* Preserve actual field nodes, not just their values: queued typing/autofill
+       must still reach the live controls after a shared update. The own d20 also
+       survives preparing another action for the same hero. */
+    var sameActor = sameSession && (el.dataset.context || '').split(':')[0] === context.split(':')[0];
+    var physicalInput = sameActor ? el.querySelector('input[data-phys]') : null;
+    if (physicalInput) UI.phys = physicalInput.value;
+    var fields = Array.prototype.filter.call(el.querySelectorAll('input,select'), function (field) { return keep || (sameActor && field.hasAttribute('data-phys')); });
+    if (!sameActor) el._h = null;
+    var changed = el._h !== h; put(el, h); el.dataset.context = context; el.dataset.session = String(sessionVersion);
     if (changed) fields.forEach(function (field) {
-      var replacement = field.id ? el.querySelector('#' + field.id) : field.physical ? el.querySelector('[data-phys]') : null;
-      if (replacement) { replacement.value = field.value; if (field.focused) replacement.focus({preventScroll:true}); }
+      var replacement = field.id ? el.querySelector('#' + field.id) : field.hasAttribute('data-phys') ? el.querySelector('[data-phys]') : null;
+      if (replacement && replacement !== field && replacement.tagName === field.tagName && replacement.getAttribute('type') === field.getAttribute('type')) {
+        replacement.replaceWith(field); if (field === active) field.focus({preventScroll:true});
+      }
     });
   }
   function renderStrip() {
     var root = $('strip'), el = $('stripControls'), ch = myChar(), G = gm(), h;
+    if (!G && ch && (el.dataset.session !== String(sessionVersion) || (el.dataset.context || '').split(':')[0] !== ch.id)) UI.phys = '';
     root.classList.toggle('myturn', !G && myTurn()); root.setAttribute('aria-label', G ? 'GM dice' : 'Roll dice');
     if (G) { putStrip(el, gmDiceView(), 'gm'); return; }
     if (!ch) { putStrip(el, '<span class="note">Choose your hero in Play to roll.</span>', 'spectator'); return; }
@@ -954,16 +964,23 @@
   /* The aim of the hero's next roll: a selected card on the table that is not a hero and has HP or an Effort bar */
   function aimFoe() { var c = UI.sel && S.cards[UI.sel]; return c && c.kind !== 'pc' && onTable(c) && (c.hp || c.progress) ? c : null; }
   function itemButtons(usable) {
-    return usable.map(function (a) { return '<button class="ef' + (a.ok ? '' : ' dim') + '" data-do="prepareUse" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (a.mode ? ' data-mode="' + esc(a.mode) + '"' : '') + (a.spellId ? ' data-spell="' + esc(a.spellId) + '"' : '') + ' title="' + esc(!a.ok ? a.why : useHow(a)) + '">' + esc(a.name) + ' · ' + (a.pick ? 'd' + a.pick + ' spell' : a.cat ? R.CAT_NAMES[a.cat] + ' d' + S.settings.dice[a.cat] : a.stat ? a.stat + ' check' : 'no roll') + (a.horror ? ' · Horror ' + R.sayHorrorAmount(a.horror) : '') + '</button>'; }).join('');
+    return usable.map(function (a) { return '<button class="ef' + (a.ok ? '' : ' dim') + '" data-do="prepareUse" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (a.mode ? ' data-mode="' + esc(a.mode) + '"' : '') + (a.spellId ? ' data-spell="' + esc(a.spellId) + '"' : '') + ' title="' + esc(!a.ok ? a.why : useHow(a)) + '">' + esc(a.name) + ' · ' + (a.pick ? 'd' + (a.pickDie || a.pick) + ' spell' : a.cat ? R.CAT_NAMES[a.cat] + ' d' + S.settings.dice[a.cat] : a.stat ? a.stat + ' check' : 'no roll') + (a.horror ? ' · Horror ' + R.sayHorrorAmount(a.horror) : '') + '</button>'; }).join('');
   }
   function useHow(a) {
-    var how = a.pick ? 'Roll d' + a.pick + ' and cast the spell that comes up' : a.cat ? 'Check with ' + a.stat + ', then on a success you roll its ' + R.CAT_NAMES[a.cat] + ' die for damage' : a.stat ? 'Check with ' + a.stat + ' (no Effort)' : 'No roll';
+    var how = a.pick ? 'Roll d' + (a.pickDie || a.pick) + ' and cast the spell that comes up' : a.cat ? 'Check with ' + a.stat + ', then on a success you roll its ' + R.CAT_NAMES[a.cat] + ' die for damage' : a.stat ? 'Check with ' + a.stat + ' (no Effort)' : 'No roll';
     return how + (a.horror ? '. The Horror rises ' + R.sayHorrorAmount(a.horror) + '.' : a.pick ? '. The Horror rises by that spell\u2019s amount.' : '.');
   }
   function physVal(id) { var i = $(id); var v = i && i.value.trim(); if (i) i.value = ''; return v ? +v : undefined; }
+  /* Read the field that the person can actually see. Browser restoration/autofill
+     need not fire input, so the cached UI value alone is not authoritative. */
+  function takeD20() {
+    var input = document.querySelector('#strip input[data-phys]'), value = input ? input.value : UI.phys;
+    UI.phys = ''; if (input) input.value = '';
+    return value != null && String(value).trim() ? +value : undefined;
+  }
   function doRoll(stat, noItem, attack, chosenTarget) {
     var ch = myChar(); if (!ch || UI.rolling) return;   /* one click, one roll: a second click while the first is on its way is ignored */
-    UI.rolling = 'Rolling ' + stat; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
+    UI.rolling = 'Rolling ' + stat; var d20 = takeD20();
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     render();
     send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
@@ -993,7 +1010,7 @@
       UI.readyAction = {charId: charId, index:index, spellId:spellId, gearKey:gearKey, mode:mode, target:areaIds || (selected && selected.id), name:use.name, hasRoll: !!(use.stat || use.pick), automation: window.SacramentSheetCore.automationText(use.spell || use.source || use.item), targetName: areaIds ? areaIds.map(function (id) { return S.cards[id] ? S.cards[id].name : ''; }).join(', ') : selected && selected.name}; render(); focusNextRoll(); return;
     }
     UI.readyAction = null;
-    UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
+    UI.rolling = 'Using an item'; var d20 = takeD20();
     var target = selected && onTable(selected) && (use.healing || !use.cat || selected.kind !== 'pc') ? selected.id : undefined;
     render();
     send({ type: 'useItem', charId: charId, index: index, gearKey: gearKey, spellId: spellId || undefined, mode: mode || undefined, targetCardIds: areaIds || undefined, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal';  } render(); });

@@ -8,7 +8,7 @@
   if (!R || !G) throw new Error('Load rules.js and gear.js before sheet-core.js.');
   var B = R.BUILD, STATS = R.STATS, CATS = R.CATS;
   var TEXT_LIMITS = { name: 60, calling: 30, vow: 120, appearance: 600, background: 1500, notes: 1500 };
-  var ALL = G.items.concat(G.relics, G.grimoires, G.found || []), BY = {}; ALL.forEach(function (i) { BY[i.id] = i; });
+  var ALL = G.items.concat(G.relics, G.grimoires, G.found || []), BY = {}; ALL.concat(G.retiredGrimoires || []).forEach(function (i) { BY[i.id] = i; });
   /* a thing only the GM gives out: a relic, or anything from the loot table that is not one of the starter items */
   var isFind = function (it) { return !!it && (it.kind === 'relic' || it.found === true); };
   var SPELL = {}; G.spells.forEach(function (s) { SPELL[s.id] = s; });
@@ -46,6 +46,7 @@
     if (kind === 'weapon' && !o.roll) o.roll = o.weaponStyle === 'ranged' || o.weaponStyle === 'crossbow' || o.weaponStyle === 'firearm' ? 'DEX' : 'STR';
     if (kind === 'weapon' && o.weaponStyle === 'heavy') { o.cat = 'weapons'; if (STATS.indexOf(o.roll) < 0) o.roll = 'STR'; }
     if (kind === 'grimoire') {
+      o.theme = (G.grimoireThemes || []).indexOf(raw.theme) >= 0 ? raw.theme : '';
       o.slots = 3;
       o.temptsHorror = true; o.cat = ''; o.roll = ''; o.horror = horrorOf(raw.horror) || 1;
       o.spells = (Array.isArray(raw.spells) ? raw.spells : []).filter(function (id, n, ids) { return Object.prototype.hasOwnProperty.call(SPELL, id) && ids.indexOf(id) === n; }).slice(0, 3);
@@ -71,6 +72,7 @@
   function automationText(src) {
     if (!src) return '';
     var heal = healingOf(src), active = !!(src.cat || src.temptsHorror || heal);
+    if (src.kind === 'grimoire' && src.legacyEdition) return 'Original spell selection: this saved book keeps its earlier spells. The GM can replace it with a themed edition if wanted. Each spell lists its automatic and manual steps.';
     if (src.kind === 'grimoire') return 'Each spell lists its automatic and manual steps. Changing ability text does not add automation.';
     if (src.kind === 'armour') return 'Automatic: equipped Defence' + (src.hearts ? ' and extra Hearts' : '') + '. GM: movement restrictions and special check difficulty in the description.';
     if (!active) return 'Manual: the GM handles this item’s effects, checks and quantities. Its description does not create an automatic action.';
@@ -78,7 +80,7 @@
     if (src.temptsHorror) auto += ', plus the stated Horror cost';
     if (src.once === 'scene') auto += ' and once-per-scene limit';
     var extra = {ward: 'Choose an eligible ally with the GM; add and later remove +2 Defence manually.', chain: 'Apply the self-harm, check bonus and once-per-turn limit manually.'};
-    return 'Automatic: ' + auto + '. GM: confirms range and eligibility' + (heal ? '.' : '; all other described effects and durations are manual.') + (extra[src.id] ? ' ' + extra[src.id] : '');
+    return 'Automatic: ' + auto + '. GM: confirms range and eligibility' + (heal ? '.' : '; all other described effects and durations are manual.') + (extra[src.id] ? ' ' + extra[src.id] : '') + (src.manualSteps ? ' ' + src.manualSteps : '');
   }
   /* The item a gear entry stands for: a designed one carries its own details, anything else is looked up on the gear list. */
   function itemOf(g) { return g ? (g.def ? makeCustom(g.def) : BY[g.id] || null) : null; }
@@ -199,7 +201,7 @@
     var out = [];
     (h.gear || []).forEach(function (g, i) {
       var it = itemOf(g); if (!it) return;
-      if (it.kind === 'grimoire' && it.pick) { var r = useOf(h, i); out.push({ index: i, spellId: '', ok: r.ok, why: r.why || '', name: 'Read ' + it.name, stat: '', cat: '', pick: it.pick }); }
+      if (it.kind === 'grimoire' && it.pick) { var r = useOf(h, i); out.push({ index: i, spellId: '', ok: r.ok, why: r.why || '', name: 'Read ' + it.name, stat: '', cat: '', pick: it.pick, pickDie: it.pickDie || it.pick }); }
       else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror || s.heal) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
       else if (it.cat || it.temptsHorror || healingOf(it)) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
     });
@@ -218,7 +220,7 @@
     var source = BY[it.healingSource || it.id]; if (source && healingOf(source)) out.healingSource = source.id;
     if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
     if (it.kind === 'armour') { out.armourPart = armourPart(it); if (it.hearts) out.hearts = it.hearts; }
-    if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
+    if (it.kind === 'grimoire') { out.category = 'Grimoire'; if (it.theme) out.theme = it.theme; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
     return out;
   }
   /* The d100 loot table: the item a roll of n gives (1 to 100), or null. */

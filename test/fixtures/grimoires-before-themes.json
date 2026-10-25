@@ -1,0 +1,750 @@
+{
+  "books": [
+    {
+      "id": "embers",
+      "loot": [
+        1,
+        6
+      ],
+      "flavour": "Psalms of fire and ruin, written before the Church was founded.",
+      "category": "Grimoire",
+      "kind": "grimoire",
+      "name": "The Ashen Psalter",
+      "slots": 3,
+      "use": "Action",
+      "roll": "INT",
+      "horror": 1,
+      "effort": 10,
+      "cat": "magic",
+      "spells": [
+        "ember",
+        "kindle",
+        "pillarash"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "temptsHorror": true,
+      "table": "grimoires",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "litany",
+      "kind": "grimoire",
+      "name": "The Seventh Penance",
+      "slots": 3,
+      "use": "Action",
+      "roll": "WIS",
+      "horror": 1,
+      "effort": 8,
+      "spells": [
+        "mend",
+        "ward",
+        "speak"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "temptsHorror": true,
+      "table": "grimoires",
+      "loot": [
+        7,
+        12
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "dust",
+      "loot": [
+        13,
+        18
+      ],
+      "flavour": "Spells of silence, secrets and stolen words.",
+      "category": "Grimoire",
+      "kind": "grimoire",
+      "name": "The Book of Quiet Mouths",
+      "slots": 3,
+      "use": "Action",
+      "roll": "INT",
+      "horror": 1,
+      "effort": 10,
+      "cat": "magic",
+      "spells": [
+        "unmake",
+        "hush",
+        "stealword"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "temptsHorror": true,
+      "table": "grimoires",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "cinderlectionary",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "name": "The Cinder Lectionary",
+      "slots": 3,
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        32,
+        37
+      ],
+      "spells": [
+        "emberpsalm",
+        "psalmruin",
+        "pyre"
+      ],
+      "horror": 1,
+      "temptsHorror": true,
+      "does": "Three spells of fire and ruin. Each spell lists its effect and Horror cost.",
+      "use": "Action",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "lastconfessions",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "name": "The Book of Last Confessions",
+      "slots": 3,
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        38,
+        43
+      ],
+      "spells": [
+        "rend",
+        "waxmouth",
+        "confession"
+      ],
+      "horror": 1,
+      "temptsHorror": true,
+      "does": "Three workings of the dead and their testimony. Each spell lists its effect and Horror cost.",
+      "use": "Action",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "thresholdlectionary",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "name": "The Threshold Lectionary",
+      "slots": 3,
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        44,
+        50
+      ],
+      "spells": [
+        "ward",
+        "lastverse",
+        "realname"
+      ],
+      "horror": 1,
+      "temptsHorror": true,
+      "does": "Three rites of protection and peril. Each spell lists its effect and Horror cost.",
+      "use": "Action",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "canticles",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "name": "The Unsealed Canticles",
+      "slots": 3,
+      "found": true,
+      "loot": [
+        19,
+        25
+      ],
+      "horror": 1,
+      "spells": [
+        "opendoor",
+        "unbinding",
+        "openwound"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "temptsHorror": true,
+      "flavour": "Hymns sung backwards. They open what was closed.",
+      "table": "grimoires",
+      "use": "Action",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "untitled",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "name": "Grimoire with no title",
+      "slots": 3,
+      "found": true,
+      "loot": [
+        26,
+        31
+      ],
+      "horror": 1,
+      "spells": [
+        "watchingpage",
+        "borrowedface",
+        "doorinward"
+      ],
+      "pick": 3,
+      "does": "Read as an Action: roll d6. On 1–2 cast The Page That Watches; on 3–4 cast Borrowed Face; on 5–6 cast The Door Inward.",
+      "temptsHorror": true,
+      "flavour": "Its pages are blank until read by candlelight, and the words change each time.",
+      "table": "grimoires",
+      "pickDie": 6,
+      "use": "Action",
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "lowdoors",
+      "name": "The Litany of Low Doors",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "opendoor",
+        "unbinding",
+        "doorinward"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "Its margins are measured like a carpenter's plan.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        51,
+        56
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "hospicepsalter",
+      "name": "The Hospice Psalter",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "mend",
+        "ward",
+        "kindle"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "Linen markers divide the pages by the hours of a night watch.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        57,
+        62
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "silentprocession",
+      "name": "The Silent Processional",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "hush",
+        "stealword",
+        "borrowedface"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "No name is written beneath its instructions.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        63,
+        68
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "gravesideoffice",
+      "name": "The Graveside Office",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "speak",
+        "confession",
+        "watchingpage"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "Soil stains the corners of every leaf.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        69,
+        75
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "charredantiphon",
+      "name": "The Charred Antiphon",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "ember",
+        "pillarash",
+        "kindle"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "The binding is scorched, but the thread is unbroken.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        76,
+        81
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "brokenmasonry",
+      "name": "The Lectionary of Broken Stone",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "unmake",
+        "psalmruin",
+        "opendoor"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "Fine mortar sifts from between the pages.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        82,
+        87
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "mourningverses",
+      "name": "The Mourning Verses",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "openwound",
+        "hush",
+        "speak"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "Each verse begins with a different dead person's name.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        88,
+        93
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    },
+    {
+      "id": "veiledpilgrim",
+      "name": "The Veiled Pilgrim's Book",
+      "kind": "grimoire",
+      "category": "Grimoire",
+      "slots": 3,
+      "use": "Action",
+      "horror": 1,
+      "temptsHorror": true,
+      "spells": [
+        "borrowedface",
+        "doorinward",
+        "ward"
+      ],
+      "does": "Three spells, each used as an Action. Each spell lists its effect and Horror cost.",
+      "flavour": "A walking route is stitched into the inside cover.",
+      "found": true,
+      "table": "grimoires",
+      "loot": [
+        94,
+        100
+      ],
+      "horrorReason": "The cost belongs to the spell: healing spells add 0 Horror; all other spells add 1."
+    }
+  ],
+  "spells": [
+    {
+      "id": "ember",
+      "from": "embers",
+      "name": "Ember",
+      "roll": "INT",
+      "effort": 10,
+      "cat": "magic",
+      "horror": 1,
+      "band": "far",
+      "use": "Action",
+      "does": "Flame strikes a foe in Near or Far.",
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "kindle",
+      "from": "embers",
+      "name": "Kindle",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Set fire to, or put out, something small. Light to Near. No roll.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "mend",
+      "from": "litany",
+      "name": "Mend",
+      "roll": "WIS",
+      "effort": 8,
+      "horror": 0,
+      "band": "near",
+      "use": "Action",
+      "does": "Yourself or any target in Close or Near heals Effort d8. Once per person per rest.",
+      "heal": true,
+      "fx": [
+        {
+          "on": "use",
+          "do": "heal",
+          "dice": "1d8",
+          "kind": "mend",
+          "target": "target"
+        }
+      ],
+      "temptsHorror": false,
+      "effect": "healing"
+    },
+    {
+      "id": "ward",
+      "from": "litany",
+      "name": "Ward",
+      "roll": "WIS",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "An ally in Close or Near gets +2 Defence until your next turn.",
+      "fx": [
+        {
+          "on": "use",
+          "do": "buff",
+          "to": "defence",
+          "n": 2,
+          "target": "ally",
+          "until": "turn"
+        }
+      ],
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "unmake",
+      "from": "dust",
+      "name": "Unmake",
+      "roll": "INT",
+      "effort": 10,
+      "cat": "magic",
+      "horror": 1,
+      "band": "far",
+      "use": "Action",
+      "does": "A foe in Near or Far takes Effort d10 force, and is left Dazed: its next attack rolls 3 less.",
+      "fx": [
+        {
+          "on": "use",
+          "do": "status",
+          "tag": "dazed",
+          "target": "foe",
+          "until": "turn"
+        }
+      ],
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "speak",
+      "from": "litany",
+      "name": "Speak with the Dead",
+      "roll": "WIS",
+      "effort": 0,
+      "horror": 1,
+      "band": "close",
+      "use": "Action",
+      "does": "Ask a corpse one question. It answers truly, and briefly.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "rend",
+      "from": "lastconfessions",
+      "name": "Rend the Veil",
+      "roll": "INT",
+      "effort": 12,
+      "cat": "ultimate",
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Once per scene, choose the visible foes within Close or Near that the GM agrees are affected. Make one INT check; on success roll Ultimate Effort d12 once and apply that damage to every selected foe. The attempt spends the scene use and adds 1 Horror, hit or miss. Range and eligible targets are judged by the GM.",
+      "once": "scene",
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails.",
+      "area": true
+    },
+    {
+      "id": "hush",
+      "from": "dust",
+      "name": "Hush",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "One creature's voice is silenced until the end of the scene.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "stealword",
+      "from": "dust",
+      "name": "Steal a Word",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Take the last word a creature spoke. It cannot say that word again until you give it back.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "waxmouth",
+      "from": "lastconfessions",
+      "name": "Mouth of Wax",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "A creature's mouth seals shut. It cannot speak, cast or eat until the wax is cut away.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "confession",
+      "from": "lastconfessions",
+      "name": "Confession of the Dead",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "close",
+      "use": "Action",
+      "does": "A corpse answers three questions truthfully. It remembers you afterwards.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "opendoor",
+      "from": "canticles",
+      "name": "Canticle of the Open Door",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "close",
+      "use": "Action",
+      "does": "Any lock, door, lid or seal you touch opens.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "unbinding",
+      "from": "canticles",
+      "name": "Unbinding",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Chains, ropes, shackles and wards fall away from one creature.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "openwound",
+      "from": "canticles",
+      "name": "Open Wound",
+      "roll": "WIS",
+      "effort": 10,
+      "cat": "magic",
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Every old wound on a creature opens at once.",
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "lastverse",
+      "from": "thresholdlectionary",
+      "name": "The Last Verse",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Open a crack in a binding. Something comes through, and it owes you nothing.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "emberpsalm",
+      "from": "cinderlectionary",
+      "name": "Ember Psalm",
+      "roll": "INT",
+      "effort": 10,
+      "cat": "magic",
+      "horror": 1,
+      "band": "far",
+      "use": "Action",
+      "does": "A fistful of holy fire burns one creature.",
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "pillarash",
+      "from": "embers",
+      "name": "Pillar of Ash",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Choking ash fills the room. Nobody inside can see past arm's length.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "psalmruin",
+      "from": "cinderlectionary",
+      "name": "Psalm of Ruin",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "far",
+      "use": "Action",
+      "does": "Stone and timber crack. A wall, floor, roof or bridge within Far that you can see collapses.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "pyre",
+      "from": "cinderlectionary",
+      "name": "Pyre",
+      "roll": "INT",
+      "effort": 12,
+      "cat": "ultimate",
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "A creature burns from within.",
+      "temptsHorror": true,
+      "effect": "damage",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "watchingpage",
+      "from": "untitled",
+      "name": "The Page That Watches",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "self",
+      "use": "Action",
+      "does": "Learn one true thing about the place where you stand.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "borrowedface",
+      "from": "untitled",
+      "name": "Borrowed Face",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "self",
+      "use": "Action",
+      "does": "Wear the face and voice of someone you have seen die, until dawn.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "doorinward",
+      "from": "untitled",
+      "name": "The Door Inward",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "near",
+      "use": "Action",
+      "does": "Step into one shadow and out of another you can see.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    },
+    {
+      "id": "realname",
+      "from": "thresholdlectionary",
+      "name": "Its Real Name",
+      "roll": "",
+      "effort": 0,
+      "horror": 1,
+      "band": "special",
+      "use": "Action",
+      "does": "Speak the book's true name. The GM decides what it does, and it is never small.",
+      "temptsHorror": true,
+      "effect": "esoteric",
+      "horrorReason": "Casting forbidden magic tempts the Horror, whether the spell succeeds or fails."
+    }
+  ]
+}
