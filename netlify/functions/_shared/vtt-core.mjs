@@ -44,6 +44,7 @@ export function addLog(s, who, text, o = {}) {
   /* private: only the GM reads it. only: the GM and that one player. gmText: what the GM reads in place of `text` (the numbers, say).
      dice: the dice the server rolled for it, [{ die: 20, n: 12 }], so every screen that reads the line can show them landing; diceGm: only the GM is shown them (the numbers are hidden from players). */
   const e = { id: nid(s, 'L'), at: o.now || 0, by: who.role === 'gm' ? 'gm' : who.pid, who: who.name || (who.role === 'gm' ? 'GM' : 'Player'), text: str(text, 400), gmText: o.gmText ? str(o.gmText, 400) : '', kind: o.kind || 'info', private: !!o.private, only: o.only || null, effects: o.effects || [], undone: false };
+  if (o.rollId) { e.rollId = o.rollId; e.rollScene = s.table.scene; }
   if (o.dice && o.dice.length) { e.dice = o.dice; if (o.diceGm) e.diceGm = true; }
   s.log.push(e); if (s.log.length > LIMITS.log) s.log.splice(0, s.log.length - LIMITS.log);
   return e;
@@ -124,6 +125,22 @@ function migrateAnnotations(s) {
   (s.draw || []).forEach((line) => { if (!line.sceneId) line.sceneId = s.table.scene; });
   Object.values(s.pointers || {}).forEach((point) => { if (!point.sceneId) point.sceneId = s.table.scene; });
 }
+/* Display-only check metadata follows the same audience as its log entry.
+   Never send raw rolls/gear or hidden monster numbers to other viewers. */
+function rollOutcome(s, e, a) {
+  const r = e.rollId && s.rolls[e.rollId]; if (!r || !r.check || r.void || e.undone || (e.rollScene && e.rollScene !== s.table.scene)) return undefined;
+  const chk = r.check, gm = isGM(a), hidden = !!(r.attack && numbersHidden(s.cards[r.attack.cardId]) && !gm);
+  const attack = !!(r.attack || r.isAttack), critical = !!(chk.success && chk.offerUltimate && !r.nonDamage);
+  const targets = (r.area ? r.targetCardIds || [] : [r.targetCardId]).map(id => s.cards[id]).filter(c => c && cardVisibleTo(s, c, a));
+  const names = r.attack ? attackerNames(s, r) : null;
+  const result = { rollId: r.id, own: r.by === (gm ? 'gm' : a.pid), who: names ? gm ? names.gm : names.pub : r.charName,
+    label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : r.attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
+    success: chk.success, critical, item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
+  if (!hidden) Object.assign(result, { d20: chk.d20, mod: chk.mod, total: chk.total, target: r.attack ? chk.defence : chk.target, versus: r.attack ? 'Defence' : 'Target', manual: !!r.manual,
+    note: r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : '' });
+  return result;
+}
+
 export function project(s, a, opt = {}) {
   const gm = isGM(a), cards = {}, layout = {};
   for (const id of Object.keys(s.cards)) {
@@ -160,7 +177,7 @@ export function project(s, a, opt = {}) {
     chars: Object.fromEntries(Object.entries(s.chars).map(([id, c]) => [id, charView(c, gm || (!!a.pid && c.owner === a.pid), scenePowers(s)[id])])),
     players: Object.values(s.players).map((p) => ({ id: p.id, name: p.name })),
     drawV: s.drawV || 0, pv: s.pv || 0, pointers: projectPointers(s, a), rolls, nextSession: s.next || null,
-    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
+    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
     horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds }, gm ? { alert: horrorOf(s).alert } : {})
   };
@@ -506,7 +523,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
-    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat), { kind: 'roll', private: privateLine, dice: diceOf(manual, 20, n) });
+    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat), { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
     natOne(s, a, ctx, ch, chk);
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
@@ -752,7 +769,7 @@ const HANDLERS = {
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
-    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, 20, d20) });
+    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20) });
     const out = { rollId: roll.id }, hr = natOne(s, a, ctx, ch, chk); if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
@@ -785,7 +802,7 @@ const HANDLERS = {
       if (sceneFx) sceneFx.roll = roll.id;
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
-      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], dice: diceOf(manual, 20, d20) });
+      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
       nat = natOne(s, a, ctx, ch, chk);
@@ -873,7 +890,7 @@ const HANDLERS = {
     const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, attack: { cardId: att.id, baseBonus: att.attack || 0, sceneBonus: s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0 }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
     s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     const who = attackerNames(s, roll), hide = numbersHidden(att), line = (n) => n + ' attacks ' + tgt.name + (hide ? (res.hit ? ': hit.' : ': miss.') : ' · ' + R.sayAttack(res)) + (manual ? ' [physical die]' : '');
-    L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', dice: diceOf(manual, 20, d20), diceGm: hide });
+    L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', rollId: roll.id, dice: diceOf(manual, 20, d20), diceGm: hide });
     return { rollId: roll.id };
   },
   monsterEffort(s, c, a, ctx) { /* on a hit: the monster's Effort is rolled and goes straight onto the hero's hit points */

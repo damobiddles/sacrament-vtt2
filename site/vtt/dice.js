@@ -14,45 +14,68 @@
     20: '<polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon points="50,24 76,68 24,68"/><path d="M50,3 V24 M93,73 L76,68 M7,73 L24,68"/>',
     100: '<polygon points="50,4 95,42 50,96 5,42"/><path d="M5,42 L50,58 L95,42 M50,58 V96"/>'
   };
-  var box = null, mine = 0, air = 0, api;
-
+  var box = null, mine = 0, air = 0, api, active = null;
+  var timers = new Set(), intervals = new Set();
+  function later(fn, ms) { var id = setTimeout(function () { timers.delete(id); fn(); }, ms); timers.add(id); return id; }
   function off() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
-  function setOff(v) { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch (e) {} }
+  function setOff(v) { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch (e) {} if (v && active) { show([], active.who, active.own, active); if (api.onLand) api.onLand(); } }
   function still() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function enabled() { return !off() && !still() && !document.hidden; }
   function holder() {
-    if (!box) { box = document.createElement('div'); box.id = 'dice'; box.setAttribute('aria-hidden', 'true'); document.body.appendChild(box); }   /* the result is read out by the activity feed; this is only a picture of it */
+    if (!box) { box = document.createElement('div'); box.id = 'dice'; box.setAttribute('aria-hidden', 'true'); document.body.appendChild(box); }
     return box;
   }
+  function clear() {
+    timers.forEach(clearTimeout); intervals.forEach(clearInterval); timers.clear(); intervals.clear(); mine = 0; air = 0; active = null;
+    if (box) { box.replaceChildren(); box.classList.remove('focused'); box.setAttribute('aria-hidden', 'true'); }
+  }
   function land(own) { if (air > 0) air--; if (own && mine > 0) mine--; if (api.onLand) api.onLand(); }
-
-  /* show one roll's dice: [{ die: 20, n: 12 }], with a name under them. `own`: the person rolled it, so their result panel waits until the dice have landed. */
-  function show(dice, who, own) {
-    if (!enabled() || !dice || !dice.length) return;
+  function textNode(parent, tag, cls, value) { var el = document.createElement(tag); el.className = cls; el.textContent = value; parent.appendChild(el); return el; }
+  /* Presentation only. Checks use the server's authorised outcome, including
+     typed physical dice; ordinary GM dice never invent a success/failure. */
+  function show(dice, who, own, outcome) {
+    if (document.hidden) return;
+    var animated = enabled() && dice && dice.length;
+    if (!animated && !outcome) return;
+    if (outcome || active) clear();
     var h = holder(); while (h.children.length >= MAX) h.removeChild(h.firstChild);
     var g = document.createElement('div'); g.className = 'dice-roll';
-    dice.slice(0, 2).forEach(function (d) {
+    if (outcome) { active = outcome; h.classList.add('focused'); h.setAttribute('aria-hidden', 'false'); g.classList.add('result-roll'); g.classList.add(outcome.success ? 'success' : 'failure'); if (outcome.critical) g.classList.add('critical'); }
+    (animated ? dice : []).slice(0, 2).forEach(function (d) {
       var size = +d.die, n = +d.n, el = document.createElement('div'), face = document.createElement('b');
-      el.className = 'die d' + size; el.innerHTML = '<svg viewBox="0 0 100 100">' + (SHAPES[size] || SHAPES[20]) + '</svg>';
+      el.className = 'die d' + size; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<svg viewBox="0 0 100 100">' + (SHAPES[size] || SHAPES[20]) + '</svg>';
       face.textContent = String(1 + Math.floor(Math.random() * size)); el.appendChild(face); g.appendChild(el);
-      var t = setInterval(function () { face.textContent = String(1 + Math.floor(Math.random() * size)); }, 70);
-      setTimeout(function () { clearInterval(t); face.textContent = String(n); el.classList.add('landed'); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
+      var t = setInterval(function () { face.textContent = String(1 + Math.floor(Math.random() * size)); }, 70); intervals.add(t);
+      later(function () { clearInterval(t); intervals.delete(t); face.textContent = String(n); el.classList.add('landed'); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
     });
-    if (who) { var nm = document.createElement('span'); nm.className = 'who'; nm.textContent = who; g.appendChild(nm); }
+    if (who || outcome) textNode(g, 'span', 'who', outcome ? outcome.who : who);
     h.appendChild(g);
-    air++; if (own) mine++; setTimeout(function () { land(own); }, SPIN + 150);
-    setTimeout(function () { g.classList.add('gone'); }, SPIN + HOLD);
-    setTimeout(function () { if (g.parentNode) g.parentNode.removeChild(g); }, SPIN + HOLD + FADE);
+    var closeTimer;
+    function dismiss() { if (g.contains(document.activeElement)) return; g.classList.add('gone'); later(function () { if (outcome && active === outcome) clear(); else if (g.parentNode) g.remove(); }, FADE); }
+    function hold() { closeTimer = later(dismiss, outcome ? 2600 : HOLD); }
+    function reveal() {
+      if (outcome) {
+        var body = document.createElement('div'); body.className = 'reveal-result'; body.setAttribute('role', 'status'); body.setAttribute('aria-live', 'polite'); body.setAttribute('aria-atomic', 'true');
+        var mark = textNode(body, 'span', 'reveal-mark', outcome.success ? '✓' : '×'); mark.setAttribute('aria-hidden', 'true');
+        textNode(body, 'strong', 'reveal-label', outcome.label);
+        textNode(body, 'p', 'reveal-summary', outcome.hiddenNumbers ? 'The GM has resolved this attack. Numbers are hidden.' : outcome.total + ' total against ' + outcome.versus + ' ' + outcome.target + '.');
+        if (outcome.item || outcome.targetName) textNode(body, 'p', 'reveal-context', (outcome.item || '') + (outcome.targetName ? (outcome.item ? ' → ' : 'Target: ') + outcome.targetName : ''));
+        if (outcome.note) textNode(body, 'p', 'reveal-note', outcome.note);
+        if (outcome.manual) textNode(body, 'p', 'reveal-note', 'Physical die');
+        g.appendChild(body); g.classList.add('revealed');
+        if (own && api.canDamage && api.canDamage(outcome.rollId)) { var btn = textNode(g, 'button', 'btn main reveal-damage', 'Roll damage'); btn.type = 'button'; btn.dataset.do = 'revealDamage'; btn.dataset.roll = outcome.rollId; }
+      }
+      hold();
+    }
+    g.addEventListener('focusin', function () { clearTimeout(closeTimer); timers.delete(closeTimer); });
+    g.addEventListener('focusout', function (e) { if (!g.contains(e.relatedTarget)) hold(); });
+    if (animated) { air++; if (own) mine++; later(function () { land(own); reveal(); }, SPIN + 150); } else reveal();
   }
-
   api = window.SacramentDice = {
-    show: show,
-    /* true while this person's own dice are still in the air */
+    show: show, clear: clear,
     busy: function () { return mine > 0; },
-    /* true while any dice are in the air on this screen */
     rolling: function () { return air > 0; },
-    /* set by the table: called each time a roll's dice land */
-    onLand: null,
+    onLand: null, canDamage: null,
     off: off, setOff: setOff
   };
 })();

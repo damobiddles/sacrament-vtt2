@@ -52,10 +52,10 @@
       if (!st.draw) { if (S && S.draw && S.drawV === st.drawV) st.draw = S.draw; else { st.draw = (S && S.draw) || []; UI.drawStale = true; setTimeout(function () { poll(true); }, 0); } }
       else UI.drawStale = false;
       /* The players have been moved to another scene: what was open (a roll, a selected card, a marked target) belonged to the old one, and a roll about a card they can no longer see would read as "not applied yet". */
-      if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { UI.roll = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
+      if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { D.clear(); UI.roll = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
-      spin(st.log); var fresh = UI.freshLog || []; S = st; UI.dirty = false;
+      S = st; UI.dirty = false; spin(st.log); var fresh = UI.freshLog || [];
       if (gm() && UI.view && !S.scenes.some(function (sc) { return sc.id === UI.view; })) { UI.view = null; UI.sel = null; UI.sceneRename = null; UI.sceneDelete = null; }
       if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
       if (was) noticeChanges(was, fresh);
@@ -78,9 +78,15 @@
   function spin(log) {
     var fresh = UI.seenLog ? log.filter(function (e) { return !UI.seenLog[e.id]; }) : []; UI.freshLog = fresh;
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
+    var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
+    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome); return; }
     fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3).forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
   }
   D.onLand = function () { if (S) render(); };
+  D.canDamage = function (id) {
+    var r = S && S.rolls.filter(function (x) { return x.id === id; })[0];
+    return !!(r && (!r.attack || (S.cards[r.targetCardId] && S.cards[r.targetCardId].hp && S.cards[r.targetCardId].hp.cur > 0)) && r.check && r.check.success && !r.void && !r.nonDamage && !r.effort && !r.applied && (r.cat || r.attack));
+  };
 
   /* Telling a player what has just happened to them, so nothing important lives only in the one-line feed:
      the turn reaching them (a short banner and a lit strip), a blow on their hero (a short banner once the dice have landed),
@@ -191,7 +197,7 @@
   }
 
   function resetSession() {
-    window.SacramentDialogs.reset();
+    window.SacramentDialogs.reset(); D.clear();
     sessionVersion++; clearTimeout(timer); clearTimeout(UI.nudge); clearTimeout(UI.leaveTimer); polling = false; again = false;
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
     clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
@@ -1012,6 +1018,14 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-do]'); if (!b || !S) return; var d = b.dataset, c = S.cards[d.id];
     switch (d.do) {
+      case 'revealDamage': {
+        var revealed = S.rolls.filter(function (r) { return r.id === d.roll; })[0];
+        if (!revealed || !D.canDamage(d.roll) || UI.working || UI.rolling) { D.clear(); break; }
+        D.clear(); UI.roll = d.roll; renderPanel();
+        var damageButton = document.querySelector('#panel [data-do=' + (revealed.attack ? 'monsterEffort' : 'effort') + '][data-roll="' + d.roll + '"]');
+        if (damageButton) { damageButton.focus({ preventScroll: true }); damageButton.click(); }
+        break;
+      }
       case 'mapWidth': UI.mapWide = !UI.mapWide; renderTable(); break;
       case 'target': send({ type: 'setTarget', delta: +d.d }); break;   /* by an amount: a press made before the screen catches up still counts */
       case 'nextRound': send({ type: 'nextRound', expect: { scene: S.table.scene.id, round: S.table.round, idx: S.table.idx } }); break;
@@ -1189,7 +1203,7 @@
       toast('Image added.'); input.value = ''; if (document.activeElement === input) input.blur();
     }).catch(function (e) { if (version !== sessionVersion) return; toast((e && e.message || 'The upload did not work.') + ' Nothing was changed.', 8000); input.value = ''; });
   }
-  document.addEventListener('input', function (e) { if (e.target.id === 'sceneName') { UI.sceneName = e.target.value; e.target.setCustomValidity(''); } });
+  document.addEventListener('input', function (e) { if (e.target.id === 'gmDiceCount') UI.gmDiceCount = +e.target.value; if (e.target.id === 'sceneName') { UI.sceneName = e.target.value; e.target.setCustomValidity(''); } });
   document.addEventListener('change', function (e) {
     var t = e.target; if (!S || !t.dataset) return;
     if (t.dataset.upload === 'bg') return uploadPicture(t);
