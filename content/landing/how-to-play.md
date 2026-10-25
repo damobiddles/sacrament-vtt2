@@ -9,7 +9,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 1. **Get an invitation.** Ask the GM for their invitation link or six-letter table code.
 2. **Create a hero.** Open [My heroes](/character/) in this browser, choose a starting focus and press **Generate a hero**. Change the name and vow if you like; press **Keep this hero** to save it. The generator supplies scores, Effort and a starting kit.
 3. **Join the table.** Open the invitation or [enter the code](/vtt/?join), then enter your player name. Choose **Bring a hero** to copy your saved hero into this game, or **Play** beside a hero your GM has provided.
-4. **Find your actions.** Open **My character**, then **Ready to use**. Select an enemy before using a weapon. A successful attack leads to **Roll damage**, then **Apply**. Tell the group what you are doing and let the GM guide your first roll.
+4. **Find your actions.** Open **My character**, then **Ready to use**. Select an enemy before using a weapon. A successful attack leads to **Roll damage**; the result applies to the chosen target automatically. Tell the group what you are doing and let the GM guide your first roll.
 
 [Read the player guide: scores, equipment, attacks, healing and Horror](/player-guide/)
 
@@ -18,7 +18,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 1. **Make a table.** Open [Run a table](/vtt/?run). Start with the sample encounter to learn the controls, or untick it to begin empty.
 2. **Keep your access safe.** In the **Table** tab, save the private GM recovery link. Keep it to yourself. Use the separate **Copy invite link** to invite players.
 3. **Prepare a simple encounter.** In **Scene**, add an enemy and an obstacle. Keep unrevealed cards hidden. In **Play**, arrange the turn order. Set the Target and explain any house rules.
-4. **Walk through a first turn.** Have a player select the enemy, use a weapon, roll damage and Apply. The GM then presses **Next turn**. The footer's **GM dice** can roll shared or private dice without changing HP.
+4. **Walk through a first turn.** Have a player select the enemy, use a weapon, roll damage and see the result applied automatically. The GM then presses **Next turn**. The footer's **GM dice** can roll shared or private dice without changing HP.
 
 [Read the GM guide: preparation, monster attacks, scenes, privacy and manual rulings](/gm-guide/)
 

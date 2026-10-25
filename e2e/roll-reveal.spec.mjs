@@ -12,9 +12,9 @@ test('a physical attack reveals the actual critical result to GM and player and 
  // Keep the brief reveal on screen while inspecting contrast, as keyboard focus does in use.
  await p.locator('.reveal-damage').focus();await expect(gm.locator('.reveal-label')).toHaveText('CRITICAL HIT');await expect(gm.locator('.reveal-damage')).toHaveCount(0);
  await p.screenshot({path:'/workspace/sacrament-audit/reveal-critical.png'});expect(await axeContrast(p)).toEqual([]);
- await p.locator('.reveal-damage').click();await saved(p);await expect(p.locator('.reveal-damage')).toHaveCount(0);await expect(p.locator('#panel [data-do=apply]')).toBeVisible();
- const r=(await state(p)).rolls.at(-1);expect(r.effort.critical).toBeTruthy();expect(r.applied).toBeNull();expect(Object.values((await state(p)).cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(20,'damage is not applied until Apply');
- await p.locator('#panel [data-do=apply]').click();await saved(p);expect(Object.values((await state(p)).cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(Math.max(0,20-r.effort.total));expect(gm.errors.concat(p.errors)).toEqual([]);
+ await p.locator('.reveal-damage').click();await saved(p);await expect(p.locator('.reveal-damage')).toHaveCount(0);await expect(p.locator('#panel')).toContainText('Applied');await expect(p.locator('#panel [data-do=apply]')).toHaveCount(0);
+ const r=(await state(p)).rolls.at(-1);expect(r.effort.critical).toBeTruthy();expect(r.applied.cardId).toBeTruthy();
+ expect(Object.values((await state(p)).cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(Math.max(0,20-r.effort.total));expect(gm.errors.concat(p.errors)).toEqual([]);
 });
 test('miss and failed check are distinct; reduced motion keeps a still readable result without dice',async({browser})=>{
  const {gm,p}=await setup(browser);await p.emulateMedia({reducedMotion:'reduce'});await attack(p,2);
@@ -31,7 +31,7 @@ test('a reveal never replays on reconnect and leaving removes it',async({browser
 });
 
 test('a shared update cannot reset the GM dice count while it is being typed',async({browser})=>{
- const gm=await newPage(browser),other=await newPage(browser),code=await makeTable(gm,{sample:false});await gm.getByRole('button',{name:'GM dice',exact:true}).click();
+ const gm=await newPage(browser),other=await newPage(browser),code=await makeTable(gm,{sample:false});await expect(gm.locator('#gmDie')).toBeVisible();
  await gm.locator('#gmDie').selectOption('8');await gm.locator('#gmDiceCount').fill('2');const before=(await state(gm)).v;
  await joinTable(other,code,'Update during typing');await expect.poll(async()=>(await state(gm)).v).toBeGreaterThan(before);
  await expect(gm.locator('#gmDiceCount')).toHaveValue('2');await gm.getByRole('button',{name:'Roll GM dice',exact:true}).click();await saved(gm);

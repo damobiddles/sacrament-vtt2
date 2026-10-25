@@ -13,7 +13,7 @@ export { expect };
 
 export async function newPage(browser, viewport) {
   const context = await browser.newContext({ viewport: viewport || { width: 1366, height: 800 } });
-  await context.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await context.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
   const page = await context.newPage();
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));

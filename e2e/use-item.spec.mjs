@@ -30,13 +30,13 @@ test('Aiming at a foe: the strip asks what the hero is using; the hit rolls noth
   await ann.locator('#sheetOverlay .sh-item', { hasText: "Penitent's Blade" }).locator('[data-sh=use]').click();
   await expect(ann.locator('#panel .calc.ok')).toContainText('Success');
   await expect(ann.locator('#panel')).toContainText("Penitent's Blade");
-  await expect(ann.locator('#panel')).toContainText('A hit! Now roll the damage.');
+  await expect(ann.locator('#panel')).toContainText('the result applies to the chosen target.');
   expect((await state(ann)).cards[id].hp.cur).toBe(hp0);
   await expect(ann.locator('#panel [data-do=effort]').first()).toContainText('Roll damage: Weapons d6 +3');    // one button, the item's own die
   await ann.locator('#panel [data-do=effort][data-cat=weapons]').click();
   await expect(ann.locator('#panel .calc').nth(1)).toContainText(/d6 \d \+ 3 Weapons = \d+ damage/);   /* against a foe it is called damage */
   const total = +(/= (\d+) damage/.exec(await ann.locator('#panel .calc').nth(1).innerText())[1]);
-  await ann.locator('[data-do=apply]').click(); await expect(ann.locator('#panel')).toContainText('Applied'); await saved(ann);
+  await expect(ann.locator('[data-do=apply]')).toHaveCount(0); await expect(ann.locator('#panel')).toContainText('Applied'); await saved(ann);
   expect((await state(ann)).cards[id].hp.cur).toBe(hp0 - total);
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);
 });

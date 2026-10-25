@@ -46,10 +46,10 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 1. Select the enemy's card or token first.
 2. Use your equipped weapon or spell from **Ready to use**, or your character's item actions. If you have not selected a target, choose one when asked. A stat roll can also offer an attack without an item; choose an ordinary check for other tasks.
 3. The table rolls the check and compares the total with the Target.
-4. On a successful attack, press **Roll damage**, then **Apply** to change the target's HP or progress. Check the named target before applying.
+4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. Undo in Activity corrects a mistake.
 5. Tell the GM when you are finished; the GM advances turns. **Undo last** can take back your own mistaken action when it is still safe to undo.
 
-The damage target stays attached to that attack. Looking at another card does not redirect it. To change it deliberately, select the intended card and use **Change target**.
+The damage target stays attached to that attack. Looking at another card does not redirect it. Choose the correct target before attacking. To correct a mistaken hit, Undo its damage in Activity first; the recorded result can then be deliberately reassigned using **Change target**.
 
 **Effort dice:** Basic d4 for basic work or bare hands; Weapons d6 for ordinary weapons, including bows, crossbows and slings; Guns d8 for guns and gunpowder; Magic d10 for magical damage; Ultimate d12 when an effect or the table's critical option grants it. Add the bonus in the matching category. The GM can change table dice, so read the labels at your table. Heavy ordinary melee weapons add +2 damage, including a critical; crossbows add +2 to their attack checks but keep Weapons d6 and a Move to reload; reach weapons keep normal damage and their described reach or control.
 
@@ -101,4 +101,6 @@ Ask your GM when an effect, distance or consequence needs a ruling. Use [Feedbac
 
 ## Area spells and scene abilities
 
-Rend the Veil asks you to select the affected foes before rolling. The GM confirms range and eligibility. Roll once, then Apply to the selected foes together. Once-per-scene powers spend their allowance on the attempt, even on a miss, and copies do not grant extra uses. Rest and reloading the page do not reset them. The GM can refresh scene abilities for a new encounter, or Undo a mistaken attempt after undoing its damage. The Executioner's Blade offers a separate final blow with its own 3-Horror cost and scene limit.
+Rend the Veil asks you to select the affected foes before rolling. The GM confirms range and eligibility. Roll once; damage applies to the selected foes together automatically. Once-per-scene powers spend their allowance on the attempt, even on a miss, and copies do not grant extra uses. Rest and reloading the page do not reset them. The GM can refresh scene abilities for a new encounter, or Undo a mistaken attempt after undoing its damage. The Executioner's Blade offers a separate final blow with its own 3-Horror cost and scene limit.
+
+Standalone Effort and ordinary task checks can still use Apply when the GM needs to choose where the result belongs. Attacks and targeted item actions apply their rolled result automatically.

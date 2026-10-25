@@ -4,7 +4,7 @@ test.setTimeout(60000);
 
 test('GM dice need no hero and private results do not reach a player',async({browser},info)=>{
  const gm=await newPage(browser),code=await makeTable(gm,{sample:false}),p=await newPage(browser);await joinTable(p,code,'Player');
- await gm.getByRole('button',{name:'GM dice',exact:true}).click();await gm.locator('#gmDie').selectOption('8');await gm.locator('#gmDiceCount').fill('2');await gm.locator('#gmDicePrivate').check();
+ await expect(gm.locator('#gmDie')).toBeVisible();await gm.locator('#gmDie').selectOption('8');await gm.locator('#gmDiceCount').fill('2');await gm.locator('#gmDicePrivate').check();
  await gm.getByRole('button',{name:'Roll GM dice',exact:true}).click();await saved(gm);await expect(gm.locator('.gm-dice [role=status]')).toContainText('GM only:');
  const privateLog=(await state(gm)).log.find(e=>e.text.startsWith('GM rolls 2d8'));expect(privateLog).toBeTruthy();expect((await state(p)).log.some(e=>e.id===privateLog.id)).toBe(false);
  await gm.locator('#gmDicePrivate').uncheck();await gm.getByRole('button',{name:'Roll GM dice',exact:true}).click();await saved(gm);await expect(p.locator('#feed')).toContainText('GM rolls 2d8');
@@ -19,9 +19,10 @@ test('an item attack chooses a target before rolling and keeps it through damage
  await p.locator('[data-do=confirmAttack]').click();expect((await state(p)).rolls).toHaveLength(0);
  await p.locator('#attackTarget').selectOption({label:'Pit Ghoul'});await p.locator('[data-do=confirmAttack]').click();await expect(p.locator('#panel .calc.ok')).toBeVisible();
  await expect(p.locator('#panel')).toContainText('Target: Pit Ghoul');await p.locator('#cards .c',{hasText:'The Sealed Gate'}).click();
- await p.locator('[data-do=effort][data-cat=weapons]').click();await expect(p.locator('[data-do=apply][data-field=hp]')).toContainText('Apply to Pit Ghoul');await saved(p);
- await p.reload();await expect(p.locator('[data-do=apply][data-field=hp]')).toContainText('Apply to Pit Ghoul');
- await p.screenshot({path:info.outputPath('attack-target.png'),fullPage:true});await p.locator('[data-do=apply][data-field=hp]').click();await saved(p);
+ await p.locator('[data-do=effort][data-cat=weapons]').click();await expect(p.locator('#panel')).toContainText('Applied to Pit Ghoul');await expect(p.locator('[data-do=apply]')).toHaveCount(0);await saved(p);
+ const completed=(await state(p)).rolls.at(-1),hpAfter=(await state(p)).cards[completed.applied.cardId].hp.cur;
+ await p.reload();await expect(p.locator('#app')).toBeVisible();await expect(p.locator('[data-do=apply]')).toHaveCount(0);const restored=await state(p);expect(restored.rolls.find(r=>r.id===completed.id).applied.cardId).toBe(completed.applied.cardId);expect(restored.cards[completed.applied.cardId].hp.cur).toBe(hpAfter);
+ await p.screenshot({path:info.outputPath('attack-target.png'),fullPage:true});await saved(p);
  await expect.poll(async()=>Object.values((await state(gm)).cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBeLessThan(20);
  expect(gm.errors).toEqual([]);expect(p.errors).toEqual([]);
 });

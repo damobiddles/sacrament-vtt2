@@ -147,8 +147,8 @@ test('support is retired and landing pages render their own donation link withou
     assert.equal(existsSync(join(b.out, 'support/index.html')), false);
     const html = readFileSync(join(b.out, 'index.html'), 'utf8');
     assert.doesNotMatch(html, /storage\.ko-fi\.com|kofiwidget2/);
-    assert.match(html, /class="btn kofi-button"[^>]*href="https:\/\/ko-fi\.com\/J4M02969C2"/);
-    assert.match(html, /https:\/\/ko-fi\.com\/J4M02969C2/);
+    assert.doesNotMatch(html, /class="btn kofi-button"/);
+    assert.match(html, /https:\/\/ko-fi\.com\/sacramentrpg/);
     assert.ok(!html.includes('javascript:alert(1)'));
   } finally { b.cleanup(); }
 });

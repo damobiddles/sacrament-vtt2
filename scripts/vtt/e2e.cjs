@@ -12,7 +12,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const errs = [], ok = [], bad = [], bodies = { player: [] };
   const check = (n, c, d) => { (c ? ok : bad).push(n); console.log((c ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + String(d).slice(0, 190) : '')); };
   const mk = async (label, vp) => {
-    const ctx = await b.newContext({ viewport: vp || { width: 1366, height: 800 } }); await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    const ctx = await b.newContext({ viewport: vp || { width: 1366, height: 800 } }); await ctx.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
     const p = await ctx.newPage(); p.setDefaultTimeout(6000); p.label = label; p.ctx = ctx;
     p.on('pageerror', (e) => errs.push(label + ': ' + e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errs.push(label + ': ' + m.text()); });
     if (label !== 'gm') p.on('response', async (r) => { if (r.url().includes('/.netlify/functions/vtt')) { try { bodies.player.push(await r.text()); } catch (e) {} } });
@@ -162,8 +162,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('the GM can show the rat but hide its numbers: the player is sent no HP, only that it has some', JSON.stringify((await card(A, 'Cellar Rat')).hp) === '{"hidden":true}' && /HP \?/.test(await txt(A, '#cards .c[data-id="' + rat.id + '"]')));
   await A.click('#cards .c[data-id="' + rat.id + '"]'); if (!(await A.$('#strip input[data-phys]'))) await diceOn(A); await A.fill('#strip input[data-phys]', '19'); await A.click('.stat[data-stat=STR]'); await A.waitForSelector('.calc'); await T(300);
   const succeeded = /Success/.test(await txt(A, '#panel .calc'));
-  if (succeeded) { await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]'); check('the chosen target is marked on the table, and the panel says nothing is applied yet', !!(await A.$('.c.aim')) && /Not applied yet/.test(await txt(A, '#panel')));
-    await A.click('[data-do=apply][data-field=hp]'); await T(1200); const sA = await st(A), rat2 = Object.values(sA.cards).find((c) => c.name === 'Cellar Rat'), ent = sA.log.filter((e) => /Cellar/.test(e.text)), mine = sA.rolls.at(-1);
+  if (succeeded) { await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText)); check('rolling damage applied it to the chosen hidden-number target without another click', !(await A.$('[data-do=apply]')) && /Applied/.test(await txt(A, '#panel')));
+    await T(1200); const sA = await st(A), rat2 = Object.values(sA.cards).find((c) => c.name === 'Cellar Rat'), ent = sA.log.filter((e) => /Cellar/.test(e.text)), mine = sA.rolls.at(-1);
     check('after the hit, nothing the player holds shows how much HP the rat has left: the card, the feed lines and her own roll record', JSON.stringify(rat2.hp) === '{"hidden":true}' && ent.length >= 1 && ent.every((e) => !/\(now|\d+\/\d+/.test(e.text)) && mine.applied && mine.applied.applied === undefined, JSON.stringify([rat2.hp, ent.map((e) => e.text), mine.applied])); }
   else check('the player rolled and missed (the Effort step is covered elsewhere)', true);
   check('the GM sees the rat’s real numbers', typeof (await card(gm, 'Cellar Rat')).hp.cur === 'number');

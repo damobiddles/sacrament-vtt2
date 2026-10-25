@@ -19,7 +19,7 @@ server.listen(0, async () => {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
   await ctx.addInitScript((s) => { let a = s >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }, seed);
   // block the web fonts so the test does not depend on the network
-  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await ctx.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
   const errs = [], ok = [], bad = [];
   const check = (n, c, d) => { (c ? ok : bad).push(n); console.log((c ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + String(d).slice(0, 170) : '')); };
   const open = async (url) => { const p = await ctx.newPage(); p.setDefaultTimeout(5000); p.on('pageerror', (e) => errs.push(url + ': ' + e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errs.push(url + ' console: ' + m.text()); }); await p.goto(base + url); await T(300); return p; };
@@ -61,7 +61,7 @@ server.listen(0, async () => {
   console.log('--- 3. bringing an earlier-rules character over');
   const stores = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'test', 'fixtures', 'stores.json'), 'utf8'));
   const old = JSON.stringify(stores['Sister Maren']);
-  const lctx = await b.newContext({ viewport: { width: 1100, height: 900 } }); await lctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  const lctx = await b.newContext({ viewport: { width: 1100, height: 900 } }); await lctx.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
   await lctx.addInitScript((o) => { if (!localStorage.getItem('sacrament-builder-v1')) localStorage.setItem('sacrament-builder-v1', o); }, old);
   const lp = await lctx.newPage(); lp.setDefaultTimeout(5000); lp.on('pageerror', (e) => errs.push('legacy: ' + e.message));
   await lp.goto(base + '/character/#earlier'); await T(500);

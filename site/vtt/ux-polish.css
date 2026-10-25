@@ -92,7 +92,7 @@
 #app[data-role=player] .view-role { background:var(--verdigris-deep); border-color:var(--verdigris); color:var(--fg); }
 #app[data-role=gm] #top { border-left:4px solid var(--blood-hi); }
 #app[data-role=player] #top { border-left:4px solid var(--verdigris); }
-#app[data-role=gm] #strip { border-top:2px solid var(--blood-hi); max-height:30vh; overflow:auto; }
+#app[data-role=gm] #strip { border-top:2px solid var(--candle); max-height:30vh; overflow:auto; }
 #app[data-role=gm] #panel>* { flex-shrink:0; }
 #app[data-role=gm] .gm-dice { min-width:0; }
 #app[data-role=gm] .gm-dice [role=status] { overflow-wrap:anywhere; }
@@ -117,3 +117,5 @@
 
 .area-targets { min-width:0; margin:0; padding:10px; border:1px solid var(--edge); }
 #panel .area-targets label { min-height:40px; padding:4px 0; overflow-wrap:anywhere; }
+
+.gm-dice-title {font:700 1rem var(--display);color:var(--candle);white-space:nowrap}

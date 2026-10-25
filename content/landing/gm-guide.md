@@ -12,7 +12,7 @@ This is a public guide to the **current VTT**, checked against the application o
 2. Open the **Table** tab. Save your **private GM recovery link** somewhere safe. Anyone with that link can run the table. Never send it as an invitation or include it in a bug report.
 3. Use **Copy invite link** for players instead. They join with a name, then claim a supplied hero or bring one from My heroes.
 4. Agree on the Target, table options and any house rules before rolling. Explain that ordinary weapons use d6, guns d8, healing spells have no casting Horror, and Push follows failed attacks only.
-5. Start with one visible enemy and one clear problem. Walk a player through choosing a target, using a weapon, rolling damage and pressing Apply.
+5. Start with one visible enemy and one clear problem. Walk a player through choosing a target, using a weapon, rolling damage and seeing it applied automatically.
 
 Your browser remembers tables under **Your tables** on the VTT entry page. Returning in that browser normally restores your GM access. A table code alone does not restore GM authority on another device: use the private recovery link. There are no accounts. Keep the link before clearing browser data.
 
@@ -45,13 +45,13 @@ A normal check may resolve the situation immediately. Use Effort when the amount
 
 For **hero checks**, the total determines success, even on a natural 1 or 20. A hero's natural 1 adds 1 Horror. A successful natural 20 offers Ultimate when the table option is on. For **monster attacks**, natural 1 always misses and natural 20 always hits. Do not apply that monster exception to hero checks.
 
-Players should select a target before attacking. A successful attack carries that target into damage; they roll damage and press Apply. An ordinary failed check cannot Push. A player can Push a failed attack only on their own active turn: +1 Horror for a second immediate action, once, with no further Push of that action. For an exception, select that hero and press **Allow this Push (+1 Horror)** on their latest failed attack. It spends the cost and grants one extra action atomically. Without turn order, only the GM can grant this exception.
+Players should select a target before attacking. A successful attack carries that target into damage; rolling damage applies it automatically. An ordinary failed check cannot Push. A player can Push a failed attack only on their own active turn: +1 Horror for a second immediate action, once, with no further Push of that action. For an exception, select that hero and press **Allow this Push (+1 Horror)** on their latest failed attack. It spends the cost and grants one extra action atomically. Without turn order, only the GM can grant this exception.
 
 ## Turns and monster attacks
 
 The Play tab's **Turn order** lets you select the active character or edit the order. The GM’s **Next turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
 
-To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. This differs from the player's separate Apply step. Undo is available in Activity. A hidden attacker is presented to players as “Something”.
+To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. Player attacks also apply their rolled damage automatically. Undo is available in Activity. A hidden attacker is presented to players as “Something”.
 
 **Automatic scene danger is optional and off by default.** In Play, you can enable adding max(0, Target − 11) to monster attacks: Target 12 adds +1; Target 14 adds +3. It uses the current Target. If you have already included scene danger in a monster's base bonus, remove that part before enabling it to avoid counting it twice. Keeping the option off preserves manually prepared bonuses.
 
@@ -91,7 +91,7 @@ The designer supports your own loot. Keep three known spells in each grimoire an
 
 ## What the VTT handles and what you decide
 
-- **Automatic:** shared saves and rolls; permitted player actions; item attack targets; damage after the required Apply step; supported catalogue healing; charges and healing rest limits; dying countdowns; Party rest; listed Horror costs and threshold alerts.
+- **Automatic:** shared saves and rolls; permitted player actions; item attack targets; attack damage applied automatically when rolled; supported catalogue healing; charges and healing rest limits; dying countdowns; Party rest; listed Horror costs and threshold alerts.
 - **Your ruling:** whether to roll; range and positioning; movement and narrative action costs; esoteric spell effects; free-text custom effects; secondary item effects not represented by controls; conditions and Horror consequences; when a rest is allowed.
 - **Your choice:** optional scene-danger automation and table dice settings. Explain those choices to players.
 
@@ -109,7 +109,7 @@ In Scene, a scene that is not live has a **Delete** button. Read the confirmatio
 
 ## Tracked powers and critical damage
 
-Rend the Veil selects several foes, uses one check and one damage roll, and applies the result to those selected targets together. You confirm range and who is affected. One Undo restores the whole damage event. Once-per-scene uses, including failed attempts, are tracked per caster and source across copies and reconnections. Returning to an old scene or resting does not reset them. In Scene, confirm **Refresh scene abilities** only when starting a new encounter there; this invalidates unfinished limited rolls from the old encounter. To correct a mistaken use, undo its damage first, then its attempt; undo Horror separately if appropriate. The Executioner's Blade has an automated final-blow action with its listed 3-Horror cost and scene limit.
+Rend the Veil selects several foes, uses one check and one damage roll, and applies the result to those selected targets together. You confirm range and who is affected. Damage applies as soon as it is rolled. One Undo restores the whole damage event. Once-per-scene uses, including failed attempts, are tracked per caster and source across copies and reconnections. Returning to an old scene or resting does not reset them. In Scene, confirm **Refresh scene abilities** only when starting a new encounter there; this invalidates unfinished limited rolls from the old encounter. To correct a mistaken use, undo its damage first, then its attempt; undo Horror separately if appropriate. The Executioner's Blade has an automated final-blow action with its listed 3-Horror cost and scene limit.
 
 For new hero checks, a successful natural 20 adds an extra Ultimate die to normal damage/Effort when enabled. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. The heavy +2 is also added only once. Earlier pending rolls retain their earlier rule. Monster natural rolls still govern hits and misses only. Crossbows have +2 accuracy, Weapons d6 and their reload Move; the GM still manages reloads and the Move budget.
 

@@ -30,7 +30,7 @@ We may remove content or block use of the site that breaks these rules.
 The text, rules, art, names and design of Sacrament RPG and this site belong to Dungeon Jukebox, also known as Damien Bidmead, unless marked otherwise. You may use them to play the game, including printing pages for your own table. Please ask before republishing or selling them.
 
 ## Donations
-Donations are voluntary and do not buy any product, service or special access. Donations are handled by [Ko-fi](https://ko-fi.com/J4M02969C2), and Ko-fi's own terms apply to the payment.
+Donations are voluntary and do not buy any product, service or special access. Donations are handled by [Ko-fi](https://ko-fi.com/sacramentrpg), and Ko-fi's own terms apply to the payment.
 
 ## No guarantees
 The site and the table are offered free, "as they are". We do our best to keep them working and correct, but we cannot promise they will always be available, free of mistakes, or that saved tables will never be lost. As far as the law allows, we are not responsible for losses that come from using, or not being able to use, the site.

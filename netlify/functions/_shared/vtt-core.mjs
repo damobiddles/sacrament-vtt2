@@ -481,6 +481,23 @@ function grantPush(s, r, ch, a, ctx) {
   return { horror: { cur: hr.cur, applied: hr.applied, crossed: hr.crossed } };
 }
 
+/* Validate the attack's recorded target before rolling. The client cannot
+   redirect automatic damage by clicking a different card. */
+function automaticEffortTarget(s, roll, a) {
+  if (roll.area) {
+    const ids = (roll.targetCardIds || []).filter(id => {
+      const card = s.cards[id]; return card && cardVisibleTo(s, card, a) && card.hp && card.kind !== 'pc' && !card.owner && (card.sceneId == null || card.sceneId === s.table.scene);
+    });
+    if (!ids.length) fail('not_found', 'No selected foe is still available. Ask the GM to resolve this attack.');
+    areaTargets(s, ids, a); return { ids };
+  }
+  const card = cardOf(s, roll.targetCardId);
+  if (!cardVisibleTo(s, card, a) || (card.sceneId != null && card.sceneId !== s.table.scene)) fail('not_found', 'The selected target is no longer available. Ask the GM to resolve this attack.');
+  const field = card.progress && !roll.isAttack ? 'progress' : card.hp ? 'hp' : card.progress ? 'progress' : '';
+  if (!field) fail('invalid', 'The selected target has no HP or Effort tracker.');
+  return { id: card.id, field };
+}
+
 function standingHero(s, ch) { const card = s.cards[ch.cardId]; if (card && card.hp && card.hp.cur === 0) fail('invalid', 'A fallen hero at 0 HP cannot act. Ask someone else to tend or heal them.'); }
 /* Why a roll cannot be pushed now, or '' when it can. A push follows a failed attack: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
 function pushBlock(s, r, override = false) {
@@ -952,6 +969,7 @@ const HANDLERS = {
     if (roll.effort && !(isGM(a) && c.force)) fail('conflict', 'Effort has already been rolled for this attempt.');
     if (!roll.check) fail('invalid', 'That Effort has no check to follow.');
     checkPowerContext(s, roll);
+    const automatic = c.autoApply === true ? automaticEffortTarget(s, roll, a) : null;
     if (roll.nonDamage) fail('invalid', 'That action does not deal damage. The GM resolves its effect.');
     if (!roll.check.success && !(isGM(a) && c.force)) fail('invalid', 'The attempt missed, so there is no Effort to roll.');
     /* After an item, its own kind of Effort is rolled; a natural 20 may still take Ultimate when the table offers it */
@@ -966,6 +984,11 @@ const HANDLERS = {
     if (roll.criticalRule === 'extra' && roll.check.offerUltimate) { const size = R.settingsOf(s.settings).dice.ultimate, extra = c.criticalRolled != null ? int(c.criticalRolled, 0) : d(ctx, size); try { e = R.criticalEffort({ base: e, rolled: extra, bonus: ch.effort.ultimate, settings: s.settings }); } catch (err) { fail('invalid', err.message); } }
     e.manual = manual; roll.effort = e; const tc = roll.targetCardId && s.cards[roll.targetCardId];
     L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled).concat(e.critical ? diceOf(c.criticalRolled != null, e.critical.die, e.critical.rolled) : []) });
+    if (automatic) {
+      if (roll.area) HANDLERS.applyArea(s, { rollId: roll.id, cardIds: automatic.ids }, a, ctx);
+      else HANDLERS.apply(s, { rollId: roll.id, cardId: automatic.id, field: automatic.field }, a, ctx);
+      roll.autoApplied = true;
+    }
     return { rollId: roll.id };
   },
   freeEffort(s, c, a, ctx) { /* Effort on its own, with no check before it: a standing blow, a physical roll, a task the GM has already allowed */

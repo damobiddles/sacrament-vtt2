@@ -29,7 +29,7 @@ test('generated heroes are previews until kept, can be edited and brought to a t
   await expect.poll(async()=>Object.values((await state(gm)).chars).some(h=>h.name==='Cordula Greave')).toBe(true);
   await expect(page.locator('.player-first-turn')).toBeVisible();
   await page.locator('.player-first-turn summary').click();
-  await expect(page.locator('.player-first-turn')).toContainText('Apply to the named target');
+  await expect(page.locator('.player-first-turn')).toContainText('applies to the named target automatically');
   await page.goto('/character/');
   await page.locator('#sheetHere [data-text=name]').fill('Local copy only');await page.locator('#sheetHere [data-text=name]').blur();
   expect(Object.values((await state(gm)).chars).some(h=>h.name==='Cordula Greave')).toBe(true);

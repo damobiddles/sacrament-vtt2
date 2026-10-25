@@ -101,9 +101,8 @@ test('Effort is rolled and applied to the selected enemy once, and its hearts go
   await ann.locator('#strip [data-do=roll][data-noitem]').click();   /* Thorne holds his hatchet, so the strip asks first */
   await ann.locator('#physE').fill('4');
   await ann.locator('[data-do=effort][data-cat=weapons]').click();
-  const apply = ann.locator('[data-do=apply]');
-  await expect(apply).toContainText('Pit Ghoul');
-  await apply.click();
+  await expect(ann.locator('[data-do=apply]')).toHaveCount(0);
+  await expect(ann.locator('#panel')).toContainText('Pit Ghoul');
   await expect(ann.locator('#panel')).toContainText('Applied');
   await saved(ann);
 

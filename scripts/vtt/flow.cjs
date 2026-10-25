@@ -13,7 +13,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const check = (n, c, d) => { (c ? ok : bad).push(n); console.log((c ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + String(d).slice(0, 260) : '')); };
   const WAIT = LIVE ? 30000 : 8000;
   const mk = async (label, vp, touch) => {
-    const ctx = await b.newContext({ viewport: vp || { width: 1366, height: 800 }, hasTouch: !!touch, isMobile: !!touch }); await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    const ctx = await b.newContext({ viewport: vp || { width: 1366, height: 800 }, hasTouch: !!touch, isMobile: !!touch }); await ctx.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
     const p = await ctx.newPage(); p.setDefaultTimeout(WAIT); p.label = label; p.ctx = ctx; p.reqs = [];
     /* what the network does to this page's requests to the table: wait, refuse an HP change, or lose the reply after the server has acted */
     p.net = { delay: 0, refuse: false, down: false, drop: 0, dropped: 0 };
@@ -367,7 +367,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('after the maximum is lowered to 2 the “now” box says 2 as well, even though a checkbox has focus (it used to keep showing 4)', (await gm.inputValue('input[data-set=timer]')) === '2', await gm.inputValue('input[data-set=timer]'));
 
   console.log('--- 20. the players are moved to another scene: nothing from the old scene is left open in their panel');
-  await A.keyboard.press('Escape'); await A.click('#cards .c[data-id="' + ghoul.id + '"]'); await roll(A); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]'); await A.click('[data-do=apply]');
+  await A.keyboard.press('Escape'); await A.click('#cards .c[data-id="' + ghoul.id + '"]'); await roll(A); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForFunction(() => /Applied/.test(document.querySelector('#panel').innerText));
   await A.waitForFunction(() => /Applied/.test(document.getElementById('panel').innerText)); await idle(A);
   check('(before the move) the player’s panel shows the roll as applied', /Applied/.test(await A.innerText('#panel')));
   await gm.keyboard.press('Escape'); await gmTab(gm, 'scene');

@@ -13,8 +13,9 @@ test('a new GM sees the code and the invite link first; the box goes once a play
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm, { sample: false });
   const box = gm.locator('#panel .sec.start');
-  await expect(box).toContainText('Getting started'); await expect(box).toContainText(code);
-  await expect(box.locator('[data-do=copy]')).toBeVisible(); await expect(box.locator('[data-do=addHero]')).toBeVisible();
+  await expect(box).toContainText('Getting started'); await expect(box.locator('[data-do=copy]')).toHaveCount(0);
+  await gm.getByRole('tab',{name:'Table',exact:true}).click();await expect(gm.locator('#panel')).toContainText(code);await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(1);await gm.locator('[data-do=gmtab][data-t=play]').click();
+  await expect(box.locator('[data-do=addHero]')).toBeVisible();
   await shot(gm, '1-gm-getting-started');
   await box.locator('[data-do=addHero]').click(); await saved(gm);
   await gm.locator('[data-do=deselect], [data-do=cardEditDone]').first().click(); await gm.locator('[data-do=deselect]').first().click().catch(() => {});

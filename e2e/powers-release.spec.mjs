@@ -32,7 +32,7 @@ test('an area spell selects several visible foes, applies one critical roll, sur
  await ann.locator('#panel').screenshot({path:'/workspace/sacrament-audit/powers-area-picker.png'});
  await ann.locator('[data-do=confirmAttack]').click();await expect(ann.locator('#panel')).toContainText('Critical: your normal Effort');
  await ann.locator('#physE').fill('2');await ann.locator('#physCritical').fill('3');await ann.locator('#panel [data-do=effort]').click();
- await expect(ann.locator('#panel')).toContainText('damage to each target');await ann.locator('[data-do=applyArea]').click();await saved(ann);
+ await expect(ann.locator('#panel')).toContainText('damage to each target');await expect(ann.locator('[data-do=applyArea]')).toHaveCount(0);await expect(ann.locator('#panel')).toContainText('Applied');await saved(ann);
  const r=(await state(ann)).rolls.at(-1),damage=r.effort.total,ghoul=Object.values((await state(ann)).cards).find(c=>c.name==='Pit Ghoul');
  expect(ghoul.hp.cur).toBe(20-damage);expect((await state(ann)).cards[made.result.id].hp.cur).toBe(20-damage);
  await expect.poll(async()=> (await state(gm)).cards[made.result.id].hp.cur).toBe(20-damage);

@@ -153,3 +153,14 @@ blockquote.todo::first-line{font-weight:700}
 @media(max-width:650px){.site-footer-grid,.site-paths{grid-template-columns:minmax(0,1fr)}.site-start,.site-next{padding:18px}.ic-nav-inner{gap:6px}.ic-nav ul{gap:2px}.ic-nav a{font-size:.72rem;padding:9px 8px}.ic-nav .ic-brand{font-size:1rem}.ic-kofi .kofi-button{font-size:.72rem;padding:8px}.ic-brand img{width:24px;height:24px}}
 
 .ic-kofi .kofi-button{gap:8px}.kofi-cup{display:block;flex:none;filter:invert(1)}
+
+/* A roomy fallback until the supplied Ko-fi floating widget is ready. */
+.ic-kofi{align-items:center;padding-block:8px;box-sizing:border-box}
+.ic-kofi[hidden]{display:none}
+.ic-kofi .kofi-button,.ic-kofi .kofi-button:hover,.ic-kofi .kofi-button:focus-visible{background:#323842;color:#fff;border-color:#95a0af;min-height:44px;padding:10px 14px;line-height:1.3;box-sizing:border-box}
+.floatingchat-container-wrap,.floatingchat-container-wrap-mobi{z-index:500!important}
+.sac-back-top{bottom:90px}
+
+.support-floating-fallback{position:fixed;left:16px;bottom:16px;z-index:500;max-width:calc(100vw - 32px);padding:0}
+
+.ic-foot{padding-bottom:100px}
