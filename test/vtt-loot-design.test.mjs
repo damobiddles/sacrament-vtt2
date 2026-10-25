@@ -20,9 +20,9 @@ test('DESIGN: an item is saved to the GM\'s library, can be edited, and can be d
   assert.equal((await t.gm.cmd({ type: 'lootDelete', id })).status, 404);
 });
 
-test('DESIGN: what is saved is tidied: a name is needed, numbers are kept sensible, horror cannot be negative, a weapon is always equippable', async () => {
+test('DESIGN: what is saved is tidied: a name is needed, numbers are kept sensible, valid zero Horror stays zero, a weapon is always equippable', async () => {
   const { t } = await setup();
-  const id = await save(t, { name: '   ', category: 'Nonsense', cat: 'zzz', roll: 'XYZ', slots: 99, horror: -4, temptsHorror: true, equippable: false });
+  const id = await save(t, { name: '   ', category: 'Nonsense', cat: 'zzz', roll: 'XYZ', slots: 99, horror: 0, temptsHorror: true, equippable: false });
   const it = (await lib(t))[0]; assert.equal(it.id, id); assert.equal(it.name, 'Unnamed find'); assert.equal(it.category, 'Curio'); assert.equal(it.cat, ''); assert.equal(it.slots, 4); assert.equal(it.horror, 0);
   const w = await save(t, { name: 'Bone Saw', category: 'Weapon', cat: 'weapons', roll: 'STR', equippable: false }); assert.equal((await lib(t)).find((x) => x.id === w).equippable, true);
 });

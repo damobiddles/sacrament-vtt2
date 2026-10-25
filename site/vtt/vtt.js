@@ -67,7 +67,7 @@
       if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
       if (was) noticeChanges(was, fresh);
       if (!UI.rollChecked) { /* after a reload, pick up where the person was: the latest roll of theirs that still has something to do */
-        UI.rollChecked = true; var mine = S.rolls.filter(function (r) { return (r.attack || S.chars[r.charId]) && ((r.effort && !r.applied) || (r.check && r.check.success && !r.effort && !r.healingResolved)); }); if (mine.length) UI.roll = mine[mine.length - 1].id;
+        UI.rollChecked = true; var mine = S.rolls.filter(function (r) { return r.by === (gm() ? 'gm' : S.you.pid) && resumableRoll(r) && ((r.effort && !r.applied) || (r.check && r.check.success && !r.effort && !r.healingResolved && !r.nonDamage)); }); if (mine.length) UI.roll = mine[mine.length - 1].id;
       }
       remember();
       render();
@@ -86,7 +86,7 @@
     var fresh = UI.seenLog ? log.filter(function (e) { return !UI.seenLog[e.id]; }) : []; UI.freshLog = fresh;
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
     var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
-    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine); return; }
+    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome); return; }
     fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3).forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
   }
   D.onLand = function () { if (S) render(); };
@@ -140,10 +140,10 @@
      t, the pointer: only its latest position matters, so it is never queued or resent. */
   var lanes = { g: mkLane('g'), d: mkLane('d') }, pointer = { id: clientId + 't', seq: 0, busy: false, next: null };
   function mkLane(l) { return { id: clientId + l, seq: 0, q: [], running: false, gameplay: l === 'g', version: sessionVersion }; }
-  function send(cmd, done, lane) {
+  function send(cmd, done, lane, onError) {
     if (UI.reconcile && (lane || 'g') === 'g') { toast('Checking what was saved. Try again in a moment.', 3000); if (done) done(null); return Promise.resolve(null); }   /* no fresh attempt until the table has been read again */
     var L = lanes[lane || 'g']; cmd.actionId = cmd.actionId || L.id + '.' + (++L.seq); if (L.gameplay) { UI.pending++; setStatus('busy'); }
-    return new Promise(function (resolve) { L.q.push({ cmd: cmd, resolve: resolve, done: done, tries: 0 }); if (!L.running) pump(L); });
+    return new Promise(function (resolve) { L.q.push({ cmd: cmd, resolve: resolve, done: done, error: onError, tries: 0 }); if (!L.running) pump(L); });
   }
   function sendPoint(x, y, sceneId) {
     sceneId = sceneId || UI.pointScene || viewScene();
@@ -163,7 +163,7 @@
       else if (r.status === 503 || r.status === 0) retry(L, job, 'the table answered ' + r.status + (r.body && r.body.error ? ': ' + r.body.error.message : ''));
       else if (r.status === 409 && r.body.error && r.body.error.code === 'stale') { finish(L, job, null); poll(true); } /* already handled: nothing to say */
       else if (r.status === 401) { setStatus('bad', 'You are no longer at this table'); finish(L, job, null); }
-      else { UI.lastError = (r.body.error && r.body.error.message) || ''; toast((UI.lastError || 'That did not work.') + ' Nothing was changed; the table has been refreshed.', 8000); finish(L, job, null); poll(true); }
+      else { UI.lastError = (r.body.error && r.body.error.message) || ''; if (job.error) job.error(UI.lastError || 'That did not work.'); else toast((UI.lastError || 'That did not work.') + ' Nothing was changed; the table has been refreshed.', 8000); finish(L, job, null); poll(true); }
     }, function (e) { retry(L, job, 'no answer (' + (e && e.name) + ')'); });
   }
   function retry(L, job, why) {
@@ -187,10 +187,14 @@
     clearTimeout(timer);
     if (!sess) return;
     if (polling) { again = true; return; }           /* one request at a time: a second loop must never start */
-    polling = true; var version = sessionVersion;
+    polling = true; var version = sessionVersion, checkingSaved = !!UI.reconcile;
     call('GET', null, { code: sess.code, since: S ? S.v : '', dv: haveDraw(), pv: S ? S.pv : '' }).then(function (r) {
       if (version !== sessionVersion || r.stale) return;
-      if (r.status === 200) { failures = 0; if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; if (!lanes.g.running) pump(lanes.g); toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
+      if (r.status === 200) {
+        /* A read started before an ambiguous command may predate its save. Only
+           a new read after entering recovery can release queued gameplay. */
+        if (UI.reconcile && !checkingSaved) { again = true; return; }
+        failures = 0; if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; if (!lanes.g.running) pump(lanes.g); toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
       else if (r.status === 401 || r.status === 404) { setStatus('bad', r.status === 404 ? 'This table has gone' : 'You are no longer at this table'); return; }
       else fail();
     }, fail).then(function () { if (version !== sessionVersion) return; polling = false; timer = setTimeout(poll, again ? 0 : pollGap()); again = false; });
@@ -251,9 +255,18 @@
     $('entry').hidden = true; $('app').hidden = false;
     $('app').dataset.role = gm() ? 'gm' : 'player';
     $('panel').setAttribute('aria-label', gm() ? 'GM controls and selected card' : 'Selected card and player help');
-    renderTop(); renderTable(); renderPanelSoon(); renderFeed(); renderStrip(); renderStatus(); renderSheet(); renderLoot();
+    renderTop(); renderTable(); renderPanelSoon(); renderFeed(); renderStrip(); renderStatus(); renderSheet(); renderLoot(); renderReveal();
   }
 
+  function renderReveal() {
+    var id = D.resultId(); if (!id) return;
+    var entry = S.log.filter(function (e) { return e.outcome && e.outcome.rollId === id && !e.undone; }).pop();
+    D.sync(entry && entry.outcome); if (!D.resultId()) return;
+    var r = S.rolls.filter(function (x) { return x.id === id; })[0];
+    if (r && !resumableRoll(r)) { D.clear(); return; }
+    var button = Array.prototype.find.call(document.querySelectorAll('#stripControls [data-do=effort], #panel [data-do=monsterEffort], #panel [data-do=effort]'), function (b) { return b.dataset.roll === id && !b.disabled; });
+    D.action(button ? {label: 'Roll damage', run: function () { button.click(); }} : null);
+  }
   /* ---------- the character sheet: a full-screen panel over the table. The table keeps running and stays connected underneath; closing the sheet returns straight to play. ---------- */
   var sheetView = null;
   var sheetHost = {
@@ -281,7 +294,7 @@
     dice: function () { return S ? S.settings.dice : R.DEFAULT_DICE; },
     lib: function () { return (S && S.lootLib) || []; },
     heroes: function () { return S ? Object.keys(S.chars).map(function (k) { return { id: k, name: S.chars[k].name }; }) : []; },
-    send: function (cmd, done) { return send(cmd, done); },
+    send: function (cmd, done) { return send(cmd, done, undefined, function (message) { if (lootView) lootView.say(message); }); },
     close: function () { closeLoot(); }
   };
   /* one press, one command: a second press while the first is on its way does nothing */
@@ -464,6 +477,16 @@
   }
   function criticalPrompt(r) {
     return r.criticalRule === 'extra' && r.check && r.check.success && r.check.offerUltimate && !r.effort ? '<p class="hint">Includes an extra Ultimate d' + S.settings.dice.ultimate + '.</p>' + physical('physCritical', 'Own extra Ultimate die (optional)') : '';
+  }
+  function resumableRoll(r) {
+    if (!r || r.void || (r.sceneId && r.sceneId !== S.table.scene.id)) return false;
+    if (r.attack) { var actor = S.cards[r.attack.cardId]; if (!actor || (actor.sceneId && actor.sceneId !== S.table.scene.id)) return false; }
+    else if (!S.chars[r.charId]) return false;
+    if (r.isAttack || r.attack || r.area) {
+      var ids = r.area ? r.targetCardIds || [] : [r.targetCardId];
+      return ids.length > 0 && ids.every(function (id) { var c = S.cards[id]; return c && !c.owner && (!c.sceneId || c.sceneId === S.table.scene.id); });
+    }
+    return true;
   }
   function currentRoll() { return UI.roll && S.rolls.filter(function (r) { return r.id === UI.roll; })[0]; }
   function targetChoiceView() {
@@ -895,7 +918,7 @@
   function playerActions(ch) {
     var foe = aimFoe(), ready = UI.readyAction;
     return '<section class="player-actions"><h4>' + (foe ? 'How are you going to deal with <b>' + esc(foe.name) + '</b>?' : 'Choose an action') + '</h4>' +
-      (ready ? '<p class="hint">Ready: ' + esc(ready.name) + (ready.targetName ? ' → ' + esc(ready.targetName) : '') + '. Use the bottom strip to roll.</p>' : '') +
+      (ready ? '<p class="hint">Ready: ' + esc(ready.name) + (ready.targetName ? ' → ' + esc(ready.targetName) : '') + '. Use the bottom strip to ' + (ready.hasRoll === false ? 'use it' : 'roll') + '.</p><p class="hint">' + esc(ready.automation || '') + '</p>' : '') +
       '<details data-detail="playerActions"' + (!ready && !currentRoll() ? ' open' : '') + '><summary data-detail="playerActions">Weapons, spells and items</summary><div class="action-options">' + itemButtons(window.SacramentSheetCore.actions(heroOf(ch))) + '</div></details>' +
       '<div class="row"><button class="chip" data-do="ordinaryCheck">Ordinary check</button>' + (foe ? '<button class="chip" data-do="basicAttack" data-card="' + foe.id + '">Attack without an item</button>' : '') + '<button class="chip" data-do="standaloneEffort">Standalone Effort</button></div>' +
       (UI.basicAttack ? '<label>Attack using<select id="basicStat">' + R.STATS.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><button class="btn" data-do="prepareBasic">Prepare attack</button>' : '') +
@@ -918,7 +941,7 @@
     var flow = rollFlow(), ready = UI.readyAction, waiting = UI.rolling || UI.working || D.busy();
     h = flow.dice ? '' : '<b>' + esc(ch.name) + '</b>';
     if (UI.attackChoice) h += '<span class="note">Choose the target in Play.</span>';
-    else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>Roll ' + esc(ready.name) + '</button>';
+    else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>' + (ready.hasRoll === false ? 'Use ' : 'Roll ') + esc(ready.name) + '</button>';
     else if (flow.dice) h += flow.dice;
     else if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Standalone Effort">' + physical('physF', 'Own Effort die') + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '"' + (waiting ? ' disabled' : '') + '>' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
     else h += '<div class="stats" role="group" aria-label="Roll an ordinary check">' + R.STATS.map(function (k) { return '<button class="stat" data-do="check" data-stat="' + k + '"' + (waiting ? ' disabled' : '') + ' aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
@@ -959,14 +982,15 @@
     var areaIds = use.area && Array.isArray(chosenTarget) ? chosenTarget : null;
     if (use.area && !areaIds) { UI.areaTargets = []; UI.attackChoice = { charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, prepareOnly: prepareOnly, area: true, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.source || use.item) }; render(); focusNextRoll(); return; }
     if (areaIds) chosenTarget = areaIds[0];
-    var selected = use.healing && use.healing.self ? S.cards[ch.cardId] : chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
+    var manualOnly = !use.cat && !use.healing;
+    var selected = manualOnly ? null : use.healing && use.healing.self ? S.cards[ch.cardId] : chosenTarget ? S.cards[chosenTarget] : UI.sel && S.cards[UI.sel];
     function usableTarget(card) { return card && onTable(card) && (use.healing ? !!card.hp : canTake(card)); }
     if (chosenTarget && !usableTarget(selected)) { toast('That target is no longer available. Choose another.'); UI.attackChoice = null; render(); return; }
     if ((use.cat || use.healing) && !usableTarget(selected)) { UI.attackTarget = null; UI.attackChoice = {charId: charId, index: index, spellId: spellId, gearKey: gearKey, mode: mode, prepareOnly: prepareOnly, name: use.name, range: window.SacramentSheetCore.rangeText(use.spell || use.item), healing: !!use.healing}; render(); focusNextRoll(); return; }
     UI.attackChoice = null; UI.targetError = '';
     if (prepareOnly) {
       UI.roll = null; UI.optEffort = false;
-      UI.readyAction = {charId: charId, index:index, spellId:spellId, gearKey:gearKey, mode:mode, target:areaIds || (selected && selected.id), name:use.name, targetName: areaIds ? areaIds.map(function (id) { return S.cards[id] ? S.cards[id].name : ''; }).join(', ') : selected && selected.name}; render(); focusNextRoll(); return;
+      UI.readyAction = {charId: charId, index:index, spellId:spellId, gearKey:gearKey, mode:mode, target:areaIds || (selected && selected.id), name:use.name, hasRoll: !!(use.stat || use.pick), automation: window.SacramentSheetCore.automationText(use.spell || use.source || use.item), targetName: areaIds ? areaIds.map(function (id) { return S.cards[id] ? S.cards[id].name : ''; }).join(', ') : selected && selected.name}; render(); focusNextRoll(); return;
     }
     UI.readyAction = null;
     UI.rolling = 'Using an item'; var d20 = UI.phys && String(UI.phys).trim() ? +UI.phys : undefined; UI.phys = ''; var pi = document.querySelector('#strip input[data-phys]'); if (pi) pi.value = '';
@@ -1044,7 +1068,7 @@
         send({ type: 'monsterAttack', cardId: d.id, targetCardId: hs.value, d20: d20a }, function (b) { UI.rolling = false; if (b) UI.roll = b.result.rollId; render(); }); break; }
       case 'monsterEffort': { if (UI.working) break; var keyM = 'effort:' + d.roll, rolledM = physVal('physE'); UI.working = keyM; renderPanel(); send({ type: 'monsterEffort', rollId: d.roll, cat: d.cat, rolled: rolledM }, function () { UI.working = null; render(); }); break; }
       case 'aim': UI.aim[d.roll] = d.card; render(); break;
-      case 'dismissRoll': UI.roll = null; UI.readyAction = null; render(); break;
+      case 'dismissRoll': D.clear(); UI.roll = null; UI.readyAction = null; render(); break;
       case 'hpAdj': { if (c && c.hp) hpQueue(d.id, { d: +d.d }, function (done) { send({ type: 'adjust', cardId: d.id, field: 'hp', delta: +d.d }, done); }); break; }
       case 'claim': send({ type: 'claim', charId: d.id }); break;
       case 'cardEdit': UI.cardEdit = d.id; renderPanel(); { var tb2 = $('panel'); if (tb2) tb2.scrollTop = 0; } break;
@@ -1053,8 +1077,8 @@
       case 'sheet': openSheet(d.id); break;
       case 'prepareUse': { var uch = myChar(); if (!uch || gm()) break; doUseItem(uch.id, +d.i, d.spell || '', d.gear, undefined, d.mode, true); break; }
       case 'commitUse': { var ready = UI.readyAction; if (!ready || gm()) break; doUseItem(ready.charId, ready.index, ready.spellId, ready.gearKey, ready.target, ready.mode); break; }
-      case 'ordinaryCheck': UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = false; UI.basicAttack = null; render(); break;
-      case 'standaloneEffort': UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = true; render(); break;
+      case 'ordinaryCheck': D.clear(); UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = false; UI.basicAttack = null; render(); break;
+      case 'standaloneEffort': D.clear(); UI.readyAction = null; UI.attackChoice = null; UI.roll = null; UI.optEffort = true; render(); break;
       case 'basicAttack': UI.basicAttack = d.card; renderPanel(); break;
       case 'prepareBasic': { var basicTarget = S.cards[UI.basicAttack]; if (!basicTarget || !onTable(basicTarget)) { toast('Select an available target.'); break; } UI.readyAction = {kind:'check', name:$('basicStat').value + ' attack', stat:$('basicStat').value, target:basicTarget.id, targetName:basicTarget.name}; UI.roll = null; UI.optEffort = false; UI.basicAttack = null; render(); focusNextRoll(); break; }
       case 'commitCheck': { var rc = UI.readyAction, readyTarget = rc && S.cards[rc.target]; if (!rc || !readyTarget || !onTable(readyTarget)) { toast('Choose an available target in Play.'); UI.readyAction = null; render(); break; } UI.readyAction = null; doRoll(rc.stat, true, true, rc.target); break; }

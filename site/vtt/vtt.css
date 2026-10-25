@@ -355,7 +355,9 @@ label.phys{align-items:flex-start}
 #strip input#physF{height:36px;padding-top:0;padding-bottom:0}
 
 /* Dice tumbling on screen (dice.js): a picture of a roll the server has already made. It never takes a click, and it carries its own dark colours because it is drawn over the table. */
-#dice{display:flex;gap:6px;pointer-events:none;flex-wrap:wrap;max-width:100%;margin-left:auto}#dice:empty{display:none}#stripControls{display:contents}
+#dice{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;gap:6px;pointer-events:none;padding:12px;overflow:auto}#dice:empty{display:none}#stripControls{display:contents}
+.reveal-result{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,380px);max-height:100%;overflow:auto;padding:20px;background:#191610;border:2px solid #b8955a;border-radius:10px;box-shadow:0 8px 35px #000b;text-align:center;color:#efe5cc}
+.reveal-result.failure{border-color:#c4786a}.reveal-result p{margin:0}.reveal-who,.reveal-detail{font-size:1rem;color:#efe5cc}.reveal-outcome{font:700 1.65rem var(--display);color:#e0c27a}.failure .reveal-outcome{color:#eca99a}.reveal-action{pointer-events:auto;flex-shrink:0;max-width:100%;white-space:normal}.reveal-dice:empty,.reveal-detail:empty{display:none}
 .dice-roll{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;max-width:220px;transition:opacity .3s}
 .dice-roll .who{flex-basis:100%;text-align:center;font:600 .85rem var(--label);color:#efe5cc;background:#12100dd9;padding:2px 8px;border-radius:4px}
 .dice-roll.gone{opacity:0}
@@ -370,7 +372,7 @@ label.phys{align-items:flex-start}
 .die.landed.low svg{stroke:#c4786a}
 @keyframes dice-tumble{0%{transform:translate(-120px,-60px) rotate(-540deg) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(20px,8px) rotate(-60deg) scale(1.05)}75%{transform:translate(-6px,-4px) rotate(18deg)}100%{transform:translate(0,0) rotate(0) scale(1)}}
 @keyframes dice-land{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){#dice{display:none}}
+@media (prefers-reduced-motion:reduce){#dice .die{display:none}}
 /* The offer to push after a failed roll: a little light in the dark, and a button that breathes. Still for anyone who asks for less motion. */
 #panel .push{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--blood-hi);border-radius:6px;background:color-mix(in srgb,var(--blood) 22%,var(--bg2))}
 #panel .push .lure{margin:0 0 8px;font-style:italic;color:var(--fg)}

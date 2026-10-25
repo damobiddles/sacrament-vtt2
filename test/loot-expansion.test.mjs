@@ -20,8 +20,9 @@ test('the expansion doubles each item category with stable catalogue definitions
   }
   // The reviewed power definitions, area/scene limits and crossbow accuracy are included.
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
+  // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '4cbc7504fc8ca48ca160695f53dad4edf8861583b3f81e370a52aaa98b97c695');
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), 'f19e5159a0b92676297810a2ebc8d7250e3e301284207bdc6ab62cd81f03bb8f');
   assert.equal(hash(G.spells), 'd325d1a01e5018630d10e8d54a34b866c2b18d65dbe83ded177c8b02e825d74c');
 });
 

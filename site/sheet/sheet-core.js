@@ -57,9 +57,28 @@
       o.healingSource = healingSource.id; o.effect = 'healing'; o.cat = ''; o.roll = healingSource.roll || '';
       if (healingSource.uses != null) o.uses = healingSource.uses;
     }
-    if (kind === 'armour') o.defence = clamp(int(raw.defence, 0), 0, 5);
+    if (kind === 'armour') { o.defence = clamp(int(raw.defence, 0), 0, 5); if (raw.hearts) o.hearts = clamp(int(raw.hearts, 0), 0, 5); }
     var uses = clamp(int(raw.uses, 0), 0, 20); if (uses > 0 && o.cat) o.uses = uses;
     return o;
+  }
+  /* Validate new writes separately from tolerant reading of old saved definitions. */
+  function designError(raw) {
+    raw = raw || {};
+    if (raw.category !== 'Grimoire' && raw.temptsHorror === true && !R.horrorValid(raw.horror) && !/^0+$/.test(String(raw.horror).trim())) return 'Horror amount must be a whole number (0 or more), or dice such as d4+2.';
+    if (raw.category === 'Grimoire' && makeCustom(raw).spells.length !== 3) return 'A grimoire must have three different spells.';
+    return '';
+  }
+  function automationText(src) {
+    if (!src) return '';
+    var heal = healingOf(src), active = !!(src.cat || src.temptsHorror || heal);
+    if (src.kind === 'grimoire') return 'Each spell lists its automatic and manual steps. Changing ability text does not add automation.';
+    if (src.kind === 'armour') return 'Automatic: equipped Defence' + (src.hearts ? ' and extra Hearts' : '') + '. GM: movement restrictions and special check difficulty in the description.';
+    if (!active) return 'Manual: the GM handles this item’s effects, checks and quantities. Its description does not create an automatic action.';
+    var auto = heal ? 'healing, charges and the stated healing limits' : src.cat ? 'the check, damage roll and application to the chosen target' : src.roll ? 'the check only' : 'no dice roll';
+    if (src.temptsHorror) auto += ', plus the stated Horror cost';
+    if (src.once === 'scene') auto += ' and once-per-scene limit';
+    var extra = {ward: 'Choose an eligible ally with the GM; add and later remove +2 Defence manually.', chain: 'Apply the self-harm, check bonus and once-per-turn limit manually.'};
+    return 'Automatic: ' + auto + '. GM: confirms range and eligibility' + (heal ? '.' : '; all other described effects and durations are manual.') + (extra[src.id] ? ' ' + extra[src.id] : '');
   }
   /* The item a gear entry stands for: a designed one carries its own details, anything else is looked up on the gear list. */
   function itemOf(g) { return g ? (g.def ? makeCustom(g.def) : BY[g.id] || null) : null; }
@@ -198,7 +217,7 @@
     var mechanics = mechanicsOf(it); if (mechanics && (mechanics.once || mechanics.area || mechanics.ultimate)) out.abilitySource = mechanics.id;
     var source = BY[it.healingSource || it.id]; if (source && healingOf(source)) out.healingSource = source.id;
     if (it.kind === 'weapon') out.weaponStyle = it.weaponStyle || 'single';
-    if (it.kind === 'armour') out.armourPart = armourPart(it);
+    if (it.kind === 'armour') { out.armourPart = armourPart(it); if (it.hearts) out.hearts = it.hearts; }
     if (it.kind === 'grimoire') { out.category = 'Grimoire'; out.spells = (it.spells || []).slice(); if (it.pick) { out.pick = it.pick; out.pickDie = it.pickDie || it.pick; } }
     return out;
   }
@@ -350,5 +369,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

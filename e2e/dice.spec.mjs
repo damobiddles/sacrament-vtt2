@@ -30,7 +30,7 @@ test('a player\'s roll tumbles on their screen and on the GM\'s, and lands on th
   /* the GM's screen picks the roll up on its next look at the table and shows the same die */
   await expect(gm.locator('#dice .die.landed b')).toHaveText(String(line.dice[0].n));
   if (SHOTS) await gm.screenshot({ path: SHOTS + '/3-gm.png' });
-  await expect(ann.locator('#dice .dice-roll')).toHaveCount(0, { timeout: 5000 });   /* it clears itself away */
+  await ann.locator('#dice .reveal-action').click(); await expect(ann.locator('#dice .dice-roll')).toHaveCount(0);   /* Continue dismisses an ordinary check */
   expect(ann.errors.concat(gm.errors)).toEqual([]);
 });
 

@@ -117,3 +117,9 @@ For new hero checks, a successful natural 20 adds an extra Ultimate die to norma
 ## Turn orders belong to scenes
 
 Each scene remembers its own turn order and current actor. A scene visited for the first time starts with the heroes; enemies added while preparing it join that scene’s order. Switch scenes without clearing or rebuilding the list. Returning restores the order you left, including deliberate removals or an empty order. The Play tab edits the live scene’s order. Preparing another scene does not change it. Deleted enemies are removed from saved orders. Rounds remain shared across the table; simply switching scenes does not advance a round, timers or dying countdowns. Automatic, unpaused timers tick every table round, including on hidden scenes. Use the existing pause control in Edit card when a countdown should wait.
+
+## Reading an ability’s result
+
+Dice and the success or failure appear over the scene. A successful attack stays until its roller presses Roll damage, either on that result or in their usual roll controls. Misses and non-damage results have Continue. The result remains in Activity afterward, with event-specific Undo where allowed.
+
+Item and spell notes name the automatic steps. Conditions, temporary Defence, weapon blessings, ammunition, movement restrictions and durations remain manual unless explicitly listed as automatic. Free-text custom ability descriptions do not add automation. Quantities labelled “track manually” do not decrease by themselves. Damage Undo restores damage but does not refund the attacking item’s use; healing Undo also restores its supported charge and healing allowance.

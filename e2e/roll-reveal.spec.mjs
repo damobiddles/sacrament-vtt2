@@ -6,7 +6,7 @@ async function attack(p,n){await p.locator('#panel [data-do=ordinaryCheck]').cli
 test('physical critical outcomes appear once in Activity; footer damage applies once',async({browser},info)=>{
  const {gm,p}=await setup(browser);await attack(p,20);
  await expect(p.locator('#feed .outcome')).toHaveText('CRITICAL HIT');await expect(p.locator('#feed')).toContainText('23 against Target 12');
- await expect(p.locator('#dice .die,.reveal-result,.reveal-damage,#panel .calc')).toHaveCount(0);
+ await expect(p.locator('#dice .die.landed b')).toHaveText('20');await expect(p.locator('#dice .reveal-result')).toContainText('CRITICAL HIT');await expect(p.locator('#panel .calc')).toHaveCount(0);
  await expect(gm.locator('#feed .outcome')).toHaveText('CRITICAL HIT');await expect(gm.locator('[data-do=effort]')).toHaveCount(0);
  await p.screenshot({path:info.outputPath('critical-activity.png')});expect(await axeContrast(p)).toEqual([]);
  await p.locator('#strip [data-do=effort]').click();await saved(p);await expect(p.locator('#feed')).toContainText('HP -');await expect(p.locator('[data-do=apply]')).toHaveCount(0);
@@ -16,7 +16,7 @@ test('miss and failed ordinary check stay distinct with reduced motion',async({b
  const {gm,p}=await setup(browser);await p.emulateMedia({reducedMotion:'reduce'});await attack(p,2);
  await expect(p.locator('#feed .outcome')).toHaveText('MISS');await expect(p.locator('#feed')).toContainText('5 against Target 12');await expect(p.locator('#dice .die')).toHaveCount(0);
  await p.locator('#panel [data-do=ordinaryCheck]').click();await p.locator('#strip input[data-phys]').fill('2');await p.locator('#strip [data-stat=WIS]').click();
- await expect(p.locator('#feed .outcome')).toHaveText('FAILED CHECK');await expect(p.locator('#panel .calc,.reveal-result')).toHaveCount(0);expect(gm.errors.concat(p.errors)).toEqual([]);
+ await expect(p.locator('#feed .outcome')).toHaveText('FAILED CHECK');await expect(p.locator('#panel .calc')).toHaveCount(0);await expect(p.locator('#dice .reveal-result')).toContainText('FAILED CHECK');expect(gm.errors.concat(p.errors)).toEqual([]);
 });
 test('reconnecting restores pending damage without replaying dice; leaving clears feedback',async({browser})=>{
  const {p}=await setup(browser);await attack(p,15);await expect(p.locator('#feed .outcome')).toHaveText('SUCCESS');await p.reload();await expect(p.locator('#app')).toBeVisible();await expect(p.locator('#dice .die,.reveal-result')).toHaveCount(0);await expect(p.locator('#strip [data-do=effort]')).toBeVisible();

@@ -41,7 +41,7 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 
 **Hero natural rolls:** a natural 1 is a 1 on the die before bonuses and adds 1 Horror. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
 
-## Attacks: target, roll, damage, apply
+## Attacks: target, roll, damage
 
 1. Select the enemy's card or token first.
 2. Choose your equipped weapon, spell or item in **Play**, then choose its target if asked. Roll the prepared action in the bottom strip. For an unarmed attack, choose **Attack without an item** in Play; for other tasks, choose **Ordinary check**.
@@ -105,4 +105,6 @@ Rend the Veil asks you to select the affected foes before rolling. The GM confir
 
 Standalone Effort and ordinary task checks can still use Apply when the GM needs to choose where the result belongs. Attacks and targeted item actions apply their rolled result automatically.
 
-During play, **Activity** at the bottom shows checks, damage, healing, Horror and other outcomes. Open it for earlier events and use **Undo** beside an event when permitted. Roll controls appear only in the bottom strip; Play holds your choices. Connection and saving messages stay beside the table status.
+During play, **Activity** at the bottom shows checks, damage, healing, Horror and other outcomes. Open it for earlier events and use **Undo** beside an event when permitted. Play holds your choices and the bottom strip holds your roll controls. Dice and the result appear over the scene: a successful attack stays until you roll damage, using the result’s Roll damage button or the bottom strip. Misses and non-damage results have Continue; eligible Push decisions remain in Play. Reduced motion keeps the result without tumbling dice. Connection and saving messages stay beside the table status.
+
+**Manual effects:** item and spell notes distinguish what the VTT handles from what the GM must track. Conditions such as Dazed, Ward’s Defence bonus, weapon blessings, reloading and their durations stay manual unless explicitly labelled automatic. A successful roll does not apply those effects for you. Quantities marked “track manually” are not live counters. Damage Undo restores damage, not the use spent to make the attack; healing Undo also restores its supported charge and allowance.

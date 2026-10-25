@@ -1,4 +1,6 @@
 import '../../site/vtt/rules.js';
+import '../../site/sheet/gear.js';
+import '../../site/sheet/sheet-core.js';
 import { esc } from './markdown.mjs';
 
 const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies, tools and curios', relic: 'Relics', grimoire: 'Grimoires' };
@@ -37,9 +39,9 @@ export function lootCatalogue(g) {
     }
     const spellList = kind === 'grimoire' ? `<ul class="loot-spells">${i.spells.map(id => {
       const s = spells.get(id);
-      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(globalThis.SacramentRules.rangeText(s) || 'Range: GM ruling')} · ${cost(s)}</p></li>`;
+      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${esc(globalThis.SacramentSheetCore.automationText(s))}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(globalThis.SacramentRules.rangeText(s) || 'Range: GM ruling')} · ${cost(s)}</p></li>`;
     }).join('')}</ul>` : '';
-    return `<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}${spellList}</article>`;
+    return `<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}<p class="small">${esc(globalThis.SacramentSheetCore.automationText(i))}</p>${spellList}</article>`;
   }).join('')}</section>`).join('');
   return `<section id="loot-roller" class="loot-roller" aria-labelledby="loot-roller-title" hidden><h2 id="loot-roller-title">What did you find?</h2><p>Try a random find from the current loot tables.</p><button class="btn" type="button">Roll loot</button><div id="loot-result" role="status" aria-live="polite" aria-atomic="true"></div></section><noscript><p>Enable JavaScript to try the loot roller, or use the roll tables below.</p></noscript><script defer src="/vtt/rules.js"></script><script defer src="/sheet/gear.js"></script><script defer src="/sheet/sheet-core.js"></script><script defer src="/loot-roller.js"></script><nav class="loot-jumps" aria-label="Loot sections"><p><b>Roll tables</b><br>${tables.map(t => `<a href="#table-${esc(t.id)}">${esc(t.name)} (d${t.die})</a>`).join(' · ')}</p><p><b>Item catalogue</b><br>${Object.entries(kinds).map(([k, v]) => `<a href="#loot-${k}">${k === 'grimoire' ? 'Grimoires and spells' : v}</a>`).join(' · ')}</p></nav><p>${items.length} catalogue items · ${items.filter(i => i.kind === 'grimoire').length} grimoires · ${g.spells.length} different spells.</p>${rolls}${list}`;
 }

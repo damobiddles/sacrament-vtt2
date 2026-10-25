@@ -1,6 +1,6 @@
 import {test,expect,newPage,makeTable,joinTable,claimHero,state,saved} from './helpers.mjs';
 test.setTimeout(60000);
-test('player prepares in Play, rolls only in the footer, and reads outcomes only in Activity',async({browser})=>{
+test('player prepares in Play, rolls only in the footer, and keeps outcomes in Activity with a scene dice reveal',async({browser})=>{
  const gm=await newPage(browser),p=await newPage(browser),code=await makeTable(gm);
  await joinTable(p,code,'Activity player');await claimHero(p,'Thorne');
  await p.locator('#cards .c',{hasText:'Pit Ghoul'}).click();
@@ -15,8 +15,9 @@ test('player prepares in Play, rolls only in the footer, and reads outcomes only
  await p.locator('#strip input[data-phys]').fill('20');
  await p.locator('#strip [data-do=commitUse]').click();await saved(p);
  await expect(p.locator('#feed')).toContainText('CRITICAL HIT');
- await expect(p.locator('#panel .calc,.reveal-result,#toast')).toHaveCount(0);
+ await expect(p.locator('#panel .calc,#toast')).toHaveCount(0);
  await expect(p.locator('#panel [data-do=effort]')).toHaveCount(0);
+ await expect(p.locator('#dice .reveal-result')).toContainText('CRITICAL HIT');
  await p.locator('#strip [data-do=effort]').first().click();await saved(p);
  await expect.poll(async()=>!!(await state(p)).rolls.at(-1).applied).toBe(true);
  await expect(p.locator('#feed [data-do=undo]')).toBeVisible();

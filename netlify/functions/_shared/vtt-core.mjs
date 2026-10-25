@@ -135,7 +135,7 @@ function rollOutcome(s, e, a) {
   const names = r.attack ? attackerNames(s, r) : null;
   const result = { rollId: r.id, own: r.by === (gm ? 'gm' : a.pid), who: names ? gm ? names.gm : names.pub : r.charName,
     label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : r.attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
-    success: chk.success, critical, item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
+    success: chk.success, critical, pendingDamage: !!(attack && chk.success && !r.nonDamage && !r.effort && !r.applied), item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
   if (!hidden) Object.assign(result, { d20: chk.d20, mod: chk.mod, total: chk.total, target: r.attack ? chk.defence : chk.target, versus: r.attack ? 'Defence' : 'Target', manual: !!r.manual,
     note: r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : '' });
   return result;
@@ -309,7 +309,7 @@ function fixArmour(s, ctx) {
 
 /* ---------- the GM's own loot ---------- */
 /* An item as the designer edits it, tidied (the sheet's own rules decide what is sensible), with the GM's private notes beside it. */
-const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; const item = SC.makeCustom(raw); if (item.kind === 'grimoire' && item.spells.length !== 3) fail('invalid', 'A grimoire must have three different spells.'); return Object.assign(SC.designOf(item), { notes: str(raw.notes, 1000) }); };
+const design = (raw) => { raw = raw && typeof raw === 'object' ? raw : {}; const error = SC.designError(raw); if (error) fail('invalid', error); const item = SC.makeCustom(raw); return Object.assign(SC.designOf(item), { notes: str(raw.notes, 1000) }); };
 const libOf = (s) => (s.lootLib = s.lootLib || []);
 /* What players read on a revealed loot card: the description, then what it does. */
 const lootText = (d) => [d.flavour, d.does, SC.rangeText(d), d.rangeNote, SC.horrorText(d)].filter(Boolean).join('\n\n');
@@ -782,7 +782,7 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
     const chk = R.check({ d20, stat: ch.stats[c.stat], target: s.table.target, adj, settings: s.settings });
-    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
+    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
@@ -813,7 +813,7 @@ const HANDLERS = {
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
       const chk = R.check({ d20, stat: ch.stats[u.stat], bonus: u.attackBonus || 0, target: s.table.target, adj, settings: s.settings });
-      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
+      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
       if (sceneFx) sceneFx.roll = roll.id;

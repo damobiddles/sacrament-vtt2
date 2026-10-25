@@ -56,6 +56,8 @@
       if (f.category === 'Weapon') out += '<label class="sh-f">Weapon style<select data-lf="weaponStyle" data-redraw>' + [['single','One handed'],['heavy','Heavy melee (+2 Weapons damage, two hands)'],['reach','Reach or control (two hands)'],['ranged','Bow or crossbow (d6, two hands)'],['crossbow','Crossbow (+2 to hit, d6, two hands)'],['firearm','Gun or gunpowder weapon (d8, two hands)']].map(function (x) { return opt(x[0], x[1], f.weaponStyle || 'single'); }).join('') + '</select></label>';
       if (f.category !== 'Grimoire') out += '<label class="sh-f">Range<select data-lf="band">' + opt('', 'Unspecified — GM decides', f.band) + Object.keys(R.RANGES).map(function (k) { return opt(k, R.RANGES[k].name, f.band); }).join('') + opt('self', 'Self', f.band) + opt('special', 'Special — GM ruling', f.band) + '</select></label>' + field('Range notes (players see this)', 'rangeNote', true, 240);
       if (f.category === 'Armour') out += '<label class="sh-f">Armour part<select data-lf="armourPart">' + [['body','Body armour'],['head','Helmet'],['shield','Shield']].map(function (x) { return opt(x[0], x[1], f.armourPart || 'body'); }).join('') + '</select></label>';
+      if (f.category === 'Armour' && f.hearts) out += '<p class="sh-note">Extra Hearts while equipped: ' + esc(f.hearts) + '. Preserved from this item.</p>';
+      out += '<p class="sh-note">Descriptions are manual instructions. Only the configured roll, damage, Horror and recognised healing or scene ability are automated.</p>';
       if (f.healingSource) out += '<p class="sh-note">Automated healing uses the rules of ' + esc(C.item(f.healingSource).name) + '. Changing the description does not change its die, target or rest limit.</p>';
       out += field('Description (players see this)', 'flavour', true, 400) + field('Ability text (what it does)', 'does', true, 600);
       if (f.category === 'Grimoire') {
@@ -91,7 +93,7 @@
     }
     function drawPrev() { var p = el.querySelector('#ltPrev'); if (p) p.innerHTML = preview(); }
     function sig() { return JSON.stringify([host.lib(), host.heroes(), ld.confirm, ld.id, ld.mode]); }
-    function say(t) { var m = el.querySelector('#ltMsg'); if (m) m.innerHTML = t ? '<b>' + esc(t) + '</b>' : ''; }
+    function say(t) { var m = el.querySelector('#ltMsg'); if (m) { m.innerHTML = t ? '<b>' + esc(t) + '</b>' : ''; if (t) { m.setAttribute('tabindex', '-1'); m.focus(); } } }
     /* a state update changes the library column only, so what is being typed is never disturbed */
     function refresh() { if (el.hidden || sig() === ld.sig) return; ld.sig = sig(); var l = el.querySelector('#ltLib'); if (l) l.innerHTML = library(); var t = el.querySelector('[data-t=lib]'); if (t) t.textContent = 'Library (' + host.lib().length + ')'; }
 
@@ -103,7 +105,7 @@
     }
     function item() { var o = Object.assign({}, ld.f); o.slots = +o.slots; o.horror = /^[0-9]+$/.test(String(o.horror).trim()) ? +o.horror : String(o.horror).trim();   /* a number, or dice the table rolls when it is used */ o.defence = +o.defence; o.uses = +o.uses; return o; }
     /* one press, one command: a second press while the first is still on its way is ignored, so a double click cannot give or place twice */
-    function once(cmd, done) { if (ld.busy) return; ld.busy = true; host.send(cmd, function (r) { ld.busy = false; if (done) done(r); }); }
+    function once(cmd, done) { if (ld.busy) return; if (cmd.item) { var error = C.designError(cmd.item); if (error) { say(error); return; } } ld.busy = true; host.send(cmd, function (r) { ld.busy = false; if (done) done(r); }); }
     function saved(b, then) { if (!b) return; then(b.result); }
     var actions = {
       tab: function (b) { ld.tab = b.dataset.t; draw(); },
