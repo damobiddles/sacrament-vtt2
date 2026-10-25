@@ -305,8 +305,7 @@
     put($('tTarget'), '<span class="lbl">Target</span>' + (G ? '<button class="chip" data-do="target" data-d="-1" aria-label="Lower the Target">−</button>' : '') +
       '<span class="big" id="tgtv">' + t.target + '</span>' + (G ? '<button class="chip" data-do="target" data-d="1" aria-label="Raise the Target">+</button>' : ''));
     put($('tRound'), '<span class="lbl">Round</span><span class="big">' + t.round + '</span>' + (G ? '<button class="link" data-do="nextRound" title="Manual round advance: running timers and dying countdowns lose 1">Next round</button>' : ''));
-    put($('tTurn'), '<span class="lbl">Turn</span><span class="who">' + (cur ? esc(cur.name) : (t.order.length ? 'Unseen' : 'No one')) + '</span>' +
-      (G && t.order.length ? '<button class="btn small main" data-do="endTurn">Next turn</button>' : ''));
+    put($('tTurn'), '<span class="lbl">Turn</span><span class="who">' + (cur ? esc(cur.name) : (t.order.length ? 'Unseen' : 'No one')) + '</span>');
     var tm = cardList().filter(function (c) { return c.timer && (gm() ? onTable(c) || true : true); });
     renderHorror();
     put($('tTimers'), tm.map(function (c) { var T = c.timer; return '<button class="chip' + (!T.hidden && T.cur === 0 ? ' hot' : '') + (c.visible ? '' : ' hid') + '" data-do="select" data-id="' + c.id + '" title="' + esc(c.name) + (c.visible ? '' : ' (hidden from players)') + (T.paused ? ' (paused)' : '') + '">' + esc(T.label || c.name) + ' <b>' + (T.hidden ? '?' : T.cur) + '</b>' + (T.paused ? ' ⏸' : '') + '</button>'; }).join(''));
@@ -558,7 +557,7 @@
     }
     if (ch) h += pushView(r);
     if (r.applied && !r.healing) h += damageUndo(r);
-    if (r.applied) h += '<p class="hint">' + (gm() ? 'Use Next turn above when everyone is ready.' : 'Tell the GM when you are finished. The GM advances turns.') + '</p>';
+    if (r.applied) h += '<p class="hint">' + (gm() ? 'Use Next turn in Play when everyone is ready.' : 'Tell the GM when you are finished. The GM advances turns.') + '</p>';
     h += '<div class="row"><button type="button" class="link" data-do="dismissRoll">Done with this roll</button></div></div>';
     return h;
   }
@@ -587,7 +586,7 @@
 
   function renderPanel() {
     var P = $('panel'), c = UI.sel && S.cards[UI.sel], h = rollCard(), focused = document.activeElement;
-    var keepFocus = focused && P.contains(focused) && focused.matches('input[type=checkbox], [role=tab]') ? { id: focused.id, tag: focused.tagName, data: Object.assign({}, focused.dataset) } : null;
+    var keepFocus = focused && P.contains(focused) && focused.matches('input[type=checkbox], [role=tab], button[data-do=renameScene]') ? { id: focused.id, tag: focused.tagName, data: Object.assign({}, focused.dataset) } : null;
     if (UI.adding) { var adding = h + '<div class="sec"><p class="note">Adding…</p></div>'; P.innerHTML = gm() ? gmTable(adding, true) : adding; return; }   /* the panel must not show the old card, with its name box, while the new one is on its way */
     if (c && !(gm() ? true : cardVisibleToMe(c))) { UI.sel = null; c = null; }
     if (UI.cardEdit && UI.cardEdit !== UI.sel) UI.cardEdit = null; if (UI.atk && UI.atk !== UI.sel) UI.atk = null;
@@ -595,7 +594,7 @@
     /* On a phone the panel can be put away, so that the scene and the controls under it stay in reach. It opens again by itself when something new is selected or rolled. */
     P.innerHTML = h; P.classList.toggle('empty', !h.trim());
     if (keepFocus) {
-      var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
+      var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab], button[data-do=renameScene]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
       if (replacement) replacement.focus({ preventScroll: true });
     }
   }
@@ -760,7 +759,7 @@
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = '<section class="play-section"><div class="row between"><h3>Turn order</h3>' + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +

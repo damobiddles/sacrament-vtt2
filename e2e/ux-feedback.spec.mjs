@@ -6,7 +6,7 @@ import { newPage, makeTable, joinTable, claimHero, saved, state } from './helper
 const SHOTS = process.env.UX_SHOTS || '';   /* a folder for screenshots, when asked for */
 const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: SHOTS + '/' + name + '.png' }); };
 const card = (page, name) => page.locator('#cards .c', { hasText: name }).first();
-const endTurn = async (page) => { await page.locator('#top [data-do=endTurn]').click(); await saved(page); };
+const endTurn = async (page) => { await page.locator('[data-do=gmtab][data-t=play]').click(); await page.locator('#panel [data-do=endTurn]').click(); await saved(page); };
 
 test('a new GM starts with turn order and uses Table for invitations and character setup', async ({ browser }) => {
   test.setTimeout(60000);

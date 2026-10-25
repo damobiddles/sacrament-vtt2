@@ -9,6 +9,8 @@ test('GM can rename live and prepared scenes, cancel edits and keep scene conten
  const rename=()=>gm.locator('[data-do=renameScene][data-scene="'+live+'"]');
  await rename().click();await expect(gm.locator('#sceneName')).toBeFocused();await expect(gm.locator('#sceneName')).toHaveValue(before.table.scene.name);
  await gm.locator('#sceneName').fill('Cancelled name');await gm.locator('#sceneName').press('Escape');await expect(gm.locator('#sceneName')).toHaveCount(0);await expect(rename()).toBeFocused();expect((await state(gm)).table.scene.name).toBe(before.table.scene.name);
+ const focusVersion=(await state(gm)).v,joining=await newPage(browser);await joinTable(joining,code,'Focus player');
+ await expect.poll(async()=>(await state(gm)).v).toBeGreaterThan(focusVersion);await expect(rename()).toBeFocused();
  await rename().click();await gm.locator('#sceneName').fill('   ');await gm.locator('[data-do=saveSceneName]').click();await expect(gm.locator('#sceneName')).toBeVisible();expect((await state(gm)).table.scene.name).toBe(before.table.scene.name);
  await gm.locator('#sceneName').fill('Renamed live scene');await gm.screenshot({path:info.outputPath('scene-name-editor.png')});await gm.locator('#sceneName').press('Enter');
  await expect.poll(async()=>(await state(player)).table.scene.name).toBe('Renamed live scene');await saved(gm);

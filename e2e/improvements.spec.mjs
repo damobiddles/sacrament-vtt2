@@ -41,7 +41,7 @@ test('the turn reaching a player in another tab marks the tab’s title and play
   await expect(ann.locator('#strip input[data-sound]')).toBeChecked();
   /* Ann looks at another tab */
   await ann.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); });
-  await gm.locator('#top [data-do=endTurn]').click(); await saved(gm);
+  await gm.locator('[data-do=gmtab][data-t=play]').click();await gm.locator('#panel [data-do=endTurn]').click(); await saved(gm);
   await expect.poll(() => ann.title(), { timeout: 15000 }).toBe('● Your turn · Sacrament RPG Table');
   expect(await ann.evaluate(() => window.__vtt.ui.chimed || 0)).toBe(1);
   /* she comes back: the title is put back */

@@ -37,7 +37,7 @@ Run it locally: `npm run vtt` (opens on http://localhost:8788/vtt/, rooms saved 
 
 ## The screen
 
-* **Top strip:** a labelled GM view or Player view, scene Target (the GM has − and +), round, whose turn it is, visible timers, Horror and connection/save state. Only the GM has **Next turn** and **Next round**. The GM's table code, invitation and Leave controls are in the **Table** tab; players have their code and Leave in the header. Leave asks twice and forgets that session in this browser without removing the saved table or hero. Keep the private recovery link before leaving a GM session.
+* **Top strip:** a labelled GM view or Player view, scene Target (the GM has − and +), round, whose turn it is, visible timers, Horror and connection/save state. Only the GM has **Next round** here; **Next turn** is beside the turn order in Play. The GM's table code, invitation and Leave controls are in the **Table** tab; players have their code and Leave in the header. Leave asks twice and forgets that session in this browser without removing the saved table or hero. Keep the private recovery link before leaving a GM session.
 * **The table:** cards and tokens placed freely (percent coordinates, no grid, no zones; range is whatever the picture shows), an optional background, a pointer and basic drawing.
 * **Contextual panel:** what you selected. A roll in progress is always at its top. Nothing selected: the table's own controls (GM) or help (player).
 * **Activity feed:** one line, expandable. Each entry that can be taken back has an Undo button.

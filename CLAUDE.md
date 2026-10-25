@@ -144,3 +144,5 @@ GM usability cleanup approved by the owner, 25 October 2026: the four GM tabs re
 Map-width switching removed at the owner’s request, 25 October 2026: no Fill width / Fit map button or wide-mode behavior remains. The map always uses its existing fitted view. Shared token coordinates and scene data are unchanged. Current guidance and the map-layout regression test reflect this removal.
 
 The owner also removed the live-encounter heading and invite/first-session-help introduction from Play, 25 October 2026. Play starts directly at Turn order. Invitations and hero creation remain in Table; the selected-card context and encounter-refresh confirmation still identify the live scene where needed.
+
+Owner decision, 25 October 2026: Next turn is only beside the turn order in the GM’s Play tab, not in the top strip. The header still displays the current actor and round; Next round remains its secondary manual override. Automatic round advancement and player permissions are unchanged. This supersedes earlier instructions to keep Next turn in the header.

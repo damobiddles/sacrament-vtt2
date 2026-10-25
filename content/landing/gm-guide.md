@@ -49,7 +49,7 @@ Players should select a target before attacking. A successful attack carries tha
 
 ## Turns and monster attacks
 
-The Play tab's **Turn order** lets you inspect a character without changing whose turn it is. Use **Edit order** and **Set turn** for a deliberate turn jump; the same editor adds, removes and reorders entries. The GM’s **Next turn** advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
+The Play tab's **Turn order** lets you inspect a character without changing whose turn it is. Use **Edit order** and **Set turn** for a deliberate turn jump; the same editor adds, removes and reorders entries. The GM’s **Next turn** in Play advances it; finishing the last entry starts a new round. **Next round** also advances the round. Countdowns lose one at the new round, so avoid advancing it twice by mistake. Discuss movement and action limits at the table; the software does not adjudicate every narrative action or distance.
 
 To attack, select a monster and press **Attack a hero…**. Choose its target and set its Attack bonus, then press **Attack**. The result is compared with **Defence: 10 + CON + armour**, with armour capped at +5 and the combined modifier capped at +10. A natural 1 always misses; a natural 20 always hits. On a hit, choose the Effort die to apply damage immediately. Player attacks also apply their rolled damage automatically. **Undo this damage** beside the result reverses that damage; Activity retains the full history. A hidden attacker is presented to players as “Something”.
 
