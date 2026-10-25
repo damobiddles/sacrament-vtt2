@@ -61,6 +61,8 @@ input[type=checkbox]{min-height:0;width:20px;height:20px}
 /* The tools sit on top of the table's picture, which can be any colour, so they carry their own dark colours in both themes: light text on near-black glass. */
 #toolbar{--fg:#cfc4ab;--dim:#a39880;--candle:#b8955a;--blood-hi:#c4786a;--bg:#12100d;--line:#4a4030;--edge:#7a6f5a}
 #toolbar .chip{min-height:34px;background:#12100df0;backdrop-filter:blur(2px)}
+#toolbar .draw-color{display:inline-flex;flex-direction:row;align-items:center;gap:6px;max-width:100%;min-height:34px;padding:3px 6px;box-sizing:border-box;background:#12100d;color:#cfc4ab;border:1px solid #7a6f5a;font:600 .85rem var(--body);text-transform:none;letter-spacing:0}
+#toolbar #drawColor{min-width:0;max-width:100%;min-height:34px;background:#12100d;color:#cfc4ab;border-color:#7a6f5a}
 /* At the bottom, not the top: along the top it sat over the toolbar's buttons (+ Enemy, + Card, Point, Draw), which could then not be pressed while a scene was being prepared. It is only a label and does not take clicks; an alert's own buttons do. */
 #banner{position:absolute;left:50%;bottom:.8cqw;transform:translateX(-50%);z-index:5001;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;max-width:90%}
 #banner .alert{pointer-events:auto}

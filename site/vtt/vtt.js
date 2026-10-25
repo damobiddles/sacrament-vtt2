@@ -8,6 +8,8 @@
   var sessionVersion = 0;
   var sess = null;                                /* { code, token, role, pid } */
   var UI = { open: {}, phys: '', sel: null, tool: 'select', adj: 'normal', roll: null, feedOpen: false, view: null, actAs: null, status: 'ok', pending: 0, aim: {}, hpOps: {}, netlog: [], reconcile: false, maxTries: 12, working: null, pressing: false, draw: null, drag: null, seenPtr: {}, dirty: false };
+  var DRAW_COLORS = [['#e0b040', 'Gold'], ['#4da6ff', 'Blue — water'], ['#65b86a', 'Green — trees'], ['#ed6a5e', 'Red — fire'], ['#ffffff', 'White'], ['#000000', 'Black']];
+  UI.drawColor = DRAW_COLORS[0][0];
   /* a player's short instructions are shown until they have made their first roll, then never again (on this browser) */
   UI.hintSeen = (function () { try { return localStorage.getItem(KEY + 'hint') === '1'; } catch (e) { return false; } })();
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -205,7 +207,7 @@
     UI.pending = 0; UI.reconcile = false; UI.working = null; UI.rolling = false;
     UI.rollChecked = false; UI.seenLog = null; UI.view = null; UI.actAs = null;
     UI.sceneDelete = null; UI.sceneDeleting = false; UI.cardEdit = null; UI.atk = null; UI.askItem = null; UI.loot = null; UI.lootBusy = false;
-    UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null;
+    UI.removePlayerAsk = null; UI.removeBusy = null; UI.drawScene = null; UI.pointScene = null; UI.drawColor = DRAW_COLORS[0][0]; UI.strokeColor = null;
     UI.attackChoice = null; UI.areaTargets = []; UI.powerResetAsk = false; UI.gmDiceResult = null; UI.gmDiceBusy = false; UI.tab = 'play'; UI.sub = null; UI.adding = false;
     if ($('lootOverlay')) { $('lootOverlay').hidden = true; $('lootOverlay').innerHTML = ''; }
     UI.aim = {}; UI.hpOps = {}; UI.roll = null; UI.draw = null; UI.drag = null; UI.pointing = false; UI.sel = null; UI.sheet = null;
@@ -373,6 +375,9 @@
     return c;
   }
   function aimId() { var r = UI.roll && S.rolls.filter(function (x) { return x.id === UI.roll; })[0]; if (!(r && r.effort && !r.applied)) return null; var t = applyTarget(r); return t ? t.id : null; }
+  function drawPalette() {
+    return '<label class="draw-color">Colour<select id="drawColor" aria-label="Drawing colour">' + DRAW_COLORS.map(function (color) { return '<option value="' + color[0] + '"' + (color[0] === UI.drawColor ? ' selected' : '') + '>' + color[1] + '</option>'; }).join('') + '</select></label>';
+  }
   function renderTable() {
     if (UI.drag) { UI.dirty = true; return; }
     var G = gm(), view = viewScene(), tbl = $('table');
@@ -407,7 +412,7 @@
     if (!G && UI.tool === 'draw') UI.tool = 'select';
     put($('toolbar'), ['select:Select', 'point:Point'].concat(G ? ['draw:Draw'] : []).map(function (t) { var k = t.split(':'); return '<button class="chip' + (UI.tool === k[0] ? ' hot' : '') + '" data-do="tool" data-tool="' + k[0] + '" aria-pressed="' + (UI.tool === k[0]) + '">' + k[1] + '</button>'; }).join('') +
       (UI.tool === 'point' ? '<span class="note tip">Press and hold on the table, then move: everyone sees where you point.</span>' : UI.tool === 'draw' ? '<span class="note tip">Press and drag on the table to draw.</span>' : '') +
-      (UI.tool === 'draw' ? '<button class="chip" data-do="drawUndo">Undo line</button>' + (G ? '<button class="chip" data-do="drawClear">Clear drawing</button>' : '') : ''));
+      (UI.tool === 'draw' ? drawPalette() + '<button class="chip" data-do="drawUndo">Undo line</button>' + (G ? '<button class="chip" data-do="drawClear">Clear drawing</button>' : '') : ''));
     var b = '';
     if (G && S.alerts && S.alerts.length) b += S.alerts.map(function (a) { return '<div class="alert">TIME: ' + esc(a.name) + ' has reached 0 <button class="chip" data-do="ack" data-id="' + a.cardId + '">Resolved</button></div>'; }).join('');
     b += horrorBanner();
@@ -1223,6 +1228,11 @@
   document.addEventListener('input', function (e) { if (e.target.id === 'gmDiceCount') UI.gmDiceCount = +e.target.value; if (e.target.id === 'sceneName') { UI.sceneName = e.target.value; e.target.setCustomValidity(''); } });
   document.addEventListener('change', function (e) {
     var t = e.target; if (!S || !t.dataset) return;
+    if (t.id === 'drawColor') {
+      if (!gm()) return;
+      if (!DRAW_COLORS.some(function (color) { return color[0] === t.value; })) { t.value = UI.drawColor; return; }
+      UI.drawColor = t.value; renderTable(); var picker = $('drawColor'); if (picker) picker.focus({ preventScroll: true }); return;
+    }
     if (t.dataset.upload === 'bg') return uploadPicture(t);
     if (t.dataset.edit) { var patch = {}; patch[t.dataset.edit] = t.value; send({ type: 'cardUpdate', id: t.dataset.id, patch: patch }); }
     else if (t.dataset.set) { var cc = S.cards[t.dataset.id]; if (t.dataset.set === 'hp' && cc && cc.hp) hpQueue(t.dataset.id, { set: +t.value }, function (done) { send({ type: 'track', id: t.dataset.id, field: 'hp', value: +t.value }, done); }); else send({ type: 'track', id: t.dataset.id, field: t.dataset.set, value: +t.value }); }
@@ -1265,7 +1275,7 @@
   $('table').addEventListener('pointerdown', function (ev) {
     if (!S || ev.button > 0 || UI.drag || UI.draw || UI.pointing) return;
     if (ev.target.closest('#toolbar') || ev.target.closest('#banner')) return;
-    if (UI.tool === 'draw' && gm()) { UI.drawScene = viewScene(); UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
+    if (UI.tool === 'draw' && gm()) { UI.drawScene = viewScene(); UI.strokeColor = UI.drawColor; UI.gesturePointer = ev.pointerId; UI.draw = [tablePoint(ev)]; $('table').setPointerCapture(ev.pointerId); return; }
     if (UI.tool === 'point') { UI.pointScene = viewScene(); UI.gesturePointer = ev.pointerId; var p = tablePoint(ev); sendPoint(p[0], p[1]); $('table').setPointerCapture(ev.pointerId); UI.pointing = true; return; }
     var cEl = ev.target.closest('.c');
     if (!cEl) { if (UI.sel) { UI.sel = null; render(); } return; }
@@ -1274,7 +1284,7 @@
     else render();
   });
   $('table').addEventListener('pointermove', function (ev) {
-    if (UI.draw && ev.pointerId === UI.gesturePointer) { var p = tablePoint(ev), q = UI.draw[UI.draw.length - 1]; if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) > .4) { UI.draw.push(p); $('ink').innerHTML += ''; var pl = $('ink').querySelector('polyline.live'); if (!pl) { $('ink').insertAdjacentHTML('beforeend', '<polyline class="live" stroke="#e0b040"/>'); pl = $('ink').querySelector('polyline.live'); } pl.setAttribute('points', UI.draw.map(function (a) { return a[0] + ',' + a[1]; }).join(' ')); } return; }
+    if (UI.draw && ev.pointerId === UI.gesturePointer) { var p = tablePoint(ev), q = UI.draw[UI.draw.length - 1]; if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) > .4) { UI.draw.push(p); $('ink').innerHTML += ''; var pl = $('ink').querySelector('polyline.live'); if (!pl) { $('ink').insertAdjacentHTML('beforeend', '<polyline class="live" stroke="' + esc(UI.strokeColor) + '"/>'); pl = $('ink').querySelector('polyline.live'); } pl.setAttribute('points', UI.draw.map(function (a) { return a[0] + ',' + a[1]; }).join(' ')); } return; }
     if (UI.pointing && ev.pointerId === UI.gesturePointer && Date.now() - lastPoint > 250) { lastPoint = Date.now(); var pp = tablePoint(ev); sendPoint(pp[0], pp[1]); return; }
     var d = UI.drag; if (!d || ev.pointerId !== d.pid) return; var r = $('table').getBoundingClientRect(), dx = ev.clientX - d.sx, dy = ev.clientY - d.sy;
     if (!d.moved && Math.abs(dx) + Math.abs(dy) < 5) return; d.moved = true; d.el.classList.add('drag');
@@ -1288,7 +1298,7 @@
     // A cancelled pointer gesture (lost capture, interrupted touch, OS gesture)
     // must not commit a token move or a partially drawn line.
     if (ev && ev.type === 'pointercancel') {
-      UI.draw = null; UI.pointing = false;
+      UI.draw = null; UI.strokeColor = null; UI.pointing = false;
       var cancelled = UI.drag; UI.drag = null;
       if (cancelled) { cancelled.el.classList.remove('drag'); cancelled.el._h = null; }
       var live = $('ink').querySelector('polyline.live'); if (live) live.remove();
@@ -1296,7 +1306,7 @@
       render();
       return;
     }
-    if (UI.draw) { var pts = UI.draw; UI.draw = null; if (pts.length > 1) { var step = Math.ceil(pts.length / 150); pts = pts.filter(function (p, i) { return i % step === 0 || i === pts.length - 1; }); send({ type: 'draw', sceneId: UI.drawScene, pts: pts, color: '#e0b040' }, null, 'd'); } var pl = $('ink').querySelector('polyline.live'); if (pl) pl.remove(); return; }
+    if (UI.draw) { var pts = UI.draw, color = UI.strokeColor; UI.draw = null; UI.strokeColor = null; if (pts.length > 1) { var step = Math.ceil(pts.length / 150); pts = pts.filter(function (p, i) { return i % step === 0 || i === pts.length - 1; }); send({ type: 'draw', sceneId: UI.drawScene, pts: pts, color: color }, null, 'd'); } var pl = $('ink').querySelector('polyline.live'); if (pl) pl.remove(); return; }
     $('ink')._h = null;   /* the line being drawn was added by hand: the next drawing of the ink replaces it */
     UI.pointing = false; var d = UI.drag; if (!d) return; UI.drag = null; d.el.classList.remove('drag'); d.el._h = null;
     if (d.moved) { var l = S.layout[d.id]; l.x = d.x; l.y = d.y; send({ type: 'move', id: d.id, x: d.x, y: d.y }); }

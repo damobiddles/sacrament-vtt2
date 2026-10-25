@@ -43,6 +43,8 @@ test('the home page and the table at 360×640 are not broken, overlapping or off
   const code = await gm.evaluate(() => window.__vtt.state().code);
   await problems(gm, 'the table as the GM');
   for (const t of ['scene', 'loot', 'table']) { await gm.locator(`#panel [data-do=gmtab][data-t=${t}]`).click(); await problems(gm, `the GM’s ${t} tab`); }
+  await gm.locator('#toolbar [data-tool=draw]').click(); await problems(gm, 'the GM drawing colour selector');
+  await gm.locator('#toolbar [data-tool=select]').click();
   await gm.locator('#cards .c', { hasText: 'Pit Ghoul' }).click(); await problems(gm, 'a monster selected, as the GM');
   await joinTable(ann, code, 'Ann'); await problems(gm, 'the table after a player joined');
   await problems(ann, 'the table as a player choosing a hero'); await claimHero(ann, 'Thorne'); await problems(ann, 'the table as a player with a hero');
