@@ -356,7 +356,7 @@ label.phys{align-items:flex-start}
 
 /* Dice tumbling on screen (dice.js): a picture of a roll the server has already made. It never takes a click, and it carries its own dark colours because it is drawn over the table. */
 #dice{position:absolute;inset:0;z-index:5002;display:flex;align-items:center;justify-content:center;gap:8px;pointer-events:none;padding:12px;overflow:auto;box-sizing:border-box}#dice:empty{display:none}#stripControls{display:contents}
-.reveal-result{pointer-events:auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,380px);max-height:100%;overflow:auto;padding:20px;background:#191610;border:2px solid #b8955a;border-radius:10px;box-shadow:0 8px 35px #000b;text-align:center;color:#efe5cc}
+.reveal-result{pointer-events:none;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,380px);max-height:100%;overflow:auto;padding:20px;background:#191610;border:2px solid #b8955a;border-radius:10px;box-shadow:0 8px 35px #000b;text-align:center;color:#efe5cc}
 .reveal-result>*{flex-shrink:0}
 .reveal-result.failure{border-color:#c4786a}.reveal-result p{margin:0}.reveal-who,.reveal-detail{font-size:1rem;color:#efe5cc}.reveal-outcome{font:700 1.65rem var(--display);color:#e0c27a}.failure .reveal-outcome{color:#eca99a}.reveal-action{pointer-events:auto;flex-shrink:0;max-width:100%;white-space:normal}.reveal-dice:empty,.reveal-detail:empty{display:none}
 .dice-roll{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;max-width:280px;transition:opacity .3s}
@@ -374,6 +374,10 @@ label.phys{align-items:flex-start}
 @keyframes dice-tumble{0%{transform:translate(-120px,-60px) rotate(-540deg) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(20px,8px) rotate(-60deg) scale(1.05)}75%{transform:translate(-6px,-4px) rotate(18deg)}100%{transform:translate(0,0) rotate(0) scale(1)}}
 @keyframes dice-land{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){#dice .die{display:none}}
+/* Leave map selection available in roomy scenes. Smaller scenes keep the
+   result scrollable; its action button accepts clicks in every layout. */
+@container (max-height:440px){.reveal-result{pointer-events:auto}}
+@media(max-width:900px){.reveal-result{pointer-events:auto}}
 /* On phones put the die beside its outcome, keeping the next action visible. */
 @media(max-width:600px){
   .reveal-result{display:grid;grid-template-columns:var(--ui-die-size) minmax(0,1fr);gap:8px;padding:12px;align-items:center}
@@ -491,3 +495,5 @@ label.phys{align-items:flex-start}
 #strip .phys input{height:36px;min-height:var(--ui-compact-height);padding:0 6px}
 /* Keep the physical-die label close to its input without increasing the footer height. */
 #strip label.phys{gap:2px}
+/* Desktop dice entry fits a single footer row without shrinking its label. */
+@media(min-width:901px){#strip label.phys{flex-direction:row;align-items:center;gap:8px}}

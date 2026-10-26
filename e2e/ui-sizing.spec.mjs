@@ -32,7 +32,10 @@ for(const viewport of [{width:1366,height:800},{width:360,height:640}])test(`rea
  // before checking the result card's own layout.
  if(viewport.width===360){await player.locator('#tablewrap').scrollIntoViewIfNeeded();await expect(player.locator('.die.landed')).toBeInViewport();await expect(player.locator('.reveal-action')).toBeInViewport();}
  await player.locator('.reveal-action').scrollIntoViewIfNeeded();await expect(player.locator('.reveal-action')).toBeInViewport();
- const covered=await bounded(player.locator('.reveal-who').evaluate(e=>{const r=e.getBoundingClientRect();return [.2,.5,.8].some(y=>!e.closest('.reveal-result').contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height*y)));}),5000,'checking result text is above map tools');expect(covered).toBe(false);
+ // Visual stacking and pointer behaviour are separate: decorative result text
+ // must be above the toolbar while roomy scenes still allow map selection.
+ const layers=await bounded(player.locator('.reveal-result').evaluate(card=>({dice:Number(getComputedStyle(document.querySelector('#dice')).zIndex),tools:Number(getComputedStyle(document.querySelector('#toolbar')).zIndex),pointer:getComputedStyle(card).pointerEvents,action:getComputedStyle(card.querySelector('.reveal-action')).pointerEvents})),5000,'checking result layering and map click-through');
+ expect(layers.dice).toBeGreaterThan(layers.tools);expect(layers.pointer).toBe(viewport.width===360?'auto':'none');expect(layers.action).toBe('auto');
  await player.screenshot({path:info.outputPath('player-dice.png')});
  await player.locator('.reveal-action').focus();await player.locator('.reveal-action').press('Enter');await expect(player.locator('#feed')).toContainText('HP -');
  await gm.locator('#cards .c',{hasText:'Thorne'}).click();await gm.locator('#panel [data-do=sheet]').click();

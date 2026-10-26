@@ -28,7 +28,11 @@ scroll, and keep labels inside their controls. In narrow windows the scene and
 tray share a scroll area so the Activity strip cannot cover tray actions. Use border-box sizing where
 padding must fit within a bounded area. A persistent dice result must scroll
 within the scene; its damage/continue button must remain reachable by mouse,
-touch and keyboard. Keep the existing reduced-motion and dice-off settings.
+touch and keyboard. In roomy scenes, decorative result content must let map
+selection clicks pass through. Small scenes must still accept scrolling within
+the result; its action button stays interactive in every layout. Check visual
+stacking separately from pointer behaviour. Keep the existing reduced-motion
+and dice-off settings.
 
 The scene's spatial cards/tokens are an explicit exception: their geometry
 and lettering scale with the scene. Important full text and HP must remain

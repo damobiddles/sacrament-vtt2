@@ -15,9 +15,10 @@ test('export is read-only, allowlisted, and excludes heroes, loot, possessions, 
 });
 
 test('complete scene round trip preserves existing game and imports fresh trackers, drawings and independent images privately',async()=>{
- const source=await table(),st=await source.state();await source.gm.cmd({type:'track',id:find(st,'Pit Ghoul').id,field:'hp',d:-7});await source.gm.cmd({type:'move',id:find(st,'Pit Ghoul').id,x:46.25,y:36.125});await source.gm.cmd({type:'nextRound'});await source.gm.cmd({type:'draw',pts:[[2.5,3],[10,20]],color:'#4da6ff'});
+ const source=await table(),st=await source.state();await source.gm.cmd({type:'track',id:find(st,'Pit Ghoul').id,field:'hp',mode:'delta',value:-7});await source.gm.cmd({type:'move',id:find(st,'Pit Ghoul').id,x:46.25,y:36.125});await source.gm.cmd({type:'nextRound'});await source.gm.cmd({type:'draw',pts:[[2.5,3],[10,20]],color:'#4da6ff'});
+ assert.equal(find(await source.state(),'Pit Ghoul').hp.cur,13);assert.equal(find(await source.state(),'The Ceiling Groans').timer.cur,3);
  const p=await exported(source);p.manifest.instructions='The sealed gate opens after the ghoul falls.';
- const dest=await table({gear:true}),player=await dest.join('Unchanged player');await dest.gm.cmd({type:'horror',d:3});const before=await dest.state(),i=await imported(dest,p),after=await dest.state();
+ const dest=await table({gear:true}),player=await dest.join('Unchanged player');await dest.gm.cmd({type:'horror',mode:'delta',value:3});const before=await dest.state();assert.equal(before.horror.cur,3);const i=await imported(dest,p),after=await dest.state();
  for(const key of ['table','chars','players','horror','settings','lootLib'])assert.deepEqual(after[key],before[key],key);
  for(const [id,c]of Object.entries(before.cards)){assert.deepEqual(after.cards[id],c);assert.deepEqual(after.layout[id],before.layout[id]);}
  const cards=Object.values(after.cards).filter(c=>c.sceneId===i.r.body.result.id);assert.equal(cards.length,4);assert.equal(cards.find(c=>c.name==='Pit Ghoul').hp.cur,20);const foe=cards.find(c=>c.name==='Pit Ghoul');assert.equal(after.layout[foe.id].x,46.25);assert.equal(after.layout[foe.id].y,36.125);assert.equal(cards.find(c=>c.timer).timer.cur,4);assert.equal(cards.find(c=>c.timer).timer.paused,true);assert.equal(cards.find(c=>c.progress).progress.cur,0);
