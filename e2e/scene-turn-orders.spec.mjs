@@ -21,7 +21,7 @@ test('GM and player change scenes without carrying enemies across, and edited or
  const b=[thorne.cardId,made.result.id];await command(gm,{type:'orderSet',order:b});await command(gm,{type:'turnSet',idx:0});
  await reveal(gm,first);await gm.locator('[data-do=gmtab][data-t=play]').click();await expect.poll(async()=>ids(await state(gm))).toEqual(a);expect((await state(gm)).table.idx).toBe(1);
  await expect(gm.locator('.turn-order')).toContainText('Pit Ghoul');await expect(gm.locator('.turn-order')).not.toContainText('Private prepared enemy');await expect(gm.locator('#panel')).toContainText('Each scene remembers its order');
- await expect.poll(async()=>ids(await state(player))).toEqual(a);await gm.screenshot({path:'/workspace/sacrament-audit/scene-order-return.png'});
+ await expect.poll(async()=>ids(await state(player))).toEqual(a);
  await reveal(gm,second);await expect.poll(async()=>ids(await state(gm))).toEqual(b);await gm.reload();await expect(gm.locator('#app')).toBeVisible();expect(ids(await state(gm))).toEqual(b);expect((await state(gm)).table.idx).toBe(0);
  await player.reload();await expect(player.locator('#app')).toBeVisible();expect((await state(player)).table.scene.id).toBe(second);expect((await state(player)).table.order[1]).toEqual({hidden:true});
  expect(gm.errors).toEqual([]);expect(player.errors).toEqual([]);

@@ -22,8 +22,8 @@ test('reload cannot offer old-scene damage or unselected player damage to the GM
 async function give(gm,id){await bounded(gm.evaluate(async(id)=>{
  const s=window.__vtt.state(),ch=Object.values(s.chars).find(c=>c.name==='Thorne');
  const key=Object.keys(localStorage).find(k=>k.endsWith(s.code)&&!k.includes('join-')),token=JSON.parse(localStorage.getItem(key)).token;
- const r=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{type:'sheet',charId:ch.id,op:{op:'add',id},actionId:'auditgear'+Math.random().toString(36).slice(2)+'.1'}})});
- if(!r.ok)throw Error('Disposable gear award failed: '+r.status);
+ const r=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{type:'sheet',charId:ch.id,op:{op:'add',id},actionId:'auditgear'+Math.random().toString(36).slice(2,10)+'.1'}})});
+ if(!r.ok)throw Error('Disposable gear award failed: '+r.status+' '+(await r.text()).slice(0,300));
 },id),5000,'award disposable gear');}
 test('manual abilities explain their work and do not inherit an enemy target',async({browser})=>{
  const {gm,p}=await setup(browser);await give(gm,'litany');await give(gm,'chain');await give(gm,'oil');

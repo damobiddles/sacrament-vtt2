@@ -6,7 +6,7 @@ test('invitations live only in Table and all GM dice controls are visible with t
  const gm=await newPage(browser);const code=await makeTable(gm);await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(0);await expect(gm.locator('#gmDie,#gmDiceCount,#gmDicePrivate,[data-do=gmDiceRoll]')).toHaveCount(4);
  for(const selector of ['#gmDie','#gmDiceCount','#gmDicePrivate','[data-do=gmDiceRoll]'])await expect(gm.locator(selector)).toBeVisible();
  await expect(gm.locator('[data-do=gmDiceToggle]')).toHaveCount(0);await gm.locator('[data-do=gmtab][data-t=table]').click();await expect(gm.locator('#panel [data-do=copy]')).toHaveCount(1);await expect(gm.locator('#panel')).toContainText(code);
- const color=await bounded(gm.locator('#strip').evaluate(el=>({actual:getComputedStyle(el).borderTopColor,expected:getComputedStyle(el).getPropertyValue('--candle').trim()})),5000,'checking footer divider');expect(color.actual).toBe('rgb(184, 149, 90)');await gm.screenshot({path:'/workspace/sacrament-audit/streamlined-gm-footer.png'});expect(gm.errors).toEqual([]);
+ const color=await bounded(gm.locator('#strip').evaluate(el=>({actual:getComputedStyle(el).borderTopColor,expected:getComputedStyle(el).getPropertyValue('--candle').trim()})),5000,'checking footer divider');expect(color.actual).toBe('rgb(184, 149, 90)');expect(gm.errors).toEqual([]);
 });
 test('Roll damage hits its original target automatically even after selecting another card, and Undo works',async({browser})=>{
  const gm=await newPage(browser),p=await newPage(browser),code=await makeTable(gm);await joinTable(p,code,'Ann');await claimHero(p,'Thorne');
