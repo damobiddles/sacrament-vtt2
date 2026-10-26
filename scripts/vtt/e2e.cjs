@@ -212,7 +212,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('a roll made while the pointer’s slow requests are still in flight works, once', (await st(A)).rolls.length === rollsBefore + 1 && (await st(gm)).pointers && true, (await st(A)).rolls.length + ' vs ' + rollsBefore);
   await A.click('[data-do=tool][data-tool=select]');
   await A.click('[data-do=ordinaryCheck]');
-  check('and a second click on a stat while the first is on its way makes one roll', await (async () => { const n0 = (await st(A)).rolls.length; await A.evaluate(() => { const b = document.querySelector('.stat[data-stat=CON]'); b.click(); b.click(); b.click(); }); await T(1500); return (await st(A)).rolls.length === n0 + 1; })());
+  check('and a second click on a stat while the first is on its way makes one roll', await (async () => { const n0 = (await st(A)).rolls.length; await A.waitForSelector('.stat[data-stat=CON]'); await A.evaluate(() => { const b = document.querySelector('.stat[data-stat=CON]'); b.click(); b.click(); b.click(); }); await T(1500); return (await st(A)).rolls.length === n0 + 1; })());
 
   console.log('--- 15. attacking the ghoul: what is marked is what is applied to, and the HP changes once');
   /* Regression: a roll made with the GATE selected, then the GHOUL clicked before Apply. The table used to mark the ghoul as the target while the button still said "Apply to The Sealed Gate". */
