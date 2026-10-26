@@ -2,6 +2,7 @@
 // It checks who is asking, loads the room, hands the command to the core, and saves the result only if nobody else saved first.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { apply, addLog, emptyState, project, projectPointers, seededRng, Fail, LIMITS } from './vtt-core.mjs';
+import { exportScene, validateScene, capacity as sceneCapacity } from './vtt-scene-pack.mjs';
 import { addSample } from './vtt-sample.mjs';
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -112,6 +113,65 @@ export function makeService({ store, rng = null, now = Date.now, createKey = '' 
             if (await store.put(code, state, cur.etag)) return out(200, { ok: true, pid, token, state: project(state, { role: 'player', pid }) });
           }
           return err(503, 'busy', 'The table is busy. Try again.');
+        }
+        if (['sceneExport','sceneCheck','sceneBegin','sceneStage','sceneCancel'].includes(body.op)) {
+          const room=await load(code);if(!room)return err(404,'no_room','No such table.');
+          const actor=who(room.data,token);if(!actor||actor.role!=='gm')return err(403,'forbidden','Only the GM can share scenes.');
+          if(body.op==='sceneExport'){
+            try{return out(200,{ok:true,...exportScene(room.data,String(body.sceneId))});}catch(e){return err(400,'invalid',e.message);}
+          }
+          const jobId=String(body.jobId||'');
+          if(body.op==='sceneCheck'||body.op==='sceneBegin'){
+            const manifest=body.manifest,packId=String(body.packId||'');
+            try{validateScene(manifest);if(!/^[a-f0-9]{64}$/.test(packId))throw Error('Invalid scene fingerprint.');}catch(e){return err(400,'invalid',e.message);}
+            const duplicates=Object.values(room.data.scenes).filter(sc=>sc.packId===packId).map(sc=>sc.name);
+            if(body.op==='sceneCheck'){
+              try{sceneCapacity(room.data,manifest);return out(200,{ok:true,duplicates});}catch(e){return err(400,'limit',e.message);}
+            }
+            if(!/^[a-f0-9]{24}$/.test(jobId))return err(400,'invalid','Invalid import request.');
+            const result=await mutate(code,token,jobId,state=>{
+              const existing=Object.values(state.scenes).find(sc=>sc.importJob===jobId);
+              if(existing)return {changed:false,result:{id:existing.id,alreadyImported:true}};
+              const jobs=state.sceneImports||(state.sceneImports={}),old=jobs[jobId];
+              if(old){if(old.packId!==packId||JSON.stringify(old.manifest)!==JSON.stringify(manifest))throw new Fail('invalid','That import request is already in use.');return {changed:false,result:{jobId}};}
+              const expired=[];Object.keys(jobs).forEach(id=>{if(jobs[id].expires<now()){expired.push(...Object.values(jobs[id].assets));delete jobs[id];}});
+              if(Object.keys(jobs).length>=2)throw new Fail('invalid','Finish or cancel the other scene imports first.');
+              if(Object.values(state.scenes).some(sc=>sc.packId===packId)&&body.allowDuplicate!==true)throw new Fail('conflict','This scene is already in this table. Confirm that you want another copy.');
+              const reserved=Object.values(jobs).flatMap(j=>j.manifest.images);
+              try{sceneCapacity(state,manifest,reserved.length,reserved.reduce((n,i)=>n+i.size,0));}catch(e){throw new Fail('invalid',e.message);}
+              jobs[jobId]={packId,nonce:randomBytes(12).toString('hex'),manifest:clone(manifest),expires:now()+1800000,assets:{}};state.v++;
+              return {result:{jobId},extra:{expired}};
+            });
+            if(result.status===200&&store.deleteImage)for(const asset of result.body.extra?.expired||[])await store.deleteImage(code,asset.id);
+            // Temporary blob ids and import jobs are never returned in a projected game.
+            if(result.body)delete result.body.extra;return result;
+          }
+          if(!/^[a-f0-9]{24}$/.test(jobId))return err(400,'invalid','Invalid import request.');
+          if(body.op==='sceneCancel'){
+            const result=await mutate(code,token,jobId,state=>{const job=state.sceneImports?.[jobId];if(!job)return {changed:false,result:{cancelled:true}};delete state.sceneImports[jobId];state.v++;return {result:{cancelled:true},extra:{assets:Object.values(job.assets)}};});
+            if(result.status===200&&store.deleteImage)for(const asset of result.body.extra?.assets||[])await store.deleteImage(code,asset.id);
+            if(result.body)delete result.body.extra;return result;
+          }
+          if(!store.putImage)return err(501,'unsupported','This table cannot store scene images.');
+          const job=room.data.sceneImports?.[jobId];
+          const completed=Object.values(room.data.scenes).find(sc=>sc.importJob===jobId);
+          if(completed)return out(200,{ok:true,result:{alreadyImported:true,id:completed.id}});
+          if(!job||job.expires<now())return err(400,'invalid','This import expired. Select the file again.');
+          const image=job.manifest.images.find(i=>i.ref===body.ref);
+          if(!image||typeof body.data!=='string'||body.data.length>IMAGES.maxBytes*1.4||body.data.length%4||!/^[A-Za-z0-9+/]*={0,2}$/.test(body.data))return err(400,'invalid','Invalid scene image.');
+          const bytes=Buffer.from(body.data,'base64'),mime=sniffImage(bytes);
+          if(bytes.length!==image.size||mime!==image.mime||createHash('sha256').update(bytes).digest('hex')!==image.sha256)return err(400,'invalid','A scene image is missing or damaged.');
+          try{globalThis.SacramentScenePack.dimensions(bytes,mime);}catch(e){return err(400,'invalid',e.message);}
+          const id=createHmac('sha256',room.data.secret).update('scene:'+job.nonce+':'+image.ref+':'+image.sha256).digest('hex').slice(0,24);
+          await store.putImage(code,id,bytes,mime);
+          const result=await mutate(code,token,jobId,state=>{
+            if(state.images?.[id])return {changed:false,result:{uploaded:true}};
+            const pending=state.sceneImports?.[jobId];if(!pending||pending.nonce!==job.nonce||pending.expires<now())throw new Fail('invalid','This import was cancelled or expired.');
+            if(pending.assets[image.ref])return {changed:false,result:{uploaded:true}};
+            pending.assets[image.ref]={id,mime,size:bytes.length};state.v++;return {result:{uploaded:true}};
+          });
+          if(result.status!==200&&store.deleteImage){const current=await load(code);if(!current?.data.images?.[id]&&current?.data.sceneImports?.[jobId]?.nonce!==job.nonce)await store.deleteImage(code,id);}
+          return result;
         }
         if (body.op === 'upload') {
           if (!store.putImage) return err(501, 'unsupported', 'This table cannot keep images.');

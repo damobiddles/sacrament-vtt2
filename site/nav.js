@@ -8,7 +8,7 @@
   function section(path) {
     path = path.replace(/index\.html$/, '');
     if (/^\/(player-guide|gm-guide|rules)(\/|$)/.test(path)) return '/how-to-play/';
-    if (/^\/(loot|brand|adventure)(\/|$)/.test(path)) return '/resources/';
+    if (/^\/(loot|brand|adventure|scenes)(\/|$)/.test(path)) return '/resources/';
     if (/^\/(blog|news)(\/|$)/.test(path)) return '/news/';
     var match = PAGES.filter(function (p) { return p[1] === '/' ? path === '/' : path.indexOf(p[1]) === 0; })[0];
     return match ? match[1] : '';

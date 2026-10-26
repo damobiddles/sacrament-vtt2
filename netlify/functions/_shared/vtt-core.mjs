@@ -9,6 +9,7 @@ import { createHmac } from 'node:crypto';
 import '../../../site/vtt/rules.js';
 import '../../../site/sheet/gear.js';
 import '../../../site/sheet/sheet-core.js';
+import { capacity as sceneCapacity } from './vtt-scene-pack.mjs';
 import { LOOT_NOTES } from './loot-notes.mjs';
 const R = globalThis.SacramentRules;
 const SC = globalThis.SacramentSheetCore;   /* the character sheet's rules: the same file the sheet in the browser runs */
@@ -239,7 +240,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -689,6 +690,34 @@ const HANDLERS = {
     l.x = clamp(x, 0, 100); l.y = clamp(y, 0, 100); if (c.front !== false) l.z = ++s.z; return {};
   },
 
+  sceneImport(s, c, a, ctx) {
+    if(!/^[a-f0-9]{24}$/.test(String(c.jobId||'')))fail('invalid','Invalid scene import request.');
+    const existing=Object.values(s.scenes).find(sc=>sc.importJob===c.jobId);
+    if(existing)return {id:existing.id,alreadyImported:true};
+    const job=s.sceneImports && own(s.sceneImports,c.jobId) && s.sceneImports[c.jobId];
+    if(!job||job.expires<ctx.now)fail('invalid','This import expired. Select the scene file again.');
+    const m=job.manifest;
+    try { sceneCapacity(s,m); } catch(e) { fail('invalid',e.message); }
+    if(m.images.some(i=>!job.assets[i.ref]))fail('invalid','Some scene images have not finished uploading. Retry the import.');
+    const id=nid(s,'sc'),used=new Set(Object.values(s.scenes).map(sc=>sc.name));let name=m.name,n=2;
+    while(used.has(name)){const suffix=' ('+(n++)+')';name=m.name.slice(0,60-suffix.length)+suffix;}
+    const img=ref=>ref? '/.netlify/functions/vtt/img/'+s.code+'/'+job.assets[ref].id:'';
+    s.scenes[id]={id,name,bg:img(m.background),packId:job.packId,importJob:c.jobId};
+    s.images=s.images||{};
+    Object.values(job.assets).forEach(asset=>{s.images[asset.id]={mime:asset.mime,size:asset.size,at:ctx.now};});
+    m.cards.slice().sort((a,b)=>a.layout.z-b.layout.z).forEach(card=>{
+      const made=newCard(s,{kind:card.kind,name:card.name,desc:card.desc,img:img(card.image),visible:card.visible,hideNumbers:card.hideNumbers,attack:card.attack,sceneId:id,...card.layout,hp:card.hp?{max:card.hp,cur:card.hp}:null,progress:card.progress?{...card.progress,cur:0}:null,timer:card.timer?{...card.timer,cur:card.timer.max,paused:true,fired:false}:null},a);
+      // Scene packs preserve exact placement; ordinary card creation rounds positions.
+      Object.assign(s.layout[made.id],{x:card.layout.x,y:card.layout.y,w:card.layout.w,h:card.layout.h});
+      if(made.kind==='token'&&made.hp)joinSceneOrder(s,made);
+    });
+    if(m.instructions)newCard(s,{kind:'card',name:'Encounter instructions',desc:'',gmNotes:m.instructions,visible:false,sceneId:id,x:12,y:15,w:18,h:22},a);
+    m.drawings.forEach(line=>s.draw.push({id:nid(s,'d'),sceneId:id,by:'gm',color:line.color,pts:line.points.map(p=>p.slice())}));
+    if(m.drawings.length)drew(s);
+    delete s.sceneImports[c.jobId];
+    L(s,a,ctx,'Imported prepared scene '+name+'. Timers are paused.',{private:true});
+    return {id};
+  },
   sceneCreate(s, c, a, ctx) { if (Object.keys(s.scenes).length >= LIMITS.scenes) fail('limit', 'Too many scenes.'); const id = nid(s, 'sc'); s.scenes[id] = { id, name: str(c.name, LIMITS.name, 'Unmarked Ground') || 'Unmarked Ground', bg: url(c.bg) }; L(s, a, ctx, 'Prepared scene ' + s.scenes[id].name + '.', { private: true }); return { id }; },
   sceneUpdate(s, c) { const sc = s.scenes[c.id] || fail('not_found', 'No such scene.'); if (own(c, 'name')) { const name = str(c.name, LIMITS.name).trim(); if (!name) fail('invalid', 'Enter a scene name.'); sc.name = name; } if (own(c, 'bg')) sc.bg = url(c.bg); return {}; },
   sceneDelete(s, c, a, ctx) {

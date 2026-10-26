@@ -30,6 +30,7 @@ const PAGES = [
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'blog', path: '/news/', label: 'News' },
   { slug: 'resources', path: '/resources/', label: 'Resources' },
+  { slug: 'scenes', path: '/scenes/', label: 'Free Scenes' },
   { slug: 'loot', path: '/loot/', label: 'Loot' },
   { slug: 'feedback', path: '/feedback/', label: 'Feedback' },
   { slug: 'privacy', path: '/privacy/', label: 'Privacy', footerOnly: true },
@@ -106,6 +107,7 @@ function resources() {
   const cards = [
     ['Play', 'My heroes', '/character/', 'Generate a character, customise the sheet, or download and restore a private backup.', 'Build and manage heroes'],
     ['Reference', 'Player and GM rules', '/rules/', 'The current VTT rules, examples and first-session guidance, organised by role.', 'Find your guide'],
+    ['Play', 'Free Scenes', '/scenes/', 'Download a prepared encounter with pictures, enemies and obstacles, ready to import into your own table.', 'Find a scene'],
     ['Reference', 'Current Loot Tables', '/loot/', 'Browse the VTT catalogue, roll a random find and learn about creating custom loot.', 'Browse and roll loot'],
     ['Play', 'Sacrament RPG Table', '/vtt/', 'Open your table, make a new one or join with an invitation from your GM.', 'Open the Sacrament RPG Table'],
     ['For creators', 'Brand kit', '/brand/', 'Logos, colours, typefaces and sharing assets for writing about Sacrament.', 'Open the brand kit']
@@ -175,6 +177,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('player-guide', NAME);
   text('gm-guide', NAME);
   text('resources', NAME, resources());
+  text('scenes', NAME);
   text('loot', NAME, lootCatalogue(globalThis.SACRAMENT_GEAR));
   text('feedback', NAME, feedbackForm + '<aside class="site-next"><h2>Looking for help with a game?</h2><p>Use the <a href="/how-to-play/">first game checklist</a>, <a href="/player-guide/">player guide</a> or <a href="/gm-guide/">GM guide</a>. Follow <a href="/news/">News</a> for published updates.</p></aside>');
   write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>We review feedback privately to plan fixes and improvements. Follow <a href="/news/">News</a> for updates.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));

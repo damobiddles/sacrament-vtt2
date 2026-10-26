@@ -284,3 +284,10 @@
   from = "/newsletter/"
   to = "/feedback/"
   status = 301
+
+# Reviewed scene packs download as files; browsers should not render their contents.
+[[headers]]
+  for = "/downloads/scenes/*.sacrament-scene"
+  [headers.values]
+    Content-Type = "application/octet-stream"
+    Content-Disposition = "attachment"

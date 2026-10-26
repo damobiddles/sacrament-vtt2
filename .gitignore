@@ -10,3 +10,6 @@ site/resources/index.html
 site/sitemap.xml
 
 site/rules/index.html
+
+# Free scene library page is built from content; reviewed packs are retained.
+site/scenes/index.html

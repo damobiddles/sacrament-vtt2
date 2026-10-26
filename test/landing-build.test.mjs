@@ -1,7 +1,7 @@
 // The Sacrament RPG home page and its pages are built from text files. These checks build into a scratch folder with their own little set of files.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, existsSync, cpSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, existsSync, cpSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -162,4 +162,18 @@ test('the home page has the two buttons and they point at the existing join and 
     assert.doesNotMatch(html, /Try it now|A sample fight opens|class="ic-try"/);
     assert.match(html, /The Church keeps the world/);
   } finally { b.cleanup(); }
+});
+
+
+test('rebuilding the Free Scenes page preserves reviewed downloads in their separate folder', () => {
+  const b=build();
+  try {
+    assert.equal(b.r.status,0,b.r.stderr);
+    const folder=join(b.out,'downloads','scenes'),file=join(folder,'preserve.sacrament-scene');
+    mkdirSync(folder,{recursive:true});const bytes=Buffer.from('reviewed portable scene bytes');writeFileSync(file,bytes);
+    const r=spawnSync('node',['scripts/build-landing.mjs'],{cwd:new URL('..',import.meta.url).pathname,env:{...process.env,LANDING_CONTENT:b.content,LANDING_OUT:b.out},encoding:'utf8'});
+    assert.equal(r.status,0,r.stderr);assert.deepEqual(readFileSync(file),bytes);
+    assert.match(readFileSync(join(b.out,'scenes','index.html'),'utf8'),/href="\/downloads\/scenes\/the-sealed-gate\.sacrament-scene"/);
+    assert.match(readFileSync(join(b.out,'resources','index.html'),'utf8'),/href="\/scenes\/"/);
+  } finally {b.cleanup();}
 });

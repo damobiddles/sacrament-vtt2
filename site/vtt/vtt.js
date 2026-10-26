@@ -202,7 +202,7 @@
   }
 
   function resetSession() {
-    window.SacramentDialogs.reset(); D.clear();
+    window.SacramentSceneTransfer.reset(); window.SacramentDialogs.reset(); D.clear();
     sessionVersion++; clearTimeout(timer); clearTimeout(UI.nudge); clearTimeout(UI.leaveTimer); polling = false; again = false;
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
     clientId = rid(12); lanes = { g: mkLane('g'), d: mkLane('d') };
@@ -771,6 +771,7 @@
     h += '<div class="row"><input id="newScene" placeholder="New scene name" maxlength="60" aria-label="New scene name"><button class="btn small" data-do="newScene">Add</button></div>';
     h += '<div class="row"><button type="button" class="link" data-do="sceneBg" aria-expanded="' + !!UI.sceneBg + '">' + (UI.sceneBg ? 'Hide picture settings' : 'Change the picture for this scene') + '</button></div>';
     if (UI.sceneBg) h += '<label>Picture address<input id="bgUrl" value="' + esc(bg) + '" placeholder="https://…"></label><label>Or upload one<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="bg"></label>';
+    h += '<div class="row"><button type="button" class="btn small" data-do="exportScene">Export scene</button><button type="button" class="btn small" data-do="importScene">Import scene</button></div>';
     h += '<h3>Add to the table</h3><div class="row"><button class="btn small" data-do="addEnemy" title="A token with 1 Heart, in the turn order">Enemy</button><button class="btn small" data-do="addObstacle" title="A card with an Effort bar">Obstacle</button><button class="btn small" data-do="addCard">Card</button></div>';
     return h + monsterList();
   }
@@ -1066,6 +1067,8 @@
       case 'leave': UI.sceneRename = null; leaveTable(); break;
       case 'gmtab': UI.tab = d.t; UI.sub = null; UI.editOrder = false; UI.sel = null; UI.cardEdit = null; UI.atk = null; UI.powerResetAsk = false; renderPanel(); renderTable(); { var tb = $('panel'); if (tb) tb.scrollTop = 0; } break;
       case 'editOrder': UI.editOrder = !UI.editOrder; renderPanel(); break;
+      case 'exportScene': window.SacramentSceneTransfer.export(); break;
+      case 'importScene': window.SacramentSceneTransfer.import(); break;
       case 'openScene': UI.sceneRename = null; UI.view = d.scene === S.table.scene.id ? null : d.scene; render(); break;
       case 'sceneBg': UI.sceneBg = !UI.sceneBg; renderPanel(); break;
       case 'gmsub': UI.sub = d.s || null; renderPanel(); break;
@@ -1322,6 +1325,10 @@
   });
   $('recoveryClose').addEventListener('click', function () { UI.recoveryOpen = false; UI.recoveryDismissed = true; renderRecovery(); });
 
+  window.SacramentSceneTransfer.init({gm:gm,scene:viewScene,version:function(){return sessionVersion;},
+    request:function(body){if(!gm())return Promise.reject(new Error('Only the GM can share scenes.'));return call('POST',Object.assign({code:sess.code},body)).then(function(r){if(r.stale)throw new Error('The table changed. Reopen scene sharing.');if(r.status!==200||!r.body.ok)throw new Error(r.body.error&&r.body.error.message||'The table could not be reached.');return r.body;});},
+    commit:function(jobId){return send({type:'sceneImport',jobId:jobId});}
+  });
   /* ---------- starting: make, join, resume ---------- */
   function enter(s, state) { resetSession(); sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); }
   $('makeForm').addEventListener('submit', function (e) {
