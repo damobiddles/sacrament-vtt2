@@ -31,7 +31,7 @@ Everything runs through `npm run`, and every command already has a time limit.
 | Job | Command | Time |
 |---|---|---|
 | Install | `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install` (the browser is already installed here; elsewhere `npx playwright install chromium`) | |
-| Run locally | `npm run vtt`, then http://localhost:8788/vtt/ (tables saved in `.vtt-data/`) | |
+| Run locally | `npm run vtt` (builds the pages first), then http://localhost:8788/vtt/ (tables saved in `.vtt-data/`) | |
 | **Quick checks: after every change** | `npm run check` = lint, type check, unit tests, quick contrast check (laptop size only; no phone tests) | about 30 s |
 | **Full suite: before deploying** | `npm run check:full` = quick checks, then every browser suite (`test:e2e`, `vtt-e2e`, `vtt-flow`, `hearts-ui`), all at laptop size (the phone tests are left out), and ending with the fast phone check | about 4.5 min |
 | **Fast phone check: before every deploy** | `npm run phone-check`: loads the home page and the table at 360×640 and fails on anything broken, overlapping or off-screen | under 30 s |

@@ -21,7 +21,7 @@ There is clearer recovery guidance for tables, including a downloadable private 
 
 On **My heroes**, a failed save is now made visible, with a retry and a way to download a backup. Larger existing collections are preserved rather than silently cut short. Downloading a backup is available; a straightforward file-import and restore screen is still future work.
 
-![An overhead cathedral crypt battle map with a central green ritual circle, stone pillars, side tombs and a candlelit altar.](/art/vtt-gifts/cathedral-ritual-chamber.png)
+![An overhead cathedral crypt battle map with a central green ritual circle, stone pillars, side tombs and a candlelit altar.](/art/vtt-gifts/cathedral-ritual-chamber.webp)
 
 *A chamber beneath the cathedral. A circle on the floor. Plenty of room for a decision you may regret.*
 

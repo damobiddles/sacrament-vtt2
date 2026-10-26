@@ -19,7 +19,7 @@ Misses and checks that do not lead to damage have **Continue**. Where a failed a
 
 Activity keeps the record afterward, including the appropriate Undo controls.
 
-![A successful attack against the Pit Ghoul shown over a cathedral battle map. The result stays on screen with a Roll damage button.](/art/vtt-updates/dice-results.png)
+![A successful attack against the Pit Ghoul shown over a cathedral battle map. The result stays on screen with a Roll damage button.](/art/vtt-updates/dice-results.webp)
 
 *The hit lands. Roll damage when you are ready.*
 
