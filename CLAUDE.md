@@ -32,9 +32,9 @@ Everything runs through `npm run`, and every command already has a time limit.
 |---|---|---|
 | Install | `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install` (the browser is already installed here; elsewhere `npx playwright install chromium`) | |
 | Run locally | `npm run vtt`, then http://localhost:8788/vtt/ (tables saved in `.vtt-data/`) | |
-| **Quick checks: after every change** | `npm run check` = lint, type check, unit tests, quick contrast check (laptop size only; no phone tests) | about 30 s |
-| **Full suite: before deploying** | `npm run check:full` = quick checks, then every browser suite (`test:e2e`, `vtt-e2e`, `vtt-flow`, `hearts-ui`), all at laptop size (the phone tests are left out), and ending with the fast phone check | about 4.5 min |
-| **Fast phone check: before every deploy** | `npm run phone-check`: loads the home page and the table at 360×640 and fails on anything broken, overlapping or off-screen | under 30 s |
+| **Quick checks: after every change** | `npm run check` = lint, type check, unit tests, quick contrast check (desktop Chrome only; no phone tests) | about 30 s |
+| **Full suite: before deploying** | `npm run check:full` = quick checks, then every browser suite (`test:e2e`, `vtt-e2e`, `vtt-flow`, `hearts-ui`), all in desktop Chrome (the phone tests are left out), and ending with the fast phone check, which is not a gate (see "Browsers and devices") | about 4.5 min |
+| Fast phone check: only when the owner asks | `npm run phone-check`: loads the home page and the table at 360×640 and fails on anything broken, overlapping or off-screen | under 30 s |
 | **Phone suite: only when the owner asks for it by name** | `npm run phone-suite`: every phone test (the tests tagged `@phone`, the phone contrast set, the phone steps of `vtt-flow`) | a few minutes |
 | **After deploying** | `npm run check:live` = `live-check` (24 HTTP checks), the Playwright suite and the walk-through against the live site | about 5 min |
 | Single pieces | `npm test`, `npm run lint`, `npm run typecheck`, `npm run test:contrast` (quick), `npm run test:e2e`, `npm run vtt-e2e`, `npm run vtt-flow`, `npm run hearts-ui`, `npm run live-check` | |
@@ -47,9 +47,9 @@ In this cloud environment, live checks need `NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_
 
 1. **Work in small steps.** For anything bigger than a small fix, show a plan and **wait for the owner's OK**.
 2. **After every change run `npm run check`; before deploying run `npm run check:full`.** Do not say something is done until they pass. If something fails, say so with the output. Do not weaken or delete a test to make it pass (if a test is wrong, say why first).
-3. **Anything visual or interactive:** run the app locally and look at it in a browser (Playwright screenshots) at laptop size. **While prototyping, do not test, mock up or screenshot phone layouts unless the owner asks.** The only phone step is the fast phone check before a deploy (see "Phone testing" below).
+3. **Anything visual or interactive:** run the app locally and look at it in a browser (Playwright screenshots) at laptop size. **Do not test, mock up or screenshot phone layouts unless the owner asks** (see "Browsers and devices" below).
 4. **Fixing a bug:** first write a test that reproduces it and watch it fail, then fix it and watch it pass.
-5. **Never deploy unless all checks pass (including `npm run phone-check`), and tell the owner first.** Work on a branch; merge to `main` only when told.
+5. **Never deploy unless all checks pass, and tell the owner first.** Work on a branch; merge to `main` only when told.
 6. **Commit after each working step**, in plain words (what and why). Do not commit while a check is failing.
 7. **If you could not verify something, say so.** Keep "tested locally", "tested on the live site" and "not verified" separate.
 8. **When you finish, summarise in plain English** what changed and what the owner should test.
@@ -82,14 +82,15 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 * A Netlify Form is registered from the published page, which then loses its `data-netlify` mark: if a form is ever added back, check its name and action, not that mark. Netlify once failed to publish two pushes in a row: if a push does not appear within a few minutes, push an empty commit.
 * The stop-hook "unpushed commits" message can be stale: run `git push -u origin <branch>` and compare with `git ls-remote`.
 
-## Phone testing (paused while prototyping)
+## Browsers and devices (owner's decision, 2026-10-26)
 
-* **Quick checks and feature work skip phones.** Do not write, run or screenshot phone layouts while building something, and do not add phone mockups to plans, unless the owner asks. New phone-only tests are tagged `@phone` in their title so the regular runs leave them out (`--grep-invert @phone`).
-* **Before each deploy: `npm run phone-check`** (under 30 seconds). It loads the home page and the table (as GM and as a player) at 360×640 and fails if anything is broken (script errors, a page that scrolls sideways), overlapping buttons, or controls off-screen. It is a smoke test, not a layout review.
-* **The phone suite** (`npm run phone-suite`) holds the full phone tests. Run it only when the owner asks for "the phone suite". After a full pass, empty the list below and write the date.
-* **Last full automated phone suite:** 2026-10-24, the owner-authorised backlog pass. Pending phone-review queue: guided My heroes creation, new-player table help, current player/GM guide pages, Rules hub, site-owned Ko-fi support button, unified public navigation/footer, home-page journeys, Resources hub, scene-deletion confirmation, GM-only turn controls and the resumed GM layout (routine phone smoke check required before publication). This is simulated Chromium phone testing; physical devices, Safari and real assistive technology remain unverified.
+The table is built for **desktop Chrome** right now. Phones, tablets, Safari and Firefox are not a priority, and phone testing slows development too much.
 
-
+* **Test and look at things in desktop Chrome only.** Do not write, run or screenshot phone layouts, and do not add phone mockups to plans, unless the owner asks. New phone-only tests are tagged `@phone` in their title so the regular runs leave them out (`--grep-invert @phone`).
+* **Phone checks are not a gate for deploying.** `npm run phone-check` (under 30 seconds, home page and table at 360×640) and `npm run phone-suite` (the full phone tests) run only when the owner asks for them by name. `npm run check:full` still ends with the fast phone check: if it fails, report it and ask the owner, and do not spend time fixing phone layouts unasked.
+* **Do not claim phone or other-browser support.** Say "tested in desktop Chrome" and keep "not verified on phones, Safari or Firefox" separate. The last full phone suite was 2026-10-24; the phone-review queue in the notes below is parked, not forgotten.
+* Real phones, Safari and real assistive technology have never been verified.
+* **This overrides** the older dated notes below that say a routine phone smoke check is required before publication, or that a full phone review is pending.
 
 ## Known open issues (do not claim they are fixed)
 
