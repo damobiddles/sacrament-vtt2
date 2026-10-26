@@ -1,7 +1,7 @@
 // The GM's monster attacks: a monster hits or misses a hero's Defence, and on a hit its Effort is rolled and taken off the hero at once.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { table, d20, die, find, charNamed } from './vtt-helpers.mjs';
+import { table, d20, die, find } from './vtt-helpers.mjs';
 import '../site/vtt/rules.js';
 
 const R = globalThis.SacramentRules;

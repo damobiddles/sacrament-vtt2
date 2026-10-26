@@ -4,7 +4,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['node_modules/**', 'archive/**', 'site/game/**', 'site/character/**', 'site/legacy/**', 'site/blog/**', 'site/brand/**', 'private/**', 'docs/**', 'test-results/**', 'playwright-report/**', '.vtt-data/**', 'netlify/functions/builder-page.mjs', 'scripts/hearts/**', 'scripts/table-test/**', 'scripts/make-*', 'site/*.js', '!site/loot-roller.js', '!site/nav.js'] },
+  { ignores: ['node_modules/**', 'archive/**', 'site/game/**', 'site/character/**', 'site/legacy/**', 'site/brand/**', 'private/**', 'docs/**', 'test-results/**', 'playwright-report/**', '.vtt-data/**', 'netlify/functions/builder-page.mjs', 'scripts/hearts/**', 'scripts/table-test/**', 'scripts/make-*', 'site/*.js', '!site/loot-roller.js', '!site/nav.js'] },
   js.configs.recommended,
   // Stripping control characters from typed text is deliberate, so this rule would only flag correct code.
   { rules: { 'no-control-regex': 'off' } },

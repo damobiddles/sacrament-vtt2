@@ -62,7 +62,7 @@ test('holy oil steps the Effort up against the unholy, and only against them', (
   E.endScene([h]); assert.equal(E.effortAgainst(6, E.enemy('knight'), 'weapon', h), 4, 'the scene ends and so does the oil');
 });
 test('the Executioner’s blade strikes at d10 for 1 Horror, or once a scene at d12 for 3, from data', () => {
-  const { E, D } = env(), h = E.newCharacter({ id: 'x', name: 'x', scores: { Body: 2, Mind: 1, Spirit: 0 }, kit: ['blade'] }), hz = E.horror(), foe = { def: E.enemy('rats'), hp: 99 };
+  const { E } = env(), h = E.newCharacter({ id: 'x', name: 'x', scores: { Body: 2, Mind: 1, Spirit: 0 }, kit: ['blade'] }), hz = E.horror(), foe = { def: E.enemy('rats'), hp: 99 };
   const a = E.use({ horror: hz, scene: 12 }, h, 'blade', '', { target: foe, d20: 12 }); assert.equal(hz.pos, 1); assert.equal(a.effort.die, 10);
   const b = E.use({ horror: hz, scene: 12 }, h, 'blade', '', { target: foe, d20: 12, mode: 'ultimate' }); assert.equal(hz.pos, 4); assert.equal(b.effort.die, 12);
   const c = E.use({ horror: hz, scene: 12 }, h, 'blade', '', { target: foe, d20: 12, mode: 'ultimate' }); assert.equal(c.ok, false); assert.equal(hz.pos, 4, 'the second ultimate is refused and costs nothing');

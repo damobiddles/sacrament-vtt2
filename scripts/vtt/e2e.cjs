@@ -7,7 +7,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vtt-'));
   /* VTT_BASE=https://your-site runs the same play against a deployed site instead of the local server (the restart check is skipped there) */
   const LIVE = (process.env.VTT_BASE || '').replace(/\/$/, ''); let srv = LIVE ? null : await startServer({ port: 0, dir }); const port = srv ? srv.port : 0, base = LIVE || 'http://localhost:' + port;
-  let chromium; try { chromium = require('playwright').chromium; } catch (e) { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
+  let chromium; try { chromium = require('playwright').chromium; } catch { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined), proxy: LIVE && process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined });
   const errs = [], ok = [], bad = [], bodies = { player: [] };
   const check = (n, c, d) => { (c ? ok : bad).push(n); console.log((c ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + String(d).slice(0, 190) : '')); };
@@ -15,7 +15,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
     const ctx = await b.newContext({ viewport: vp || { width: 1366, height: 800 } }); await ctx.route(/fonts\.(googleapis|gstatic)\.com|storage\.ko-fi\.com|\/\/ko-fi\.com\//, (r) => r.abort());
     const p = await ctx.newPage(); p.setDefaultTimeout(6000); p.label = label; p.ctx = ctx;
     p.on('pageerror', (e) => errs.push(label + ': ' + e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errs.push(label + ': ' + m.text()); });
-    if (label !== 'gm') p.on('response', async (r) => { if (r.url().includes('/.netlify/functions/vtt')) { try { bodies.player.push(await r.text()); } catch (e) {} } });
+    if (label !== 'gm') p.on('response', async (r) => { if (r.url().includes('/.netlify/functions/vtt')) { try { bodies.player.push(await r.text()); } catch {} } });
     return p;
   };
   const txt = (p, s) => p.$eval(s, (e) => e.innerText.replace(/\s+/g, ' ').trim()).catch(() => '(missing)');
@@ -29,9 +29,6 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const diceOn = async (p) => { if (!(await p.$('#strip input[data-phys]'))) await p.click('[data-do=ordinaryCheck]'); };
 
   const editCard = async (p) => { await p.waitForSelector('[data-do=cardEdit], [data-edit=name]'); if (!(await p.$('[data-edit=name]'))) await p.click('[data-do=cardEdit]'); await p.waitForSelector('[data-edit=name]'); };   /* the card's full settings are on its Edit card screen */
-  const attackOpen = async (p) => { if (!(await p.$('[data-do=monsterAttack]'))) await p.click('[data-do=attackToggle]'); await p.waitForSelector('[data-do=monsterAttack]'); };
-  const sceneBg = async (p) => { await gmTab(p, 'scene'); if (!(await p.$('#bgUrl'))) await p.click('[data-do=sceneBg]'); };
-  const openScene = async (p, name) => { await gmTab(p, 'scene'); await p.evaluate((n) => { const li = [...document.querySelectorAll('#panel .tabbody li')].find((l) => l.querySelector('.n').innerText.trim().startsWith(n)); li.querySelector('[data-do=openScene]').click(); }, name); };
   let clicks = 0; const click = async (p, sel) => { clicks++; await p.click(sel); };
 
   console.log('--- 1. a GM makes a table; two players join');
@@ -153,7 +150,6 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   await D.reload(); await D.waitForSelector('#app:not([hidden])'); await T(900);
   check('and after a reload still one Dee', (await st(gm2)).players.filter((p) => p.name === 'Dee').length === 1);
 
-  const enemiesBefore = Object.values((await st(gm)).cards).length;
   await gm.keyboard.press('Escape'); await addBtn(gm, 'addEnemy'); await gm.waitForSelector('[data-edit=name]'); await gm.fill('[data-edit=name]', 'Cellar Rat'); await gm.press('[data-edit=name]', 'Tab'); await gm.click('#panel [data-do=visible]');   /* new cards start hidden */ await settle(A, () => !!Object.values(window.__vtt.state().cards).find((c) => c.name === 'Cellar Rat'));
   const rat = await card(A, 'Cellar Rat');
   check('an unexpected enemy is two clicks, a name and Show: it has 1 Heart and is already in the turn order for everyone', rat && rat.hp.cur === 10 && (await st(A)).table.order.some((o) => o.id === rat.id), JSON.stringify(rat));

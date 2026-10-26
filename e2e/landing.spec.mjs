@@ -198,7 +198,7 @@ test('the "Build and manage characters" button opens the character sheet page, a
 
 test('nothing on any page of the site links to the removed sign-up, and its thank-you page is gone', async ({ browser }) => {
   const page = await newPage(browser);
-  for (const path of ['/', '/news/', '/blog/welcome/', '/how-to-play/', '/feedback/']) {
+  for (const path of ['/', '/news/', '/how-to-play/', '/feedback/']) {
     await page.goto(path);
     await expect(page.locator('a[href*="#join"], a[href*="/thanks"]'), path).toHaveCount(0);
   }

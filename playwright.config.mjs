@@ -24,5 +24,5 @@ export default defineConfig({
     actionTimeout: 15000,
     navigationTimeout: 30000,
   },
-  webServer: live ? undefined : { command: `node scripts/build-blog.mjs && node scripts/build-landing.mjs && node scripts/vtt/server.mjs ${port} .vtt-data-e2e`, url: `http://localhost:${port}/vtt/`, reuseExistingServer: false, timeout: 20000 },
+  webServer: live ? undefined : { command: `node scripts/build-landing.mjs && node scripts/vtt/server.mjs ${port} .vtt-data-e2e`, url: `http://localhost:${port}/vtt/`, reuseExistingServer: false, timeout: 20000 },
 });

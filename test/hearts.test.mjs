@@ -260,7 +260,7 @@ test('six scores with six points, and four points of Effort: the ready heroes ke
   assert.equal(E.validEffort({ basic: 0, weapons: 5, ranged: 0, magic: 0, ultimate: 0 }), false);
   const a = hero(env, 'aldric'); a.effort.weapons = 3;
   for (let i = 0; i < 60; i++) { const r = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 12, target: { def: E.enemy('rats'), hp: 99 } }); assert.ok(r.effort.bonus === 3 && r.effort.total >= 4 && r.effort.total <= 9, 'd6+3'); }
-  const crit = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 20, target: { def: E.enemy('rats'), hp: 99 } }); a.effort.ultimate = 2;
+  E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 20, target: { def: E.enemy('rats'), hp: 99 } }); a.effort.ultimate = 2;
   const crit2 = E.use({ horror: E.horror(), scene: 12 }, a, 'billhook', '', { d20: 20, target: { def: E.enemy('rats'), hp: 99 } }); assert.equal(crit2.effort.ultBonus, 2); assert.equal(crit2.effort.rolls.length, 2);
   assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'crossbow')), 'weapons'); assert.equal(E.catOf(D.ITEMS.find((i) => i.id === 'cudgel')), 'weapons');
 });

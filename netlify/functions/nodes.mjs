@@ -7,7 +7,7 @@ export default async () => {
     const rec = await getStore({ name: 'sacrament-library', consistency: 'strong' }).get('latest', { type: 'json' });
     if (!rec) return new Response(JSON.stringify({ error: 'none' }), { status: 404, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     return new Response(JSON.stringify(rec), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' } });
-  } catch (e) {
+  } catch {
     return new Response(JSON.stringify({ error: 'unavailable' }), { status: 503, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
   }
 };

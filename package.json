@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Sacrament website, VTT, character builder and the password-gated node builder, for Netlify.",
   "scripts": {
-    "build": "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs",
-    "test": "node scripts/build-private.mjs && node scripts/build-blog.mjs && node scripts/build-landing.mjs && node scripts/with-timeout.mjs 300 node --test --test-timeout=60000 'test/*.test.mjs'",
+    "build": "node scripts/build-private.mjs && node scripts/build-landing.mjs",
+    "test": "node scripts/build-private.mjs && node scripts/build-landing.mjs && node scripts/with-timeout.mjs 300 node --test --test-timeout=60000 'test/*.test.mjs'",
     "lint": "node scripts/with-timeout.mjs 120 eslint .",
     "typecheck": "node scripts/with-timeout.mjs 180 tsc -p .",
     "test:e2e": "node scripts/with-timeout.mjs 600 playwright test --workers=2 --grep-invert \"@phone|text and buttons are readable\" && node scripts/with-timeout.mjs 300 playwright test e2e/contrast.spec.mjs --workers=1 --grep-invert @phone",

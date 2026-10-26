@@ -28,7 +28,7 @@ test('rules: the d4 countdown, a round off, the GM\'s corrections, and the rest\
 });
 
 test('FALL: a hero brought to 0 rolls the d4 where everyone sees it, and is marked dying for the players too', async () => {
-  const { t, ann, card } = await setup([die(3, 4)]);
+  const { ann, card } = await setup([die(3, 4)]);
   const r = await down(ann, card); assert.equal(r.status, 200);
   const st = r.body.state; assert.deepEqual(find(st, 'Thorne').dying, { left: 3, stable: false, dead: false }, 'the player is sent the countdown');
   const line = lastLog(st, /falls and is dying/); assert.equal(line.text, 'Thorne falls and is dying: d4 shows 3, 3 rounds left.'); assert.deepEqual(line.dice, [{ die: 4, n: 3 }]);

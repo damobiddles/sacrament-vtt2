@@ -53,7 +53,7 @@ export function makeHandler(getStore, createKey = '') {
     const r = await service.image(im[1], im[2]); if (r.status !== 200) return new Response('Not found', { status: r.status });
     return new Response(r.bytes, { status: 200, headers: { 'content-type': r.mime, 'x-content-type-options': 'nosniff', 'cache-control': 'public, max-age=31536000, immutable' } });
   }
-  if (req.method === 'POST') { try { body = await req.json(); } catch (e) { return Response.json({ error: { code: 'invalid', message: 'Bad request.' } }, { status: 400 }); } }
+  if (req.method === 'POST') { try { body = await req.json(); } catch { return Response.json({ error: { code: 'invalid', message: 'Bad request.' } }, { status: 400 }); } }
   const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
   const r = await service.handle({ method: req.method, query: Object.fromEntries(url.searchParams), body, token });
   return Response.json(r.body, { status: r.status, headers: { 'cache-control': 'no-store' } });

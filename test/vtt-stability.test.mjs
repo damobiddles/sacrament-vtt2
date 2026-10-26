@@ -127,7 +127,7 @@ test('DEFECT: joining twice made two players. Now the same attempt, the same tok
 const everything = (r) => JSON.stringify(r.body);
 
 test('a hidden timer does not exist for the players: not in the order tick, the turn line, the alert, the results they are sent, or the undo records', async () => {
-  const t = await table(), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne');
+  const t = await table(), ann = await t.join('Ann'); await claim(t, ann, 'Thorne');
   const dread = (await t.gm.cmd({ type: 'cardCreate', card: { name: 'Cult Ritual', visible: false, timer: { cur: 1, max: 1, auto: true, label: 'The ritual completes' }, gmNotes: 'summons the Warden' } })).body.result.id;
   await t.gm.cmd({ type: 'orderSet', order: [...(await t.state()).table.order.map((o) => o.id), dread] });
   const seen = []; const watch = (r) => { seen.push(everything(r)); return r; };

@@ -22,7 +22,7 @@
   }
   root.SacramentSite = { navigation: navigation, footer: footer, section: section };
   if (typeof document === 'undefined') return;
-  try { localStorage.removeItem('sacrament-theme'); } catch (e) {}
+  try { localStorage.removeItem('sacrament-theme'); } catch {}
   function backToTop() {
     if (/^\/(vtt|character|builder)(\/|$)/.test(location.pathname) || document.body.hasAttribute('data-no-nav')) return;
     var button = document.createElement('button');
@@ -76,7 +76,7 @@
             'floating-chat.donateButton.background-color': '#323842',
             'floating-chat.donateButton.text-color': '#fff'
           });
-        } catch (e) { return; }
+        } catch { return; }
         var observer;
         function ready() {
           var widget = document.querySelector('.floatingchat-container-wrap, .floatingchat-container-wrap-mobi');

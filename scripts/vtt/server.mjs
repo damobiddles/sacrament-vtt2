@@ -14,13 +14,13 @@ export function fileStore(dir) {
   const queues = new Map();
   const path = (code) => join(dir, code.replace(/[^A-Z0-9]/g, '') + '.json');
   const serial = (code, fn) => { const q = (queues.get(code) || Promise.resolve()).then(fn, fn); queues.set(code, q.catch(() => {})); return q; };
-  const read = async (code) => { try { const t = JSON.parse(await readFile(path(code), 'utf8')); return { data: t.data, etag: String(t.etag) }; } catch (e) { return null; } };
+  const read = async (code) => { try { const t = JSON.parse(await readFile(path(code), 'utf8')); return { data: t.data, etag: String(t.etag) }; } catch { return null; } };
   return {
     kind: 'file',
     get: (code) => serial(code, () => read(code)),
     putImage: async (code, id, bytes, mime) => { await mkdir(join(dir, 'img'), { recursive: true }); await writeFile(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, '')), bytes); },
     deleteImage: async (code, id) => { await rm(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, '')), { force: true }); },
-    getImage: async (code, id) => { try { return { bytes: await readFile(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, ''))) }; } catch (e) { return null; } },
+    getImage: async (code, id) => { try { return { bytes: await readFile(join(dir, 'img', code.replace(/[^A-Z0-9]/g, '') + '-' + id.replace(/[^a-f0-9]/g, ''))) }; } catch { return null; } },
     put: (code, data, etag) => serial(code, async () => {
       const cur = await read(code); if (etag === null ? !!cur : !cur || cur.etag !== etag) return false;
       await mkdir(dir, { recursive: true }); const tmp = path(code) + '.tmp'; await writeFile(tmp, JSON.stringify({ etag: (cur ? +cur.etag : 0) + 1, data })); await rename(tmp, path(code)); return true;
@@ -38,13 +38,13 @@ export function startServer({ port = 0, dir, createKey = '' } = {}) {
     if (url.pathname === '/.netlify/functions/vtt') {
       if (req.method === 'POST') { /* images arrive as base64 in JSON */ }
       let raw = ''; for await (const c of req) raw += c; let body = null;
-      if (req.method === 'POST') { try { body = JSON.parse(raw || 'null'); } catch (e) { res.writeHead(400); return res.end('{}'); } }
+      if (req.method === 'POST') { try { body = JSON.parse(raw || 'null'); } catch { res.writeHead(400); return res.end('{}'); } }
       const r = await service.handle({ method: req.method, query: Object.fromEntries(url.searchParams), body, token: (req.headers.authorization || '').replace(/^Bearer\s+/i, '') });
       res.writeHead(r.status, { 'content-type': 'application/json', 'cache-control': 'no-store' }); return res.end(JSON.stringify(r.body));
     }
     let p = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, ''); if (p.endsWith('/')) p += 'index.html';
     try { const buf = await readFile(join(ROOT, p)); res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream', 'cache-control': 'no-store' }); res.end(buf); }
-    catch (e) { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Not found'); }
+    catch { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Not found'); }
   });
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve({ server, port: /** @type {import('node:net').AddressInfo} */ (server.address()).port, service })));
 }

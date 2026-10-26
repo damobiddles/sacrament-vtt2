@@ -11,7 +11,7 @@
   var DRAW_COLORS = [['#e0b040', 'Gold'], ['#4da6ff', 'Blue — water'], ['#65b86a', 'Green — trees'], ['#ed6a5e', 'Red — fire'], ['#ffffff', 'White'], ['#000000', 'Black']];
   UI.drawColor = DRAW_COLORS[0][0];
   /* a player's short instructions are shown until they have made their first roll, then never again (on this browser) */
-  UI.hintSeen = (function () { try { return localStorage.getItem(KEY + 'hint') === '1'; } catch (e) { return false; } })();
+  UI.hintSeen = (function () { try { return localStorage.getItem(KEY + 'hint') === '1'; } catch { return false; } })();
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var sgn = function (n) { return (n >= 0 ? '+' : '−') + Math.abs(n); };
   var rid = function (n) { var a = new Uint8Array(n); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (b) { return (b % 36).toString(36); }).join(''); };
@@ -32,10 +32,10 @@
       localStorage.setItem(KEY + sess.code, JSON.stringify(sess));
       if (JSON.parse(localStorage.getItem(KEY + sess.code) || 'null').token !== sess.token) throw new Error('Not saved');
       localStorage.setItem(KEY + 'last', sess.code); UI.storageProblem = false;
-    } catch (e) { UI.storageProblem = true; }
+    } catch { UI.storageProblem = true; }
     renderRecovery(); return !UI.storageProblem;
   };
-  var load = function (code) { if (memorySessions[code]) return memorySessions[code]; try { return JSON.parse(localStorage.getItem(KEY + code) || 'null'); } catch (e) { return null; } };
+  var load = function (code) { if (memorySessions[code]) return memorySessions[code]; try { return JSON.parse(localStorage.getItem(KEY + code) || 'null'); } catch { return null; } };
   /* which of the GM's sections are open is remembered in this browser, so they stay as the GM left them between turns and after a reload */
 
   /* ---------- talking to the server ---------- */
@@ -182,7 +182,7 @@
   }
 
   function setStatus(s, text, why) { UI.status = s; UI.statusText = text || ''; UI.statusWhy = why || ''; renderStatus(); }
-  var failures = 0, timer = null, polling = false, again = false;
+  var timer = null, polling = false, again = false;
   function poll(now) {
     clearTimeout(timer);
     if (!sess) return;
@@ -194,11 +194,11 @@
         /* A read started before an ambiguous command may predate its save. Only
            a new read after entering recovery can release queued gameplay. */
         if (UI.reconcile && !checkingSaved) { again = true; return; }
-        failures = 0; if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; if (!lanes.g.running) pump(lanes.g); toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
+        if (r.body.state) take(r.body.state); else if (r.body.pointers) takePointers(r.body.pointers, r.body.pv); if (UI.reconcile) { UI.reconcile = false; if (!lanes.g.running) pump(lanes.g); toast('Reconnected. The table now shows what was saved: check it before trying again.', 9000); } if (!lanes.g.q.length) setStatus('ok'); }
       else if (r.status === 401 || r.status === 404) { setStatus('bad', r.status === 404 ? 'This table has gone' : 'You are no longer at this table'); return; }
       else fail();
     }, fail).then(function () { if (version !== sessionVersion) return; polling = false; timer = setTimeout(poll, again ? 0 : pollGap()); again = false; });
-    function fail() { if (version !== sessionVersion) return; failures++; setStatus('bad', 'Offline: reconnecting'); }
+    function fail() { if (version !== sessionVersion) return; setStatus('bad', 'Offline: reconnecting'); }
   }
 
   function resetSession() {
@@ -242,7 +242,6 @@
   function turnCardId() { var e = S.table.order[S.table.idx]; return e && e.id || null; }
   function myTurn() { var id = turnCardId(); if (!id) return false; if (gm()) return true; var c = S.cards[id]; return !!(c && c.charId && S.chars[c.charId] && S.chars[c.charId].owner === S.you.pid); }
   var cardList = function () { return Object.keys(S.cards).map(function (k) { return S.cards[k]; }); };
-  var cardByName = function (n) { return cardList().filter(function (c) { return c.name === n; })[0]; };
   var bgUrl = function (u) { return u ? 'url("' + esc(u).replace(/\(/g, '%28').replace(/\)/g, '%29') + '")' : 'none'; };
 
   /* ---------- drawing the screen ---------- */
@@ -368,7 +367,7 @@
     if (!gm() && !UI.leaveAsk) { UI.leaveAsk = true; renderStatus(); if (gm()) renderPanel(); clearTimeout(UI.leaveTimer); UI.leaveTimer = setTimeout(function () { UI.leaveAsk = false; if (S) { renderStatus(); if (gm()) renderPanel(); } }, 5000); return; }
     clearTimeout(UI.leaveTimer); UI.leaveAsk = false;
     if (!gm()) delete memorySessions[sess.code];
-    try { if (!gm()) localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch (e) {}
+    try { if (!gm()) localStorage.removeItem(KEY + sess.code); localStorage.removeItem(KEY + 'last'); } catch {}
     resetSession(); sess = null; S = null; UI.sel = null; UI.roll = null; UI.aim = {}; UI.hpOps = {}; UI.reconcile = false; UI.working = null; UI.rolling = false; UI.rollChecked = false; UI.seenLog = null; clearTimeout(timer);
     history.replaceState(null, '', '/vtt/'); $('app').hidden = true; $('entry').hidden = false; $('resume').hidden = true; $('joinCode').value = ''; $('makeMsg').textContent = '';
     listTables();
@@ -984,7 +983,7 @@
     UI.rolling = 'Rolling ' + stat; var d20 = takeD20();
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     render();
-    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch (e) {} } render(); });
+    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [] }; }
@@ -1340,7 +1339,7 @@
     }, function () { if (version !== sessionVersion) return; $('makeMsg').textContent = 'Could not reach the server.'; }).then(function () { mb.disabled = false; });
   });
   /* Joining is one person however many times the button is pressed: the attempt has a key that is kept for the tab, and a place already held is resumed, not joined again. */
-  var joinKeyFor = function (code) { var k = KEY + 'join-' + code; try { var v = sessionStorage.getItem(k); if (!v) { v = rid(16); sessionStorage.setItem(k, v); } return v; } catch (e) { return rid(16); } };
+  var joinKeyFor = function (code) { var k = KEY + 'join-' + code; try { var v = sessionStorage.getItem(k); if (!v) { v = rid(16); sessionStorage.setItem(k, v); } return v; } catch { return rid(16); } };
   $('joinForm').addEventListener('submit', function (e) {
     e.preventDefault(); var version = sessionVersion, btn = this.querySelector('button[type=submit]'); if (btn.disabled) return; $('joinMsg').textContent = '';
     var code = $('joinCode').value.trim().toUpperCase(), prev = load(code);
@@ -1398,7 +1397,7 @@
     window.addEventListener('appinstalled', function () { $('install').hidden = true; });
     if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) $('installIos').hidden = false;
   })();
-  var q = new URLSearchParams(location.search), room = (q.get('room') || '').toUpperCase(), last = room || (function () { try { return localStorage.getItem(KEY + 'last') || ''; } catch (e) { return ''; } })();
+  var q = new URLSearchParams(location.search), room = (q.get('room') || '').toUpperCase(), last = room || (function () { try { return localStorage.getItem(KEY + 'last') || ''; } catch { return ''; } })();
   if (room) {
     /* an invitation link: joining that table is the main thing on the page; running one's own is still there, below and quieter */
     $('joinCode').value = room; $('entry').classList.add('invited'); var im = $('inviteMsg'); im.hidden = false; im.textContent = 'You have been invited to the table ' + room + '. Enter your name and press Join.';

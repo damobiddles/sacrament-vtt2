@@ -1,4 +1,4 @@
-import {prepareItem,rollPrepared,basicAttack} from './helpers.mjs';
+import {prepareItem,rollPrepared} from './helpers.mjs';
 import {test,expect,newPage,makeTable,joinTable,claimHero,state,saved} from './helpers.mjs';
 import {bounded} from './contrast-lib.mjs';
 test.setTimeout(60000);

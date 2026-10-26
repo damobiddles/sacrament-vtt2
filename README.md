@@ -13,7 +13,7 @@ Working on it? Read `CLAUDE.md` first: it has the exact commands and the rules f
 | Home page and its pages (`/`, `/the-game/`, `/how-to-play/`, `/news/` and so on) | text in `content/landing/`, built into `site/` by `scripts/build-landing.mjs` (not committed) |
 | **The table** (`/vtt/`): a GM and players in their browsers, cards, tokens, dice, hearts, turns | `site/vtt/` (screen, rules arithmetic), `netlify/functions/vtt.mjs` and `_shared/vtt-*.mjs` (the server side; saves to Netlify Blobs); notes in `docs/vtt/` |
 | The Basic Rules (`/rules/`) and the hero builder (`/character/`) | `site/rules/`, `site/character/`, with the shared game code in `site/game/` and the earlier rules' files in `site/legacy/` (used to bring earlier characters over) |
-| Updates blog (`/blog/`) | `content/blog/*.md`, built by `scripts/build-blog.mjs` |
+| News (`/news/`) | `content/landing/blog/*.md`, built by `scripts/build-landing.mjs`. The old `/blog/` addresses redirect here. |
 | The owner's overview of everything (`/inventory/`, unlisted) | `scripts/inventory/items.mjs`, built with `npm run inventory` |
 | Passphrase-protected ability builder (`/builder/`) | `private/builder.html`, `netlify/functions/builder.mjs`, `nodes.mjs` |
 | Design notes for the rules | `docs/hearts/`, with `scripts/hearts/` (simulator, validation, browser test) |
