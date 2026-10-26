@@ -75,6 +75,7 @@ test('"Run a game" opens the make-a-table form first, and a GM can really make a
   await gm.goto('/');
   await gm.getByRole('link', { name: 'Run a game' }).click();
   await expect(gm).toHaveURL(/\/vtt\/\?run$/);
+  await expect(gm.locator('#joinForm')).toBeVisible(); await expect(gm.locator('#makeForm')).toBeVisible();   // measure only once both forms are drawn
   const joinBox = await gm.locator('#joinForm').boundingBox(), makeBox = await gm.locator('#makeForm').boundingBox();
   expect(makeBox.y).toBeLessThan(joinBox.y);
   await expect(gm.locator('#makeForm button[type=submit]')).toBeFocused();

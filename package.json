@@ -14,7 +14,6 @@
     "check:full": "npm run check && npm run test:e2e && npm run test:browser-suites && npm run phone-check",
     "hearts-ui": "node scripts/with-timeout.mjs 300 node scripts/hearts/ui-test.cjs",
     "hearts-validate": "node scripts/with-timeout.mjs 120 node scripts/hearts/validate.mjs && node scripts/with-timeout.mjs 120 node scripts/hearts/docs.mjs",
-    "stress": "echo retired: see archive/old-scripts",
     "vtt": "node scripts/vtt/server.mjs",
     "vtt-e2e": "node scripts/with-timeout.mjs 900 node scripts/vtt/e2e.cjs",
     "vtt-latency": "node scripts/with-timeout.mjs 300 node scripts/vtt/latency.cjs",
