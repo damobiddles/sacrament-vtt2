@@ -41,6 +41,7 @@
 .sh-pill.cat{color:var(--fg)}
 .sh-b.use{background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi)}
 .sh-b.use.dim{background:var(--bg);color:var(--dim);border-color:var(--edge)}
+.sh-b:disabled{background:var(--bg);color:var(--dim);border-color:var(--edge);cursor:default}
 .sh-spells li{margin:6px 0}
 .sh-supply{display:inline-flex;align-items:center;justify-content:center;min-height:var(--ui-control-height);padding:0 12px;border:1px dashed var(--edge);color:var(--dim);font:700 var(--ui-text-small) var(--label);letter-spacing:.1em;text-transform:uppercase;cursor:default}
 .sh-hearts{display:inline-flex;flex-wrap:wrap;align-items:flex-end;gap:2px;--hs:22px}

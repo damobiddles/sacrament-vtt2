@@ -92,13 +92,13 @@
         '<div class="sh-msg" role="status" aria-live="polite" id="ltMsg"></div>' +
         '<div class="lt-tabs"><button type="button" data-lb="tab" data-t="lib" aria-pressed="' + (ld.tab === 'lib') + '">Library (' + host.lib().length + ')</button><button type="button" data-lb="tab" data-t="design" aria-pressed="' + (ld.tab === 'design') + '">Design</button></div>' +
         '<div class="lt-cols lt-show-' + ld.tab + '"><div class="lt-lib" id="ltLib">' + library() + '</div><div class="lt-form" id="ltForm">' + form() + '</div></div></div>';
-      drawPrev();
+      drawPrev(); markBusy();
     }
     function drawPrev() { var p = el.querySelector('#ltPrev'); if (p) p.innerHTML = preview(); }
     function sig() { return JSON.stringify([host.lib(), host.heroes(), ld.confirm, ld.id, ld.mode]); }
     function say(t) { var m = el.querySelector('#ltMsg'); if (m) { m.innerHTML = t ? '<b>' + esc(t) + '</b>' : ''; if (t) { m.setAttribute('tabindex', '-1'); m.focus(); } } }
     /* a state update changes the library column only, so what is being typed is never disturbed */
-    function refresh() { if (el.hidden || sig() === ld.sig) return; ld.sig = sig(); var l = el.querySelector('#ltLib'); if (l) l.innerHTML = library(); var t = el.querySelector('[data-t=lib]'); if (t) t.textContent = 'Library (' + host.lib().length + ')'; }
+    function refresh() { if (el.hidden || sig() === ld.sig) return; ld.sig = sig(); var l = el.querySelector('#ltLib'); if (l) { l.innerHTML = library(); markBusy(); } var t = el.querySelector('[data-t=lib]'); if (t) t.textContent = 'Library (' + host.lib().length + ')'; }
 
     function open(spec) {
       spec = spec || {}; ld.confirm = null;
@@ -108,7 +108,16 @@
     }
     function item() { var o = Object.assign({}, ld.f); o.slots = +o.slots; o.horror = /^[0-9]+$/.test(String(o.horror).trim()) ? +o.horror : String(o.horror).trim();   /* a number, or dice the table rolls when it is used */ o.defence = +o.defence; o.uses = +o.uses; return o; }
     /* one press, one command: a second press while the first is still on its way is ignored, so a double click cannot give or place twice */
-    function once(cmd, done) { if (ld.busy) return; if (cmd.item) { var error = C.designError(cmd.item); if (error) { say(error); return; } } ld.busy = true; host.send(cmd, function (r) { ld.busy = false; if (done) done(r); }); }
+    function once(cmd, done) { if (ld.busy) return; if (cmd.item) { var error = C.designError(cmd.item); if (error) { say(error); return; } } ld.busy = true; markBusy(); host.send(cmd, function (r) { ld.busy = false; markBusy(); if (done) done(r); }); }
+    /* while the table is answering, the action buttons wait and say why: a press now would be ignored, and the edit or the Give lost without a word */
+    var ACTION_BUTTONS = '[data-lb=place],[data-lb=give],[data-lb=del],[data-lb=save],[data-lb=saveplace],[data-lb=placeform],[data-lb=giveform],[data-lb=savecard]';
+    function markBusy() {
+      Array.prototype.forEach.call(el.querySelectorAll(ACTION_BUTTONS), function (b) {
+        b.disabled = !!ld.busy;
+        if (ld.busy) { if (!b.title) { b.title = 'Saving. This works as soon as the table has confirmed it.'; b.dataset.busyTitle = '1'; } }
+        else if (b.dataset.busyTitle) { b.removeAttribute('title'); delete b.dataset.busyTitle; }
+      });
+    }
     function saved(b, then) { if (!b) return; then(b.result); }
     var actions = {
       tab: function (b) { ld.tab = b.dataset.t; draw(); },
