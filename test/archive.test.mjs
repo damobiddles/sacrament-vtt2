@@ -67,5 +67,4 @@ test('the playtest sign-up is removed: no thank-you page, its address goes to th
   const build = readFileSync(root('scripts/build-landing.mjs'), 'utf8');
   assert.ok(!/name="sign-up"/.test(build), 'the build still writes a sign-up form');
   assert.doesNotMatch(readFileSync(root('site/index.html'), 'utf8'), /<form\b/i, 'the home page still has a form');
-  assert.ok(!/#join|\/thanks/.test(readFileSync(root('content/blog/2026-10-17-welcome.md'), 'utf8')), 'a post still links to the sign-up');
 });

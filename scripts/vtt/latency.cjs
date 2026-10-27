@@ -7,7 +7,7 @@ const N = +process.argv[2] || 30;
 (async () => {
   const { startServer } = await import('./server.mjs');
   const srv = await startServer({ port: 0, dir: fs.mkdtempSync(path.join(os.tmpdir(), 'vtt-lat-')) }), base = 'http://localhost:' + srv.port;
-  let chromium; try { chromium = require('playwright').chromium; } catch (e) { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
+  let chromium; try { chromium = require('playwright').chromium; } catch { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined) });
   const mk = async (delay) => { const c = await b.newContext({ viewport: { width: 1280, height: 720 } }); await c.route(/fonts\./, (r) => r.abort());
     if (delay) await c.route(/netlify\/functions\/vtt/, async (r) => { await T(delay); r.continue(); }); return c.newPage(); };

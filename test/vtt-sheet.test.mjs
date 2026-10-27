@@ -107,7 +107,7 @@ test('BRINGING A HERO: a player brings one from My heroes; it is checked against
 });
 
 test('a hero from a table saved before the sheet existed still works: no gear, no text, and it can be edited', async () => {
-  const { t, ann, thorne } = await setup();
+  const { ann } = await setup();
   const old = (await me(ann, 'Thorne')); assert.deepEqual(old.gear, []); assert.equal(old.notes, '');
   assert.equal(typeof old.defence, 'number');
 });

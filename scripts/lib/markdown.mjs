@@ -1,4 +1,4 @@
-// Shared by the blog builders (scripts/build-blog.mjs for Sacrament, scripts/build-landing.mjs for the Sacrament RPG Table): a small Markdown reader and the front-matter parser.
+// Shared by the page builder (scripts/build-landing.mjs): a small Markdown reader and the front-matter parser.
 import { readFileSync } from 'node:fs';
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

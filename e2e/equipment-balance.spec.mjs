@@ -14,7 +14,6 @@ test('the loot designer saves weapon and armour roles and fixes grimoires at thr
   await expect(editor.locator('[data-lf=slots]')).toHaveValue('2');
   await expect(editor.locator('#ltPrev')).toContainText('+2 heavy damage');
   await expect(editor.locator('[data-lf=cat]')).toBeDisabled();
-  await editor.screenshot({ path: '/workspace/sacrament-audit/equipment-designer-preview.png' });
   await editor.locator('[data-lb=save]').click();
   await expect(editor.locator('#ltLib')).toContainText('Heavy equipment test');
   await editor.locator('#ltLib [data-lb=edit]').click();
@@ -73,6 +72,5 @@ test('a player must put away their shield before a heavy attack and sees the ext
   await ann.locator('#strip [data-do=effort][data-cat=weapons]').click();
   await expect(ann.locator('#feed')).toContainText('heavy weapon');
   await expect.poll(async () => (await state(gm)).rolls.at(-1)?.effort?.weaponBonus).toBe(2);
-  await ann.locator('#panel').screenshot({ path: '/workspace/sacrament-audit/equipment-damage-preview.png' });
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });

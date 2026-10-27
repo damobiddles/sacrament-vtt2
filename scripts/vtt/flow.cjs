@@ -7,7 +7,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const { startServer } = await import('./server.mjs');
   const LIVE = (process.env.VTT_BASE || '').replace(/\/$/, ''); const srv = LIVE ? null : await startServer({ port: 0, dir: fs.mkdtempSync(path.join(os.tmpdir(), 'vtt-flow-')) });
   const base = LIVE || 'http://localhost:' + srv.port;
-  let chromium; try { chromium = require('playwright').chromium; } catch (e) { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
+  let chromium; try { chromium = require('playwright').chromium; } catch { chromium = require('/opt/node22/lib/node_modules/playwright').chromium; }
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined), proxy: LIVE && process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined });
   const ok = [], bad = [], errs = [];
   const check = (n, c, d) => { (c ? ok : bad).push(n); console.log((c ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + String(d).slice(0, 260) : '')); };
@@ -26,7 +26,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
       return r.continue();
     });
     p.on('pageerror', (e) => errs.push(label + ': ' + e.message));
-    p.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/vtt')) { try { p.reqs.push(JSON.parse(r.postData()).cmd); } catch (e) {} } });
+    p.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/vtt')) { try { p.reqs.push(JSON.parse(r.postData()).cmd); } catch {} } });
     return p;
   };
   const st = (p) => p.evaluate(() => window.__vtt.state());
@@ -41,7 +41,6 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const diceOn = async (p) => { if (!(await p.$('#strip input[data-phys]'))) await p.click('[data-do=ordinaryCheck]'); };
 
   const editCard = async (p) => { await p.waitForSelector('[data-do=cardEdit], [data-edit=name]'); if (!(await p.$('[data-edit=name]'))) await p.click('[data-do=cardEdit]'); await p.waitForSelector('[data-edit=name]'); };   /* the card's full settings are on its Edit card screen */
-  const attackOpen = async (p) => { if (!(await p.$('[data-do=monsterAttack]'))) await p.click('[data-do=attackToggle]'); await p.waitForSelector('[data-do=monsterAttack]'); };
   const sceneBg = async (p) => { await gmTab(p, 'scene'); if (!(await p.$('#bgUrl'))) await p.click('[data-do=sceneBg]'); };
   const openScene = async (p, name) => { await gmTab(p, 'scene'); await p.evaluate((n) => { const li = [...document.querySelectorAll('#panel .tabbody li')].find((l) => l.querySelector('.n').innerText.trim().startsWith(n)); li.querySelector('[data-do=openScene]').click(); }, name); };
   /* a press that lasts as long as a person's does */
@@ -60,7 +59,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const gate = await card(gm, 'The Sealed Gate'), ghoul = await card(gm, 'Pit Ghoul');
 
   /* somebody else keeps changing the table, so that every page is redrawn again and again while people click */
-  let churn = false; const churning = (async () => { while (true) { if (churn) { try { await gm.evaluate(() => document.querySelector('[data-do=target][data-d="1"]').click()); await gm.evaluate(() => document.querySelector('[data-do=target][data-d="-1"]').click()); } catch (e) {} } await T(120); } })();
+  let churn = false; const churning = (async () => { while (true) { if (churn) { try { await gm.evaluate(() => document.querySelector('[data-do=target][data-d="1"]').click()); await gm.evaluate(() => document.querySelector('[data-do=target][data-d="-1"]').click()); } catch {} } await T(120); } })();
   const rolls = async (p) => (await st(p)).rolls;
 
   console.log('--- 1. Effort while the table keeps changing, and a press that takes a human’s time');
@@ -204,7 +203,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('--- 12. scenes: create, prepare privately, use the toolbar while preparing, reveal, switch, return, reload');
   const names = async (p) => p.$$eval('#cards .c', (e) => e.map((x) => x.getAttribute('aria-label')).sort());
   const liveOf = (p) => p.evaluate(() => window.__vtt.state().table.scene.name);
-  const raw = []; B.on('response', async (r) => { if (r.url().includes('/vtt') && r.request().method() !== 'OPTIONS') { try { raw.push(await r.text()); } catch (e) {} } });
+  const raw = []; B.on('response', async (r) => { if (r.url().includes('/vtt') && r.request().method() !== 'OPTIONS') { try { raw.push(await r.text()); } catch {} } });
   const timer0 = (await card(gm, 'The Ceiling Groans')).timer.cur, ghoul0 = await card(gm, 'Pit Ghoul'), lay0 = JSON.stringify((await st(gm)).layout[ghoul0.id]), liveName = await liveOf(A), live0 = await names(A);
   await gm.keyboard.press('Escape'); await gmTab(gm, 'scene');
   await slow(gm, 800);                                                                             /* the GM's requests are slow: every step below is made while others are in flight */
@@ -319,6 +318,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('the home page is the Sacrament RPG Table page: it has “Join a game” and “Run a game” going to the table', joinRun.some((l) => /^Join a game$/i.test(l.t) && l.h === '/vtt/?join') && joinRun.some((l) => /^Run a game$/i.test(l.t) && l.h === '/vtt/?run'), JSON.stringify(joinRun.slice(0, 6)));
   await site.goto(base + '/resources/'); check('Resources opens the Sacrament RPG Table directly', (await site.$$eval('a', (e) => e.some((x) => x.getAttribute('href') === '/vtt/' && /Sacrament RPG Table/i.test(x.innerText)))));
   const inv = await mk('inv'); await inv.goto(base + '/vtt/?room=ZZZZZZ'); await inv.waitForSelector('#entry:not([hidden])');
+  await inv.waitForFunction(() => document.activeElement && document.activeElement.id === 'joinName', null, { timeout: 5000 }).catch(() => {});   // the page puts focus there 50 ms after showing the form; the check below still decides
   const jb = await (await inv.$('#joinForm')).boundingBox(), mb = await (await inv.$('#makeForm')).boundingBox();
   check('on an invitation link the Join form comes first, with the code filled in, a line saying who invited you, and the name box ready to type in', jb.y < mb.y && (await inv.inputValue('#joinCode')) === 'ZZZZZZ' && /invited to the table ZZZZZZ/i.test(await inv.innerText('#inviteMsg')) && (await inv.evaluate(() => document.activeElement && document.activeElement.id)) === 'joinName', jb.y + ' vs ' + mb.y);
   const plain = await mk('plain'); await plain.goto(base + '/vtt/'); await plain.waitForSelector('#entry:not([hidden])'); check('without an invitation the page is as before: Run a table first, no invitation line', (await (await plain.$('#makeForm')).boundingBox()).x < (await (await plain.$('#joinForm')).boundingBox()).x && (await plain.$('#inviteMsg:not([hidden])')) === null);

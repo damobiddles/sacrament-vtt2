@@ -17,8 +17,8 @@
   var box = null, mine = 0, air = 0, api, result = null;
   var timers = new Set(), intervals = new Set();
   function later(fn, ms) { var id = setTimeout(function () { timers.delete(id); fn(); }, ms); timers.add(id); return id; }
-  function off() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
-  function setOff(v) { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch (e) {} if (v) { clear(); if (api.onLand) api.onLand(); } }
+  function off() { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } }
+  function setOff(v) { try { if (v) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch {} if (v) { clear(); if (api.onLand) api.onLand(); } }
   function still() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function enabled() { return !off() && !still() && !document.hidden; }
   function holder() { if (!box) box = document.getElementById('dice'); return box; }

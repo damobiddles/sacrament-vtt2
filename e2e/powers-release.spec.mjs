@@ -25,14 +25,12 @@ test('an area spell selects several visible foes, applies one critical roll, sur
  await physical(ann,20);await prepareItem(ann,'[data-spell=rend]');
  await expect(ann.locator('.area-targets')).toBeVisible();await expect(ann.locator('.area-targets')).not.toContainText('PRIVATE');
  await ann.locator('.area-targets label',{hasText:'Pit Ghoul'}).check();await ann.locator('.area-targets label',{hasText:'Disposable second foe'}).check();
- await ann.locator('#panel').screenshot({path:'/workspace/sacrament-audit/powers-area-picker.png'});
  await ann.locator('[data-do=confirmAttack]').click();await rollPrepared(ann);await expect(ann.locator('#strip')).toContainText('extra Ultimate');
  await ann.locator('#physE').fill('2');await ann.locator('#physCritical').fill('3');await ann.locator('#strip [data-do=effort]').click();
  await expect(ann.locator('#feed')).toContainText('damage');await expect(ann.locator('[data-do=applyArea]')).toHaveCount(0);await expect(ann.locator('#feed')).toContainText('HP -');await saved(ann);
  const r=(await state(ann)).rolls.at(-1),damage=r.effort.total,ghoul=Object.values((await state(ann)).cards).find(c=>c.name==='Pit Ghoul');
  expect(ghoul.hp.cur).toBe(20-damage);expect((await state(ann)).cards[made.result.id].hp.cur).toBe(20-damage);
  await expect.poll(async()=> (await state(gm)).cards[made.result.id].hp.cur).toBe(20-damage);
- await ann.locator('#panel').screenshot({path:'/workspace/sacrament-audit/powers-area-damage.png'});
  await ann.reload();await expect(ann.locator('#app')).toBeVisible();expect((await state(ann)).chars[h.id].usedPowers.rend).toBeTruthy();
  const log=(await state(gm)).rolls.find(x=>x.id===r.id).applied.log;await command(gm,{type:'undo',logId:log});
  await expect.poll(async()=> (await state(ann)).cards[made.result.id].hp.cur).toBe(20);expect((await state(ann)).cards[ghoul.id].hp.cur).toBe(20);

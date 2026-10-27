@@ -1,4 +1,4 @@
-import {prepareItem,rollPrepared,basicAttack} from './helpers.mjs';
+import {prepareItem,rollPrepared} from './helpers.mjs';
 import {test,expect,newPage,makeTable,joinTable,claimHero,state,saved} from './helpers.mjs';import {bounded} from './contrast-lib.mjs';
 test.setTimeout(60000);
 async function cmd(page,c){return bounded(page.evaluate(async c=>{const s=window.__vtt.state(),entry=Object.entries(localStorage).find(([k])=>k.endsWith(s.code)&&!k.includes('join-')),token=JSON.parse(entry[1]).token;const r=await fetch('/.netlify/functions/vtt',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({op:'cmd',code:s.code,cmd:{...c,actionId:'automation'+Math.random().toString(36).slice(2,8)+'.1'}})});return {status:r.status,body:await r.json()};},c),15000,'updating a disposable test table');}

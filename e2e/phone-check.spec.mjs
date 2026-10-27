@@ -2,7 +2,7 @@ import {prepareItem,rollPrepared} from './helpers.mjs';
 // The fast phone check, run before every deploy (npm run phone-check): the home page and the table at 360×640 must not be broken, overlapping or off-screen.
 // It is a smoke test, not a layout review. The full phone tests are the "phone suite" (npm run phone-suite).
 import { test, expect } from './helpers.mjs';
-import { newPage, makeTable, joinTable, claimHero } from './helpers.mjs';
+import { newPage, joinTable, claimHero } from './helpers.mjs';
 
 test.setTimeout(45000);
 const PHONE = { width: 360, height: 640 };

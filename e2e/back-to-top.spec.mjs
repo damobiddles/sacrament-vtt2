@@ -27,7 +27,6 @@ test('the back-to-top button scrolls a long page and stays within the viewport',
   await expect(button).toBeVisible();
   const box = await button.boundingBox();
   expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(1366);
-  await page.screenshot({ path: '/workspace/sacrament-audit/back-to-top-preview.png' });
   await button.click();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });

@@ -38,7 +38,7 @@
     try {
       text = localStorage.getItem(KEY); st.storageVersion = text;
       if (text) { raw = JSON.parse(text); if (!raw || !Array.isArray(raw.heroes)) throw new Error('Invalid heroes'); }
-    } catch (e) {
+    } catch {
       st.readOnly = true; st.unreadableOriginal = text || '';
       st.saveError = 'Saved heroes could not be read. Their existing data has not been replaced. Download a backup before closing this page.';
       return st;
@@ -56,7 +56,7 @@
         st.current = String(old.current || ''); st.converted = old.converted && typeof old.converted === 'object' ? old.converted : {};
         if (st.heroes.length) save(st);
       }
-    } catch (e) { st.readOnly = true; st.unreadableOriginal = oldText || ''; st.saveError = 'Earlier heroes could not be read. Download a backup; their existing data has not been replaced.'; }
+    } catch { st.readOnly = true; st.unreadableOriginal = oldText || ''; st.saveError = 'Earlier heroes could not be read. Download a backup; their existing data has not been replaced.'; }
     return st;
   }
   function backup(st) {
@@ -71,7 +71,7 @@
       localStorage.setItem(KEY, data);
       if (localStorage.getItem(KEY) !== data) throw new Error('Not saved');
       st.storageVersion = data; st.saveError = ''; return true;
-    } catch (e) { st.saveError = 'Your latest changes could not be saved in this browser. Keep this page open and download a backup, or try saving again.'; return false; }
+    } catch { st.saveError = 'Your latest changes could not be saved in this browser. Keep this page open and download a backup, or try saving again.'; return false; }
   }
   root.SacramentHeroes = { tidy: tidy, read: read, save: save, blank: blank, fromEngine: fromEngine, uid: uid, KEY: KEY, LIMIT: LIMIT, canAdd: function (st) { return st.heroes.length < LIMIT; }, backup: backup };
 })(typeof window !== 'undefined' ? window : globalThis);

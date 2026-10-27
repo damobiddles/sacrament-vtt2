@@ -75,6 +75,7 @@ test('"Run a game" opens the make-a-table form first, and a GM can really make a
   await gm.goto('/');
   await gm.getByRole('link', { name: 'Run a game' }).click();
   await expect(gm).toHaveURL(/\/vtt\/\?run$/);
+  await expect(gm.locator('#joinForm')).toBeVisible(); await expect(gm.locator('#makeForm')).toBeVisible();   // measure only once both forms are drawn
   const joinBox = await gm.locator('#joinForm').boundingBox(), makeBox = await gm.locator('#makeForm').boundingBox();
   expect(makeBox.y).toBeLessThan(joinBox.y);
   await expect(gm.locator('#makeForm button[type=submit]')).toBeFocused();
@@ -197,7 +198,7 @@ test('the "Build and manage characters" button opens the character sheet page, a
 
 test('nothing on any page of the site links to the removed sign-up, and its thank-you page is gone', async ({ browser }) => {
   const page = await newPage(browser);
-  for (const path of ['/', '/news/', '/blog/welcome/', '/how-to-play/', '/feedback/']) {
+  for (const path of ['/', '/news/', '/how-to-play/', '/feedback/']) {
     await page.goto(path);
     await expect(page.locator('a[href*="#join"], a[href*="/thanks"]'), path).toHaveCount(0);
   }

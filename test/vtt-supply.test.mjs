@@ -1,7 +1,7 @@
 // Supplies cannot be equipped at a table: the server refuses it, a hero brought in is cleaned, and a table saved before this rule is put right (the GM is told which heroes).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { table, find, charNamed } from './vtt-helpers.mjs';
+import { table, charNamed } from './vtt-helpers.mjs';
 import { memoryStore } from '../netlify/functions/_shared/vtt-service.mjs';
 
 const claim = async (t, who, name) => { const ch = charNamed(await t.state(), name); assert.equal((await who.cmd({ type: 'claim', charId: ch.id })).status, 200); return ch; };

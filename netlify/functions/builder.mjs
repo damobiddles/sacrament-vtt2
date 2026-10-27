@@ -66,7 +66,7 @@ export async function handle(req, deps) {
     if (!valid(cookieOf(req, COOKIE), pass)) return json({ error: 'Sign in again.' }, 401);
     const json_ = (b, st = 200) => new Response(JSON.stringify(b), { status: st, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     let store;
-    try { store = await deps.getStore(); } catch (e) { return json_({ error: 'Publishing is not available here. It needs Netlify.' }, 503); }
+    try { store = await deps.getStore(); } catch { return json_({ error: 'Publishing is not available here. It needs Netlify.' }, 503); }
     try {
       if (url.searchParams.get('reset') === '1') {
         const cur = await store.get('latest', { type: 'json' });
@@ -82,7 +82,7 @@ export async function handle(req, deps) {
       const rec = { ...lib, at: Date.now() };
       await store.setJSON('latest', rec);
       return json_({ ok: true, nodes: lib.nodes.length, edges: lib.edges.length, at: rec.at });
-    } catch (e) { return json_({ error: 'Could not save. Try again.' }, 500); }
+    } catch { return json_({ error: 'Could not save. Try again.' }, 500); }
   }
 
   if (route === '/builder/logout') {
