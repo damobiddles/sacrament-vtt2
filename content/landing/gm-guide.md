@@ -77,7 +77,7 @@ Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide wh
 
 ## Scenes, maps and privacy
 
-In Scene, add a named scene and **Open** it to prepare it privately. Add and move cards, change its picture and rename it without losing its contents. **Show to players** makes it live for everyone. Prepared enemies cannot attack live heroes: show their scene first. Unfinished monster attacks cannot carry damage into a different live scene. Prepared scenes and their names stay private until shown. The Target is a table setting; changing scenes does not give each scene its own saved Target.
+In Scene, add a named scene and choose **Prepare** on it to work on it privately; players keep seeing the live scene. Add and move cards, change its picture and rename it without losing its contents. **Show to players** makes it live for everyone, and **Back to live** returns you to the live scene while you are preparing another. Prepared enemies cannot attack live heroes: show their scene first. Unfinished monster attacks cannot carry damage into a different live scene. Prepared scenes and their names stay private until shown. The Target is a table setting; changing scenes does not give each scene its own saved Target.
 
 The map automatically fits the available space without stretching the artwork. **Point** shows people looking at the same scene where you mean. Drawing, undoing lines and clearing drawing are GM-only. Select **Draw**, then choose **Colour**: blue for water, green for trees, red for fire, or gold, white and black. The choice affects new lines only. Everyone viewing the scene sees the saved colours.
 

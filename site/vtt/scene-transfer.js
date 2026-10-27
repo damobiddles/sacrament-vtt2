@@ -81,7 +81,7 @@
     message('Preparing a private scene…');var begun=await api.request({op:'sceneBegin',jobId:job,packId:fingerprint,manifest:pack.manifest,allowDuplicate:!!duplicate});guard(version,turn);
     var result=begun.result;
     if(!result.alreadyImported){for(var asset of pack.assets){guard(version,turn);message('Uploading picture '+(pack.assets.indexOf(asset)+1)+' of '+pack.assets.length+'…');await api.request({op:'sceneStage',jobId:job,ref:asset.ref,data:asset.data});guard(version,turn);}message('Saving the complete scene…');var committed=await api.commit(job);guard(version,turn);if(!committed)throw Error('The save could not be confirmed. Retry to check it safely.');result=committed.result;}
-    job='';message('Scene added privately. Timers are paused. Open it in Scene to review, then choose Show to players.');pack=null;$('sceneTransferGo').hidden=true;$('sceneTransferClose').textContent='Done';
+    job='';message('Scene added privately. Timers are paused. In Scene, choose Prepare on it to review it, then Show to players.');pack=null;$('sceneTransferGo').hidden=true;$('sceneTransferClose').textContent='Done';
    }catch(e){if(turn===epoch)message(e.message+' You can retry safely; no partial encounter is added.');}finally{if(turn===epoch)lock(false);}
   };
  }

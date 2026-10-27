@@ -748,22 +748,24 @@
       '<p class="hint">Safe rest: +10 HP to living heroes; Horror −' + (nd || 1) + 'd' + R.REST.horrorDie + '; healing allowances refresh.</p></section>' + encounterControls();
   }
   function encounterControls() {
-    if (viewScene() !== S.table.scene.id) return '<p class="hint">Preparing another scene. Open the live scene to run or refresh its encounter.</p>';
+    if (viewScene() !== S.table.scene.id) return '<p class="hint">Preparing another scene. Go back to the live scene to run or refresh its encounter.</p>';
     return '<section class="play-section"><button class="btn small" data-do="scenePowerReset" data-scene="' + S.table.scene.id + '">' + (UI.powerResetAsk === S.table.scene.id ? 'Confirm: refresh scene abilities' : 'Refresh scene abilities') + '</button><p class="hint">New encounter in ' + esc(S.table.scene.name) + ' only. Spent scene abilities refresh; unfinished limited rolls expire.</p></section>';
   }
   function tabScene() {
     var live = S.table.scene.id, view = viewScene(), bg = (S.scenes.filter(function (x) { return x.id === view; })[0] || {}).bg || '';
     /* what a GM reaches for when something unexpected happens comes first, so it never scrolls out of sight behind a long scene list */
     var quickAdd = '<h3>Add to the table</h3><div class="row"><button class="btn small" data-do="addEnemy" title="A token with 1 Heart, in the turn order">Enemy</button><button class="btn small" data-do="addObstacle" title="A card with an Effort bar">Obstacle</button><button class="btn small" data-do="addCard">Card</button></div>';
-    var h = quickAdd + '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
+    var anyCards = cardList().some(function (c) { return c.kind !== 'pc' && onTable(c); });
+    var emptyHint = anyCards ? '' : '<p class="hint scene-empty">Nothing on this scene yet. Add an enemy, obstacle or card above' + (bg ? '' : ', and set its picture below') + '.' + (view === live ? '' : ' Players see nothing until you press Show to players.') + '</p>';
+    var h = quickAdd + emptyHint + '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
       var isLive = x.id === live, isView = x.id === view;
       var status = isLive ? '<span class="pill">Live</span>' : isView ? '<span class="pill">Preparing</span>' : '', right = '';
-      if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '">Open</button>';
+      if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '" aria-label="' + (isLive ? 'Back to live scene: ' : 'Prepare scene: ') + esc(x.name) + '">' + (isLive ? 'Back to live' : 'Prepare') + '</button>';
       else if (!isLive) right += '<button class="btn small main" data-do="reveal" data-scene="' + x.id + '">Show to players</button>';
       if (!isLive) right += '<button type="button" class="btn small danger" data-do="deleteScene" data-scene="' + x.id + '" aria-label="Delete scene: ' + esc(x.name) + '">Delete</button>';
       right += '<button type="button" class="btn small" data-do="renameScene" data-scene="' + x.id + '" aria-label="Rename scene: ' + esc(x.name) + '">Rename</button>';
       return '<li class="' + (isView ? 'cur' : '') + '"><div class="scene-heading"><span class="n">' + esc(x.name) + '</span>' + status + '</div><div class="scene-actions" role="group" aria-label="Actions for ' + esc(x.name) + '">' + right + '</div></li>';
-    }).join('') + '</ul><p class="hint">Show another scene to players before deleting the live scene. Heroes and items held by players are kept.</p>';
+    }).join('') + '</ul><p class="hint">Prepare opens a scene for you alone: players keep seeing the live scene until you press Show to players.</p><p class="hint">Show another scene to players before deleting the live scene. Heroes and items held by players are kept.</p>';
     var deleting = S.scenes.filter(function (x) { return x.id === UI.sceneDelete; })[0];
     if (deleting) h += '<div class="sec scene-delete"><h4>Delete ' + esc(deleting.name) + '?</h4><p>This permanently removes this scene, its table cards and its drawings. Heroes and items held by players are kept. This cannot be undone. Uploaded pictures are kept in case another scene uses them.</p><div class="row"><button class="btn small danger" data-do="confirmSceneDelete" data-scene="' + deleting.id + '"' + (UI.sceneDeleting ? ' disabled aria-busy="true"' : '') + '>Delete this scene</button><button class="btn small" data-do="cancelSceneDelete">Cancel</button></div></div>';
     var renaming = S.scenes.filter(function (x) { return x.id === UI.sceneRename; })[0];
@@ -1078,7 +1080,7 @@
       case 'effort': { if (UI.working) break; var damageRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; render(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE, autoApply: automaticDamage(damageRoll) }, function () { UI.working = null; render(); }); break; }
       case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }
       case 'allowPush': if (!UI.working) { UI.working = 'push:' + d.roll; send({ type: 'pushOverride', rollId: d.roll }, function () { UI.working = null; render(); }); } break;
-      case 'scenePowerReset': if (viewScene() !== S.table.scene.id || d.scene !== S.table.scene.id) { toast('Open the live scene to refresh its encounter.'); break; } if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
+      case 'scenePowerReset': if (viewScene() !== S.table.scene.id || d.scene !== S.table.scene.id) { toast('Go back to the live scene to refresh its encounter.'); break; } if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
       case 'applyArea': { if (UI.working) break; var areaRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; if (!areaRoll) break; UI.working = 'apply:' + d.roll; var ids = (areaRoll.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; }); send({ type: 'applyArea', rollId: d.roll, cardIds: ids }, function () { UI.working = null; render(); }); break; }
       case 'again': { var ra = S.rolls.filter(function (x) { return x.id === d.roll; })[0]; if (ra) rollAgain(ra); break; }
       case 'apply': { if (UI.working) break; var key2 = 'apply:' + d.roll; UI.working = key2; renderPanel(); send({ type: 'apply', rollId: d.roll, cardId: d.card, field: d.field }, function () { UI.working = null; render(); }); break; }
