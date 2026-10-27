@@ -60,8 +60,6 @@ In this cloud environment, live checks need `NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_
    * Tests are split into the **quick** tier (lint, type check, unit, quick contrast: seconds to under 2 minutes) and the **full** tier (everything else). Keep the quick tier quick; put anything slow in the full tier.
    * When a limit fires, that is a finding: say what was stuck. Do not just raise the number or retry silently. Stop background jobs by their exact process id when they overrun.
 
-**Protected branch.** `before-cleanup` is a snapshot of the project before the cleanup (commit `9791b3b`). **Never commit to it, rebase it, move it, force-push over it or delete it.** Recover anything removed with `git show before-cleanup:<path>` or `git checkout before-cleanup -- <path>`. (This environment cannot push tags; the owner may add a tag on that commit.)
-
 Also: do not delete real game data, print access tokens (GM tokens, passphrases), or add features or change rules that were not asked for. Test only on disposable tables.
 
 ## Things worth knowing
@@ -72,7 +70,7 @@ Also: do not delete real game data, print access tokens (GM tokens, passphrases)
 * A click can be lost if the screen redraws between press and release; the press guard in `vtt.js` exists for this. Do not redraw while a button is held.
 * **Saved data names must NOT be renamed:** the Blobs storage name in `netlify/functions/vtt.mjs` and the browser-storage prefix in `site/vtt/vtt.js` (written in two pieces on purpose). Renaming either hides every saved table, GM key and hero. `test/old-addresses.test.mjs` guards them. Invitation links are `/vtt/?room=CODE` and `/vtt/` must not move.
 * **Old addresses** (the table website's old home, the retired `/play/` table, `/table`, `/tools`, `/legacy/`) are 301 redirects in `netlify.toml`. `/play/tiles/stone.webp` redirects to `/vtt/stone.webp` because earlier saved tables use it as a background. `test/old-addresses.test.mjs`, `test/play-retired.test.mjs` and `test/archive.test.mjs` read those rules.
-* **Retiring a page or tool:** delete it, add a 301 for its old address (pages), update those tests and the inventory. There is no `archive/` folder: git history and `before-cleanup` keep everything.
+* **Retiring a page or tool:** delete it, add a 301 for its old address (pages), update those tests and the inventory. There is no `archive/` folder: git history keeps everything.
 * **One theme only (dark).** Colours live in `site/theme.css`: `--line` is for dividers, `--edge` is the outline of anything pressed or typed in (3:1 against the ground). Anything drawn over the table's picture carries its own dark colours in `site/vtt/vtt.css`. Do not dim text with `opacity`: it breaks contrast. `test/no-light-theme.test.mjs` guards this.
 * **Contrast check** (`e2e/contrast.spec.mjs`): axe plus every button in every state (text 4.5:1, outlines 3:1; disabled 3:1). The laptop run is part of the regular checks (`npm run test:contrast` is the quick set; the full set runs at the end of `test:e2e`, on its own, because beside the other browser tests it ran out of its 4-minute limit); the phone run is tagged `@phone` and belongs to the phone suite. For a full list with pictures run it with `CONTRAST_AUDIT=1 CONTRAST_OUT=<folder>` (generated pictures are git-ignored).
 * The game page describes the table's current mechanics in plain words; change that text together with `site/vtt/rules.js` when the rules change.
