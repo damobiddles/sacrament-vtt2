@@ -31,7 +31,7 @@ export function fileStore(dir) {
 /** @param {{ port?: number, dir?: string, createKey?: string }} [options] */
 export function startServer({ port = 0, dir, createKey = '' } = {}) {
   const service = makeService({ store: fileStore(dir), createKey });
-  const server = createServer(async (req, res) => {
+  const serve = async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const im = /^\/\.netlify\/functions\/vtt\/img\/([A-Za-z0-9]+)\/([a-f0-9]+)$/.exec(url.pathname);
     if (im) { const r = await service.image(im[1], im[2]); if (r.status !== 200) { res.writeHead(r.status); return res.end(); } res.writeHead(200, { 'content-type': r.mime, 'x-content-type-options': 'nosniff', 'cache-control': 'public, max-age=31536000, immutable' }); return res.end(r.bytes); }
@@ -45,6 +45,10 @@ export function startServer({ port = 0, dir, createKey = '' } = {}) {
     let p = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, ''); if (p.endsWith('/')) p += 'index.html';
     try { const buf = await readFile(join(ROOT, p)); res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream', 'cache-control': 'no-store' }); res.end(buf); }
     catch { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Not found'); }
+  };
+  /* a browser that gives up on a request halfway ("aborted") must not stop the server, and so every later request and test */
+  const server = createServer((req, res) => {
+    serve(req, res).catch(() => { try { if (res.headersSent || res.destroyed) res.destroy(); else { res.writeHead(500, { 'content-type': 'text/plain' }); res.end('Server error'); } } catch { /* the connection is already gone */ } });
   });
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve({ server, port: /** @type {import('node:net').AddressInfo} */ (server.address()).port, service })));
 }
