@@ -753,7 +753,9 @@
   }
   function tabScene() {
     var live = S.table.scene.id, view = viewScene(), bg = (S.scenes.filter(function (x) { return x.id === view; })[0] || {}).bg || '';
-    var h = '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
+    /* what a GM reaches for when something unexpected happens comes first, so it never scrolls out of sight behind a long scene list */
+    var quickAdd = '<h3>Add to the table</h3><div class="row"><button class="btn small" data-do="addEnemy" title="A token with 1 Heart, in the turn order">Enemy</button><button class="btn small" data-do="addObstacle" title="A card with an Effort bar">Obstacle</button><button class="btn small" data-do="addCard">Card</button></div>';
+    var h = quickAdd + '<h3>Scenes</h3><ul class="ol scene-list">' + S.scenes.map(function (x) {
       var isLive = x.id === live, isView = x.id === view;
       var status = isLive ? '<span class="pill">Live</span>' : isView ? '<span class="pill">Preparing</span>' : '', right = '';
       if (!isView) right += '<button class="btn small" data-do="openScene" data-scene="' + x.id + '">Open</button>';
@@ -771,7 +773,6 @@
     h += '<div class="row"><button type="button" class="link" data-do="sceneBg" aria-expanded="' + !!UI.sceneBg + '">' + (UI.sceneBg ? 'Hide picture settings' : 'Change the picture for this scene') + '</button></div>';
     if (UI.sceneBg) h += '<label>Picture address<input id="bgUrl" value="' + esc(bg) + '" placeholder="https://…"></label><label>Or upload one<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload="bg"></label>';
     h += '<div class="row"><button type="button" class="btn small" data-do="exportScene">Export scene</button><button type="button" class="btn small" data-do="importScene">Import scene</button></div>';
-    h += '<h3>Add to the table</h3><div class="row"><button class="btn small" data-do="addEnemy" title="A token with 1 Heart, in the turn order">Enemy</button><button class="btn small" data-do="addObstacle" title="A card with an Effort bar">Obstacle</button><button class="btn small" data-do="addCard">Card</button></div>';
     return h + monsterList();
   }
   /* The GM's monsters: kept in this browser (like My heroes), so one made at one table can be added to any other. A monster added comes in hidden, in the turn order, at full HP. */
