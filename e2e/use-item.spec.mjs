@@ -28,9 +28,9 @@ test('Play prepares an item, the footer rolls its check and damage, and Activity
 test('sheet manages equipment; Play explains why an unequipped item cannot be prepared',async({browser})=>{
  const {ann}=await setup(browser);await takeBlade(ann);await ann.locator('#shAdd').selectOption('cloak');await ann.locator('[data-sh=add]').click();
  await expect(ann.locator('#sheetOverlay [data-sh=use],#sheetOverlay [data-sh=quickUse]')).toHaveCount(0);
- await ann.locator('.sh-item',{hasText:"Penitent's Blade"}).locator('[data-sh=move]').click();await ann.locator('[data-sh=close]').click();
+ await ann.locator('.sh-item',{hasText:"Penitent's Blade"}).locator('[data-sh=move]').click();await saved(ann);await ann.locator('[data-sh=close]').click();
  await prepareItem(ann);await expect(ann.locator('#feed')).toContainText("Equip the Penitent's Blade first");await expect(ann.locator('[data-do=commitUse]')).toHaveCount(0);
- await ann.locator('#panel [data-do=sheet]').click();await ann.locator('.sh-item',{hasText:"Penitent's Blade"}).locator('[data-sh=move]').click();await ann.locator('[data-sh=close]').click();
+ await ann.locator('#panel [data-do=sheet]').click();await ann.locator('.sh-item',{hasText:"Penitent's Blade"}).locator('[data-sh=move]').click();await saved(ann);await ann.locator('[data-sh=close]').click();
  await prepareItem(ann);await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'});await ann.locator('[data-do=confirmAttack]').click();await rollPrepared(ann);await expect(ann.locator('#feed')).toContainText('STR');expect(ann.errors).toEqual([]);
 });
 
