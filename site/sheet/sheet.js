@@ -110,7 +110,7 @@
     /* What to show and to judge against: the table's last answer with every change still on its way applied on top of it (on a slow connection a second click would otherwise be refused for want of a point the first has not yet freed). */
     function effective(d) {
       var hero = JSON.parse(JSON.stringify(d.hero)), hp = d.hp ? { cur: d.hp.cur, max: d.hp.max } : null;
-      pend.forEach(function (p) { C.edit(hero, p.op, { gm: !!d.gm }, hp); });
+      pend.forEach(function (p) { if (host.applied && p.cmd && host.applied(p.cmd)) return; C.edit(hero, p.op, { gm: !!d.gm }, hp); });   /* one the table has already applied is in its answer: not counted twice */
       return Object.assign({}, d, { hero: hero, hp: hp });
     }
     function draw(force) {
@@ -127,7 +127,7 @@
       var copy = JSON.parse(JSON.stringify(d.hero)), hp = d.hp ? { cur: d.hp.cur, max: d.hp.max } : null, r = C.edit(copy, op, { gm: !!d.gm }, hp);
       if (!r.ok) { msg = r.why; draw(true); return; }
       msg = ''; var item = { op: op }; pend.push(item);
-      host.act(op, function (ok, why) { var i = pend.indexOf(item); if (i >= 0) pend.splice(i, 1); if (!ok) msg = why || 'That could not be saved. Try again.'; draw(true); });
+      item.cmd = host.act(op, function (ok, why) { var i = pend.indexOf(item); if (i >= 0) pend.splice(i, 1); if (!ok) msg = why || 'That could not be saved. Try again.'; draw(true); });
       draw(true);
     }
     el.addEventListener('pointerdown', function (e) { if (e.target.closest && e.target.closest('button')) pressing = true; }, true);
