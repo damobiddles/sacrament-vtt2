@@ -62,10 +62,12 @@ test('a player must put away their shield before a heavy attack and sees the ext
   const sheet = ann.locator('#sheetOverlay');
   const heavy = sheet.locator('.sh-item', { hasText: 'Tithe Barn Maul' });
   await expect(heavy).toBeVisible();
+  await expect(sheet.locator('.sh-item', { hasText: 'Heater Shield' })).toBeVisible();   // both gifts have reached this screen before it is used
   await ann.locator('[data-sh=close]').click();
   await prepareItem(ann);await expect(ann.locator('#feed')).toContainText('Move your shield to the pack first');
   await ann.locator('#panel [data-do=sheet]').click();
   await sheet.locator('.sh-item', { hasText: 'Heater Shield' }).getByRole('button', { name: 'To the pack', exact: true }).click();
+  await saved(ann);   // the table has confirmed the move before the next step relies on it
   await ann.locator('[data-sh=close]').click();await prepareItem(ann);
   await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();await rollPrepared(ann);
   await expect(ann.locator('#feed li.success .tx')).toContainText('Success');

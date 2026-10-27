@@ -104,6 +104,7 @@
 :is(#sheetOverlay, #sheetHere) .sh-b.use:not(.dim) { background:#783c44; border-color:#783c44; color:#fff9ee; }
 :is(#sheetOverlay, #sheetHere) :is(.sh-b.go,.sh-b.use:not(.dim)):hover:not(:disabled) { background:#65313b; border-color:#65313b; }
 :is(#sheetOverlay, #sheetHere) .sh-b.use.dim { background:#eeeae1; color:#5e655d; }
+:is(#sheetOverlay, #sheetHere) .sh-b:disabled { background:#eeeae1; color:#5e655d; cursor:default; }
 :is(#sheetOverlay, #sheetHere) .sh-def { color:#525d52; margin-left:auto; }
 :is(#sheetOverlay, #sheetHere) .sh-def b { color:#354d42; }
 :is(#sheetOverlay, #sheetHere) .sh-ht .bg path { fill:#f0dcd6; stroke:#b77c77; }
