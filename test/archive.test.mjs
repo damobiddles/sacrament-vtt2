@@ -1,4 +1,4 @@
-// Retiring a page means deleting it from the site, with its old address redirecting somewhere sensible. (Git history and the before-cleanup branch keep the old files; there is no archive folder.)
+// Retiring a page means deleting it from the site, with its old address redirecting somewhere sensible. (Git history keeps the old files; there is no archive folder.)
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
