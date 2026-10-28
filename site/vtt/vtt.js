@@ -276,7 +276,8 @@
     },
     roll: function (stat, adj, physical) { if (!gm()) return; UI.adj = adj; UI.phys = physical; closeSheet(); doRoll(stat, true, false); },
     use: function (index, spellId, done, gearKey, mode) { if (!gm()) return; var id = UI.sheet; closeSheet(); doUseItem(id, index, spellId, gearKey, undefined, mode); done(true); },
-    act: function (op, done) { UI.lastError = ''; send({ type: 'sheet', charId: UI.sheet, op: op }, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); },
+    act: function (op, done) { UI.lastError = ''; var cmd = { type: 'sheet', charId: UI.sheet, op: op }; send(cmd, function (b) { done(!!b, b ? '' : (UI.lastError || 'The table did not take that change. Nothing was changed.')); }); return cmd; },
+    applied: function (cmd) { return !!(S && S.done && S.done.indexOf(cmd.actionId) >= 0); },
     hp: function (d) { var ch = S.chars[UI.sheet], card = ch && S.cards[ch.cardId]; if (card && card.hp) hpQueue(card.id, { d: d }, function (done) { send({ type: 'adjust', cardId: card.id, field: 'hp', delta: d }, done); }); },
     close: function () { closeSheet(); }
   };
