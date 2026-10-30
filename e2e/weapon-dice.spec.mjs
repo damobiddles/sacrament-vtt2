@@ -26,8 +26,12 @@ test('GM designer separates bows and firearms and multiplayer bows use d6',async
  const player=await newPage(browser);await joinTable(player,code,'Archer');
  // Generate locally, then bring the saved scout into the disposable table.
  await player.goto('/character/');await player.locator('#generatorFocus').selectOption('scout');await player.locator('#generateHero').click();await player.locator('#keepGenerated').click();
- await player.goto('/vtt/?room='+code);await expect(player.locator('#app')).toBeVisible();await player.locator('[data-do=bring]').click();
+ await player.goto('/vtt/?room='+code);await expect(player.locator('#app')).toBeVisible();
+ // a slow table: it applies each change at once but its answer reaches the player 3 s late, so the player's screen trails the GM's
+ await player.route('**/.netlify/functions/vtt',async r=>{const a=await r.fetch();await new Promise(ok=>setTimeout(ok,3000));await r.fulfill({response:a});});
+ await player.locator('[data-do=bring]').click();
  await expect.poll(async()=>Object.values((await state(gm)).chars).length).toBe(1);
+ await expect.poll(async()=>Object.values((await state(player)).chars).length,{timeout:15000}).toBe(1);   // the player's own screen, which can lag behind the GM's
  const result=await bounded(player.evaluate(async()=>{
   const s=window.__vtt.state(),ch=Object.values(s.chars)[0],entry=Object.entries(localStorage).find(([k])=>k.endsWith(s.code)&&!k.includes('join-')),token=JSON.parse(entry[1]).token;
   const weapon=ch.gear.find(g=>['bow','crossbow'].includes(g.id)),client='archertest'+Math.random().toString(36).slice(2,6);
