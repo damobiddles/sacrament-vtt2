@@ -1,3 +1,4 @@
+@import url('/blackletter.css');
 /* The Sacrament RPG home page and its pages. Colours, fonts and buttons come from theme.css; the page shapes are shared with the blog (blog.css). */
 .ic-hero{padding-bottom:44px}
 .ic-hero h1{font-size:clamp(3rem,12vw,6.5rem)}

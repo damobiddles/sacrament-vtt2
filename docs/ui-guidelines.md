@@ -3,7 +3,8 @@
 Applies to the website, VTT entry screen, GM and player controls, and character
 sheets. Shared values live in `site/theme.css`. Use the existing tokens and
 component classes; update their original rules instead of appending competing
-size overrides. The art, palette and existing two font families stay unchanged.
+size overrides. The art, palette and existing two font families stay unchanged; the website
+also uses UnifrakturMaguntia for the logo and page titles (never on the table).
 
 | Element | Default at a 16px browser root |
 | --- | --- |
@@ -18,7 +19,9 @@ size overrides. The art, palette and existing two font families stay unchanged.
 | Dice | 72px desktop, 64px phone; 28px numerals |
 
 Use Source Sans 3 for controls, numbers and reading text. Reserve Cormorant
-Garamond for headings and atmosphere. Use sentence case for VTT actions;
+Garamond for headings and atmosphere. On the website only, the page title (h1)
+and the "Sacrament RPG" name in the top bar and footer use UnifrakturMaguntia
+(`site/blackletter.css`); the table (`/vtt/`) never loads it. Use sentence case for VTT actions;
 website display buttons may retain their brand styling. Avoid widely spaced
 uppercase labels in dense controls. Reading text needs about
 1.5 line height; button labels need at least 1.3.

@@ -1,0 +1,7 @@
+/* The Sacrament logo face (owner's decision, 2026-11-01): UnifrakturMaguntia sets the "Sacrament RPG" name in the
+   navigation and footer and every page title (h1) on the website. It is hard to read at length, so it is NEVER used on
+   the table (/vtt/): that page must not load this file or landing.css. landing.css imports it; /character/ links it.
+   The face has one weight, so these rules set weight 400 to avoid a smeared fake bold. */
+@font-face{font-family:'UnifrakturMaguntia';src:url('/fonts/UnifrakturMaguntia-Book.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+:root{--blackletter:'UnifrakturMaguntia',var(--display)}
+h1,nav.ic-nav a.ic-brand,footer.ic-foot .site-footer-grid>div:first-child>b,a.sac-mark{font-family:var(--blackletter);font-weight:400;letter-spacing:0}
