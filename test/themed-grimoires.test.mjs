@@ -3,17 +3,20 @@ import {table,charNamed,find} from './vtt-helpers.mjs';
 import {lootCatalogue} from '../scripts/lib/loot-catalogue.mjs';
 const C=globalThis.SacramentSheetCore,G=globalThis.SACRAMENT_GEAR;
 const before=JSON.parse(fs.readFileSync(new URL('./fixtures/grimoires-before-themes.json',import.meta.url)));
-test('sixteen current books have ten clear themes, three spells/slots and no duplicate selections',()=>{
- const books=C.items.filter(i=>i.kind==='grimoire');assert.equal(books.length,16);
+test('twenty-two current books have ten clear themes, three spells/slots and no spell shared between books',()=>{
+ const books=C.items.filter(i=>i.kind==='grimoire');assert.equal(books.length,22);
  assert.equal(new Set(books.map(b=>b.theme)).size,10);
- assert.equal(new Set(books.map(b=>[...b.spells].sort().join(','))).size,16);
+ assert.equal(new Set(books.map(b=>[...b.spells].sort().join(','))).size,22);
  for(const b of books){assert.ok(G.grimoireThemes.includes(b.theme));assert.equal(b.slots,3);assert.equal(b.spells.length,3);assert.equal(new Set(b.spells).size,3);assert.equal(C.spellsOf(b).length,3);}
- const used=new Set(books.flatMap(b=>b.spells));assert.equal(used.size,G.spells.length);assert.equal(G.spells.length,43);
+ const used=books.flatMap(b=>b.spells);assert.equal(new Set(used).size,G.spells.length);assert.equal(used.length,G.spells.length,'each spell belongs to exactly one current book');assert.equal(G.spells.length,66);
+ for(const theme of ['Energy','Druidic','Necromancy'])assert.ok(books.filter(b=>b.theme===theme).length>=3,theme);
 });
 test('every previously owned book, spell and backup retains its original mechanics',()=>{
  for(const old of before.books){const gear={id:old.id,eq:true},it=C.itemOf(gear);assert.ok(it);assert.equal(it.name,old.name);assert.deepEqual(it.spells,old.spells);assert.equal(it.slots,old.slots);assert.equal(it.pick,old.pick);
  const h=C.cleanHero({...C.blankHero('Compatibility'),gear:[gear]});assert.deepEqual(C.itemOf(h.gear[0]).spells,old.spells);}
- for(const spell of before.spells)assert.deepEqual(G.spells.find(s=>s.id===spell.id),spell);
+ // Owner decision 2026-11-01: descriptions were rewritten for clarity. Saved heroes store spell ids, so every field except the wording stays locked.
+ const rules=s=>Object.fromEntries(Object.entries(s).filter(([key])=>key!=='does'));
+ for(const spell of before.spells){const now=G.spells.find(s=>s.id===spell.id);assert.ok(now,spell.id);assert.deepEqual(rules(now),rules(spell));assert.ok(now.does.length>=spell.does.length,spell.id+' keeps at least as much detail');}
  const retired=G.retiredGrimoires||[];assert.ok(retired.length>0);for(const old of retired)assert.ok(!C.items.some(i=>i.id===old.id));
 });
 test('all new spell actions honour damage/manual boundaries, Horror costs, retries and Undo',async()=>{
@@ -22,11 +25,13 @@ test('all new spell actions honour damage/manual boundaries, Horror costs, retri
   const t=await table({dice:[]}),h=charNamed(await t.state(),'Thorne'),enemy=find(await t.state(),'Pit Ghoul');
   assert.equal((await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:book.id}})).status,200);
   const p=await t.join('Theme check');await p.cmd({type:'claim',charId:h.id});
-  const command={type:'useItem',charId:h.id,index:0,spellId:id,d20:15,targetCardId:enemy.id,actionId:'themedspell.1'};
+  const healing=G.spells.find(s=>s.id===id).effect==='healing';if(healing)await t.gm.cmd({type:'adjust',cardId:h.cardId,field:'hp',delta:-9});
+  const command={type:'useItem',charId:h.id,index:0,spellId:id,d20:15,targetCardId:healing?h.cardId:enemy.id,actionId:'themedspell.1'};
   if(book.pick)t.queue(((book.spells.indexOf(id)*2+1)-0.5)/6);
   const cast=await p.cmd(command);if(book.pick)assert.equal(cast.body.result.picked.spellId,id);assert.equal(cast.status,200,id);const r=cast.body.state.rolls.at(-1),spell=G.spells.find(s=>s.id===id);
-  assert.equal(cast.body.state.horror.cur,1,id);assert.equal((await p.cmd(command)).body.state.horror.cur,1);
-  if(spell.effect==='damage'){assert.equal(r.nonDamage,false);const damage=await p.cmd({type:'effort',rollId:r.id,cat:'magic',rolled:4,autoApply:true});assert.equal(damage.status,200);assert.equal(damage.body.state.rolls.at(-1).applied.cardId,enemy.id);const event=(await t.state()).rolls.at(-1).applied.log;assert.equal((await t.gm.cmd({type:'undo',logId:event})).status,200);assert.equal((await t.state()).cards[enemy.id].hp.cur,20);}
+  const cost=spell.effect==='healing'?0:1;assert.equal(cast.body.state.horror.cur,cost,id);assert.equal((await p.cmd(command)).body.state.horror.cur,cost);
+  if(spell.effect==='healing'){assert.ok(!spell.cat);assert.equal(spell.temptsHorror,false);assert.equal(r.applied.field,'healing',id);assert.ok(r.applied.applied>0,id);assert.equal(cast.body.state.cards[enemy.id].hp.cur,20);}
+  else if(spell.effect==='damage'){assert.equal(r.nonDamage,false);const damage=await p.cmd({type:'effort',rollId:r.id,cat:'magic',rolled:4,autoApply:true});assert.equal(damage.status,200);assert.equal(damage.body.state.rolls.at(-1).applied.cardId,enemy.id);const event=(await t.state()).rolls.at(-1).applied.log;assert.equal((await t.gm.cmd({type:'undo',logId:event})).status,200);assert.equal((await t.state()).cards[enemy.id].hp.cur,20);}
   else {assert.ok(!spell.cat);assert.equal(cast.body.state.cards[enemy.id].hp.cur,20);assert.match(C.automationText(spell),/manual/i);}
  }
 });
@@ -44,7 +49,7 @@ test('an old table can still cast its original spell while a new edition cannot 
 });
 
 test('the themed random book advertises its actual d6 and maps all six faces fairly',async()=>{
- const book=C.item('namelesspact');assert.equal(C.actions({gear:[{id:book.id,eq:true}]}).find(a=>a.pick).pickDie,6);
+ const book=C.item('unnamedbook');assert.equal(C.actions({gear:[{id:book.id,eq:true}]}).find(a=>a.pick).pickDie,6);
  for(let face=1;face<=6;face++){
   const t=await table({dice:[]}),h=charNamed(await t.state(),'Thorne');await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:book.id}});
   t.queue((face-0.5)/6);const r=await t.gm.cmd({type:'useItem',charId:h.id,index:0});assert.equal(r.status,200);assert.equal(r.body.result.picked.spellId,book.spells[Math.floor((face-1)/2)]);assert.equal(r.body.state.horror.cur,1);

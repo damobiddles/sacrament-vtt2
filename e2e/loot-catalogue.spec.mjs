@@ -8,13 +8,13 @@ test('public loot tables link to complete three-spell books with clear effect la
   await expect(navigation.getByRole('link', { name: 'Grimoires (d100)', exact: true })).toHaveAttribute('href', '#table-grimoires');
   await expect(navigation.getByRole('link', { name: 'Grimoires and spells', exact: true })).toHaveAttribute('href', '#loot-grimoire');
   const books = page.locator('#loot-grimoire .loot-entry');
-  await expect(books).toHaveCount(16);
-  await expect(page.locator('.loot-entry')).toHaveCount(178);
+  await expect(books).toHaveCount(22);
+  await expect(page.locator('.loot-entry')).toHaveCount(184);
   await expect(page.locator('#item-lowdoors .loot-effect')).toHaveText(['Esoteric effect', 'Esoteric effect', 'Esoteric effect']);
-  await expect(page.locator('#item-hospicewardbook .loot-effect')).toHaveText(['Healing', 'Esoteric effect', 'Esoteric effect']);
+  await expect(page.locator('#item-hospicevigil .loot-effect')).toHaveText(['Healing', 'Esoteric effect', 'Esoteric effect']);
   await expect(page.locator('#item-hospicerib')).toContainText('The table applies healing');
   await expect(page.locator('#table-arms')).toContainText('Processional Harness');
-  for (let n = 0; n < 16; n++) await expect(books.nth(n).locator('.loot-spells > li')).toHaveCount(3);
+  for (let n = 0; n < 22; n++) await expect(books.nth(n).locator('.loot-spells > li')).toHaveCount(3);
   await expect(page.locator('#item-embers .loot-effect')).toHaveText(['Damage', 'Esoteric effect', 'Esoteric effect']);
   await expect(page.locator('#item-seventhpenance .loot-effect')).toHaveText(['Healing', 'Esoteric effect', 'Esoteric effect']);
   await page.locator('#table-d100').getByRole('link', { name: 'Grimoires — roll d100', exact: true }).click();
@@ -101,11 +101,11 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   const order = await page.evaluate(() => ['#loot-search', '#loot-roller', '#table-d100', '#loot-weapon', '#about-loot'].map(sel => document.querySelector(sel).getBoundingClientRect().top + scrollY));
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   await expect(page.locator('main .body > *').first()).toHaveAttribute('id', 'loot-search');
-  await expect(visible).toHaveCount(178);
+  await expect(visible).toHaveCount(184);
   await search.fill('cinder lectionary');
   await expect(visible).toHaveCount(1);
   await expect(page.locator('#item-cinderlectionary')).toBeVisible();
-  await expect(page.locator('#loot-search-count')).toHaveText('1 of 178 items match.');
+  await expect(page.locator('#loot-search-count')).toHaveText('1 of 184 items match.');
   // Roll tables keep only the rows that point at a match; sections with nothing left are hidden.
   await expect(page.locator('#table-grimoires tbody tr:visible')).toHaveCount(1);
   await expect(page.locator('#table-arms')).toBeHidden();
@@ -118,7 +118,7 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   await expect(page.locator('#loot-search-count')).toHaveText('No loot matches “zzqx nothing”.');
   await search.press('Escape');
   await expect(search).toHaveValue('');
-  await expect(visible).toHaveCount(178);
+  await expect(visible).toHaveCount(184);
   await expect(page.locator('#loot-search-count')).toHaveText('');
   // A jump link to a section the search hid clears the search so the link still lands.
   await search.fill('cinder lectionary');
