@@ -31,6 +31,14 @@ Questions the current text left open. The rules have not changed; these say how 
 
 **Past 21, you pay in blood.** The meter stops at 21. Before this change, any Horror that could not go on a full meter was simply lost, so pushes, spells and natural 1s became free at exactly the moment they should hurt most. Now each point of a hero's cost that cannot go on the meter costs that hero d4 HP instead. *Prompted by:* the designer noticed that pushing cost nothing once the meter was full, and chose this fix from four options.
 
+## 1 November 2026: grimoires
+
+- **Fuller spell text.** Every spell's description now says what it looks like, what it does, its range, how long it lasts, the check, its limits and its Horror cost. Only the wording changed: no number, die, range or cost moved.
+- **No spell in two books.** Four books that shared spells with other books have new editions with spells of their own. A hero who already owns an older edition keeps it exactly as it was.
+- **Six new books**, two each for Energy, Druidic and Necromancy magic. There are now 22 grimoires and 66 spells. Every grimoire still takes three slots and holds three spells, damage spells still roll Magic d10, healing spells still cost no casting Horror and every other spell still costs 1.
+- **Finding a grimoire.** The Grimoires d100 table is now shared across all 22 books. The chance of finding a grimoire at all has not changed.
+- *Prompted by:* the designer's decision.
+
 ## 25 October 2026: grimoires and results
 
 - **Themed grimoires.** The catalogue grew to 16 books across ten themes and 43 spells. Every grimoire still takes three slots and holds three spells, healing spells still cost no casting Horror and every other spell still costs 1. Books whose contents changed are new editions: a hero who already owns an older edition keeps it exactly as it was. *Prompted by:* the designer's decision.
