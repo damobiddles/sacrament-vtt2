@@ -7,6 +7,7 @@
   function showProposal() {
     var h = proposal;
     $('keepGenerated').hidden = !h;
+    $('printGenerated').hidden = !h;
     $('keepGenerated').disabled = !H.canAdd(S) || S.readOnly;
     if (!h) { $('generatorPreview').replaceChildren(); return; }
     var eq = C.slotsUsed(h, 'eq'), pack = C.slotsUsed(h, 'pack');
@@ -24,6 +25,12 @@
   $('generateHero').onclick = function () {
     try { proposal = T.generate($('generatorFocus').value); showProposal(); $('generatorStatus').textContent = H.canAdd(S) ? 'A suggestion only. Keep this hero to save it, or generate another.' : 'Your hero library is full. You can preview suggestions; download a backup before removing a saved hero to make room.'; }
     catch { $('generatorStatus').textContent = 'The hero could not be generated. Your saved heroes have not changed.'; }
+  };
+  /* the paper sheet shows the name and vow as typed, whether or not the hero is kept */
+  $('printGenerated').onclick = function () {
+    if (!proposal) return;
+    var h = JSON.parse(JSON.stringify(proposal)); h.name = $('proposalName').value.trim() || h.name; h.vow = $('proposalVow').value;
+    window.open('/character/print/#' + encodeURIComponent(JSON.stringify(h)), '_blank', 'noopener');
   };
   $('keepGenerated').onclick = function () {
     if (!proposal || !H.canAdd(S) || S.readOnly) return;
