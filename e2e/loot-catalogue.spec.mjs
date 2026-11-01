@@ -97,6 +97,10 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   const search = page.getByRole('searchbox', { name: 'Search the loot' });
   const visible = page.locator('.loot-entry:visible');
   await expect(search).toBeVisible();
+  // The search comes first on the page, before the roller and the tables; the explanations come last.
+  const order = await page.evaluate(() => ['#loot-search', '#loot-roller', '#table-d100', '#loot-weapon', '#about-loot'].map(sel => document.querySelector(sel).getBoundingClientRect().top + scrollY));
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  await expect(page.locator('main .body > *').first()).toHaveAttribute('id', 'loot-search');
   await expect(visible).toHaveCount(178);
   await search.fill('cinder lectionary');
   await expect(visible).toHaveCount(1);
