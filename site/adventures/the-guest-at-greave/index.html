@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Guest at Greave | Sacrament</title>
+<meta name="description" content="A five-scene Sacrament RPG adventure for the GM: a snowbound priory, a guest that wears familiar faces, and a test written in blood on the snow.">
+<link rel="canonical" href="https://playsacrament.com/adventures/the-guest-at-greave/">
+<meta property="og:title" content="The Guest at Greave | Sacrament">
+<meta property="og:description" content="A five-scene Sacrament adventure: a snowbound priory and a guest that wears familiar faces.">
+<meta property="og:url" content="https://playsacrament.com/adventures/the-guest-at-greave/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://playsacrament.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#12100d">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/theme.css">
+<script src="/nav.js"></script>
+<style>
+/* The Guest at Greave: an unlisted adventure page (not in the navigation). Colours come from theme.css; --frost is the theme's indigo. */
+/* Layout: one reading column like a bound GM's book; scenes are framed plates, stat blocks are ledger slips. Single dark look, matching the Sacrament brand (soot ground, parchment ink), with frost blue for snow and cold. */
+.gg{--bg3:#221e19;--frost:var(--indigo);--frost-deep:var(--indigo-deep);max-width:860px;padding-block:var(--gap-page) 80px;font-size:17px;line-height:1.65}
+.gg h1{font-size:clamp(2.6rem,8vw,4.4rem);letter-spacing:-.01em}
+.gg h2{font-size:clamp(1.9rem,5vw,2.5rem);margin:0 0 14px}
+.gg h3{font-size:1.5rem;margin:28px 0 8px;color:var(--fg)}
+.gg h4{font-family:var(--body);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--candle);margin:22px 0 8px;font-weight:700}
+.gg p{margin:0 0 14px}
+.gg a{color:var(--blood-hi)}
+.gg a:focus-visible,.gg button:focus-visible,.gg input:focus-visible{outline:2px solid var(--candle);outline-offset:3px}
+.gg .label{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:.78rem;color:var(--candle)}
+.gg .dim{color:var(--dim)}
+.gg em.say{font-family:var(--display);font-size:1.18em;font-style:italic;color:var(--fg)}
+.gg hr.rule{border:0;border-top:3px double var(--line);margin:48px 0}
+
+/* Opening */
+.gg header.title{padding:20px 0 8px;display:grid;gap:12px}
+.gg header.title .lede{font-family:var(--display);font-size:1.45rem;line-height:1.35;font-style:italic;color:var(--frost);max-width:36ch}
+.gg .facts{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.9rem;color:var(--dim);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-top:8px}
+.gg .facts b{color:var(--fg);font-weight:600}
+.gg .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 24px;margin:24px 0 0;padding:0;list-style:none;font-size:.95rem}
+.gg .toc a{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
+.gg .toc a:hover{color:var(--candle)}
+
+/* Quotation in the world's voice */
+.gg blockquote{margin:22px 0;padding:0 0 0 18px;border-left:2px solid var(--frost);font-family:var(--display);font-size:1.3rem;line-height:1.4;font-style:italic;color:var(--fg)}
+.gg blockquote cite{display:block;font-family:var(--body);font-style:normal;font-size:.85rem;color:var(--dim);margin-top:6px}
+
+/* Read-aloud box */
+.gg .aloud{background:var(--frost-deep);border:1px solid #3d4a6b;padding:16px 20px;margin:16px 0 20px;font-family:var(--display);font-size:1.22rem;line-height:1.45;color:#e3e8f2}
+.gg .aloud::before{content:"Read aloud";display:block;font-family:var(--body);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--frost);margin-bottom:6px;font-weight:700}
+
+/* GM-only box */
+.gg .secret{border:1px dashed var(--blood-hi);padding:14px 18px;margin:16px 0;background:color-mix(in srgb,var(--blood) 18%,var(--bg))}
+.gg .secret::before{content:"GM only";display:block;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blood-hi);margin-bottom:6px;font-weight:700}
+.gg .secret p:last-child,.gg .aloud p:last-child{margin:0}
+
+/* Scene plates */
+.gg section.scene{margin-top:56px}
+.gg .scene-head{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:end;border-bottom:3px double var(--line);padding-bottom:12px;margin-bottom:18px}
+.gg .scene-no{font-family:var(--display);font-size:4.2rem;line-height:.8;color:var(--candle);grid-row:span 2}
+.gg .scene-head h2{margin:0}
+.gg .scene-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem;color:var(--dim)}
+.gg .pill{display:inline-block;border:1px solid var(--edge);padding:1px 9px;border-radius:2px;font-size:.82rem;color:var(--fg);white-space:nowrap}
+.gg .pill.t{border-color:var(--candle);color:var(--candle)}
+
+/* Ledger slips: enemies, obstacles, countdowns, loot */
+.gg .slips{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0 18px}
+.gg .slip{background:var(--bg2);border:1px solid var(--line);padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.gg .slip .kind{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.gg .slip.foe .kind{color:var(--blood-hi)} .gg .slip.task .kind{color:var(--candle)} .gg .slip.clock .kind{color:var(--frost)} .gg .slip.loot .kind{color:var(--verdigris)}
+.gg .slip h5{font-family:var(--display);font-size:1.3rem;margin:0;line-height:1.1}
+.gg .slip dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.9rem;font-variant-numeric:tabular-nums}
+.gg .slip dt{color:var(--dim)} .gg .slip dd{margin:0;color:var(--fg)}
+.gg .slip p{font-size:.92rem;margin:0}
+.gg .slip .pub{font-style:italic;color:var(--dim)}
+
+.gg ul.tight,.gg ol.tight{margin:0 0 14px;padding-left:22px} .gg ul.tight li,.gg ol.tight li{margin-bottom:5px}
+
+/* Tables */
+.gg .tbl{overflow-x:auto;margin:12px 0 18px}
+.gg table{border-collapse:collapse;width:100%;font-size:.93rem}
+.gg th,.gg td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+.gg th{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--candle);font-weight:700;border-bottom:1px solid var(--edge)}
+.gg td.n{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--candle);font-weight:700}
+
+/* Roster */
+.gg .roster{display:grid;gap:10px;margin:14px 0}
+.gg .who{display:grid;grid-template-columns:1fr auto;gap:2px 14px;background:var(--bg2);border:1px solid var(--line);padding:12px 14px}
+.gg .who h5{font-family:var(--display);font-size:1.25rem;margin:0}
+.gg .who p{margin:0;font-size:.92rem}
+.gg .who label{display:flex;gap:6px;align-items:center;font-size:.82rem;color:var(--blood-hi);cursor:pointer;grid-row:1;grid-column:2;white-space:nowrap}
+.gg .who input{accent-color:var(--blood-hi);width:18px;height:18px}
+.gg .who.taken{border-color:var(--blood-hi);background:color-mix(in srgb,var(--blood) 22%,var(--bg2))}
+.gg .roller{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0 4px}
+.gg button{font:600 .95rem var(--body);background:var(--bg3);color:var(--fg);border:1px solid var(--edge);padding:9px 16px;min-height:44px;cursor:pointer}
+.gg button:hover{border-color:var(--candle);color:var(--candle)}
+.gg #rollOut{font-family:var(--display);font-size:1.25rem;color:var(--blood-hi);min-height:1.5em}
+
+/* Map */
+.gg figure.map{margin:20px 0;background:var(--bg2);border:1px solid var(--line);padding:12px}
+.gg figure.map .scroll{overflow-x:auto}
+.gg figure.map svg{display:block;width:100%;min-width:520px;height:auto}
+.gg figure.map figcaption{font-size:.85rem;color:var(--dim);margin-top:8px}
+.gg .m-bld{fill:var(--bg3);stroke:var(--edge);stroke-width:1.5}
+.gg .m-key{fill:color-mix(in srgb,var(--blood) 45%,var(--bg3));stroke:var(--blood-hi);stroke-width:1.5}
+.gg .m-yard{fill:none;stroke:var(--frost);stroke-width:1;stroke-dasharray:4 4}
+.gg .m-snow{fill:var(--frost-deep)}
+.gg .m-path{fill:none;stroke:var(--frost);stroke-width:2;stroke-dasharray:2 6;stroke-linecap:round}
+.gg .m-wall{fill:none;stroke:var(--dim);stroke-width:3}
+.gg .m-t{fill:var(--fg);font:600 13px var(--body)}
+.gg .m-s{fill:var(--dim);font:12px var(--body)}
+.gg .m-n{fill:var(--candle);font:700 15px var(--display)}
+.gg .m-f{fill:var(--frost);font:italic 600 14px var(--display)}
+
+.gg footer{margin-top:64px;padding-top:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--dim)}
+@media (max-width:520px){.gg .scene-no{font-size:3rem}.gg .aloud{padding:14px 16px}}
+</style>
+</head>
+<body>
+<main class="wrap gg">
+
+<header class="title">
+  <span class="label">A Sacrament RPG adventure · five scenes · for the GM</span>
+  <h1>The Guest at Greave</h1>
+  <p class="lede">A priory above the snowline, shut in for the winter. Everyone in it is someone you know. One of them is not who they were yesterday.</p>
+  <div class="facts">
+    <span><b>3 to 5 heroes</b>, any starting heroes</span>
+    <span><b>About 4 hours</b>, one long session or two</span>
+    <span><b>Horror</b> starts at 0</span>
+    <span><b>Tone</b> cold, quiet, suspicious</span>
+  </div>
+  <ul class="toc">
+    <li><a href="#premise">The premise and the hook</a></li>
+    <li><a href="#guest">What the Guest is and does</a></li>
+    <li><a href="#priory">The priory and its people</a></li>
+    <li><a href="#paranoia">Running the paranoia</a></li>
+    <li><a href="#s1">1 · The Last Lamp</a></li>
+    <li><a href="#s2">2 · The Byre</a></li>
+    <li><a href="#s3">3 · The Cut</a></li>
+    <li><a href="#s4">4 · The Chapter House</a></li>
+    <li><a href="#s5">5 · The Icehouse</a></li>
+    <li><a href="#after">Endings and loot</a></li>
+  </ul>
+  <p class="dim"><b>For the GM.</b> This page tells you who the monster is. Players should stop reading here.</p>
+</header>
+
+<section id="premise">
+<hr class="rule">
+<h2>The premise</h2>
+<p>The <b>Priory of Saint Cordula</b> sits on a shelf of rock above the <b>Greave Pass</b>, a day's climb from the village of <b>Tarnwick</b>, on the last consecrated boundary before the Unhallowed lands. Every dusk the brothers light a fire on the bell tower so Tarnwick knows they are alive. Three nights ago the fire did not burn.</p>
+<p>What Tarnwick does not know: in autumn the brothers cut a figure out of the glacier above the priory. It was a man, or shaped like one, kneeling, perfect, with frost on its eyelashes. The Prior called it the <b>Ice Saint</b> and sent to Aubrecht for a canon to certify it. Pilgrims would come. The priory would be rich.</p>
+<p>It was not a saint. The brothers laid it in the chapel to thaw. Old Brother Faustin sat vigil beside it through the night, alone. By morning the ice coffin was empty and Faustin said he had seen nothing.</p>
+<p>It is called <b>the Guest</b> in this book, because that is what it does: it comes in, sits at your table and wears a face you know. It can become anyone it is left alone with for long enough. Every piece of it is all of it. Fire is the only thing that ends it.</p>
+
+<h3>The hook</h3>
+<p>The heroes are in Tarnwick when the fire fails for the third night. The reeve pays them a purse of clipped coin each, with a promise of more in spring, to carry the winter supply up to the priory and come back with news. They lead one mule: lamp oil, salt, flour and candles.</p>
+<blockquote>“If the fire burns on the tower when you get there, they've only run out of oil. Give them ours and come down. If it doesn't burn, come down faster.”<cite>Reeve Mathilde Sallow of Tarnwick</cite></blockquote>
+<p>Make sure the players know two things before play: the pass closes in heavy snow, and nobody will come looking for them until spring.</p>
+
+<h3>The shape of the adventure</h3>
+<ol class="tight">
+  <li><b>The Last Lamp.</b> Arrive in a storm, get inside, meet the survivors, find the empty coffin. The pass closes behind them.</li>
+  <li><b>The Byre.</b> The first night. The animals scream. Something is wearing Brother Odo, badly. Now everyone knows it copies people.</li>
+  <li><b>The Cut.</b> Climb to the dig on the glacier and learn what the Guest is, and the one test that tells it apart. Come back to find the gate barred against you.</li>
+  <li><b>The Chapter House.</b> Everyone is tied to the benches and tested, one at a time, while the fire burns down.</li>
+  <li><b>The Icehouse.</b> What is left of the Guest has gone below, among the winter dead, and is boring its way down the mountain towards Tarnwick. Burn it, or warn the valley, or both.</li>
+</ol>
+
+<div class="secret">
+<p><b>Who is the Guest at the start?</b> Brother Faustin. He has been the Guest since the night of the vigil. In scene 2 a piece of him is taking Brother Odo in the byre. When the Horror first reaches 7 (or at the start of scene 4 if it has not), the Guest takes a second person: use the roster below. Keep both secret until the blood says otherwise.</p>
+</div>
+</section>
+
+<section id="guest">
+<hr class="rule">
+<h2>What the Guest is and does</h2>
+<p>Nobody on the mountain knows where it came from. The ruin it was frozen in, <b>Ossk Varel</b>, is older than the Binding and has no name anyone can read. Do not explain it further. The less the players know, the better this works.</p>
+
+<h3>Its rules</h3>
+<ul class="tight">
+  <li><b>It takes people in private.</b> Anyone alone with it, out of sight, for about a quarter of an hour can be taken. Afterwards they look, speak and remember like themselves. They believe nothing is wrong only for as long as it suits the Guest.</li>
+  <li><b>Every piece is all of it.</b> A severed hand crawls. A drop of its blood flinches. Cut it in half and you have two problems.</li>
+  <li><b>Steel hurts it. Only fire ends it.</b> A Guest form brought to 0 HP by anything except fire is not dead. It collapses, and one <b>Crawling Piece</b> slips out of the remains and hides, unless a hero burns the remains before the end of the next round (an Action with an open flame: a torch, a lit lamp, lamp oil, Kindle).</li>
+  <li><b>It breaks apart when hurt.</b> The first time a Guest form drops to half its HP or less, two Crawling Pieces tear free and act at the end of that round.</li>
+  <li><b>It counts as Unholy.</b> Flask of Holy Oil steps up a weapon's Effort against it; a Flask of holy water can be thrown at it. Let the players find this out by trying.</li>
+  <li><b>It wants to live, and it wants to get down the mountain.</b> Tarnwick has three hundred people. It is patient. It will let a copy die to protect a better hidden one.</li>
+</ul>
+
+<h3>Fire at the table</h3>
+<p>The rules do not have a fire rule, so here is a ruling for this adventure. A <b>burning brand</b> is a Close weapon: STR check, Basic Effort d4, and it counts as fire. A lit <b>Flask of lamp oil</b> thrown into Close or Near is a DEX check; on success roll Basic Effort d4 and the target is <b>burning</b>: it takes d4 at the start of each round until it spends an Action smothering itself in snow. Track burning by hand. Spells such as Ember, Ember Psalm, Pyre and Kindle count as fire, and each non-healing spell still adds its 1 Horror. That cost should hurt here: fire is exactly what the heroes need, and magic is the quickest way to get it.</p>
+
+<h3>The Horror, in this adventure</h3>
+<p>The table alerts you at 7, 14 and 21; you choose what happens. Suggested choices:</p>
+<div class="tbl"><table>
+  <thead><tr><th>Horror</th><th>What the Guest does</th></tr></thead>
+  <tbody>
+    <tr><td class="n">7</td><td><b>It stirs.</b> Before the next scene the Guest takes a second person (the roster). Somebody is quieter than before.</td></tr>
+    <tr><td class="n">14</td><td><b>It draws near.</b> The lamps fail. The oil store is found poured out into the snow. From now on the only light is what the heroes carry, and every WIS check to search or notice in the dark is Hard (as the Hooded Lantern describes).</td></tr>
+    <tr><td class="n">21</td><td><b>It has arrived.</b> In scene 5 the Gathered Guest has 20 more HP and the countdown starts one lower. If a player agreed to the Taken Hero option, their hero is now taken.</td></tr>
+  </tbody>
+</table></div>
+<p>Optional, for the paranoia: when the heroes kill or burn someone who turns out to be human, raise the Horror by 2 by hand in the Table tab. Say so before play.</p>
+</section>
+
+<section id="priory">
+<hr class="rule">
+<h2>The priory</h2>
+<p>A tight cluster of grey stone round a square cloister yard, the snow in it waist-deep. Every building is a short walk through the cold from every other, and every walk is a moment someone is alone.</p>
+
+<figure class="map">
+  <div class="scroll">
+  <svg viewBox="0 0 640 440" role="img" aria-labelledby="mapT">
+    <title id="mapT">Map of the Priory of Saint Cordula: buildings around a cloister yard, the glacier path to the north, the lower road and rope bridge to the south</title>
+    <rect class="m-snow" x="0" y="0" width="640" height="440"/>
+    <path class="m-path" d="M450 70 C 480 50, 530 40, 596 30"/>
+    <text class="m-f" x="296" y="40">to the Cut · the glacier</text>
+    <path class="m-path" d="M330 360 C 330 390, 350 405, 390 418"/>
+    <text class="m-f" x="398" y="424">lower road · rope bridge · the pass</text>
+    <rect class="m-wall" x="90" y="70" width="440" height="290"/>
+    <rect class="m-bld" x="110" y="90" width="200" height="70"/>
+    <text class="m-t" x="122" y="118">Chapel of Saint Cordula</text>
+    <text class="m-s" x="122" y="136">the empty ice coffin</text>
+    <rect class="m-bld" x="320" y="82" width="56" height="86"/>
+    <text class="m-t" x="327" y="112">Bell</text><text class="m-t" x="327" y="128">tower</text>
+    <text class="m-s" x="327" y="150">fire</text>
+    <rect class="m-key" x="388" y="90" width="122" height="70"/>
+    <text class="m-t" x="398" y="116">Chapter House</text>
+    <text class="m-s" x="398" y="134">scriptorium above</text>
+    <text class="m-n" x="490" y="152">4</text>
+    <rect class="m-yard" x="190" y="176" width="220" height="110"/>
+    <text class="m-f" x="252" y="236">cloister yard</text>
+    <rect class="m-bld" x="110" y="176" width="66" height="110"/>
+    <text class="m-t" x="118" y="218">Infir-</text><text class="m-t" x="118" y="234">mary</text>
+    <rect class="m-bld" x="424" y="176" width="86" height="110"/>
+    <text class="m-t" x="432" y="218">Dormitory</text>
+    <text class="m-s" x="432" y="236">the dorter</text>
+    <rect class="m-bld" x="110" y="300" width="190" height="48"/>
+    <text class="m-t" x="122" y="322">Refectory · kitchen</text>
+    <text class="m-s" x="122" y="339">icehouse below</text>
+    <text class="m-n" x="282" y="340">5</text>
+    <rect class="m-bld" x="306" y="300" width="64" height="48"/>
+    <text class="m-t" x="313" y="328">Gate</text>
+    <text class="m-n" x="352" y="342">1</text>
+    <rect class="m-key" x="376" y="300" width="134" height="48"/>
+    <text class="m-t" x="386" y="322">Byre · stores</text>
+    <text class="m-s" x="386" y="339">goats, mules, oil</text>
+    <text class="m-n" x="492" y="342">2</text>
+    <text class="m-n" x="604" y="36">3</text>
+  </svg>
+  </div>
+  <figcaption>Numbers mark where each scene happens. The bell tower is reached from the chapel; the icehouse by a trapdoor in the kitchen floor.</figcaption>
+</figure>
+
+<div class="tbl"><table>
+  <thead><tr><th>Place</th><th>What is there</th></tr></thead>
+  <tbody>
+    <tr><td><b>Gatehouse</b></td><td>An oak gate with a bar on the inside and a spyhole. The porter's cell beside it is empty, the blanket folded.</td></tr>
+    <tr><td><b>Chapel</b></td><td>Cold as the yard. The ice coffin lies before the altar on two trestles, split open from the inside. Meltwater has frozen again on the floor in a long smear towards the vestry door. One window pane is broken; a fragment of stained glass lies in the frost.</td></tr>
+    <tr><td><b>Bell tower</b></td><td>A ladder from the chapel, a platform with an iron fire basket. The basket holds cold ash and a cracked oil jar. Three fire baskets in a row, the old signal, mean plague: stay away.</td></tr>
+    <tr><td><b>Chapter House</b></td><td>Stone benches round the walls, one hearth, the priory's books upstairs in the scriptorium. The only room with a door that bars from inside on both sides.</td></tr>
+    <tr><td><b>Infirmary</b></td><td>Brother Lucan's room. Herbs, a physician's satchel, a slate covered in his notes about the Ice Saint.</td></tr>
+    <tr><td><b>Dormitory</b></td><td>Eight cells off a corridor. Faustin's cell is very tidy. Under his straw mattress: his own spectacles, which he has not asked for.</td></tr>
+    <tr><td><b>Refectory and kitchen</b></td><td>The warm room. A long table where everyone eats, so everyone can watch everyone. A trapdoor in the kitchen floor leads to the icehouse, where the brothers keep the winter dead until the ground thaws.</td></tr>
+    <tr><td><b>Byre and stores</b></td><td>Goats, two mules, hay, the oil barrels. Ursel sleeps in the loft.</td></tr>
+    <tr><td><b>The Cut</b></td><td>An hour's climb up the glacier: the dig, a lean-to of tools, and the black mouth of the ruin in the ice.</td></tr>
+    <tr><td><b>Lower road</b></td><td>The way home: a rope bridge over a gorge, then the pass. In snow it is a day to Tarnwick. Once the pass closes, it is a spring away.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>The people</h3>
+<p>Eight people are alive at the priory when the heroes arrive. Tick a box when someone is taken; it is only saved in your own browser.</p>
+<div class="roster" id="roster">
+  <div class="who" data-id="severin"><h5>Prior Severin Ashby</h5><label><input type="checkbox" id="tk-severin"> taken</label><p>Proud, tired, charming. Ordered the dig. Wants the Ice Saint to be real, because he has already spent the money it would bring. Will lie to protect the priory's name.</p></div>
+  <div class="who" data-id="lucan"><h5>Brother Lucan Tarn</h5><label><input type="checkbox" id="tk-lucan"> taken</label><p>The infirmarian. Clever, frightened, thorough. The first to understand. After scene 3 he decides nothing must leave the mountain, and he means <i>nothing</i>: he burns the rope bridge and bars the gate. He is never taken unless you choose; he is the dangerous human.</p></div>
+  <div class="who taken" data-id="faustin"><h5>Brother Faustin Mourne</h5><label><input type="checkbox" id="tk-faustin" checked> taken</label><p>The old scribe, half-blind, gentle. Kept vigil over the Ice Saint. The Guest from the start. Tell: he reads small writing without his spectacles.</p></div>
+  <div class="who" data-id="odo"><h5>Brother Odo Wick</h5><label><input type="checkbox" id="tk-odo"> taken</label><p>Cellarer and cook. Big, kind, laughs too loudly when scared. Being taken in the byre during scene 2.</p></div>
+  <div class="who" data-id="dunstan"><h5>Brother Dunstan Crane</h5><label><input type="checkbox" id="tk-dunstan"> taken</label><p>A novice of fifteen who keeps the bell and the tower fire. He let the fire go out because Brother Faustin told him the Prior had forbidden it. He is ashamed and will not say so.</p></div>
+  <div class="who" data-id="hildreth"><h5>Canon Hildreth Vesper</h5><label><input type="checkbox" id="tk-hildreth"> taken</label><p>Of the Order of the Vault, sent from Aubrecht to judge the Ice Saint. Cool, exact, unafraid. Secretly carries a Vault specimen jar holding a piece of the Ice Saint, cut off in autumn. The Order wants a live one for the Undervaults.</p></div>
+  <div class="who" data-id="ursel"><h5>Ursel the Goatherd</h5><label><input type="checkbox" id="tk-ursel"> taken</label><p>A lay servant, fifty, hard as a boot. Trusts the goats more than the brothers. A natural ally, which is exactly why she is worth taking.</p></div>
+  <div class="who" data-id="jorun"><h5>Jorun the Muleteer</h5><label><input type="checkbox" id="tk-jorun"> taken</label><p>Brought the Canon up and wants his pay and his road home. Quick to anger, quick to accuse, carries a crossbow. Will try to leave by the lower road at the worst possible moment.</p></div>
+</div>
+
+<h4>The second Guest</h4>
+<p>When the Horror first reaches 7, or at the start of scene 4, roll a d6 to see who else the Guest has taken. Roll again if that person is dead or already shown to be human.</p>
+<div class="tbl"><table>
+  <thead><tr><th>d6</th><th>Taken</th><th>How it happened</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td>Prior Severin</td><td>He went to pray in the chapel alone. Faustin followed to keep him company.</td></tr>
+    <tr><td class="n">2</td><td>Canon Hildreth</td><td>She opened her specimen jar to look. The piece was waiting.</td></tr>
+    <tr><td class="n">3</td><td>Ursel</td><td>She went out to the byre to calm the goats.</td></tr>
+    <tr><td class="n">4</td><td>Jorun</td><td>He tried the lower road, came back an hour later, and said the bridge was out.</td></tr>
+    <tr><td class="n">5</td><td>Brother Dunstan</td><td>He climbed the tower to light the fire against orders.</td></tr>
+    <tr><td class="n">6</td><td>Your choice</td><td>A hero, if a player agreed to the Taken Hero option. Otherwise choose whoever would hurt most.</td></tr>
+  </tbody>
+</table></div>
+<div class="roller"><button type="button" id="rollBtn">Roll the d6</button><span id="rollOut" aria-live="polite"></span></div>
+</section>
+
+<section id="paranoia">
+<hr class="rule">
+<h2>Running the paranoia</h2>
+<p>The fights are short. The real game is the talking between them. A few habits keep it frightening:</p>
+<ul class="tight">
+  <li><b>Keep asking where everyone is.</b> “Who goes to fetch the oil? Who stays with Brother Lucan? Who sleeps where?” Write it down where the players can see you writing.</li>
+  <li><b>Let the folk tests fail.</b> The brothers have ideas: salt on the threshold, watching for breath in the cold, sharing the bread, the warmth of a rosary. None of them prove anything. The Coarse Salt Pouch says so itself. The Guest breathes, eats and prays very well.</li>
+  <li><b>Give true clues that only point at places.</b> The Ashen Rosary warms when something supernatural is within Near, but not at whom. The Fragment of stained glass shows one image from the last day at one place: Faustin's hands on the coffin, and the ice moving under them. Both cost 1 Horror to use.</li>
+  <li><b>Let the players test each other.</b> Once they learn the blood test in scene 3, they will want to use it on each other. Let them. Make it slow.</li>
+  <li><b>Borrowed Face is a gift.</b> A hero who carries a book with Borrowed Face in it will be suspected the moment anyone reads it. Let the brothers find out.</li>
+</ul>
+
+<h3>The Taken Hero (optional, ask first)</h3>
+<p>Before play, ask privately whether one player would enjoy their hero being taken. If they say yes, and only then: when you choose, write in that hero's private notes on the table (only the owner and the GM can see them) <em class="say">“You were alone in the dark for too long. You are the Guest now. Nobody must know until you choose.”</em> The player keeps playing their hero, keeps rolling honestly, and wins if the Guest gets down the mountain. Their blood fails the test. Never do this to a player who did not agree.</p>
+</section>
+
+<!-- SCENE 1 -->
+<section class="scene" id="s1">
+<div class="scene-head"><span class="scene-no">1</span><h2>The Last Lamp</h2>
+<div class="scene-meta"><span class="pill t">Target 12</span><span>Gatehouse, chapel, refectory</span><span>Arrival, introductions, the empty coffin</span></div></div>
+
+<div class="aloud"><p>The snow has been coming sideways since noon. The mule is stumbling. Above you, the priory sits on its shelf of rock like a fist, and the bell tower is dark. The gate is shut. Drift is piled against it to the height of a man, and behind you, down the pass, you can hear the mountain moving.</p></div>
+
+<p>Nobody answers the gate at first. The porter is gone. The heroes have to dig and force their way in while the storm closes the pass behind them.</p>
+
+<div class="slips">
+  <div class="slip task"><span class="kind">Obstacle</span><h5>The Drifted Gate</h5>
+    <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>STR to dig and heave</dd></dl>
+    <p class="pub">Snow to a man's height, and the gate barred from inside.</p>
+    <p>A Wayshrine Crowbar makes the STR check Easy. A Rope and Grapnel gets one hero over the wall as a Move; they can then lift the bar and the obstacle is done. Someone inside (Ursel) lifts the bar if anyone shouts for 2 rounds straight.</p></div>
+  <div class="slip clock"><span class="kind">Countdown</span><h5>The Pass Closes</h5>
+    <dl><dt>Rounds</dt><dd>4, automatic</dd></dl>
+    <p class="pub">The mountain is moving. The road behind you will not be there long.</p>
+    <p>At 0 a snow shelf comes down across the lower road. Anyone still outside the gate takes d6 as the edge of it buries them. If the mule is not inside by then, it bolts down the pass with the supplies: the oil, candles and salt are lost.</p></div>
+</div>
+
+<h4>Inside</h4>
+<p>Ursel lets them in, or finds them in the yard, with a goat-knife in her hand. She takes them to the refectory, where the survivors are gathered round the only fire they still trust. Let the players meet everyone in one room, at one table, so they can watch faces.</p>
+<ul class="tight">
+  <li><b>Prior Severin</b> welcomes them graciously and explains nothing. The fire? An oversight. The porter? Gone down the road to Tarnwick, surely they passed him.</li>
+  <li><b>Brother Lucan</b> asks too many questions about how long the heroes were on the road and whether they met anyone.</li>
+  <li><b>Canon Hildreth</b> asks only whether the pass is closed. When told yes, she nods as if a decision has been made.</li>
+  <li><b>Brother Faustin</b> pours the heroes hot wine and sits close to whichever one looks coldest.</li>
+</ul>
+
+<h4>The chapel</h4>
+<p>If the heroes ask about the Ice Saint, or wander, they find the chapel. The coffin is split from inside. The frozen smear on the floor runs to the vestry door and stops. The vestry is empty: robes on hooks, one of them missing.</p>
+<div class="secret"><p>The missing robe is the one Faustin wore at the vigil. It is in the icehouse, under the dead, with the porter: the first person the Guest killed, two nights ago, when he caught it trying the gate. The heroes cannot know that yet.</p></div>
+
+<div class="slips">
+  <div class="slip loot"><span class="kind">Loot · hidden</span><h5>Fragment of stained glass</h5>
+    <p class="pub">A shard of blue glass in the frost under the broken window.</p>
+    <p>Catalogue relic, 1 Horror. Looking at the coffin through it shows one image from the last day: an old brother's hands flat on the ice, and the ice pressing back.</p></div>
+  <div class="slip loot"><span class="kind">Loot · hidden</span><h5>Brother Lucan's slate</h5>
+    <p class="pub">A slate covered in small chalk writing.</p>
+    <p>Story item, no rules. <em>“Wept for nine days in the coffin. Not meltwater. Too warm. Hair grew. It was not dead. It was not sleeping either.”</em></p></div>
+</div>
+
+<h4>Leaving the scene</h4>
+<p>End with the first night. The Prior offers the guest cells in the dormitory. Ask each player where their hero sleeps, and with whom. Ask who keeps watch. Then let it be quiet for a while.</p>
+<p class="dim">Rest: a Party rest is fine tonight, if the heroes keep a watch. If nobody watches, the Guest does not take a hero tonight, but tell the players nothing either way.</p>
+</section>
+
+<!-- SCENE 2 -->
+<section class="scene" id="s2">
+<div class="scene-head"><span class="scene-no">2</span><h2>The Byre</h2>
+<div class="scene-meta"><span class="pill t">Target 12</span><span>Byre and stores, the yard at night</span><span>First fight, the first proof</span></div></div>
+
+<div class="aloud"><p>You wake in the dark to the goats. Not bleating. Screaming, the way an animal screams when it cannot get out. Across the yard there is a lamp moving in the byre, and the shadow of a big man bent over the stalls, and the shadow is wrong. It has too many elbows.</p></div>
+
+<p>Brother Odo went out to the byre with a lamp because the goats were restless. A piece of Faustin was waiting in the hay. The heroes arrive halfway through. Odo's face is still Odo's; the rest of him is opening like a book.</p>
+
+<div class="slips">
+  <div class="slip foe"><span class="kind">Enemy · Unholy</span><h5>The Guest, wearing Odo</h5>
+    <dl><dt>HP</dt><dd>25</dd><dt>Attack</dt><dd>+4</dd><dt>Damage</dt><dd>d8</dd><dt>Reach</dt><dd>Close</dd></dl>
+    <p class="pub">Brother Odo's face on something that is still deciding what shape to be.</p>
+    <p>At 12 HP or less, two Crawling Pieces tear free. At 0 HP, not from fire: it collapses and a Crawling Piece escapes unless the remains are burned by the end of the next round.</p></div>
+  <div class="slip foe"><span class="kind">Enemy · Unholy · ×2</span><h5>Crawling Piece</h5>
+    <dl><dt>HP</dt><dd>5</dd><dt>Attack</dt><dd>+2</dd><dt>Damage</dt><dd>d4</dd><dt>Reach</dt><dd>Close</dd></dl>
+    <p class="pub">A hand, running on its fingers.</p>
+    <p>Each piece tries to hide (under hay, in a stall) rather than fight. A piece that hides and is not found by the end of the scene will matter later.</p></div>
+  <div class="slip clock"><span class="kind">Countdown · paused</span><h5>The Byre Burns</h5>
+    <dl><dt>Rounds</dt><dd>3, start it when the hay catches</dd></dl>
+    <p class="pub">Hay, timber, lamp oil. It will go up fast.</p>
+    <p>Fire is the obvious answer, and the byre is a tinderbox. Start this countdown when anything burns. At 0 the roof comes down: anyone still inside takes d6, and everything left in the byre burns, including any Crawling Piece. The oil barrels go up too, which matters at Horror 14.</p></div>
+</div>
+
+<h4>Running it</h4>
+<ul class="tight">
+  <li>The Guest wants to escape, not win. If it is losing, it goes for the back wall, which is old timber, and the snow beyond.</li>
+  <li>Ursel arrives in round 2 from the loft, swinging a hay fork. She is human. Let a player wonder.</li>
+  <li>Count heads after the fight. Somebody is always late. Brother Faustin arrives last, in his night robe, carrying a candle, asking what happened.</li>
+</ul>
+
+<h4>After the fire</h4>
+<p>Brother Lucan kneels in the ash with tongs and lifts out something that is still moving. Now everybody knows: it can look like anyone. The Prior wants to pray. Jorun wants to leave. The Canon wants the thing in the tongs, very badly, and asks for it in a level voice.</p>
+<div class="secret"><p>If the Canon gets it, put it in her specimen jar. That raises the chance she is taken (she is 2 on the d6 table already) and gives you a second Guest to release at a bad moment.</p></div>
+
+<div class="slips">
+  <div class="slip loot"><span class="kind">Loot · hidden</span><h5>Odo's keys and lamp</h5>
+    <p class="pub">A ring of cellar keys, and a Hooded Lantern with one cracked pane.</p>
+    <p>The keys open the oil store and the icehouse trapdoor. The lantern is the catalogue Hooded Lantern.</p></div>
+  <div class="slip loot"><span class="kind">Loot · on the table</span><h5>Flasks of lamp oil</h5>
+    <p class="pub">Two flasks on a shelf by the stalls.</p>
+    <p>Two catalogue Flasks of lamp oil, if the byre has not burned. Thrown alight, use the fire ruling above.</p></div>
+</div>
+<p class="dim">Rest: the heroes can take a Party rest before dawn, in the refectory, with everyone watching everyone. A rest here is a fine moment for the Horror to reach 7.</p>
+</section>
+
+<!-- SCENE 3 -->
+<section class="scene" id="s3">
+<div class="scene-head"><span class="scene-no">3</span><h2>The Cut</h2>
+<div class="scene-meta"><span class="pill t">Target 13</span><span>The glacier, the ruin of Ossk Varel, the barred gate</span><span>What it is, the test, shut out</span></div></div>
+
+<p>Brother Lucan says the answer is at the dig. The brothers' notes stop on the day they found the figure; something else was down there, and the Prior had the tunnel boarded up. Lucan cannot climb. The heroes can. Ask who stays behind. Jorun or the Canon will come if asked; Faustin offers, and should be refused, with a smile.</p>
+
+<div class="aloud"><p>The glacier is blue inside. Your breath freezes on your scarves. At the top of the climb there is a lean-to of picks and planks, and a tunnel the brothers cut, boarded across. Someone has pulled the boards out from the inside.</p></div>
+
+<div class="slips">
+  <div class="slip task"><span class="kind">Obstacle</span><h5>The Ice Stair</h5>
+    <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>STR or DEX</dd></dl>
+    <p class="pub">Steps cut in the ice by the brothers, half filled with new snow.</p>
+    <p>A failed check costs the climber d4 from a fall or the cold, which nothing reduces. A Rope and Grapnel lets the whole party skip this as one Move, as its own text says.</p></div>
+  <div class="slip clock"><span class="kind">Countdown · paused</span><h5>The Ice Weeps</h5>
+    <dl><dt>Rounds</dt><dd>3, start when a flame comes Near the far wall</dd></dl>
+    <p class="pub">Water runs down the wall in thin lines where your light touches it.</p>
+    <p>A second figure is frozen in the far wall. Heat wakes it. At 0 it breaks free: add the Sleeper in the Wall. Working by no light keeps it asleep, but every WIS check to search or read in the dark is Hard.</p></div>
+  <div class="slip foe"><span class="kind">Enemy · Unholy · hidden</span><h5>The Sleeper in the Wall</h5>
+    <dl><dt>HP</dt><dd>20</dd><dt>Attack</dt><dd>+3</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+    <p class="pub">Half a shape, still sheathed in ice to the waist.</p>
+    <p>Slow from the cold: it acts last in each round and cannot leave the wall for its first 2 rounds. Same breaking and burning rules as every Guest form. If it is not burned, it follows them home.</p></div>
+</div>
+
+<h4>What is in the ruin</h4>
+<p>Beyond the boards: a round chamber of black stone, older than anything the heroes have seen. Around the walls, in the ice, are people. Twelve of them, sitting in a ring, facing inward, dressed in nothing anyone can name. In front of each one is a stain in the ice, bright red, and the stains are <b>not frozen</b>. They are still wet after all these centuries.</p>
+<p>Carved on the centre stone: a row of figures, each one holding out a cut hand over a white field. Under most hands the drops lie still. Under two, the drops have stood up and are running towards each other.</p>
+
+<h4>Learning the test</h4>
+<p>Any of these teaches it:</p>
+<ul class="tight">
+  <li>An <b>INT</b> check against the Target to read the carving and the stains together.</li>
+  <li><b>Speak with the Dead</b> or <b>Confession of the Dead</b> on one of the ring: <em class="say">“Which of you were still yourselves?” “The ones whose blood went cold.”</em></li>
+  <li>Simply watching their own blood: any hero who is cut on the climb sees it freeze black on the ice in moments.</li>
+</ul>
+<div class="secret">
+<p><b>The test.</b> Human blood dropped on snow freezes into a dark crust within a breath. The Guest's blood does not freeze. It stays bright and wet, and then it slides across the snow towards the nearest other part of the Guest. A test can expose two at once. It needs snow, a blade and light to see by.</p>
+</div>
+
+<div class="slips">
+  <div class="slip loot"><span class="kind">Loot · hidden</span><h5>Pre-Binding coin</h5>
+    <p class="pub">A coin of black metal from the floor of the ring, too heavy for its size.</p>
+    <p>Catalogue valuable. The GM decides its worth in Aubrecht. The Canon will want it.</p></div>
+  <div class="slip loot"><span class="kind">Loot · roll</span><h5>The diggers' lean-to</h5>
+    <p class="pub">Picks, planks and a frozen pack.</p>
+    <p>Roll once on the d100 loot table, or give the Wayshrine Crowbar and Iron Spikes and Hammer.</p></div>
+</div>
+
+<h4>Coming home: the gate is barred</h4>
+<div class="aloud"><p>It is nearly dark when you reach the priory. Smoke is rising from the lower road, where the rope bridge was. The gate is shut. Brother Lucan's voice comes through the spyhole: “How long were you up there? Were you ever apart? Then how do you know?”</p></div>
+<p>While the heroes were gone, Lucan burned the bridge and poured out half the oil so nobody could use it to leave. He is not taken. He is right, and he is terrified.</p>
+<div class="slips">
+  <div class="slip task"><span class="kind">Obstacle</span><h5>The Barred Gate</h5>
+    <dl><dt>Progress</dt><dd>0 / 30 Effort</dd><dt>Check</dt><dd>STR to force it</dd></dl>
+    <p class="pub">Oak, barred and spiked from the inside.</p>
+    <p>Lucan has spiked it, so forcing it is Hard. The other way in is talk: a <b>Hard CHA</b> check to persuade him, which ends the obstacle at once. Offering to be tested at the gate is worth making the check Normal instead. Someone inside may open it for the heroes; who offers is a good place to plant suspicion.</p></div>
+  <div class="slip clock"><span class="kind">Countdown</span><h5>Night Falls</h5>
+    <dl><dt>Rounds</dt><dd>4, automatic</dd></dl>
+    <p class="pub">The light is going, and the cold is coming with it.</p>
+    <p>At 0, each hero still outside takes d4 cold at the start of every round. A hero in a Pilgrim's Cloak or under the Winter Shroud takes none (GM ruling).</p></div>
+</div>
+<p class="dim">No rest between scenes 3 and 4. Lucan will not allow anyone to sleep until everyone has been tested.</p>
+</section>
+
+<!-- SCENE 4 -->
+<section class="scene" id="s4">
+<div class="scene-head"><span class="scene-no">4</span><h2>The Chapter House</h2>
+<div class="scene-meta"><span class="pill t">Target 12</span><span>The Chapter House, everyone present</span><span>The test, the reveal, a fight among the bound</span></div></div>
+
+<p>Everyone alive goes into the Chapter House. Lucan bars the door. He has rope and insists everyone is tied to the stone benches by one wrist, heroes included, except whoever does the testing. A bucket of snow sits by the hearth. The hearth is the only light.</p>
+<p>Roll for the second Guest now if the Horror has not reached 7.</p>
+
+<div class="aloud"><p>Everyone left alive, on stone benches, one wrist each tied to the iron rings that once held the brothers' book-chains. The fire spits. Brother Lucan holds out a knife, handle first. “I do not trust my own hand,” he says. “Someone else must cut me first.”</p></div>
+
+<div class="slips">
+  <div class="slip clock"><span class="kind">Countdown</span><h5>The Last of the Oil</h5>
+    <dl><dt>Rounds</dt><dd>6, automatic</dd></dl>
+    <p class="pub">The hearth is burning the last oil and the benches' kindling.</p>
+    <p>At 0 the fire is out. The only light is what the heroes carry; without light the test cannot be read at all. At Horror 14 or more, start it at 4.</p></div>
+  <div class="slip task"><span class="kind">The test, one person at a time</span><h5>Blood on snow</h5>
+    <dl><dt>Cost</dt><dd>one Action per person</dd><dt>Check</dt><dd>WIS to read it</dd></dl>
+    <p>Cut, drip, read. With good light, a Normal WIS check against the Target. In poor light, Hard. A success reads the blood clearly. A failure means it is smeared or unclear: test that person again. A hero's natural 1 also smears it, and adds its 1 Horror as usual.</p></div>
+</div>
+
+<h4>Who goes first</h4>
+<p>Let the players choose the order and argue about it. The NPCs push: the Prior insists on going last, as befits his office. Jorun insists the heroes go first since they were away. The Canon asks quietly that her jar not be opened. Lucan goes first if allowed, and is human.</p>
+
+<h4>The reveal</h4>
+<p>The Guest does not wait to be tested. When the knife is one person away from a taken one, or when the countdown reaches 2, it unveils. If the second Guest's blood is tested first, Faustin's drop slides across the snow to it, and both unveil together.</p>
+<div class="slips">
+  <div class="slip foe"><span class="kind">Enemy · Unholy</span><h5>The Unveiled</h5>
+    <dl><dt>HP</dt><dd>30</dd><dt>Attack</dt><dd>+5</dd><dt>Damage</dt><dd>d10</dd><dt>Reach</dt><dd>Close, or Near with a lash</dd></dl>
+    <p class="pub">A face you know, splitting along a line that should not be there.</p>
+    <p>At 15 HP or less, two Crawling Pieces tear free. Not burned at 0: a Crawling Piece escapes. Its first attack goes at whoever is still tied up nearest to it.</p></div>
+  <div class="slip foe"><span class="kind">Enemy · Unholy · second Guest</span><h5>The Unveiled, second</h5>
+    <dl><dt>HP</dt><dd>20</dd><dt>Attack</dt><dd>+4</dd><dt>Damage</dt><dd>d8</dd><dt>Reach</dt><dd>Close</dd></dl>
+    <p class="pub">Someone you were sure of.</p>
+    <p>Only if the second Guest unveils here. If the second Guest was Faustin's only partner and the heroes are badly hurt, keep this one hidden and let it slip away in the dark to scene 5.</p></div>
+</div>
+
+<h4>Running it</h4>
+<ul class="tight">
+  <li>Tied heroes are still in the fight: cutting free takes a Move with a blade, or an Easy STR check to tear the old ring from the wall.</li>
+  <li>The hearth is right there. Pushing a Guest form into it counts as fire: on a STR success, roll Basic d4 and it is burning.</li>
+  <li>Protect the bound. Ask who unties whom first. It says a lot about trust.</li>
+  <li>When the fight ends, whatever escaped (pieces not burned, a Guest that fled) goes down through the kitchen trapdoor. Let the heroes find the trail: a smear across the refectory floor and the trapdoor open.</li>
+</ul>
+<p class="dim">Rest: a short, wary Party rest is allowed now, but only if the heroes bar the kitchen. If they rest, start scene 5's countdown 2 lower.</p>
+</section>
+
+<!-- SCENE 5 -->
+<section class="scene" id="s5">
+<div class="scene-head"><span class="scene-no">5</span><h2>The Icehouse</h2>
+<div class="scene-meta"><span class="pill t">Target 14</span><span>Below the kitchen, the bell tower</span><span>The finale: burn it, warn the valley</span></div></div>
+
+<div class="aloud"><p>The ladder goes down into blue cold. The brothers keep their winter dead here, wrapped and stacked like cordwood until the ground softens. The stacks have been pulled apart. At the far end, where the old meltwater channel drains away under the mountain, something has made itself out of them. It is very busy. It is digging.</p></div>
+
+<p>Everything left of the Guest has gone below and gathered into one body, built from the dead. It is boring along the meltwater channel, which runs under the mountain and comes out in the spring above Tarnwick. If it reaches the village, the heroes have lost.</p>
+
+<div class="slips">
+  <div class="slip foe"><span class="kind">Enemy · Unholy</span><h5>The Gathered Guest</h5>
+    <dl><dt>HP</dt><dd>50, or 70 at Horror 21</dd><dt>Attack</dt><dd>+5</dd><dt>Damage</dt><dd>d10</dd><dt>Reach</dt><dd>Close and Near</dd></dl>
+    <p class="pub">Every face of the priory's winter dead, and some faces that were alive this morning.</p>
+    <p>At 25 HP or less, two Crawling Pieces tear free. It fights only to keep the heroes away from the channel. When the countdown reaches 0 it is gone into the channel, whatever its HP.</p></div>
+  <div class="slip clock"><span class="kind">Countdown</span><h5>The Channel Opens</h5>
+    <dl><dt>Rounds</dt><dd>6, automatic</dd></dl>
+    <p class="pub">Ice cracks somewhere far below. Water is running.</p>
+    <p>Start it at 4 if the heroes rested after scene 4, one lower again at Horror 21. At 0 the Guest is in the channel and away.</p></div>
+  <div class="slip task"><span class="kind">Obstacle</span><h5>Fire the Icehouse</h5>
+    <dl><dt>Progress</dt><dd>0 / 30 Effort</dd><dt>Check</dt><dd>any the GM agrees fits</dd></dl>
+    <p class="pub">Oil, timber shoring, straw, and a ladder up.</p>
+    <p>Roll the oil barrels down from the stores (STR), pour them across the floor (DEX), knock out the shoring so the roof falls in (INT or STR). When it is complete, the icehouse goes up: the Gathered Guest takes 20 damage at once and is burning (d6 each round) and cannot reach the channel through the fire. Anyone still below at the end of the next round takes d8. If the byre burned in scene 2, the barrels are gone: the obstacle needs 40.</p></div>
+  <div class="slip task"><span class="kind">Obstacle · optional</span><h5>The Three Fires</h5>
+    <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>STR or DEX</dd></dl>
+    <p class="pub">Three iron baskets on the tower, iced over.</p>
+    <p>Clearing and lighting all three on the bell tower tells Tarnwick: plague, stay away. Whatever happens below, nobody from the valley comes up. If the Guest gets away, the village has warning; it is Brother Dunstan's idea, if he lives.</p></div>
+</div>
+
+<h4>Ways to win</h4>
+<ul class="tight">
+  <li><b>Burn it.</b> Finish Fire the Icehouse and get out. The cleanest ending, and the priory's kitchen and refectory go with it.</li>
+  <li><b>Kill it with fire.</b> Bring it to 0 HP with fire, or bring it to 0 and burn the remains before the end of the next round.</li>
+  <li><b>Close the channel.</b> Psalm of Ruin brings down the channel roof (1 Horror). This buries it; it does not end it. Spring will come. Say so.</li>
+  <li><b>Split the party.</b> Some fight below, some climb the tower to light the three fires. That is the best plan and the most frightening one, because nobody can see the others.</li>
+</ul>
+</section>
+
+<section id="after">
+<hr class="rule">
+<h2>Endings</h2>
+<div class="tbl"><table>
+  <thead><tr><th>If</th><th>Then</th></tr></thead>
+  <tbody>
+    <tr><td>The Guest burned and every piece was found</td><td>The heroes and whoever lived wait for the thaw in the chapel, the only roof left. In spring Tarnwick comes up and finds them thin and quiet. Nobody sits alone with anyone, ever again.</td></tr>
+    <tr><td>The Guest burned, but a piece escaped somewhere</td><td>The same, except you know, and they do not. Tell the players nothing. Keep a note.</td></tr>
+    <tr><td>The Guest reached the channel, the three fires burned</td><td>Tarnwick saw the fires and barred its gates. It may be enough. Begin the next adventure in the valley.</td></tr>
+    <tr><td>The Guest reached the channel, no fires</td><td>In spring the reeve sends a letter up the mountain thanking the heroes for the oil. It is in her handwriting. It is very warm in tone.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>The last image</h3>
+<p>Whatever happens, end on two survivors sitting in the snow outside the burning building, watching each other across the fire. One of them offers the other a drink. Ask the player whether their hero takes it. Then stop.</p>
+
+<h3>Rewards</h3>
+<p>Award catalogue loot as you see fit. Things that belong on this mountain:</p>
+<ul class="tight">
+  <li><b>The Ashen Rosary</b> (relic, 1 Horror): Prior Severin's, on his body or his desk. It warms near something supernatural, as it did all winter.</li>
+  <li><b>The Ashen Psalter</b> (grimoire, Fire), in the scriptorium, hidden behind the account books. Ember, Kindle and Pillar of Ash. Finding it in scene 1 or 2 makes the whole adventure a question about how much Horror the party will spend on fire.</li>
+  <li><b>Physician's satchel</b> from the infirmary.</li>
+  <li><b>Vault specimen jar</b>, the Canon's. Empty, if the players are lucky.</li>
+  <li><b>Inquisitor's warrant</b> or <b>Letter of safe passage</b> in the Canon's papers, for whoever survives to explain all this in Aubrecht.</li>
+</ul>
+
+<h3>Setting it up on the Sacrament RPG Table</h3>
+<ul class="tight">
+  <li>Make one scene per chapter above and choose <b>Prepare</b> to build each privately. Show scene 1 when play starts.</li>
+  <li>Put each enemy on as a token with its HP and the description in italics above as its public text; put the rest in its private GM notes. Use <b>Hide the numbers from players</b> on every Guest form. Nobody should know how close it is to breaking.</li>
+  <li>Put obstacles on as cards with Effort progress, and countdowns as cards with a timer. Leave the ones marked paused paused until the fiction starts them.</li>
+  <li>Keep Crawling Pieces and the Sleeper in the Wall hidden until they appear. Hidden cards are not sent to players at all.</li>
+  <li>Set the Target per scene by hand when the scene goes live: the Target belongs to the table, not to the scene.</li>
+  <li>The NPCs are not on the table as tokens unless you want them there. If you add them, give them no numbers. Players should not be able to tell a monster from a monk by its card.</li>
+</ul>
+</section>
+
+<footer>
+<p>The Guest at Greave, for the Sacrament RPG. Inspired by John Carpenter's <i>The Thing</i> (1982): its isolation and its paranoia. The names, places, creature and test are this adventure's own. Rules as on the Sacrament RPG Table on 1 November 2026; the rules are still provisional and being playtested. The fire ruling, the Guest's breaking and burning rules and the Horror consequences are GM choices for this adventure, not table rules.</p>
+</footer>
+</main>
+<script>
+(function(){
+  var KEY='guest-at-greave-taken';
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ saved={}; }
+  var rows=document.querySelectorAll('#roster .who');
+  rows.forEach(function(row){
+    var id=row.getAttribute('data-id'), box=row.querySelector('input');
+    if(Object.prototype.hasOwnProperty.call(saved,id)) box.checked=!!saved[id];
+    row.classList.toggle('taken',box.checked);
+    box.addEventListener('change',function(){
+      row.classList.toggle('taken',box.checked);
+      saved[id]=box.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+    });
+  });
+  var names=['','Prior Severin','Canon Hildreth','Ursel the Goatherd','Jorun the Muleteer','Brother Dunstan','your choice'];
+  var btn=document.getElementById('rollBtn'), out=document.getElementById('rollOut');
+  btn.addEventListener('click',function(){
+    var n=1+Math.floor(Math.random()*6);
+    out.textContent=n+': '+names[n]+(n===6?'.':' is taken.');
+  });
+})();
+</script>
+</body>
+</html>
