@@ -25,6 +25,13 @@ It uses the current rules: a Target for each scene, Effort against obstacles, co
 
 **It is written for the GM.** It tells you who the monster is. If you are going to play it, stop at the first page and let your GM read the rest.
 
+## For the players
+
+Players need a hero and the rules close to hand, not the adventure.
+
+- [Make a hero with the character builder](/character/), then print or save it as a PDF character sheet
+- The player cheat sheet, two pages with checks, Effort, Push, the Horror, healing and dying: [download the PDF (A4)](/downloads/players/sacrament-player-cheat-sheet-A4.pdf) or [US Letter](/downloads/players/sacrament-player-cheat-sheet-Letter.pdf)
+
 ## Why a real table
 
 The VTT does a lot of quiet work: it rolls, adds, tracks HP and keeps the Horror meter honest. Around a kitchen table, nobody does that for you. This game will show us which rules are easy to carry in your head, which numbers people forget, and where the table had been hiding a rough edge.
