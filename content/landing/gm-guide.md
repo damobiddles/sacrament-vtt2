@@ -73,7 +73,7 @@ Healing Undo restores the related HP, charge and allowance. Undo later related h
 
 The shared meter runs from 0 to 21. Healing spells add 0 casting Horror; other spells add 1, whether or not they succeed. Relics and other items use their stated cost. A Push adds 1. A hero's natural 1 adds 1 separately on an attack, a spell or a pushed action of any kind, but not on other checks. A non-healing spell with a natural 1 therefore adds 2.
 
-Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide what the Horror does.** The VTT does not automatically run aftershock tables, forbid magic or apply overflow damage at 21. Use the Table tab or Activity Undo to adjust mistakes; Party rest can lower the meter. Explain any additional consequences you choose before players accept a risk.
+Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide what the Horror does.** At 21 the meter stays full, and each point a hero's Push, counted natural 1, spell or item cannot add costs that hero d4 HP instead (paying in blood). It has its own line in Activity, which only you can undo. The VTT does not automatically run aftershock tables or forbid magic. Use the Table tab or Activity Undo to adjust mistakes; Party rest can lower the meter. Explain any additional consequences you choose before players accept a risk.
 
 ## Scenes, maps and privacy
 

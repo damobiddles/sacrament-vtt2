@@ -81,7 +81,7 @@ The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowanc
 
 ## The shared Horror
 
-The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total.
+The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you d4 HP.
 
 At **7, 14 and 21**, the VTT alerts the GM. The GM decides what happens in the story. It does not automatically apply aftershock tables, extra damage or other consequences. Tell your group before accepting a dangerous cost.
 

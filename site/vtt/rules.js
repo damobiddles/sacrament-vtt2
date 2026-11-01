@@ -34,8 +34,9 @@
      An amount of 0 does nothing. Passing a threshold announces it in the feed and alerts the GM; the GM decides what it means, and the table applies no effect itself.
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
      A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20),
-     but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01). */
-  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
+     but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01).
+     Paying in blood (the owner's rule, 2026-11-01): a hero's Horror cost that cannot go on a full meter (a push, a natural 1, a spell or item) costs that hero one `bloodDie` of HP for each point instead. */
+  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, bloodDie: 4, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
   var HORROR_DICE = /^([1-9]?)d(4|6|8|10|12|20)(?:\+([0-9]{1,2}))?$/;   /* "d6", "2d4", "d4+2" */
 
   /* What a Horror amount is: { fixed } for a number, { count, sides, plus } for dice, or null when there is none (missing, 0, or not readable). */
