@@ -20,7 +20,7 @@ test('every item has a known group, status and recommendation, and a recommendat
   const ids = new Set(groups.map((g) => g.id));
   for (const it of items) {
     assert.ok(ids.has(it.g), it.name + ': unknown group');
-    assert.ok(['works', 'broken', 'duplicate', 'unverified', 'redirect', 'locked', 'none', 'archived'].includes(it.status), it.name + ': status ' + it.status);
+    assert.ok(['works', 'broken', 'duplicate', 'unverified', 'redirect', 'locked', 'none', 'off', 'archived'].includes(it.status), it.name + ': status ' + it.status);
     assert.ok(['keep', 'merge', 'archive', 'decide'].includes(it.rec), it.name + ': rec ' + it.rec);
     for (const k of ['what', 'note', 'from', 'why']) assert.ok(it[k] && it[k].length > 5, it.name + ': missing ' + k);
     assert.ok(it.url || it.repo || it.display, it.name + ': nothing to show as its address');

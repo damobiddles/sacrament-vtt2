@@ -69,7 +69,7 @@
 <li>I can see what links to a page from inside the site. I cannot see links in other people's messages, other websites or search results, and I cannot see what Google has indexed.</li>
 </ul></div>
 
-<div class="sum"><span><b>61</b> items</span><span><b>0</b> broken</span><span><b>1</b> I could not fully verify</span><span><b>55</b> keep</span><span><b>1</b> merge</span><span><b>4</b> archive</span><span><b>1</b> your call</span></div>
+<div class="sum"><span><b>61</b> items</span><span><b>0</b> broken</span><span><b>0</b> I could not fully verify</span><span><b>55</b> keep</span><span><b>1</b> merge</span><span><b>4</b> archive</span><span><b>1</b> your call</span></div>
 
 <div class="box"><h2>Decisions so far</h2><ul><li><b>2026-10-20</b> Character sheet built: one sheet over the table and on My heroes, with a gear list file (site/sheet/gear.js) you can edit. The old hero sheet was replaced by it.</li><li><b>2026-10-20</b> Removed the playtest sign-up form from the home page, its thank-you page (/thanks/ now redirects home) and the link to it in the Welcome post. The Newsletter page stays.</li><li><b>2026-10-20</b> Keep: accepted for all 43 items marked Keep. Nothing to do.</li><li><b>2026-10-20</b> Archive: done for the three Archive items (the example blog post, the earlier Basic Rules page, the empty folders). Their old addresses redirect; nothing was deleted.</li><li><b>2026-10-20</b> Your call: kept as they are, on my suggestion: the Sexton's Ledger page, the designer builder, the published library, and the test tables. One item is still open: tidying the 50 branches on GitHub that are already part of the main site (waiting for permission to delete them).</li></ul></div>
 
@@ -554,9 +554,9 @@
 <p class="addr"><a class="u" href="/builder/">playsacrament.com/builder/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>A passphrase-protected tool where the rules designers edit the ability library and publish it.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge warn">Locked</span> Shows the sign-in page as it should. I did not sign in (that needs your passphrase, and publishing overwrites the live library), so I could not test the tool itself.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge dim">Switched off</span> Switched off on the live site: it answers &quot;not switched on&quot; because no DESIGNER_PASSPHRASE is set in Netlify. The code is kept. Setting the passphrase in Netlify (Site configuration, Environment variables) switches it back on. Its publish step has never been tested.</p></div>
 <div><h4>What links to it</h4><p>A small &quot;Designer&quot; link in the home page footer (marked &quot;nofollow&quot;, and blocked in robots.txt).</p></div>
-<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept: you still use it for the ability library. Its publish step is still untested.</p>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept, switched off. Nothing on the site needs it today.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Node builder (designers only)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article>
@@ -564,10 +564,10 @@
 <h3>Published ability library: /api/nodes</h3>
 <p class="addr"><a class="u" href="/api/nodes">playsacrament.com/api/nodes</a></p>
 <div class="cols">
-<div><h4>What it is</h4><p>The data the node builder last published, as raw text. A library is currently published.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works, but nothing on the site reads it any more: the hero builder and tables use their built-in data.</p></div>
-<div><h4>What links to it</h4><p>Nothing (the code comment says the hero builder and VTT read it; they do not).</p></div>
-<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept as it is. Nothing reads it today; it only matters if the builder is used again.</p>
+<div><h4>What it is</h4><p>The data the node builder last published, as raw text.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge dim">Nothing there</span> Nothing has been published on this site, so it answers &quot;Not found&quot;. Nothing on the site reads it: the hero builder and tables use their built-in data.</p></div>
+<div><h4>What links to it</h4><p>Nothing.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Kept as it is. It only matters if the builder is switched on and used again.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Published ability library: /api/nodes"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article></section>

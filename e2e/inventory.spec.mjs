@@ -94,7 +94,7 @@ test('on the live site every listed address answers the way the inventory says, 
   for (const it of items.filter((i) => i.href)) {
     const r = await page.request.get(it.href, { maxRedirects: 5 });
     const code = r.status();
-    const ok = { Works: code === 200 || (it.href.startsWith('/.netlify/') && code < 500), Redirect: code === 200, Archived: code === 200, Locked: code === 401, 'Nothing there': code === 404, Broken: code === 200, "Couldn't verify": code < 500 }[it.status];
+    const ok = { Works: code === 200 || (it.href.startsWith('/.netlify/') && code < 500), Redirect: code === 200, Archived: code === 200, Locked: code === 401, 'Nothing there': code === 404, 'Switched off': code === 503, Broken: code === 200, "Couldn't verify": code < 500 }[it.status];
     if (!ok) wrong.push(`${it.name} ${it.href}: says "${it.status}", got ${code}`);
   }
   expect(wrong).toEqual([]);

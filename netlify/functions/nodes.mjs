@@ -1,5 +1,5 @@
 // Public, read-only: the ability library most recently published from the node builder.
-// The character builder and the VTT fetch this and fall back to their built-in library if there is none.
+// Nothing on the site reads this today: the hero builder and the table use their built-in library.
 import { getStore } from '@netlify/blobs';
 
 export default async () => {

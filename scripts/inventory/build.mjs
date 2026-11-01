@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { items, groups, problems, decisions, CHECKED, REPO_TREE } from './items.mjs';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const STATUS = { works: ['Works', 'ok'], present: ['Present', 'ok'], broken: ['Broken', 'bad'], duplicate: ['Duplicate', 'warn'], unverified: ["Couldn't verify", 'warn'], redirect: ['Redirect', 'ok'], locked: ['Locked', 'warn'], none: ['Nothing there', 'dim'], archived: ['Archived', 'ok'] };
+const STATUS = { works: ['Works', 'ok'], present: ['Present', 'ok'], broken: ['Broken', 'bad'], duplicate: ['Duplicate', 'warn'], unverified: ["Couldn't verify", 'warn'], redirect: ['Redirect', 'ok'], locked: ['Locked', 'warn'], none: ['Nothing there', 'dim'], off: ['Switched off', 'dim'], archived: ['Archived', 'ok'] };
 const REC = { keep: 'Keep', merge: 'Merge', archive: 'Archive', decide: 'Your call' };
 
 const rows = items.map((it, i) => ({ ...it, id: 'i' + (i + 1), status: (it.g === 'repo' || it.g === 'leftovers') && it.status === 'works' ? 'present' : it.status }));
