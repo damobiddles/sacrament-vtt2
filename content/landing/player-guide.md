@@ -39,7 +39,7 @@ The GM sets the **Target**, the number to meet or beat. Roll **d20 + the relevan
 
 Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A successful conversation or a simple lock may need no further roll. The GM describes the result.
 
-**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses and adds 1 Horror. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
+**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses. It adds 1 Horror on an attack, a spell or a pushed second action, but not on other checks. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
 
 ## Attacks: target, roll, damage
 
@@ -81,7 +81,7 @@ The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowanc
 
 ## The shared Horror
 
-The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a hero's natural 1 and a Push. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total.
+The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you d4 HP.
 
 At **7, 14 and 21**, the VTT alerts the GM. The GM decides what happens in the story. It does not automatically apply aftershock tables, extra damage or other consequences. Tell your group before accepting a dangerous cost.
 
