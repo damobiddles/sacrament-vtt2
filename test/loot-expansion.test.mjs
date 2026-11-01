@@ -12,20 +12,23 @@ const added = G.found.slice(47);
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
-  assert.equal(C.items.length, 178);
-  assert.equal(added.length, 89);
-  for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28, grimoire: 16 })) {
+  // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
+  assert.equal(C.items.length, 184);
+  assert.equal(added.length, 95);
+  for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28 })) {
     assert.equal(C.items.filter(i => i.kind === kind).length, total, kind);
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
+  assert.equal(C.items.filter(i => i.kind === 'grimoire').length, 22);
   // The reviewed power definitions, area/scene limits and crossbow accuracy are included.
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '87a348eb6a96d9e13d11f65c9891de272f766188d788711c7ed9c5d1b82d9f77');
+  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '8bab618847fd8b1dd98e5686ee0b1514c8df3b23624980441625293b1dc439cb');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
-  assert.equal(hash(G.spells.slice(0,23)), 'd325d1a01e5018630d10e8d54a34b866c2b18d65dbe83ded177c8b02e825d74c');
-  assert.equal(hash(G.spells), 'b2fddfd3fa03107d93c67800a09c7e4628a38c0a7c97da0cc215634864a38ee6');
+  // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
+  assert.equal(hash(G.spells.slice(0,23).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
+  assert.equal(hash(G.spells), 'a4e36ead81334f9fd57b31813ae838b6ad6111328ab3051f5d3c74dfa23585e9');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {
@@ -38,7 +41,7 @@ test('every new find is reachable at both range boundaries, visible in the publi
       seen.add(result.item.id);
     }
   }
-  assert.equal(seen.size, 144); // The binding seal is the 145th find, awarded directly on 100.
+  assert.equal(seen.size, 150); // The binding seal is the 151st find, awarded directly on 100.
   for (const item of added) {
     assert.ok(seen.has(item.id), item.id);
     assert.ok(html.includes('id="item-' + item.id + '"'), item.id);

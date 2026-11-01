@@ -8,7 +8,7 @@ summary: The current Sacrament RPG loot tables, equipment and three-spell grimoi
 
 Roll d100 on the main table, then roll d100 again on the table it points to. Each number has one result. The catalogue above also includes starting equipment and items the GM can award directly.
 
-**Themed grimoires.** Choose by name and theme: Fire, Cold, Energy, Necromancy, Nature, Druidic, Demonic, Healing and protection, Silence and deception, or Doors and passage. Each of the 16 books has a different three-spell selection. Nature concerns plants and the land; Druidic concerns beasts and wind.
+**Themed grimoires.** Choose by name and theme: Fire, Cold, Energy, Necromancy, Nature, Druidic, Demonic, Healing and protection, Silence and deception, or Doors and passage. Each of the 22 books has its own three spells, and no spell appears in two current books. Nature concerns plants and the land; Druidic concerns beasts, trees, weather and the seasons. Energy covers force, storm and iron; Necromancy covers the dead, bones and graves.
 
 Spells are labelled **Damage**, **Healing** or **Esoteric effect**. Damage spells roll Effort; other effects do what their description says. The GM still resolves effects the table does not automate, such as ranges and free-text custom effects. A grimoire holds three spells; some spells appear in more than one book.
 
