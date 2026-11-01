@@ -6,7 +6,7 @@ summary: The current Sacrament RPG loot tables, equipment and three-spell grimoi
 
 **Equipment choices.** Every grimoire takes **three slots**. Heavy two-handed melee weapons add **+2 damage** to Weapons Effort; reach weapons keep their reach or control benefit instead. Put your shield in the pack to use a two-handed weapon. Equip one body armour, one helmet and one shield at a time.
 
-Roll d100 on the main table, then roll d100 again on the table it points to. Each number has one result. The catalogue below also includes starting equipment and items the GM can award directly.
+Roll d100 on the main table, then roll d100 again on the table it points to. Each number has one result. The catalogue above also includes starting equipment and items the GM can award directly.
 
 **Themed grimoires.** Choose by name and theme: Fire, Cold, Energy, Necromancy, Nature, Druidic, Demonic, Healing and protection, Silence and deception, or Doors and passage. Each of the 16 books has a different three-spell selection. Nature concerns plants and the land; Druidic concerns beasts and wind.
 

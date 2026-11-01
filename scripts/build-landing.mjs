@@ -150,7 +150,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
 </main>`));
 
   /* the text pages */
-  const text = (slug, label, extraAfter = '') => {
+  const text = (slug, label, extraAfter = '', extraBefore = '') => {
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
     let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
     html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules));
@@ -168,7 +168,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
       html = '<nav class="role-paths" aria-label="Choose your role"><a href="#for-players">I am a player</a><a href="#for-gms">I am the GM</a><a href="/rules/">Find a rules guide</a></nav>' + html;
     }
     write(meta.path, page(p.title + ' | ' + NAME, p.summary, meta.path,
-      `${head(label, p.title, p.summary)}<main class="wrap post ic-body${slug === 'resources' ? ' site-resources' : ''}"><div class="body">${html}${extraAfter}</div></main>`));
+      `${head(label, p.title, p.summary)}<main class="wrap post ic-body${slug === 'resources' ? ' site-resources' : ''}"><div class="body">${extraBefore}${extraBefore ? '<section id="about-loot" class="loot-about"><h2>About these tables</h2>' + html + '</section>' : html}${extraAfter}</div></main>`));
   };
   text('the-game', NAME, '<aside class="site-next"><h2>Ready to play?</h2><p><a class="btn" href="/how-to-play/">Start your first game</a> <a href="/setting/">Explore the setting</a></p></aside>');
   text('setting', NAME, '<aside class="site-next"><h2>Take a hero into this world</h2><p><a class="btn" href="/character/">Create a hero</a> <a href="/how-to-play/">Learn how to play</a></p></aside>');
@@ -178,7 +178,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('gm-guide', NAME);
   text('resources', NAME, resources());
   text('scenes', NAME);
-  text('loot', NAME, lootCatalogue(globalThis.SACRAMENT_GEAR));
+  text('loot', NAME, '', lootCatalogue(globalThis.SACRAMENT_GEAR));
   text('feedback', NAME, feedbackForm + '<aside class="site-next"><h2>Looking for help with a game?</h2><p>Use the <a href="/how-to-play/">first game checklist</a>, <a href="/player-guide/">player guide</a> or <a href="/gm-guide/">GM guide</a>. Follow <a href="/news/">News</a> for published updates.</p></aside>');
   write('/feedback/thanks/', page('Thank you | ' + NAME, 'Thank you for helping improve the table.', '/feedback/thanks/', `${head(NAME, 'Thank you for your feedback', 'Your feedback has been sent.')}<main class="wrap post"><p>We review feedback privately to plan fixes and improvements. Follow <a href="/news/">News</a> for updates.</p><p><a class="btn" href="/vtt/">Back to the table</a> <a href="/feedback/">Send more feedback</a></p></main>`, '<meta name="robots" content="noindex">'));
   text('privacy', NAME);
