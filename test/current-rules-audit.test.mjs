@@ -34,7 +34,8 @@ test('a fallen hero cannot start attacks, checks, item actions, Effort or Push; 
 // The separate stable-catalogue fingerprint in powers-release protects IDs, odds, slots and spell assignments.
 test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
+ // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'1d4c7c5b62f1370bfbcba33c7fc8e51c0b9fba55ca8b14133f87a5122dcc55d2');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'7319d2bc34295af9b7d84ffc72cef2dff91435b197c10b0611f59a633b301d1a');
 });

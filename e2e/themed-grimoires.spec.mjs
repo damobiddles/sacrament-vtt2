@@ -3,7 +3,7 @@ import {bounded} from './contrast-lib.mjs';
 test.setTimeout(60000);
 test('the current catalogue shows ten themes and keeps older book links usable',async({browser},info)=>{
  const p=await newPage(browser);await p.goto('/loot/');
- await expect(p.locator('#loot-grimoire .loot-entry')).toHaveCount(16);await expect(p.locator('main')).toContainText('43 different spells');
+ await expect(p.locator('#loot-grimoire .loot-entry')).toHaveCount(22);await expect(p.locator('main')).toContainText('66 different spells');
  for(const [id,theme] of [['rimebound','Cold'],['rootbound','Nature'],['thornantler','Druidic'],['brokenbell','Energy'],['unsealedcanticles','Demonic']])await expect(p.locator('#item-'+id)).toContainText('Theme: '+theme);
  await p.goto('/loot/#item-charredantiphon');await expect(p.locator('#item-charredantiphon')).toHaveCount(1);await expect(p.locator('#item-rimebound h3')).toHaveText('The Rimebound Litany');
  await p.locator('#item-rimebound').screenshot({path:info.outputPath('cold-grimoire.png')});expect(p.errors).toEqual([]);

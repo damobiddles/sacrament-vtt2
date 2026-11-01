@@ -56,7 +56,7 @@ test('names read like the lore: no punctuation oddities, and the example items f
   for (const n of names) assert.ok(!/[<>"]| {2}/.test(n), 'odd characters in the name ' + n);
 });
 
-test('the loot tables: every number on the d100 and on each sub-table gives exactly one thing, and 145 things are listed in all', () => {
+test('the loot tables: every number on the d100 and on each sub-table gives exactly one thing, and 151 things are listed in all', () => {
   const tables = [{ id: 'd100', die: 100 }, ...(G.tables || [])];
   for (const t of G.tables || []) {
     assert.match(t.id, /^[a-z]+$/, 'the table id "' + t.id + '" should be lower-case letters only'); assert.notEqual(t.id, 'd100');
@@ -72,7 +72,7 @@ test('the loot tables: every number on the d100 and on each sub-table gives exac
     hits.forEach((h, k) => { assert.equal(h.length, 1, 'on the ' + t.id + ' table the roll ' + (k + 1) + ' gives ' + (h.length ? h.join(' and ') : 'nothing')); });
   }
   for (const i of all()) if (i.table) assert.ok((G.tables || []).some((t) => t.id === i.table), i.name + ' is on a table that does not exist: ' + i.table);
-  assert.equal(listed, 145);
+  assert.equal(listed, 151);
   const depth = (t, k = 1) => (!t.on || t.on === 'd100' ? k : depth(G.tables.find((x) => x.id === t.on), k + 1));
   for (const t of G.tables || []) assert.ok(depth(t) <= 3, 'the ' + t.name + ' table is more than three tables deep');
 });
