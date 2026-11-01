@@ -58,14 +58,40 @@
     return { ok: true, count: plan.heroes.length, skipped: plan.skipped };
   }
 
-  var names = ['Agathe', 'Benedikt', 'Cordula', 'Dunstan', 'Eulalia', 'Faustin', 'Gisela', 'Hildreth', 'Ignatia', 'Konrad', 'Lucan', 'Mathilde', 'Odo', 'Perpetua', 'Rainald', 'Ursel'];
-  var surnames = ['Vey', 'Marrow', 'Ashby', 'Greave', 'Holloway', 'Sallow', 'Tarn', 'Vesper', 'Wick', 'Crane', 'Dray', 'Pell'];
+  /* Random hero names, following the naming guide in docs/lore/sacrament-lore.md: saints' and old Germanic or English given names,
+     short weathered surnames, and now and then "of" a Heartlands place instead of a surname. */
+  var names = [
+    'Adelheid', 'Agathe', 'Albrecht', 'Aldith', 'Amalric', 'Ambrose', 'Anselm', 'Ansgar', 'Arnulf', 'Aveline', 'Bartholomew', 'Basilia', 'Benedikt',
+    'Berthold', 'Bertilla', 'Blaise', 'Casimir', 'Cecily', 'Clemence', 'Columba', 'Cordula', 'Cunegund', 'Cyprian', 'Demetria', 'Dietmar', 'Dunstan',
+    'Edeltraud', 'Egbert', 'Emerentia', 'Emmerich', 'Engelbert', 'Eulalia', 'Euphemia', 'Eustace', 'Everard', 'Faustin', 'Felicitas', 'Florian',
+    'Fridolin', 'Gerlach', 'Gertrud', 'Gervase', 'Gisela', 'Godric', 'Gotthard', 'Gunhild', 'Hartmut', 'Hilarion', 'Hildegund', 'Hildreth',
+    'Hroswitha', 'Ida', 'Ignatia', 'Irmgard', 'Isembard', 'Jodok', 'Jorun', 'Jutta', 'Konrad', 'Kunibert', 'Ladislas', 'Lambert', 'Leodegar',
+    'Leofric', 'Liutgard', 'Lucan', 'Ludmila', 'Margarethe', 'Mathilde', 'Mechthild', 'Meinrad', 'Nikolas', 'Notburga', 'Odilia', 'Odo', 'Ortwin',
+    'Oswin', 'Pancras', 'Perpetua', 'Petronel', 'Philippa', 'Quirin', 'Radegund', 'Rainald', 'Reinhild', 'Remigius', 'Richenza', 'Rosamund',
+    'Ruprecht', 'Sabina', 'Scholastica', 'Sebald', 'Servatius', 'Severin', 'Sigrun', 'Sixtus', 'Swithun', 'Thecla', 'Theodric', 'Ulrich', 'Ursel',
+    'Valentin', 'Verena', 'Walburga', 'Wendelin', 'Wigbert', 'Wilhelmina', 'Winfrid', 'Wulfhild', 'Wulfram', 'Zita'
+  ];
+  var surnames = [
+    'Ambry', 'Ashby', 'Ashdown', 'Barrowe', 'Blight', 'Brack', 'Brine', 'Candlish', 'Chantry', 'Coffer', 'Coldridge', 'Coldwell', 'Crane', 'Cresset',
+    'Darrow', 'Dole', 'Dray', 'Dunmore', 'Durst', 'Fallow', 'Fenwick', 'Ferrow', 'Fosse', 'Gall', 'Gaunt', 'Glebe', 'Gorse', 'Gravell', 'Greave',
+    'Hale', 'Harl', 'Harrow', 'Hearne', 'Heddle', 'Hesk', 'Hollin', 'Holloway', 'Hythe', 'Keel', 'Kell', 'Knell', 'Lantry', 'Lathe', 'Leach',
+    'Lorne', 'Lowe', 'Lychett', 'Mardle', 'Marrow', 'Mire', 'Morrow', 'Mortlake', 'Moss', 'Mourne', 'Nab', 'Nettle', 'Ormond', 'Pardew', 'Pell',
+    'Penhallow', 'Pennick', 'Pyke', 'Quarle', 'Reave', 'Rook', 'Ruddle', 'Rushby', 'Sallow', 'Saltash', 'Sawtell', 'Scarth', 'Sedge', 'Sexton',
+    'Sheaf', 'Shrike', 'Skell', 'Sloe', 'Sorrel', 'Stave', 'Stillwell', 'Stoup', 'Tallow', 'Tamsett', 'Tarn', 'Teasel', 'Tench', 'Thatch', 'Thole',
+    'Thorne', 'Tolle', 'Varl', 'Vesper', 'Vey', 'Vowell', 'Wake', 'Wether', 'Whitlock', 'Wick', 'Withy', 'Wold', 'Wren', 'Yarrow'
+  ];
+  var places = [
+    'Hollowmere', 'Grimsby Fold', 'Saint Aubrel\'s Cross', 'Aubrecht', 'Ashholt', 'Coldmere', 'Nether Wick', 'Upper Dray', 'Fennbarrow', 'Saltstead',
+    'Gallowford', 'Rookby', 'Thornefold', 'Lowbarrow', 'Brackwick', 'Saint Odo\'s Cross', 'Saint Eulalia\'s Cross', 'Harrowstead', 'Sedgeford',
+    'Kellholt', 'Mirefold', 'Upper Tarn', 'Nether Sallow', 'Wrenby'
+  ];
+  function heroName(pick, random) { var given = pick(names); return random() < 0.2 ? given + ' of ' + pick(places) : given + ' ' + pick(surnames); }
   var vows = ['I will bring the missing home.', 'I will keep the road open until the last pilgrim passes.', 'I will pay the debt my family left behind.', 'I will see my companion buried on consecrated ground.', 'I will carry the truth back to Hollowmere.', 'I will not leave another soul at the gate.'];
   function generate(focus, random) {
     random = random || Math.random;
     var pick = function (a) { return a[Math.min(a.length - 1, Math.floor(random() * a.length))]; };
     if (!['fighter', 'scout', 'scholar', 'healer'].includes(focus)) focus = pick(['fighter', 'scout', 'scholar', 'healer']);
-    var h = H.blank(pick(names) + ' ' + pick(surnames)), weapon, book, primary, secondary, third, effort, kit;
+    var h = H.blank(heroName(pick, random)), weapon, book, primary, secondary, third, effort, kit;
     h.vow = pick(vows);
     if (focus === 'fighter') {
       h.calling = pick(['Road warden', 'Mercenary', 'Pilgrim guard']); primary = 'STR'; secondary = 'CON'; third = pick(['WIS', 'DEX', 'CHA']); effort = 'weapons';
@@ -88,5 +114,5 @@
     var problems = C.problems(h, { gm: false }); if (problems.length) throw new Error('Generated hero is not valid: ' + problems.join(' '));
     return h;
   }
-  root.SacramentHeroTools = { MAX_BACKUP: MAX_BACKUP, planRestore: planRestore, restore: restore, generate: generate };
+  root.SacramentHeroTools = { MAX_BACKUP: MAX_BACKUP, planRestore: planRestore, restore: restore, generate: generate, NAMES: { given: names, surnames: surnames, places: places } };
 })(typeof window !== 'undefined' ? window : globalThis);

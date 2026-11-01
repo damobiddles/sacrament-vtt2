@@ -102,3 +102,19 @@ test('conversion keys cannot pollute prototypes or replace existing conversion l
   assert.equal(T.restore(st,T.planRestore(st,backup(H,[h],{converted}))).ok,true);
   assert.equal(st.converted.old,'kept');assert.equal(st.converted.new,h.id);assert.equal(Object.hasOwn(st.converted,'__proto__'),false);assert.equal(Object.hasOwn(st.converted,'constructor'),false);
 });
+
+test('generated hero names come from a large setting name pool and vary', () => {
+  const {T}=setup(); const N=T.NAMES;
+  assert.ok(N.given.length>=100 && N.surnames.length>=100 && N.places.length>=20);
+  for (const list of [N.given,N.surnames,N.places]) assert.equal(new Set(list).size,list.length,'no repeated names');
+  const seen=new Set(); let ofPlace=0;
+  for(let seed=1;seed<=300;seed++){
+    let x=seed*7919; const rng=()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};
+    const name=T.generate('random',rng).name; seen.add(name);
+    const m=/^(\S+) of (.+)$/.exec(name);
+    if(m){ofPlace++;assert.ok(N.given.includes(m[1])&&N.places.includes(m[2]),name);}
+    else {const [g,s,...rest]=name.split(' ');assert.equal(rest.length,0,name);assert.ok(N.given.includes(g)&&N.surnames.includes(s),name);}
+  }
+  assert.ok(seen.size>=280,'300 heroes give at least 280 different names, got '+seen.size);
+  assert.ok(ofPlace>0 && ofPlace<150);
+});
