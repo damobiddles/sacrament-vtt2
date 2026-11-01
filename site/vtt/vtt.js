@@ -822,7 +822,7 @@
       '<button class="btn small" data-do="horrorAdj" data-d="-1" aria-label="Lower the Horror by 1">−1</button><button class="btn small" data-do="horrorAdj" data-d="1" aria-label="Raise the Horror by 1">+1</button>' +
       (H.cur > 0 ? '<button class="btn small' + (UI.hzResetAsk ? ' danger' : '') + '" data-do="horrorReset">' + (UI.hzResetAsk ? 'Sure? Reset to 0' : 'Reset to 0') + '</button>' : '') +
       '<span class="hz-set"><label>Set to<input id="hzSet" type="number" min="0" max="' + H.max + '" inputmode="numeric" value="' + H.cur + '"></label><button class="btn small" data-do="horrorSet">Set</button></span></div>' +
-      '<p class="hint">Healing spells cost 0; other spells +1; items list their own cost. Natural 1 and Push add 1 separately. Party rest lowers Horror with d10s. These controls are manual GM adjustments.</p>';
+      '<p class="hint">Healing spells cost 0; other spells +1; items list their own cost. Push adds 1; a natural 1 adds 1 separately on attacks, spells and pushed actions. At 21, each point that cannot go on costs that hero d4 HP. Party rest lowers Horror with d10s. These controls are manual GM adjustments.</p>';
   }
   /* The next session: the GM sets it in the Play tab; everyone reads it in their own time, with links to put it in a calendar (three hours, by default). */
   function sayWhen(ms) { return new Date(ms).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }

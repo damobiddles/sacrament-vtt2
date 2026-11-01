@@ -452,13 +452,26 @@ function moveHorror(s, a, ctx, d, say, dice) {
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
   const what = privateUse ? 'A private use of magic tempts the Horror.' : u.spell ? ch.name + ' read from ' + u.item.name + '.' : ch.name + ' used ' + u.item.name + '.';
-  return moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  const hr = moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
 }
 
-/* A hero's d20 showing a natural 1 raises the Horror by itself, whatever the check was for. */
-function natOne(s, a, ctx, ch, chk) {
-  if (!chk.nat1) return null;
-  return moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes a d4 of that hero's HP instead, on a line of its own (only the GM can undo it). */
+function bleed(s, ctx, ch, lost, privateUse = false) {
+  const card = ch && s.cards[ch.cardId]; if (!(lost > 0) || !card || !card.hp || card.hp.cur <= 0) return null;
+  const rolls = []; for (let i = 0; i < lost; i++) rolls.push(d(ctx, R.HORROR.bloodDie));
+  const total = rolls.reduce((x, y) => x + y, 0), was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
+  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + lost + 'd' + R.HORROR.bloodDie + ' shows ' + rolls.join(' + ') + ', ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
+    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card), dice: rolls.map((n) => ({ die: R.HORROR.bloodDie, n })) });
+  settleHero(s, card, was, e, ctx);
+  return { lost, rolls, hp: -applied, log: e.id };
+}
+
+/* A hero's d20 showing a natural 1 raises the Horror by itself on an attack, a spell, or a pushed second action of any kind; not on a plain check (the owner's rule, 2026-11-01). */
+function natOne(s, a, ctx, ch, chk, roll, spell) {
+  if (!chk.nat1 || !R.nat1Tempts({ attack: !!(roll && roll.isAttack), spell: !!spell, pushed: !!(roll && roll.fromPush) })) return null;
+  const hr = moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  bleed(s, ctx, ch, R.HORROR.nat1 - hr.applied); return hr;
 }
 /* Scene allowances are scoped to the scene and caster, shared across copies.
    A GM refresh begins a new encounter without altering cards or characters. */
@@ -481,6 +494,7 @@ function checkPowerContext(s, roll) { if ((roll.area || roll.limited) && (roll.s
 function grantPush(s, r, ch, a, ctx) {
   r.pushed = true; ch.pushPending = true; ch.pushTurn = turnKey(s); ch.pushScene = s.table.scene;
   const hr = moveHorror(s, a, ctx, R.HORROR.push, (applied, now) => ch.name + ' pushes for a second action.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  bleed(s, ctx, ch, R.HORROR.push - hr.applied);
   return { horror: { cur: hr.cur, applied: hr.applied, crossed: hr.crossed } };
 }
 
@@ -544,7 +558,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
     L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat), { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
-    natOne(s, a, ctx, ch, chk);
+    natOne(s, a, ctx, ch, chk, roll, u.spell);
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
   const effects = [], dice = [];
@@ -818,7 +832,7 @@ const HANDLERS = {
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
     L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20) });
-    const out = { rollId: roll.id }, hr = natOne(s, a, ctx, ch, chk); if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
+    const out = { rollId: roll.id }, hr = natOne(s, a, ctx, ch, chk, roll, false); if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
   useItem(s, c, a, ctx) { /* a hero uses an item: a check with the item's stat; on a success the player then rolls the item's own Effort die (see `effort`), plus their bonus in that kind. No Effort kind, no Effort roll;
@@ -853,7 +867,7 @@ const HANDLERS = {
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
-      nat = natOne(s, a, ctx, ch, chk);
+      nat = natOne(s, a, ctx, ch, chk, roll, u.spell);
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [] });
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
     const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };

@@ -34,6 +34,21 @@ test('PUSH: a natural 1 on an item\'s check adds its own point beside the item\'
   assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1\)\..*The Horror rises 1 \(now 2\)/);
 });
 
+test('PUSH: a natural 1 on a plain check (not an attack, not a spell) does not raise the Horror (the owner\'s rule, 2026-11-01)', async () => {
+  const { ann, thorne } = await setup([d20(1)]);
+  const r = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX' }); assert.equal(r.status, 200);
+  assert.equal(r.body.state.horror.cur, 0); assert.equal(r.body.result.horror, undefined);
+  assert.doesNotMatch(feed(r.body.state), /natural 1/);
+});
+
+test('PUSH: a natural 1 on a pushed second action raises the Horror even when that action is a plain check', async () => {
+  const { ann, thorne } = await setup([d20(2), d20(1)]);
+  const r1 = await roll(ann, thorne); assert.equal((await push(ann, last(r1).id)).body.state.horror.cur, 1);
+  const r2 = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX' }); assert.equal(last(r2).fromPush, true);
+  assert.equal(r2.body.state.horror.cur, 2, '1 for the push, 1 for the natural 1');
+  assert.match(feed(r2.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 2\)\./);
+});
+
 test('PUSH: a monster\'s natural 1 does not raise the Horror', async () => {
   const { t } = await setup([d20(1)]), st = await t.state();
   const r = await t.gm.cmd({ type: 'monsterAttack', cardId: find(st, 'Pit Ghoul').id, targetCardId: find(st, 'Thorne').id }); assert.equal(r.status, 200);

@@ -24,8 +24,9 @@ test('a player\'s roll tumbles on their screen and on the GM\'s, and lands on th
   await expect(ann.locator('#dice .die.landed b')).toHaveText(String(line.dice[0].n));
   await expect(ann.locator('#strip')).toContainText('Thorne');
   if (line.dice[0].n !== 1) await expect(ann.locator('#feed .tx')).toContainText(String(line.dice[0].n) + ' ');   // a natural 1 adds a second feed line: the check below covers it
-  /* landed, the line tells the result; on a natural 1 the line after it (the Horror rising) is the last one */
-  await expect(ann.locator('#feed .last')).toContainText(line.dice[0].n === 1 ? 'rolled a natural 1' : 'against Target');
+  /* landed, the line tells the result; when a natural 1 raised the Horror (attacks, spells, pushed actions) the line after it is the last one */
+  const nat1Horror = (await state(ann)).log.at(-1).text.includes('rolled a natural 1');
+  await expect(ann.locator('#feed .last')).toContainText(nat1Horror ? 'rolled a natural 1' : 'against Target');
   if (SHOTS) await ann.screenshot({ path: SHOTS + '/2-landed.png' });
   /* the GM's screen picks the roll up on its next look at the table and shows the same die */
   await expect(gm.locator('#dice .die.landed b')).toHaveText(String(line.dice[0].n));
