@@ -89,3 +89,38 @@ test('the public loot roller follows the VTT tables, shows book contents and sup
   expect(writes).toEqual([]);
   expect(page.errors).toEqual([]);
 });
+
+test('the loot search filters items and roll-table rows as you type, and clears with Escape', async ({ browser }) => {
+  test.setTimeout(30000);
+  const page = await newPage(browser);
+  await page.goto('/loot/');
+  const search = page.getByRole('searchbox', { name: 'Search the loot' });
+  const visible = page.locator('.loot-entry:visible');
+  await expect(search).toBeVisible();
+  await expect(visible).toHaveCount(178);
+  await search.fill('cinder lectionary');
+  await expect(visible).toHaveCount(1);
+  await expect(page.locator('#item-cinderlectionary')).toBeVisible();
+  await expect(page.locator('#loot-search-count')).toHaveText('1 of 178 items match.');
+  // Roll tables keep only the rows that point at a match; sections with nothing left are hidden.
+  await expect(page.locator('#table-grimoires tbody tr:visible')).toHaveCount(1);
+  await expect(page.locator('#table-arms')).toBeHidden();
+  await expect(page.locator('#loot-weapon')).toBeHidden();
+  // A spell name finds the books that hold it, ignoring capitals.
+  await search.fill('EMBER');
+  await expect(page.locator('#item-embers')).toBeVisible();
+  await search.fill('zzqx nothing');
+  await expect(visible).toHaveCount(0);
+  await expect(page.locator('#loot-search-count')).toHaveText('No loot matches “zzqx nothing”.');
+  await search.press('Escape');
+  await expect(search).toHaveValue('');
+  await expect(visible).toHaveCount(178);
+  await expect(page.locator('#loot-search-count')).toHaveText('');
+  // A jump link to a section the search hid clears the search so the link still lands.
+  await search.fill('cinder lectionary');
+  await expect(page.locator('#loot-weapon')).toBeHidden();
+  await page.getByRole('navigation', { name: 'Loot sections' }).getByRole('link', { name: 'Weapons', exact: true }).click();
+  await expect(page.locator('#loot-weapon')).toBeVisible();
+  await expect(search).toHaveValue('');
+  expect(page.errors).toEqual([]);
+});
