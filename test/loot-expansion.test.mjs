@@ -28,7 +28,7 @@ test('the expansion doubles each item category with stable catalogue definitions
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
   assert.equal(hash(G.spells.slice(0,23).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
-  assert.equal(hash(G.spells), '7c918a9f4ccda7735260a6c76801b0ef7c51c4af979967c408f8d3119d4b3b37');
+  assert.equal(hash(G.spells), 'a4e36ead81334f9fd57b31813ae838b6ad6111328ab3051f5d3c74dfa23585e9');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {

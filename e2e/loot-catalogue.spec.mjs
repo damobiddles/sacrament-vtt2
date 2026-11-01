@@ -65,10 +65,10 @@ test('the public loot roller follows the VTT tables, shows book contents and sup
   const button = page.getByRole('button', { name: 'Roll loot', exact: true });
   const result = page.getByRole('status');
   await expect(button).toBeVisible();
-  // A main-table 96, then 51 on Grimoires: the three-spell Litany of Low Doors.
-  await page.evaluate(() => { const dice = [0.95, 0.50]; Math.random = () => dice.shift(); });
+  // A main-table 96, then 43 on Grimoires: the three-spell Litany of Low Doors.
+  await page.evaluate(() => { const dice = [0.95, 0.42]; Math.random = () => dice.shift(); });
   await button.focus(); await button.press('Enter');
-  await expect(result).toContainText('You rolled 96 → Grimoires d100: 51.');
+  await expect(result).toContainText('You rolled 96 → Grimoires d100: 43.');
   await expect(result.getByRole('heading', { name: 'The Litany of Low Doors', exact: true })).toBeVisible();
   await expect(result.locator('.loot-spells > li')).toHaveCount(3);
   await expect(result.getByRole('link', { name: 'View in the catalogue' })).toHaveAttribute('href', '#item-lowdoors');
