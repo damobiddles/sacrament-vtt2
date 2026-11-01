@@ -2,7 +2,7 @@
 title: Rules and guides
 summary: The current Sacrament RPG rules used by the VTT, with player and GM guides and one shared range reference.
 ---
-These are the **current VTT rules**. The earlier experimental draft is retained in the project notes and is no longer presented as playable rules here. The [Player guide](/player-guide/) explains your character and first turn; the [GM guide](/gm-guide/) explains running the table. For a first session, use the [first game checklist](/how-to-play/).
+These are the **current VTT rules**. The earlier experimental draft is retained in the project notes and is no longer presented as playable rules here. The [Player guide](/player-guide/) explains your character and first turn; the [GM guide](/gm-guide/) explains running the table. For a first session, use the [first game checklist](/how-to-play/). What has changed recently, and corrections to earlier text, are on [Rules updates and errata](/rules/updates/).
 
 ## The numbers at the table
 
@@ -14,7 +14,7 @@ The values above come from the VTT rules file used by the server. GMs may change
 
 Roll d20 and add the relevant score. Meet or beat the Target to succeed. Easy and Hard change the Target, not the number of dice. The Target cannot fall below 1. A single check modifier is capped at +10.
 
-A hero's natural 1 adds 1 Horror on an attack roll, a spell roll or a pushed second action of any kind. A natural 1 on any other check adds no Horror. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal damage or Effort roll when enabled. Add the normal Effort bonus and the Ultimate bonus once each. If the normal ability already uses Ultimate, count that bonus only once. Heavy ordinary melee weapons add their +2 damage only once. Older pending rolls keep the rule they began with.
+A hero's natural 1 adds 1 Horror on an attack roll, a spell roll or a pushed second action of any kind. A natural 1 on any other check adds no Horror: ordinary checks, items that do not deal damage (such as bandages) and a weapon used on an obstacle's progress are plain checks. Every spell counts, healing spells included. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal damage or Effort roll when enabled. Add the normal Effort bonus and the Ultimate bonus once each. If the normal ability already uses Ultimate, count that bonus only once. Heavy ordinary melee weapons add their +2 damage only once. Older pending rolls keep the rule they began with.
 
 Monster attacks are different: natural 1 always misses and natural 20 always hits. Otherwise the monster's d20 plus Attack bonus must meet the hero's Defence.
 
@@ -50,7 +50,7 @@ The GM decides whether a place and time allow Party rest. It heals living heroes
 
 ## Horror and GM rulings
 
-Non-healing spells cost 1 Horror even if the check fails. A natural 1 and a Push add separate costs. Reaching a threshold alerts the GM; the GM chooses the consequence. At 21 the meter stays capped, and the hero pays in blood instead: each point of their Horror cost that cannot go on the meter (a Push, a natural 1 that counts, a spell or an item) costs them d4 HP. The current VTT does not automatically impose aftershocks, magic bans or rest bans.
+Non-healing spells cost 1 Horror even if the check fails. A natural 1 and a Push add separate costs. Reaching a threshold alerts the GM; the GM chooses the consequence. At 21 the meter stays capped, and the hero pays in blood instead: each point of their Horror cost that cannot go on the meter (a Push, a natural 1 that counts, a spell or an item) costs them d4 HP. That HP loss can drop a hero to 0 and start their dying countdown. The GM's own manual raises cost no blood. The current VTT does not automatically impose aftershocks, magic bans or rest bans.
 
 Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, conditional bonuses, esoteric magic require GM adjudication unless the controls explicitly say they are automated. Rend the Veil lets you choose several foes before the check, roll damage once; it applies to the selected foes together automatically. One Undo restores all that damage. The GM still confirms eligible targets and range. Once-per-scene abilities spend their use on the attempt, including a miss; copies share the same caster/source allowance. Rest, refreshing the page or leaving and returning to a scene do not refill it. In Play, the GM can confirm **Refresh scene abilities** for a new encounter in the named live scene; unfinished limited rolls from the previous encounter cannot then be applied. To restore a mistaken use, the GM undoes its damage first and then its attempt in Activity. Horror has its own Undo. The Executioner's Blade has a separate **final blow** action: Ultimate damage, 3 Horror and one attempt per scene, all tracked by the VTT.
 

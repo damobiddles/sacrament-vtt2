@@ -2,9 +2,9 @@
 title: Player guide
 summary: Create your first hero, join a table and understand the rules used by the current Sacrament RPG Table.
 ---
-These are the **current VTT rules**, checked against the application on 25 October 2026. Sacrament is still being playtested. Your GM decides what happens in the fiction and explains any house rules before play. You do not need to memorise this page.
+These are the **current VTT rules**, checked against the application on 1 November 2026. Sacrament is still being playtested. Your GM decides what happens in the fiction and explains any house rules before play. You do not need to memorise this page.
 
-[First game checklist](/how-to-play/) · [Create a hero](/character/) · [Join a game](/vtt/?join) · [GM guide](/gm-guide/)
+[First game checklist](/how-to-play/) · [Create a hero](/character/) · [Join a game](/vtt/?join) · [GM guide](/gm-guide/) · [Rules updates](/rules/updates/)
 
 ## Start here
 
@@ -39,7 +39,7 @@ The GM sets the **Target**, the number to meet or beat. Roll **d20 + the relevan
 
 Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A successful conversation or a simple lock may need no further roll. The GM describes the result.
 
-**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses. It adds 1 Horror on an attack, a spell or a pushed second action, but not on other checks. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
+**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses. It adds 1 Horror on an attack, a spell (healing spells too) or a pushed second action, but not on other checks. Using bandages or another item that deals no damage is a plain check. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
 
 ## Attacks: target, roll, damage
 
@@ -81,9 +81,9 @@ The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowanc
 
 ## The shared Horror
 
-The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you d4 HP.
+The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you d4 HP. That can bring you to 0 HP and start your dying countdown.
 
-At **7, 14 and 21**, the VTT alerts the GM. The GM decides what happens in the story. It does not automatically apply aftershock tables, extra damage or other consequences. Tell your group before accepting a dangerous cost.
+At **7, 14 and 21**, the VTT alerts the GM. The GM decides what happens in the story. Apart from paying in blood at 21, the table does not apply aftershock tables or other consequences by itself. Tell your group before accepting a dangerous cost.
 
 ## Staying connected and getting help
 
