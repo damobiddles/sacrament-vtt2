@@ -11,7 +11,7 @@ test('RECAP: a new table starts one; rolls, the hardest blow, a fall, a gift and
   t.queue(d20(20)); const r = await p.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: ghoul.id }); assert.equal(r.status, 200, JSON.stringify(r.body));
   t.queue(die(8, 8)); await p.cmd({ type: 'effort', rollId: r.body.result.rollId, cat: 'weapons' });
   await p.cmd({ type: 'apply', rollId: r.body.result.rollId, cardId: ghoul.id, field: 'hp' });
-  t.queue(d20(1)); await p.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX' });
+  t.queue(d20(1)); await p.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX', attack: true, targetCardId: ghoul.id });   /* an attack: a plain check's natural 1 adds no Horror */
   await t.gm.cmd({ type: 'track', id: thorne.cardId, field: 'hp', value: 0 });
   const bell = find(st, 'Warden’s Bell'); await t.gm.cmd({ type: 'giveCard', id: bell.id, pid: p.pid });
   st = await t.state(); const C = st.recap, h = C.heroes[thorne.id];

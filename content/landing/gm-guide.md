@@ -43,7 +43,7 @@ Set one visible **Target** for the current situation. A hero rolls d20 + a score
 
 A normal check may resolve the situation immediately. Use Effort when the amount matters: damage to a foe or progress against an obstacle. Basic d4, Weapons d6, Guns d8, Magic d10 and Ultimate d12 are the default dice; heroes add their matching Effort bonus. Item actions supply their own category. Healing follows its listed dice without the Magic Effort bonus.
 
-For **hero checks**, the total determines success, even on a natural 1 or 20. A hero's natural 1 adds 1 Horror. A successful natural 20 offers Ultimate when the table option is on. For **monster attacks**, natural 1 always misses and natural 20 always hits. Do not apply that monster exception to hero checks.
+For **hero checks**, the total determines success, even on a natural 1 or 20. A hero's natural 1 adds 1 Horror on an attack, a spell or a pushed second action; a natural 1 on any other check adds nothing. A successful natural 20 offers Ultimate when the table option is on. For **monster attacks**, natural 1 always misses and natural 20 always hits. Do not apply that monster exception to hero checks.
 
 Players should select a target before attacking. A successful attack carries that target into damage; rolling damage applies it automatically. An ordinary failed check cannot Push. A player can Push a failed attack only on their own active turn: +1 Horror for a second immediate action, once, with no further Push of that action. For an exception, select that hero and press **Allow this Push (+1 Horror)** on their latest failed attack. It spends the cost and grants one extra action atomically. Without turn order, only the GM can grant this exception.
 
@@ -71,7 +71,7 @@ Healing Undo restores the related HP, charge and allowance. Undo later related h
 
 ## Horror and consequences
 
-The shared meter runs from 0 to 21. Healing spells add 0 casting Horror; other spells add 1, whether or not they succeed. Relics and other items use their stated cost. A hero's natural 1 and a Push each add 1 separately. A non-healing spell with a natural 1 therefore adds 2.
+The shared meter runs from 0 to 21. Healing spells add 0 casting Horror; other spells add 1, whether or not they succeed. Relics and other items use their stated cost. A Push adds 1. A hero's natural 1 adds 1 separately on an attack, a spell or a pushed action of any kind, but not on other checks. A non-healing spell with a natural 1 therefore adds 2.
 
 Crossing **7, 14 or 21** announces the threshold and alerts you. **You decide what the Horror does.** The VTT does not automatically run aftershock tables, forbid magic or apply overflow damage at 21. Use the Table tab or Activity Undo to adjust mistakes; Party rest can lower the meter. Explain any additional consequences you choose before players accept a risk.
 

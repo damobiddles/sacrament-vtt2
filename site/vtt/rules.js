@@ -33,7 +33,8 @@
      whether or not the check succeeds (using it is what tempts the Horror). An amount is a whole number ("horror": 2) or dice rolled at the moment of use ("horror": "d4+2").
      An amount of 0 does nothing. Passing a threshold announces it in the feed and alerts the GM; the GM decides what it means, and the table applies no effect itself.
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
-     A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20). */
+     A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20),
+     but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01). */
   var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
   var HORROR_DICE = /^([1-9]?)d(4|6|8|10|12|20)(?:\+([0-9]{1,2}))?$/;   /* "d6", "2d4", "d4+2" */
 
@@ -55,6 +56,8 @@
     return { amount: amount, rolled: rolled, text: amount + ' (' + sayHorrorAmount(v) + ': ' + rolled.join(' + ') + (h.plus ? ' + ' + h.plus : '') + ')' };
   }
   /* Move the meter by `d` (up or down), kept from 0 to the maximum. `crossed` is every threshold passed on the way up, lowest first; going down crosses none. */
+  /* Whether a hero's natural 1 tempts the Horror: { attack, spell, pushed } describe the roll. */
+  function nat1Tempts(o) { o = o || {}; return !!(o.attack || o.spell || o.pushed); }
   function horrorMove(cur, d) {
     cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max);
     return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t; }), arrived: to >= HORROR.max };
@@ -175,6 +178,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove,
+    HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

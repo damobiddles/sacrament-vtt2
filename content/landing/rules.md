@@ -14,7 +14,7 @@ The values above come from the VTT rules file used by the server. GMs may change
 
 Roll d20 and add the relevant score. Meet or beat the Target to succeed. Easy and Hard change the Target, not the number of dice. The Target cannot fall below 1. A single check modifier is capped at +10.
 
-A hero's natural 1 adds 1 Horror. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal damage or Effort roll when enabled. Add the normal Effort bonus and the Ultimate bonus once each. If the normal ability already uses Ultimate, count that bonus only once. Heavy ordinary melee weapons add their +2 damage only once. Older pending rolls keep the rule they began with.
+A hero's natural 1 adds 1 Horror on an attack roll, a spell roll or a pushed second action of any kind. A natural 1 on any other check adds no Horror. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal damage or Effort roll when enabled. Add the normal Effort bonus and the Ultimate bonus once each. If the normal ability already uses Ultimate, count that bonus only once. Heavy ordinary melee weapons add their +2 damage only once. Older pending rolls keep the rule they began with.
 
 Monster attacks are different: natural 1 always misses and natural 20 always hits. Otherwise the monster's d20 plus Attack bonus must meet the hero's Defence.
 
