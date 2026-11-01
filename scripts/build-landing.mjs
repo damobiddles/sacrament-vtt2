@@ -28,6 +28,7 @@ const PAGES = [
   { slug: 'rules', path: '/rules/', label: 'Rules' },
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
+  { slug: 'rules-updates', path: '/rules/updates/', label: 'Rules updates', guide: true },
   { slug: 'blog', path: '/news/', label: 'News' },
   { slug: 'resources', path: '/resources/', label: 'Resources' },
   { slug: 'scenes', path: '/scenes/', label: 'Free Scenes' },
@@ -176,6 +177,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('rules', NAME);
   text('player-guide', NAME);
   text('gm-guide', NAME);
+  text('rules-updates', NAME);
   text('resources', NAME, resources());
   text('scenes', NAME);
   text('loot', NAME, '', lootCatalogue(globalThis.SACRAMENT_GEAR));

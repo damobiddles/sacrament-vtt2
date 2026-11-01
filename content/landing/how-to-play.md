@@ -38,4 +38,4 @@ My heroes saves locally, not to an account. Download a private heroes backup bef
 
 The table handles shared rolls and supported mechanics. The GM decides range, esoteric effects, free-text custom effects and Horror consequences. Both guides distinguish those rulings from automation. The rules are still being playtested.
 
-[Player guide](/player-guide/) · [GM guide](/gm-guide/) · [Loot and custom equipment](/loot/) · [Free VTT artwork](/resources/) · [Report a problem or share feedback](/feedback/)
+[Player guide](/player-guide/) · [GM guide](/gm-guide/) · [Rules updates and errata](/rules/updates/) · [Loot and custom equipment](/loot/) · [Free VTT artwork](/resources/) · [Report a problem or share feedback](/feedback/)
