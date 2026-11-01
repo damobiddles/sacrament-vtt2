@@ -32,6 +32,15 @@ Players need a hero and the rules close to hand, not the adventure.
 - [Make a hero with the character builder](/character/), then print or save it as a PDF character sheet
 - The player cheat sheet, two pages with checks, Effort, Push, the Horror, healing and dying: [download the PDF (A4)](/downloads/players/sacrament-player-cheat-sheet-A4.pdf) or [US Letter](/downloads/players/sacrament-player-cheat-sheet-Letter.pdf)
 
+## Everything for the table, in one place
+
+There is now a [Play in person](/play-in-person/) page with everything you need to run this around a real table: what to bring, who keeps track of what, and the rules on one page. It also has new downloads:
+
+- **The print-and-play kit:** nine sheets with a quick reference, a blank character sheet, the Horror track, a fold-up Target sign, foe cards, countdowns and a healing log. [A4](/downloads/print-kit/sacrament-print-kit-A4.pdf) or [US Letter](/downloads/print-kit/sacrament-print-kit-Letter.pdf).
+- **Before the Snow,** the opening reading for one of the players to read aloud. No spoilers. [A4](/downloads/adventures/before-the-snow-A4.pdf), [US Letter](/downloads/adventures/before-the-snow-Letter.pdf) or [listen to it narrated](/downloads/adventures/before-the-snow.mp3) (4 minutes).
+- **The players' map** of the priory, safe to put on the table. [A4](/downloads/adventures/the-guest-at-greave-players-map-A4.pdf) or [US Letter](/downloads/adventures/the-guest-at-greave-players-map-Letter.pdf).
+- **The whole adventure, narrated,** for the GM to listen to while preparing. It gives away every secret. [MP3, 37 minutes](/downloads/adventures/the-guest-at-greave-audio.mp3).
+
 ## Why a real table
 
 The VTT does a lot of quiet work: it rolls, adds, tracks HP and keeps the Horror meter honest. Around a kitchen table, nobody does that for you. This game will show us which rules are easy to carry in your head, which numbers people forget, and where the table had been hiding a rough edge.

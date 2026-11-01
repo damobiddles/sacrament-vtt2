@@ -25,4 +25,6 @@ The GM still decides range, esoteric effects and what the Horror does. Read the 
 - A hero created on [My heroes](/character/), or a hero the GM provides.
 - A way to talk to each other, in person or through your usual voice call. The VTT does not provide voice chat.
 
+You can also play without a screen: [Play in person](/play-in-person/) has printable sheets, a ready-to-run adventure and a list of what to bring.
+
 No account or installation is needed. Sacrament is being playtested, so the rules and tools will continue to develop. Follow [News](/news/) and send [feedback](/feedback/) after your session.

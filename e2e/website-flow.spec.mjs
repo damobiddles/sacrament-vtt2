@@ -4,7 +4,7 @@ test.setTimeout(60000);
 
 test('public pages share one navigation and identify their section', async ({ browser }) => {
   const page = await newPage(browser); let expected;
-  for (const path of ['/', '/how-to-play/', '/player-guide/', '/gm-guide/', '/the-game/', '/setting/', '/resources/', '/loot/', '/rules/', '/brand/', '/adventure/', '/news/', '/feedback/']) {
+  for (const path of ['/', '/how-to-play/', '/player-guide/', '/gm-guide/', '/the-game/', '/setting/', '/resources/', '/loot/', '/rules/', '/brand/', '/adventure/', '/play-in-person/', '/adventures/the-guest-at-greave/', '/news/', '/feedback/']) {
     await page.goto(path);
     await expect(page.locator('.ic-nav')).toHaveCount(1);
     const links = await bounded(page.locator('.ic-nav ul a').evaluateAll(as => as.map(a => [a.textContent.trim(), a.getAttribute('href')])), 10000, 'reading main navigation');
