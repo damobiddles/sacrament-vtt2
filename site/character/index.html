@@ -26,7 +26,7 @@
   <div class="row"><label>Starting focus<select id="generatorFocus" aria-describedby="focusHelp"><option value="random">Surprise me</option><option value="fighter">Fighter</option><option value="scout">Scout</option><option value="scholar">Scholar (magic)</option><option value="healer">Healer (prayers)</option></select></label><button class="btn" type="button" id="generateHero">Generate a hero</button></div>
   <p class="note" id="focusHelp">Not sure? Surprise me chooses a complete, playable starting kit for you.</p>
   <div id="generatorPreview" aria-live="polite"></div>
-  <div class="row"><button class="btn" type="button" id="keepGenerated" hidden>Keep this hero</button></div>
+  <div class="row"><button class="btn" type="button" id="keepGenerated" hidden>Keep this hero</button><button class="btn ghost" type="button" id="printGenerated" hidden>Print or save as PDF</button></div>
   <p class="note" id="generatorStatus" role="status">Generating a suggestion does not change your saved heroes. Each one uses the current starting rules.</p>
 </section>
 
@@ -40,7 +40,8 @@
 <h2 id="heroNextTitle">3. Bring your hero to a game</h2>
 <p id="heroReadiness" role="status"></p>
 <p>Open your GM’s invitation link in this browser, or join with their six-letter code. After joining, choose <b>Bring a hero</b> and select your hero. Joining uses your player name; you choose your hero afterwards.</p>
-<p><a class="btn" href="/vtt/?join">Join a game</a> <a href="#sheetHere">Customise this hero</a></p>
+<p><a class="btn" href="/vtt/?join">Join a game</a> <button class="btn ghost" type="button" id="printHero">Print or save as PDF</button> <a href="#sheetHere">Customise this hero</a></p>
+<p class="note">Print opens a paper character sheet in a new tab. To download it, choose <b>Save as PDF</b> as the printer.</p>
 <p class="note">Bringing a hero makes a separate copy at that table. Later changes here do not update the table’s copy. Keep a backup before changing browser or device.</p>
 </section>
 <div id="sheetHere"></div>
@@ -114,6 +115,7 @@
   function add(h) { if (!H.canAdd(S)) { renderStorage(); return null; } S.heroes.push(h); S.current = h.id; save(); render(); return h; }
   $('heroSel').onchange = function () { S.current = this.value; save(); render(); };
   $('newHero').onclick = function () { add(H.blank('New hero')); };
+  $('printHero').onclick = function () { var h = cur(); if (h) window.open('/character/print/#' + encodeURIComponent(JSON.stringify(h)), '_blank', 'noopener'); };
   $('delHero').onclick = function () { var c = cur(); if (!c || !confirm('Delete ' + c.name + '? This cannot be undone.')) return; S.heroes = S.heroes.filter(function (h) { return h !== c; }); S.current = S.heroes.length ? S.heroes[0].id : ''; save(); render(); };
   if (!cur() && S.heroes.length) S.current = S.heroes[0].id;
   /* what the earlier-characters section below needs */

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Character sheet | Sacrament RPG</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/theme.css">
+<!-- The blackletter face is for the printed sheet only (the "Sacrament" mark and the headings). It is never loaded by the table. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap">
+<link rel="stylesheet" href="/character/print/print.css">
+<meta name="theme-color" content="#12100d">
+</head>
+<body>
+<div class="ps-bar" role="region" aria-label="Print controls">
+  <a class="btn ghost small" href="/character/">Back to My heroes</a>
+  <button class="btn" type="button" id="printNow">Print or save as PDF</button>
+  <p class="note">To download the sheet, choose <b>Save as PDF</b> as the printer. A4 and Letter both fit. The hero stays in this browser: nothing is sent anywhere.</p>
+</div>
+<main id="printSheet"></main>
+<script src="/vtt/rules.js"></script>
+<script src="/sheet/gear.js"></script>
+<script src="/sheet/sheet-core.js"></script>
+<script src="/character/print/print.js"></script>
+</body>
+</html>

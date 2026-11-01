@@ -65,3 +65,21 @@ test('restore cancellation, invalid files and changed versions preserve existing
   await expect(page.locator('#heroSel option')).toHaveCount(2);await expect(page.locator('#heroSel')).toContainText('restored copy');
   const saved=JSON.parse(await stored(page));expect(saved.heroes[0].notes).toBe('');expect(saved.heroes[1].notes).toBe('A different version');expect(page.errors).toEqual([]);
 });
+
+test('a generated or saved hero opens as a printable sheet in a new tab',async({browser})=>{
+  const page=await newPage(browser);await page.goto('/character/');
+  await expect(page.locator('#printGenerated')).toBeHidden();
+  await page.locator('#generatorFocus').selectOption('healer');await page.locator('#generateHero').click();
+  await page.locator('#proposalName').fill('Ursel <b>Tarn</b>');
+  const [sheet]=await Promise.all([page.context().waitForEvent('page'),page.locator('#printGenerated').click()]);
+  await expect(sheet.locator('.ps-page').first()).toContainText('Ursel <b>Tarn</b>');
+  await expect(sheet.locator('.ps-magic')).toContainText('The Seventh Penance');
+  await expect(sheet.locator('#printNow')).toBeEnabled();
+  expect(await stored(page)).toBe(null);
+  await page.locator('#keepGenerated').click();
+  const [saved]=await Promise.all([page.context().waitForEvent('page'),page.locator('#printHero').click()]);
+  await expect(saved.locator('.ps-page').first()).toContainText('Ursel <b>Tarn</b>');
+  const empty=await newPage(browser);await empty.goto('/character/print/');
+  await expect(empty.locator('#printSheet')).toContainText('No hero to print');await expect(empty.locator('#printNow')).toBeDisabled();
+  expect(page.errors).toEqual([]);expect(empty.errors).toEqual([]);
+});
