@@ -8,6 +8,7 @@ Everything on the home page and its pages (https://playsacrament.com/, /the-game
 | About the game | `the-game.md` |
 | The setting (your text goes in the marked boxes) | `setting.md` |
 | The how-to-play guide | `how-to-play.md` |
+| Play in person (/play-in-person/): what to bring, printables, the adventure | `play-in-person.md`; the download cards and the "who keeps track" table are in `scripts/build-landing.mjs` (`playInPerson`), the files in `site/downloads/` |
 | The feedback page | `feedback.md` |
 | The support page | `support.md` |
 | The privacy page (a draft for you to review) | `privacy.md` |

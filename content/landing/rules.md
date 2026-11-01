@@ -2,7 +2,7 @@
 title: Rules and guides
 summary: The current Sacrament RPG rules used by the VTT, with player and GM guides and one shared range reference.
 ---
-These are the **current VTT rules**. The earlier experimental draft is retained in the project notes and is no longer presented as playable rules here. The [Player guide](/player-guide/) explains your character and first turn; the [GM guide](/gm-guide/) explains running the table. For a first session, use the [first game checklist](/how-to-play/). What has changed recently, and corrections to earlier text, are on [Rules updates and errata](/rules/updates/).
+These are the **current VTT rules**. The earlier experimental draft is retained in the project notes and is no longer presented as playable rules here. The [Player guide](/player-guide/) explains your character and first turn; the [GM guide](/gm-guide/) explains running the table. For a first session, use the [first game checklist](/how-to-play/). What has changed recently, and corrections to earlier text, are on [Rules updates and errata](/rules/updates/). Playing on paper? The numbers are the same; [Play in person](/play-in-person/) has printable sheets and a one-page summary.
 
 ## The numbers at the table
 

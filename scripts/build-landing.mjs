@@ -29,6 +29,7 @@ const PAGES = [
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'rules-updates', path: '/rules/updates/', label: 'Rules updates', guide: true },
+  { slug: 'play-in-person', path: '/play-in-person/', label: 'Play in person' },
   { slug: 'blog', path: '/news/', label: 'News' },
   { slug: 'resources', path: '/resources/', label: 'Resources' },
   { slug: 'scenes', path: '/scenes/', label: 'Free Scenes' },
@@ -104,8 +105,42 @@ const feedbackForm = `<form class="ic-form feedback-form" name="vtt-feedback" me
 </form>`;
 
 
+/* /play-in-person/: the downloads for a real table. Files live in site/downloads/ (committed). */
+const pdfPair = (base, size) => '<a href="' + base + '-A4.pdf" download>A4 PDF</a> · <a href="' + base + '-Letter.pdf" download>US Letter PDF</a>' + (size ? ' <span class="small">(' + size + ' each)</span>' : '');
+const dlCard = (tag, title, desc, links, img) => '<article class="card">' + (img ? '<img class="resource-image" src="' + img[0] + '" alt="' + esc(img[1]) + '" loading="lazy" decoding="async">' : '') + '<span class="tag">' + tag + '</span><h3>' + title + '</h3><p>' + desc + '</p><p class="dl-links">' + links + '</p></article>';
+function playInPerson(html) {
+  const paths = '<nav class="role-paths" aria-label="On this page"><a href="#what-to-bring">What to bring</a><a href="#free-printables">Free printables</a><a href="#the-adventure-the-guest-at-greave">The adventure</a><a href="#the-rules-at-a-glance">The rules at a glance</a></nav>';
+  const downloads = '<div class="resource-grid">' + [
+    dlCard('For everyone', 'Print-and-play kit', 'Nine sheets: a quick reference, a blank character sheet with a notes page, the Horror track and a fold-up Target sign, foe and obstacle cards, turn slips and countdowns, a healing log, item and grimoire cards, and a what-to-bring checklist.', pdfPair('/downloads/print-kit/sacrament-print-kit', '0.5 MB')),
+    dlCard('For players', 'Player cheat sheet', 'Two pages with everything a player needs to hand: checks, Effort, Push, the Horror, healing and dying.', pdfPair('/downloads/players/sacrament-player-cheat-sheet', '0.3 MB')),
+    dlCard('For players', 'Your hero, printed', 'Generate a hero on My heroes, then press Print or save as PDF for a filled-in character sheet.', '<a class="btn" href="/character/">Make a hero</a>'),
+    dlCard('For the GM', 'Current Loot Tables', 'Every item, grimoire and relic, with the d100 tables you roll when the heroes search. Print the page or keep it open on a phone.', '<a class="btn" href="/loot/">Open the loot tables</a>'),
+  ].join('') + '</div>';
+  const adventure = '<div class="resource-grid">' + [
+    dlCard('For the GM', 'The Guest at Greave', 'The full adventure: the priory and its people, five scenes, the monster and how to run the suspicion. Read it online or print all 20 pages.', '<a class="btn" href="/adventures/the-guest-at-greave/">Read it online</a></p><p class="dl-links">' + pdfPair('/downloads/adventures/the-guest-at-greave', '0.8 MB')),
+    dlCard('For the GM', 'The adventure, narrated', 'The whole adventure read aloud, for preparing on a walk or a commute. It gives away every secret.', '<a href="/downloads/adventures/the-guest-at-greave-audio.mp3" download>MP3, 37 minutes</a> <span class="small">(18 MB)</span>'),
+    dlCard('For the players', 'Before the Snow', 'The opening reading: the world as the Church tells it, the village of Tarnwick, and the fire that did not burn. One player reads it aloud before the first scene. No spoilers.', pdfPair('/downloads/adventures/before-the-snow', '0.2 MB') + '</p><p class="dl-links"><a href="/downloads/adventures/before-the-snow.mp3" download>Narrated MP3, 4 minutes</a> <span class="small">(6 MB)</span>'),
+    dlCard('For the players', 'The players’ map', 'A charcoal sketch of the priory, the glacier and the gorge, as the heroes first see them. Safe to put on the table.', pdfPair('/downloads/adventures/the-guest-at-greave-players-map', '4 MB'), ['/art/adventures/the-guest-at-greave-map.webp', 'A charcoal sketch map of a walled priory below a glacier, with a gorge and a rope bridge beneath it']),
+  ].join('') + '</div>';
+  const jobs = [
+    ['Adding up checks against the Target', 'The player says the total; the GM confirms it'],
+    ['Taking damage off HP, or adding progress to an obstacle', 'The GM crosses boxes on the foe card; players erase their own HP'],
+    ['Adding Horror for spells, items, natural 1s and Pushes', 'Whoever caused it moves the coin on the Horror track'],
+    ['Paying in blood past 21', 'The hero who caused it rolls d4 for each point and loses that HP'],
+    ['Remembering who has had which healing since the last rest', 'The healing log in the kit'],
+    ['Ticking countdowns and dying heroes each round', 'The GM, each time the round coin moves'],
+    ['Rolling loot', 'The GM, with the printed loot tables'],
+    ['Keeping hidden foes and GM notes secret', 'Face-down cards and the GM screen'],
+    ['Undo', 'An eraser, and an honest table'],
+  ];
+  const jobTable = '<div class="table-scroll"><table class="jobs"><thead><tr><th scope="col">The job</th><th scope="col">Who does it at a real table</th></tr></thead><tbody>' + jobs.map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + '</td></tr>').join('') + '</tbody></table></div>';
+  html = html.replace(/<h2>(.*?)<\/h2>/g, (_, t) => '<h2 id="' + t.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '">' + t + '</h2>');
+  return html.replace('<p>{{PLAY_PATHS}}</p>', paths).replace('<p>{{DOWNLOADS}}</p>', downloads).replace('<p>{{ADVENTURE}}</p>', adventure).replace('<p>{{JOBS}}</p>', jobTable);
+}
+
 function resources() {
   const cards = [
+    ['Play', 'Play in person', '/play-in-person/', 'Printable sheets, a player cheat sheet and The Guest at Greave adventure, for playing with dice and paper.', 'Get the printables'],
     ['Play', 'My heroes', '/character/', 'Generate a character, customise the sheet, or download and restore a private backup.', 'Build and manage heroes'],
     ['Reference', 'Player and GM rules', '/rules/', 'The current VTT rules, examples and first-session guidance, organised by role.', 'Find your guide'],
     ['Play', 'Free Scenes', '/scenes/', 'Download a prepared encounter with pictures, enemies and obstacles, ready to import into your own table.', 'Find a scene'],
@@ -144,9 +179,9 @@ function build() {
   write('/', page(h.title + ' | A shared table in your browser', h.summary, '/',
     `<header class="bhead ic-hero"><div class="wrap"><div class="label">A tabletop roleplaying game</div><div class="ic-hero-title"><h1>${esc(h.title)}</h1><img class="ic-hero-symbol" src="/favicon.svg" width="108" height="108" alt="" aria-hidden="true"></div><p class="lede">${esc(h.lede || h.summary)}</p>
 <p class="ic-cta"><a class="btn" href="/vtt/?join">Join a game</a> <a class="btn" href="/vtt/?run">Run a game</a> <a class="btn" href="/character/">Build and manage characters</a></p>
-<p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share.</p>
+<p class="small">Joining a game? You need a six-letter code or an invitation link from your GM. Running one? You get a code to share. Playing around a real table? <a href="/play-in-person/">Get the printables</a>.</p>
 <p class="small ic-flavour"><em>The Church keeps the world. Someone has to go where it won't.</em></p></div></header>
-<main class="wrap blist ic-cards"><section class="site-start" aria-labelledby="start-heading"><h2 id="start-heading">Find your way into Sacrament</h2><div class="site-paths"><div><h3>Discover the game</h3><p>Learn what you play, how the dice work and the world your heroes inhabit.</p><a href="/the-game/">Meet Sacrament RPG</a></div><div><h3>Play your first session</h3><p>Follow a short checklist for players and GMs, with links to the current rules.</p><a href="/how-to-play/">Start here</a></div><div><h3>Find tools and artwork</h3><p>Browse loot, manage heroes and download scenes for your table.</p><a href="/resources/">Explore the resources</a></div></div></section>${cards}${latestPost}<p class="ic-more"><a href="/how-to-play/">First game checklist</a> &middot; <a href="/feedback/">Share feedback</a></p>
+<main class="wrap blist ic-cards"><section class="site-start" aria-labelledby="start-heading"><h2 id="start-heading">Find your way into Sacrament</h2><div class="site-paths"><div><h3>Discover the game</h3><p>Learn what you play, how the dice work and the world your heroes inhabit.</p><a href="/the-game/">Meet Sacrament RPG</a></div><div><h3>Play your first session</h3><p>Follow a short checklist for players and GMs, with links to the current rules.</p><a href="/how-to-play/">Start here</a></div><div><h3>Find tools and artwork</h3><p>Browse loot, manage heroes and download scenes for your table.</p><a href="/resources/">Explore the resources</a></div><div><h3>Play around a real table</h3><p>Print the sheets, bring dice and run a ready-made adventure, no screens needed.</p><a href="/play-in-person/">Play in person</a></div></div></section>${cards}${latestPost}<p class="ic-more"><a href="/how-to-play/">First game checklist</a> &middot; <a href="/feedback/">Share feedback</a></p>
 ${notes('early', 'This is an early version, built in the open. The rules it follows are still being worked out, so some details may change.')}
 </main>`));
 
@@ -154,6 +189,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   const text = (slug, label, extraAfter = '', extraBefore = '') => {
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
     let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
+    if (slug === 'play-in-person') html = playInPerson(html);
     html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules));
     if (meta.guide) {
       const sections = [];
@@ -166,7 +202,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
     }
     if (slug === 'how-to-play') {
       html = html.replace('<h2>I am a player</h2>', '<h2 id="for-players">I am a player</h2>').replace('<h2>I am the GM</h2>', '<h2 id="for-gms">I am the GM</h2>');
-      html = '<nav class="role-paths" aria-label="Choose your role"><a href="#for-players">I am a player</a><a href="#for-gms">I am the GM</a><a href="/rules/">Find a rules guide</a></nav>' + html;
+      html = '<nav class="role-paths" aria-label="Choose your role"><a href="#for-players">I am a player</a><a href="#for-gms">I am the GM</a><a href="/rules/">Find a rules guide</a><a href="/play-in-person/">Playing with paper and dice?</a></nav>' + html;
     }
     write(meta.path, page(p.title + ' | ' + NAME, p.summary, meta.path,
       `${head(label, p.title, p.summary)}<main class="wrap post ic-body${slug === 'resources' ? ' site-resources' : ''}"><div class="body">${extraBefore}${extraBefore ? '<section id="about-loot" class="loot-about"><h2>About these tables</h2>' + html + '</section>' : html}${extraAfter}</div></main>`));
@@ -178,6 +214,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('player-guide', NAME);
   text('gm-guide', NAME);
   text('rules-updates', NAME);
+  text('play-in-person', NAME, '<aside class="site-next"><h2>Rather play online?</h2><p>The same rules run on the Sacrament RPG Table, which rolls, adds up and keeps the Horror for you. <a class="btn" href="/how-to-play/">Start your first online game</a></p></aside>');
   text('resources', NAME, resources());
   text('scenes', NAME);
   text('loot', NAME, '', lootCatalogue(globalThis.SACRAMENT_GEAR));
@@ -196,7 +233,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
       `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
 <nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
-  const urls = [...new Set([...PAGES.map(p => p.path), '/rules/', '/character/', '/vtt/', '/brand/', '/adventure/', ...posts.map(p => '/news/' + p.slug + '/')])];
+  const urls = [...new Set([...PAGES.map(p => p.path), '/rules/', '/character/', '/vtt/', '/brand/', '/adventure/', '/adventures/the-guest-at-greave/', ...posts.map(p => '/news/' + p.slug + '/')])];
   writeFileSync(new URL('sitemap.xml', OUT), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(path => '<url><loc>' + SITE + esc(path) + '</loc></url>').join('\n') + '\n</urlset>\n');
   console.log('Built the Sacrament RPG pages: ' + PAGES.length + ' pages and ' + posts.length + ' post(s).');
 }
