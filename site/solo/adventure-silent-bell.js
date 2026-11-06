@@ -31,6 +31,7 @@
             + ' A wayshrine stands by the gate with a tin offering box at its foot.' + (api.flag('talked') ? '' : ' In the nearest house a shutter opens a finger\'s width. Someone is watching you.')
         },
         exits: { north: 'nave' },
+        secret: 'Under the wayshrine\'s stone lip someone has scratched a tally of nights: three, each one crossed with a little flame. Tilda has been counting too.',
         actions: [
           { id: 'talk', label: 'Talk to the watcher at the shutter', words: ['talk', 'shutter', 'watcher', 'woman', 'ask'], when: function (api) { return !api.flag('talked'); },
             run: function (api) {
@@ -63,6 +64,7 @@
           east: { to: 'tower', when: function (api) { return api.flag('door'); }, closed: 'The tower door is locked. Brother Odo would have the key.' },
           down: 'crypt'
         },
+        secret: 'Wax has been scraped from the floor in long strokes, all leading to the crypt steps. Whatever ate the candles carried nothing away: it ate where it stood, and went back down.',
         actions: [
           { id: 'ledger', label: 'Read the sexton\'s ledger', words: ['ledger', 'read', 'book', 'lectern'], when: function (api) { return !api.flag('ledger'); },
             run: function (api) {
@@ -79,9 +81,9 @@
             run: function (api) {
               var bar = api.has(BARS);
               api.say(bar ? 'You set the crowbar in the jamb.' : 'You put your shoulder to the old oak.');
-              var c = api.check('STR', { adj: bar ? 'easy' : 'hard', what: 'Forcing the door' });
-              if (c.success) { api.flag('door', true); api.say('The lock tears out of the frame with a noise like a shot. The tower stair is behind it.'); }
-              else api.say('The door holds. The noise goes down the crypt steps and does not come back.');
+              var c = api.work('door', { adj: bar ? 'easy' : 'normal', what: 'Forcing the door' });
+              if (c.success && !api.flag('door')) api.say('The wood groans and gives a little. Not yet.');
+              else if (!c.success) api.say('The door holds. The noise goes down the crypt steps and does not come back.');
               if (!c.success && !api.flag('beat_eater') && !api.flag('roused')) { api.flag('roused', true); api.say('Something on the crypt stair heard you. It is coming up.', 'foe'); api.fight('eater'); }
             } }
         ]
@@ -90,14 +92,17 @@
         name: 'The Crypt', short: 'the crypt', art: 'crypt', dark: true,
         text: function (api) {
           return 'A low vault. Shelves of old bones in their niches, and on the floor a man in a sexton\'s black, curled on his side.'
-            + (api.flag('beat_eater') ? (api.flag('key') ? ' Brother Odo breathes, slow and shallow.' : ' He is breathing.') : ' Something crouches over him.');
+            + (api.flag('odo_dead') ? ' He is not breathing.' : api.flag('beat_eater') ? (api.flag('key') ? ' Brother Odo breathes, slow and shallow.' : ' He is breathing.') : ' Something crouches over him, feeding.');
         },
         exits: { up: 'nave' },
-        enter: function (api) { if (!api.flag('beat_eater') && !api.s.fight) api.fight('eater'); },
+        dead: true,
+        secret: 'The old bones answer in dry whispers. Three nights ago the sexton came down with a lit candle, and it was the candle it wanted first. It still wants light more than it wants you.',
+        enter: function (api) { if (!api.flag('beat_eater') && !api.s.fight) { api.fight('eater'); if (!api.flag('odo_dead')) { api.timer('odo', 'start'); api.say('Brother Odo is still alive under it. Each round it feeds, he has less breath left.', 'note'); } } },
         actions: [
-          { id: 'odo', label: 'See to Brother Odo', words: ['odo', 'brother', 'sexton', 'man', 'body', 'key'], when: function (api) { return api.flag('beat_eater') && !api.flag('key'); },
+          { id: 'odo', label: function (api) { return api.flag('odo_dead') ? 'Take the key from Brother Odo\'s hand' : 'See to Brother Odo'; }, words: ['odo', 'brother', 'sexton', 'man', 'body', 'key'], when: function (api) { return api.flag('beat_eater') && !api.flag('key'); },
             run: function (api) {
               api.flag('key', true);
+              if (api.flag('odo_dead')) { api.say('His hand is cold and smooth as wax. In it, an iron key: the tower. You close his eyes.'); api.flag('door', true); api.say('You now hold the tower key. The tower door is open to you.', 'note'); return; }
               api.say('His skin is cold and smooth as wax, but he is alive. His eyes open. "The rope," he whispers. "It ate the rope. The tallow in it." He presses an iron key into your hand: the tower.');
               api.flag('door', true);
               api.say('You now hold the tower key. The tower door is open to you.', 'note');
@@ -137,20 +142,44 @@
           return 'It is the size of a starved dog and the colour of tallow. Where its face should be there is a wick, and the wick is lit. ' + (api.lit() ? 'It turns toward your light.' : 'It turns toward the sound of your breathing.');
         },
         hits: 'Soft hands, hot as a candle\'s pool, close on you',
+        card: 'The size of a starved dog and the colour of tallow, with a lit wick where its face should be. It eats light: candles first, then the warmth of the living.',
+        flame: true,
+        snuffed: 'Its wick gutters and goes out. It gropes for you blind and does not attack this turn, until the wick lights itself again.',
+        weakness: 'The dead remember how it fed on them: it will take a flame from your hand before it takes your hand. Hold the light out, and strike while it feeds.',
         defeated: 'The Candle-Eater folds in on itself and runs, like wax too near a fire. Its wick gutters and goes out. The vault is very quiet.',
-        after: function (api) { if (api.s.room !== 'crypt') api.say('It came up out of the crypt. Whatever it left down there is still below.', 'note'); }
+        after: function (api) { api.timer('odo', 'stop'); if (api.s.room !== 'crypt') api.say('It came up out of the crypt. Whatever it left down there is still below.', 'note'); }
       }
     },
-    /* A spell or item with no Effort die: what the game makes of it here. */
-    onUse: function (api, src) {
-      if (src.id === 'kindle') { api.flag('lit', true); api.say('A small flame stands in your palm. It lights the room around you.', 'note'); return true; }
-      return false;
+    /* Obstacles: cards with an Effort bar, as at the table. */
+    obstacles: {
+      door: { name: 'The tower door', room: 'nave', max: 6, stat: 'STR', cat: 'basic', open: true,
+        text: 'Old oak and an iron lock. Each try is a STR check against the Target (Easy with a crowbar). A success rolls Basic Effort into the bar; fill it and the door gives. A failed try is loud.',
+        opened: 'The lock tears out of the frame with a noise like a shot.',
+        isDone: function (api) { return !!api.flag('door'); },
+        done: function (api) { if (!api.flag('door')) { api.flag('door', true); api.say('The tower door stands open. The stair is behind it.'); } } }
+    },
+    /* Timers: they lose 1 at the start of each new round while they run, as at the table. */
+    timers: {
+      odo: { name: 'Brother Odo\'s breath', room: 'crypt', max: 5,
+        text: 'The Candle-Eater is feeding on Brother Odo. He loses a breath at the start of each new round. Kill it, or stop it eating, before it reaches 0.',
+        out: function (api) {
+          api.flag('odo_dead', true);
+          api.say('Under the Candle-Eater, Brother Odo lets out one long breath and does not take another.', 'hurt');
+          if (api.s.fight) api.foeHeal(4, 'It has fed. The Candle-Eater swells');
+        } }
+    },
+    /* Spells this scene answers in its own way, before the general solo rulings (spells.js). */
+    spells: {
+      waxmouth: function (api) {
+        var t = api.s.timers && api.s.timers.odo; if (!api.s.fight || !t || !t.on) return null;
+        return { run: function () { api.timer('odo', 'stop'); api.say('Wax wells up over the wick-mouth and seals it. It cannot eat. Under it, Brother Odo draws a breath, and then another.', 'win'); } };
+      }
     }
   };
 
   function ring(api) {
     api.say('The bell speaks. Once, twice, nine times for the vigil, and the sound goes out over the fields to the boundary stones and back.', 'end');
-    api.say('In Wrenholt, one by one, candles are lit behind the shutters.');
+    api.say('In Wrenholt, one by one, candles are lit behind the shutters.' + (api.flag('odo_dead') ? ' Down in the crypt, Brother Odo does not hear it.' : ' Down in the crypt, Brother Odo hears it, and weeps.'));
     api.end('won', 'You rang the silent bell. This is the end of the test scene.');
   }
 })(typeof window !== 'undefined' ? window : globalThis);

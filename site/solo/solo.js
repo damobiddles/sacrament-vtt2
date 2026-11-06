@@ -66,7 +66,7 @@
   }
   function render() {
     tune(state.over === 'won' ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : ADV.rooms[state.room].art);
-    renderHud(); renderTurns(); renderChoices(); paint();
+    renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
     var r = ADV.rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
   function renderHud() {
@@ -85,6 +85,18 @@
     $('targetText').textContent = String(info.target);
     $('darkText').hidden = !info.dark;
   }
+  /* The cards in this place, as on the table: the foe, an obstacle with its Effort bar, a timer counting down. Tap one to read it. */
+  function renderCards() {
+    var box = $('cards'), list = S.cards(state, ADV); box.textContent = ''; box.hidden = !list.length;
+    list.forEach(function (c) {
+      var b = document.createElement('button'), t = document.createElement('b'), bar = document.createElement('span'), n = document.createElement('small');
+      b.type = 'button'; b.className = 'card ' + c.kind; t.textContent = c.name;
+      bar.className = 'fill'; bar.style.setProperty('--v', String(c.max ? c.cur / c.max : 0));
+      n.textContent = c.kind === 'timer' ? (c.unit === 'ended' ? 'Time is up' : c.cur + ' of ' + c.max + ' left') : c.cur + ' of ' + c.max + ' ' + c.unit;
+      b.setAttribute('aria-label', c.name + ': ' + n.textContent + '. Read the card.');
+      b.append(t, bar, n); b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats, does: c.text }); }); box.appendChild(b);
+    });
+  }
   /* The turn order, as on the table's strip: whose turn it is, and the round. */
   function renderTurns() {
     var box = $('turns'), f = state.fight; box.hidden = !f; if (!f) return;
@@ -93,7 +105,6 @@
     [[state.hero.name, f.phase !== 'foe', 'hero'], [f.name, f.phase === 'foe', 'foe']].forEach(function (x) {
       var chip = document.createElement('span'); chip.className = 'chip ' + x[2] + (x[1] ? ' now' : ''); chip.textContent = x[0]; box.appendChild(chip);
     });
-    var bar = document.createElement('span'); bar.className = 'foehp'; bar.title = f.name; bar.style.setProperty('--hp', String(f.hp.cur / f.hp.max)); box.appendChild(bar);
     var whose = document.createElement('span'); whose.className = 'whose';
     whose.textContent = f.phase === 'foe' ? 'Its turn next' : f.phase === 'damage' ? 'Your turn: roll damage' : f.phase === 'push' ? 'Your turn: push or end it' : 'Your turn';
     box.appendChild(whose);
@@ -119,7 +130,8 @@
   function choiceButton(c, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
-    if (c.horror) { var sm = document.createElement('small'); sm.textContent = '+' + R.sayHorrorAmount(c.horror) + ' Horror'; b.appendChild(sm); }
+    if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = 'No use here'; b.appendChild(no); }
+    else if (c.horror) { var sm = document.createElement('small'); sm.textContent = '+' + R.sayHorrorAmount(c.horror) + ' Horror'; b.appendChild(sm); }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });
     if (!c.about || !c.about.does) return b;
     /* spells and items carry a small "?" that opens what they do, in the gear list's own words */
@@ -130,7 +142,7 @@
   }
   function showAbout(a) {
     $('aboutName').textContent = a.name;
-    $('aboutRoll').textContent = [a.from ? 'From ' + a.from : '', a.roll ? 'Roll ' + a.roll + ' against Target ' + S.sceneInfo(state, ADV).target : 'No roll'].filter(Boolean).join(' · ');
+    $('aboutRoll').textContent = a.line != null ? a.line : [a.from ? 'From ' + a.from : '', a.roll ? 'Roll ' + a.roll + ' against Target ' + S.sceneInfo(state, ADV).target : 'No roll'].filter(Boolean).join(' · ');
     $('aboutDoes').textContent = a.does;
     $('about').showModal();
   }

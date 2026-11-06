@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/spells.js', 'solo/engine.js', 'solo/adventure-silent-bell.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -119,4 +119,52 @@ test('the scene Target is always known, the dark is flagged, and every spell but
   for (const c of spells) assert.ok(c.about && c.about.does.length > 20 && c.about.name, c.label + ' has no description');
   s.room = 'crypt'; s.hero.gear = []; s.flags.lit = false;
   assert.equal(S.sceneInfo(s, A).dark, true, 'an unlit crypt is dark');
+});
+
+// A hero carrying one grimoire, for the story-spell tests; the dice are fixed so each test reads plainly.
+function withBook(book, rolls) {
+  const hero = T.generate('scholar', seeded(4)); hero.gear = [{ id: book, eq: true }, { id: 'lantern', eq: false }];
+  const s = S.start(hero, A, fixed([10])); return { s, die: fixed(rolls || [10]) };
+}
+const cast = (s, name) => S.choices(s, A).find((c) => c.label.startsWith('Cast ') && c.label.includes(name));
+
+test('a story spell that nothing here answers says "No use here", and casting it costs nothing', () => {
+  const { s, die } = withBook('quietmouths');
+  const hush = cast(s, 'Hush'); assert.ok(hush && hush.idle, 'Hush has no use at the lychgate');
+  const before = s.horror; S.act(s, A, hush.cmd, die);
+  assert.equal(s.horror, before, 'no Horror for a spell that did nothing');
+  assert.match(s.log.at(-1).t, /Nothing here answers Hush/);
+});
+
+test('the tower door is an obstacle: successes roll Effort into its bar until it opens, and Open Door opens it at once', () => {
+  const { s, die } = withBook('embers', [15, 4]);   /* d20 15 succeeds; Basic Effort d4 shows 4 */
+  S.act(s, A, 'go north', die);
+  let card = S.cards(s, A).find((c) => c.kind === 'obstacle'); assert.equal(card.cur, 0); assert.equal(card.max, 6);
+  S.act(s, A, 'do force', die); card = S.cards(s, A).find((c) => c.kind === 'obstacle');
+  assert.ok(card.cur >= 4 && card.cur < 6 && !s.flags.door, 'one success fills part of the bar');
+  S.act(s, A, 'do force', die);
+  assert.equal(s.flags.door, true, 'a full bar opens the door'); assert.equal(S.cards(s, A).length, 0, 'an open door leaves no card');
+  const b = withBook('lowdoors'); S.act(b.s, A, 'go north', b.die);
+  const spell = cast(b.s, 'Open Door'); assert.ok(spell && !spell.idle); S.act(b.s, A, spell.cmd, b.die);
+  assert.equal(b.s.flags.door, true);
+});
+
+test("Brother Odo's breath is a timer: it loses 1 each round of the fight, and at 0 he dies and the Candle-Eater heals", () => {
+  const { s } = withBook('embers'); const miss = fixed([2, 1]);   /* every attack misses, the foe hits for 1 */
+  S.act(s, A, 'go north', miss); S.act(s, A, 'go down', miss);
+  assert.equal(S.cards(s, A).find((c) => c.kind === 'timer').cur, 5);
+  s.fight.hp.cur = 6; s.hp.cur = s.hp.max = 99;
+  for (let i = 0; i < 5; i++) { S.act(s, A, 'punch', miss); if (s.fight.phase === 'push') S.act(s, A, 'foe', miss); }
+  assert.equal(s.flags.odo_dead, true); assert.equal(s.fight.hp.cur, 10, 'it fed: +4 HP');
+});
+
+test('story spells in a fight: Wax Mouth stops the feeding, Snuff Candle costs the foe its attack, Thunderclap dazes it', () => {
+  let { s, die } = withBook('quietmouths'); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  S.act(s, A, cast(s, 'Mouth of Wax').cmd, die); assert.equal(s.timers.odo.on, false, 'the timer stops');
+  ({ s, die } = withBook('processional')); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  const hp = s.hp.cur; S.act(s, A, cast(s, 'Snuffed Candle').cmd, die); S.act(s, A, 'foe', die);
+  assert.equal(s.hp.cur, hp, 'no attack this turn'); assert.equal(s.fight.round, 2);
+  ({ s, die } = withBook('rivensky', [20, 10])); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  const clap = S.choices(s, A).find((c) => /Judgement|Clap/i.test(c.label)); S.act(s, A, clap.cmd, die); assert.equal(s.fight.dim, 3);
+  S.act(s, A, 'foe', die); assert.match(s.log.find((l) => l.foeAttack).t, / - 1 = /, 'its attack rolls 3 less (+2 becomes -1)');
 });
