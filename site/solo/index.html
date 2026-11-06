@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solo: The Pilgrim Road | Sacrament RPG</title>
+<meta name="description" content="A solo Sacrament RPG adventure in words and pictures, played with the real rules, for one hero: five scenes on the pilgrim road.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#12100d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sacrament Solo">
+<link rel="manifest" href="/solo/manifest.webmanifest">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/solo/solo.css">
+</head>
+<body class="solo">
+<header class="bar">
+  <a class="home" href="/">Sacrament RPG</a>
+  <span class="where">Solo</span>
+  <span class="grow"></span>
+  <button type="button" class="tb" id="musicBtn" aria-label="Music" aria-pressed="false">♪ Off</button>
+  <button type="button" class="tb" id="heroBtn" hidden>Hero</button>
+  <button type="button" class="tb" id="menuBtn" hidden>Menu</button>
+</header>
+
+<main id="start" class="start">
+  <div id="titleArt" class="art" aria-hidden="true"></div>
+  <p class="kicker">A solo adventure in five scenes</p>
+  <h1>The Pilgrim Road</h1>
+  <p class="blurb" id="blurb"></p>
+  <p class="how">Play one hero alone, in words and pictures. Tap a choice, or type what you do. Every check, attack, find and point of Horror uses the Sacrament rules.</p>
+  <div id="resume"></div>
+  <h2>Choose your hero</h2>
+  <div id="mine" class="heroes"></div>
+  <h2 class="sub">Or take a ready-made hero</h2>
+  <div class="heroes four">
+    <button type="button" class="pick" data-focus="fighter"><b>Fighter</b><span>Steel and armour</span></button>
+    <button type="button" class="pick" data-focus="scout"><b>Scout</b><span>A bow and a lantern</span></button>
+    <button type="button" class="pick" data-focus="scholar"><b>Scholar</b><span>A forbidden book</span></button>
+    <button type="button" class="pick" data-focus="healer"><b>Healer</b><span>Prayers that mend</span></button>
+  </div>
+  <p class="fine">Your hero plays as a copy: nothing you do here changes the hero saved in <a href="/character/">My heroes</a>. The adventure saves itself in this browser.</p>
+</main>
+
+<main id="game" class="game" hidden>
+  <div class="stage">
+    <div class="frame">
+      <div id="art" class="art" role="img" aria-label=""></div>
+      <div id="dice" aria-hidden="true"></div>
+    </div>
+    <div id="turns" class="turns" hidden></div>
+    <div id="cards" class="cards" aria-label="Cards in this place"></div>
+    <div class="hud">
+      <div class="meter hp"><span class="lbl">HP</span><span id="hearts" class="hearts"></span><span id="hpText" class="num"></span></div>
+      <div class="meter target" title="The number a check or attack must reach in this scene"><span class="lbl">Target</span><span id="targetText" class="num"></span><span id="darkText" class="tag" hidden>Hard: dark</span></div>
+      <div class="meter horror"><span class="lbl">Horror</span><span id="pips" class="pips"></span><span id="horrorText" class="num"></span></div>
+    </div>
+  </div>
+  <section id="log" class="log" aria-live="polite" aria-label="The story so far"></section>
+  <div class="controls">
+    <nav id="choices" class="choices" aria-label="What you can do"></nav>
+    <form id="cmd" class="cmd" autocomplete="off">
+      <label for="cmdIn" class="prompt">&gt;</label>
+      <input id="cmdIn" name="cmd" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Or type: look, go north, read ledger…" aria-label="Type a command">
+      <button type="submit" class="go">Go</button>
+    </form>
+  </div>
+</main>
+
+<dialog id="sheet" class="sheet" aria-labelledby="sheetName">
+  <div class="sheet-in">
+    <h2 id="sheetName"></h2>
+    <p id="sheetCalling" class="calling"></p>
+    <div id="sheetNums" class="nums"></div>
+    <h3>Scores</h3><div id="sheetStats" class="stats"></div>
+    <h3>Effort</h3><div id="sheetEffort" class="stats"></div>
+    <h3>Equipped</h3><ul id="sheetEq" class="gear"></ul>
+    <h3>Pack</h3><ul id="sheetPack" class="gear"></ul>
+    <p class="fine">A copy of your hero for this adventure. Finds stay with this copy.</p>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </div>
+</dialog>
+
+<dialog id="about" class="sheet" aria-labelledby="aboutName">
+  <div class="sheet-in">
+    <h2 id="aboutName"></h2>
+    <p id="aboutRoll" class="calling"></p>
+    <p id="aboutDoes" class="does"></p>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </div>
+</dialog>
+
+<dialog id="menu" class="sheet" aria-labelledby="menuTitle">
+  <div class="sheet-in">
+    <h2 id="menuTitle">Menu</h2>
+    <div class="menu-list">
+      <button type="button" class="btn ghost" id="restartBtn">Start a new road with this hero</button>
+      <button type="button" class="btn ghost" id="newHeroBtn">Choose another hero</button>
+      <a class="btn ghost" href="/rules/">The rules</a>
+    </div>
+    <form method="dialog"><button class="btn">Back to the game</button></form>
+  </div>
+</dialog>
+
+<script src="/vtt/rules.js"></script>
+<script src="/sheet/gear.js"></script>
+<script src="/sheet/sheet-core.js"></script>
+<script src="/sheet/heroes.js"></script>
+<script src="/sheet/hero-tools.js"></script>
+<script src="/solo/spells.js"></script>
+<script src="/solo/engine.js"></script>
+<script src="/solo/adventure-silent-bell.js"></script>
+<script src="/solo/road.js"></script>
+<script src="/vtt/dice.js"></script>
+<script src="/solo/art.js"></script>
+<script src="/solo/music.js"></script>
+<script src="/solo/solo.js"></script>
+</body>
+</html>

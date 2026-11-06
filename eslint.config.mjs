@@ -10,7 +10,7 @@ export default [
   { rules: { 'no-control-regex': 'off' } },
   {
     // the Sacrament RPG Table in the browser (older-style scripts: no import/export)
-    files: ['site/vtt/**/*.js', 'site/sheet/**/*.js', 'site/loot-roller.js', 'site/loot-search.js', 'site/nav.js'],
+    files: ['site/vtt/**/*.js', 'site/sheet/**/*.js', 'site/solo/**/*.js', 'site/loot-roller.js', 'site/loot-search.js', 'site/nav.js'],
     languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: { ...globals.browser, SacramentRules: 'readonly', module: 'readonly' } },
     rules: { 'no-unused-vars': ['warn', { args: 'none' }] },
   },

@@ -1,0 +1,217 @@
+/* Sacrament RPG solo: the screen. Phone first (one column), two columns from tablet width. Colours come from theme.css. */
+.solo.playing{height:100dvh;overflow:hidden}
+.solo{--px:var(--label);--tty:var(--body);min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
+.solo .bar{display:flex;align-items:center;gap:10px;padding:max(6px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--bg2);min-height:48px}
+.solo .home{font:600 1rem var(--px);color:var(--candle);text-decoration:none;letter-spacing:.02em}
+.solo .where{font:400 1rem var(--px);color:var(--dim)}
+.solo .grow{flex:1}
+.solo .tb{white-space:nowrap;font:600 1rem var(--px);color:var(--fg);background:transparent;border:1px solid var(--edge);min-height:40px;padding:4px 14px;cursor:pointer}
+.solo .tb:hover{color:var(--candle);border-color:var(--candle)}
+.art{display:block;width:100%;aspect-ratio:320/192;background:#0b0a08;overflow:hidden}
+.art svg{display:block;width:100%;height:100%}
+/* the pictures move a little: flames flicker, people breathe, stars twinkle. Nothing moves for anyone who asks for less motion. */
+.art .flame{transform-box:fill-box;transform-origin:50% 100%;animation:solo-flicker 1.3s ease-in-out infinite alternate}
+.art .glow{animation:solo-glow 2.4s ease-in-out infinite alternate}
+.art .breathe{transform-box:fill-box;transform-origin:50% 100%;animation:solo-breathe 3.2s ease-in-out infinite}
+.art .sway{transform-box:fill-box;transform-origin:50% 100%;animation:solo-sway 2.6s ease-in-out infinite}
+.art .twinkle{animation:solo-twinkle 3s ease-in-out infinite alternate}
+.art .rays{animation:solo-glow 5s ease-in-out infinite alternate}
+.art .swing{animation:solo-swing 1.2s ease-in-out infinite alternate}
+.art .ring{animation:solo-glow .6s ease-in-out infinite alternate}
+@keyframes solo-flicker{0%{transform:scale(1,1)}40%{transform:scale(.88,1.12)}70%{transform:scale(1.08,.92)}100%{transform:scale(.95,1.06)}}
+@keyframes solo-glow{from{opacity:.65}to{opacity:1}}
+@keyframes solo-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.015) translateY(-.5px)}}
+@keyframes solo-sway{0%,100%{transform:skewX(0) scaleY(1)}50%{transform:skewX(-2deg) scaleY(1.03)}}
+@keyframes solo-twinkle{from{opacity:.3}to{opacity:1}}
+@keyframes solo-swing{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+/* the miniatures: drifting mist, glinting stars, a stirring hem, a blink, a drip of wax */
+.art .hem{transform-box:fill-box;transform-origin:50% 0;animation:solo-hem 4.5s ease-in-out infinite}
+.art .blink{animation:solo-blink 6s steps(1) infinite}
+.art .drip{animation:solo-drip 3.4s ease-in infinite}
+.art .fog{animation:solo-fog 26s ease-in-out infinite alternate}
+.art .fog.f1{animation-duration:34s;animation-delay:-9s}
+.art .fog.f2{animation-duration:41s;animation-delay:-20s}
+.art .mote{animation:solo-mote 9s linear infinite}
+.art .cloud{animation:solo-cloud 60s ease-in-out infinite alternate}
+@keyframes solo-hem{0%,100%{transform:skewX(0)}50%{transform:skewX(4deg)}}
+@keyframes solo-blink{0%,96%{opacity:.85}97%,99%{opacity:0}}
+@keyframes solo-drip{0%,60%{transform:translateY(0);opacity:0}70%{opacity:1}100%{transform:translateY(10px);opacity:0}}
+@keyframes solo-fog{from{transform:translateX(-18px)}to{transform:translateX(18px)}}
+@keyframes solo-mote{0%{transform:translateY(0);opacity:0}20%{opacity:.8}100%{transform:translateY(-40px);opacity:0}}
+@keyframes solo-cloud{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
+@media (prefers-reduced-motion:reduce){.art *{animation:none !important}}
+
+/* ---------- the first screen ---------- */
+.start{width:100%;max-width:720px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.start .art{border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 40px #000a}
+.start .kicker{font:400 1rem var(--px);color:var(--candle);margin:18px 0 2px;letter-spacing:.04em}
+.start h1{font:700 clamp(2.4rem,9vw,3.6rem)/1 var(--display);color:var(--fg);margin:0 0 10px}
+.start h2{font:700 1.5rem var(--display);margin:26px 0 10px;color:var(--fg)}
+.start h2.sub{font-size:1.1rem;color:var(--dim)}
+.start .blurb{font:italic 1.35rem/1.35 var(--display);color:var(--fg);margin:0 0 8px}
+.start .how{margin:0;color:var(--dim);font-size:1rem;line-height:1.5}
+.start .fine,.sheet .fine{color:var(--dim);font-size:.9rem;line-height:1.45;margin-top:18px}
+.heroes{display:grid;gap:10px;grid-template-columns:1fr}
+.heroes.four{grid-template-columns:1fr 1fr}
+@media (min-width:600px){.heroes{grid-template-columns:1fr 1fr}.heroes.four{grid-template-columns:repeat(4,1fr)}}
+.pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:64px;padding:10px 14px;background:var(--bg2);color:var(--fg);border:1px solid var(--edge);cursor:pointer;font:inherit}
+.pick b{font:600 1.15rem var(--px)}
+.pick span{font-size:.92rem;color:var(--dim);line-height:1.3}
+.pick:hover,.pick:focus-visible{border-color:var(--candle)}
+.pick.resume{border-color:var(--candle);border-width:2px}
+.empty{color:var(--dim);font-size:1rem;margin:0}
+
+/* ---------- the game ---------- */
+.game{flex:1;display:flex;flex-direction:column;min-height:0;width:100%;max-width:720px;margin:0 auto}
+.stage{position:relative;padding:8px max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px))}
+.frame{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:44dvh;aspect-ratio:320/192;margin:0 auto;box-shadow:0 8px 30px #0009}
+.frame .art{height:100%;width:100%;aspect-ratio:auto}
+.frame.hit{animation:solo-shake .4s ease-out}
+.frame.hit::after,.frame.good::after{content:"";position:absolute;inset:0;pointer-events:none;animation:solo-flash .5s ease-out both}
+.frame.hit::after{background:#c0392b}
+.frame.good::after{background:#ffd97a}
+@keyframes solo-shake{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(2px,0)}}
+@keyframes solo-flash{from{opacity:.35}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.frame.hit{animation:none}}
+/* the turn order, as on the table's strip */
+.turns{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 2px 0}
+.turns .round{font:600 .85rem var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--candle)}
+.turns .chip{font:600 .95rem var(--label);padding:3px 10px;border:1px solid var(--edge);border-radius:999px;color:var(--dim)}
+.turns .chip.now{color:#14100c;background:var(--candle);border-color:var(--candle)}
+.turns .chip.foe.now{background:#e39a8c;border-color:#e39a8c}
+.turns .foehp{width:70px;height:8px;border-radius:4px;background:linear-gradient(90deg,#e6d6b0 calc(var(--hp)*100%),#2a2433 0);box-shadow:inset 0 0 0 1px var(--edge)}
+.turns .whose{flex-basis:100%;font-size:.95rem;color:var(--fg)}
+/* the table's dice and result card (copied from vtt.css so the table's styles are not loaded here) */
+#dice{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:8px;pointer-events:none;padding:10px;overflow:auto;box-sizing:border-box;--ui-die-size:60px}
+#dice:empty{display:none}
+.reveal-result{pointer-events:auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:8px;width:min(100%,360px);max-height:100%;overflow:auto;padding:14px 16px;background:#191610f2;border:2px solid #b8955a;border-radius:10px;box-shadow:0 8px 35px #000b;text-align:center;color:#efe5cc}
+.reveal-result>*{flex-shrink:0}
+.reveal-result.failure{border-color:#c4786a}.reveal-result p{margin:0}.reveal-who,.reveal-detail{font-size:1rem;color:#efe5cc;line-height:1.35}.reveal-outcome{font:700 1.6rem var(--display);color:#e0c27a;letter-spacing:.04em}.failure .reveal-outcome{color:#eca99a}.reveal-action{pointer-events:auto;max-width:100%;white-space:normal}.reveal-dice:empty,.reveal-detail:empty{display:none}
+.dice-roll{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;max-width:280px;transition:opacity .3s}
+.dice-roll.gone{opacity:0}
+.die{position:relative;width:var(--ui-die-size);height:var(--ui-die-size);flex-shrink:0;animation:dice-tumble .9s cubic-bezier(.2,.7,.3,1) both}
+.die svg{position:absolute;inset:0;width:100%;height:100%;fill:#1b1814;stroke:#b8955a;stroke-width:3;stroke-linejoin:round;filter:drop-shadow(0 0 3px #000) drop-shadow(0 8px 14px #000e)}
+.die svg :not(:first-child){fill:none;stroke-width:1.5;opacity:.55}
+.die b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 1.5rem/1 var(--label);color:#efe5cc}
+.die.d4 b{box-sizing:border-box;padding-top:24%}
+.die.landed{animation:dice-land .35s ease-out both}
+.die.landed.top svg{stroke:#e0c27a;filter:drop-shadow(0 0 12px #b8955acc)}
+.die.landed.low svg{stroke:#c4786a}
+@keyframes dice-tumble{0%{transform:translate(-120px,-60px) rotate(-540deg) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(20px,8px) rotate(-60deg) scale(1.05)}75%{transform:translate(-6px,-4px) rotate(18deg)}100%{transform:translate(0,0) rotate(0) scale(1)}}
+@keyframes dice-land{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#dice .die{display:none}}
+@media (max-width:600px){.reveal-result{display:grid;grid-template-columns:var(--ui-die-size) minmax(0,1fr);gap:4px 10px;padding:10px;align-items:center}.reveal-who,.reveal-action{grid-column:1/-1}.reveal-dice{grid-column:1;grid-row:2/4}.reveal-outcome,.reveal-detail{grid-column:2}.reveal-outcome{font-size:1.3rem}.reveal-who,.reveal-detail{font-size:.9rem}}
+.hud{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;padding:6px 2px 4px}
+.meter{display:flex;align-items:center;gap:6px;min-height:24px}
+.meter .lbl{font:600 .95rem var(--px);color:var(--dim)}
+.meter .num{font:600 1rem/1 var(--label);color:var(--fg)}
+.hearts{display:flex;gap:3px}
+.heart{width:18px;height:16px;background:linear-gradient(0deg,#d2443a calc(var(--fill)*100%),#3a2622 0);clip-path:path('M9 15 L2 8 C-1 5 1 1 4.5 1 C6.5 1 8 2.2 9 4 C10 2.2 11.5 1 13.5 1 C17 1 19 5 16 8 Z')}
+.pips{display:grid;grid-template-columns:repeat(21,6px);gap:1px}
+.pip{width:6px;height:12px;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--edge)}
+.pip.on{background:#a4443b;box-shadow:none}
+.pip.mark{margin-right:3px}
+.log{flex:1;min-height:120px;overflow-y:auto;padding:6px max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));font:1.05rem/1.5 var(--tty);color:var(--fg);overscroll-behavior:contain}
+.log p{margin:0 0 .55em;max-width:62ch}
+.log .k-title{font:700 1.7rem var(--display);color:var(--candle);margin-top:.2em}
+.log .k-room{font:700 1.4rem var(--display);color:var(--candle);margin-top:.8em}
+.log .k-cmd{color:var(--dim);margin-top:.7em}
+.log .k-npc{color:#e3d6b5;font-style:normal;padding-left:10px;border-left:2px solid var(--candle)}
+.log .k-note{color:var(--indigo)}
+.log .k-roll,.log .k-win,.log .k-miss{padding-left:10px;border-left:2px solid var(--edge)}
+.log .k-win{color:#d9c48a;border-left-color:var(--candle)}
+.log .k-miss{color:var(--dim)}
+.log .k-hurt{color:#e39a8c}
+.log .k-heal{color:var(--verdigris)}
+.log .k-horror{color:#d88d80;padding-left:10px;border-left:2px solid #a4443b}
+.log .k-loot{color:#e8cf8a;padding-left:10px;border-left:2px solid var(--candle)}
+.log .k-foe{color:#eadfc6}
+.log .k-end{color:var(--candle);font:600 1.3rem/1.3 var(--display)}
+.log .k-act{color:var(--fg)}
+.log p.new{animation:solo-in .35s ease-out both}
+@keyframes solo-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.log p.new{animation:none}}
+
+.controls{border-top:1px solid var(--line);background:var(--bg2);padding:8px max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:34dvh;overflow-y:auto}
+.choices .more{grid-column:1/-1;font:600 .95rem var(--px);color:var(--dim);margin:4px 2px 0}
+.ch{min-height:44px;padding:6px 10px;text-align:left;font:600 1rem/1.2 var(--px);color:var(--on-blood);background:var(--blood);border:1px solid color-mix(in srgb,var(--on-blood) 30%,transparent);cursor:pointer}
+.ch:hover{background:color-mix(in srgb,var(--blood) 80%,var(--blood-hi))}
+.ch.go{background:var(--bg);color:var(--fg);border-color:var(--edge)}
+.ch.go:hover{border-color:var(--candle);color:var(--candle)}
+.ch.spell{background:var(--indigo-deep);color:#e4e8f6;border-color:#56619a}
+.ch.use{background:var(--verdigris-deep);color:#e6f1ec;border-color:#4f8574}
+.ch.push{background:#5b4316;color:#f6e7c3;border-color:var(--candle)}
+.ch.plain{background:var(--bg);color:var(--fg);border-color:var(--edge)}
+.ch.wide,.chw.wide{grid-column:1/-1}
+.ch.idle{background:var(--bg);color:var(--dim);border-color:var(--edge);border-style:dashed}
+/* the cards in this place, as on the table */
+.cards{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 0}
+.cards[hidden]{display:none}
+.card{flex:0 0 auto;min-width:132px;max-width:190px;text-align:left;padding:6px 10px 7px;background:#1a1612;color:var(--fg);border:1px solid var(--edge);border-top:3px solid var(--edge);cursor:pointer;font:400 .85rem/1.2 var(--body)}
+.card b{display:block;font:600 .95rem/1.2 var(--px);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .fill{display:block;height:7px;padding:0;border:0;border-radius:4px;background:linear-gradient(90deg,var(--fill) calc(var(--v)*100%),#2a2433 0);box-shadow:inset 0 0 0 1px var(--edge);margin-bottom:4px}
+.card small{color:var(--fg);font-size:.82rem}
+.card:hover{border-color:var(--candle)}
+.npc-name{color:#8fd18a;font-weight:600}
+.card .hearts{display:flex;gap:3px;margin-bottom:4px}
+.card .hearts .heart{width:15px;height:13px;clip-path:path('M7.5 12.5 L1.7 6.7 C-.8 4.2 .8 .8 3.8 .8 C5.4 .8 6.7 1.8 7.5 3.3 C8.3 1.8 9.6 .8 11.2 .8 C14.2 .8 15.8 4.2 13.3 6.7 Z')}
+.log .k-run{font:600 1.5rem/1.2 var(--px);color:var(--candle);margin-top:4px}
+.card.foe{border-top-color:#e39a8c;--fill:#e6d6b0}
+.card.obstacle{border-top-color:#86b3a1;--fill:#86b3a1}
+.card.timer{border-top-color:var(--candle);--fill:var(--candle)}
+.chw{display:flex;gap:4px;min-width:0}
+.chw .ch{flex:1;min-width:0}
+.why{flex:none;width:44px;min-height:44px;font:700 1.1rem var(--px);color:var(--fg);background:var(--bg);border:1px solid var(--edge);cursor:pointer}
+.why:hover{color:var(--candle);border-color:var(--candle)}
+.meter.target .num{color:var(--candle)}
+.tag{font:600 .8rem/1 var(--label);color:#f3d8a8;background:#4a2f12;border:1px solid var(--candle);padding:3px 6px}
+.sheet .does{line-height:1.5;margin:8px 0 14px}
+.gear .spell{margin:6px 0 0;font:400 .9rem/1.4 var(--body);color:var(--fg)}
+/* the foe's end: it sags, melts into its own wax and its flame goes out */
+.art .who.foe.dying .sway{transform-box:fill-box;transform-origin:50% 100%;animation:solo-melt 1.8s ease-in forwards}
+.art .foeflame.out{animation:solo-snuff .7s ease-out forwards !important}
+.art .who.foe.dying .flame{animation:solo-snuff .7s ease-out forwards}
+@keyframes solo-melt{0%{transform:none;opacity:1;filter:none}25%{transform:scale(1.04,.96)}60%{transform:scale(1.25,.45);opacity:.9;filter:brightness(1.4)}100%{transform:scale(1.45,.05);opacity:0;filter:brightness(.4)}}
+@keyframes solo-snuff{0%{opacity:1}100%{opacity:0;transform:translateY(-6px) scaleX(.3)}}
+.ch small{display:block;font:400 .82rem var(--body);opacity:1;color:inherit;margin-top:1px}
+.cmd{display:flex;align-items:center;gap:6px;margin-top:8px}
+.cmd .prompt{font:700 1.4rem/1 var(--display);color:var(--candle)}
+.cmd input{flex:1;min-width:0;min-height:44px;padding:4px 10px;font:1rem var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--edge);border-radius:0}
+.cmd input::placeholder{color:#8f8570}
+.cmd input:focus{outline:2px solid var(--candle);outline-offset:1px}
+.cmd .go{min-height:44px;padding:4px 16px;font:600 1rem var(--px);color:var(--fg);background:transparent;border:1px solid var(--edge);cursor:pointer}
+.over{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+/* tablet and wider, landscape: picture and choices on the left, the story on the right */
+@media (min-width:900px) and (min-aspect-ratio:1/1){
+  .game{max-width:1280px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-rows:auto 1fr;height:calc(100dvh - 49px);column-gap:0}
+  .stage{grid-column:1;grid-row:1}
+  .stage .art{max-height:none}
+  .controls{grid-column:1;grid-row:2;border-top:0;background:transparent;overflow:auto}
+  .choices{max-height:none}
+  .log{grid-column:2;grid-row:1/3;border-left:1px solid var(--line);padding:14px 22px;font-size:1.12rem}
+  .frame{max-height:none}
+}
+/* tablet portrait: one column, a larger story */
+@media (min-width:700px) and (max-aspect-ratio:1/1){.log{font-size:1.12rem}.choices{grid-template-columns:1fr 1fr 1fr}}
+
+/* the hero sheet and the menu */
+.sheet{background:var(--bg2);color:var(--fg);border:2px solid var(--edge);padding:0;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+.sheet::backdrop{background:rgb(0 0 0 / .7)}
+.sheet-in{padding:18px 18px 16px;overflow:auto}
+.sheet h2{font:700 1.8rem var(--display);margin:0}
+.sheet h3{font:600 1rem var(--px);color:var(--candle);margin:16px 0 6px}
+.sheet .calling{color:var(--dim);margin:2px 0 8px;font-size:1rem}
+.nums{display:flex;flex-wrap:wrap;gap:8px}
+.nums span,.stats span{font:600 1rem/1 var(--label);padding:6px 10px;border:1px solid var(--line);background:var(--bg)}
+.nums b,.stats b{font:600 .85rem var(--px);color:var(--dim);margin-right:6px}
+.stats{display:flex;flex-wrap:wrap;gap:6px}
+.gear{list-style:none;margin:0;padding:0}
+.gear li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line);font-size:1rem;line-height:1.35}
+.gear li img{width:26px;height:26px;flex:none;margin-top:2px}
+.gear li small{display:block;color:var(--dim);font-size:.88rem}
+.gear .none{color:var(--dim)}
+.menu-list{display:grid;gap:8px;margin:14px 0}
+.menu-list .btn{text-align:center}
+.sheet form{margin-top:14px}
