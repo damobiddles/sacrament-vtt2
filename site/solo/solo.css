@@ -258,3 +258,6 @@
 .sheet.won h2{font-size:2rem}
 .sheet.won .next{font:italic 1.15rem/1.4 var(--display);color:var(--fg)}
 @media (prefers-reduced-motion:reduce){.float,.toast,.art .who.foe.flinch,.pips.pulse{animation:none}.frame .art{transition:none}}
+/* step 3: the foe's next move on its card, and a dying hero's countdown */
+.card .next{display:block;margin-top:2px;color:var(--candle,#d9a441);font-size:.78rem}
+#hpText.dying{color:#ff8a7a;font-weight:700}

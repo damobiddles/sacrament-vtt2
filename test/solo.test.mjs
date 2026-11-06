@@ -22,7 +22,7 @@ function playThrough(focus, seed) {
 test('every ready-made hero can play the scene to an end, and the hero given to it is not changed', () => {
   for (const focus of ['fighter', 'scout', 'scholar', 'healer']) for (const seed of [1, 2, 5, 9, 11]) {
     const { s, unchanged } = playThrough(focus, seed);
-    assert.ok(['won', 'dead'].includes(s.over), focus + ' seed ' + seed + ' did not finish');
+    assert.ok(['won', 'dead', 'fled'].includes(s.over), focus + ' seed ' + seed + ' did not finish');   // fled: crawled away while dying (owner, 2026-11-06)
     assert.ok(unchanged, 'the saved hero was changed');
     assert.ok(s.horror >= 0 && s.horror <= R.HORROR.max && s.hp.cur >= 0 && s.hp.cur <= s.hp.max);
   }
@@ -203,7 +203,7 @@ test('every hero can play whole runs to an end; HP, Horror and gear carry from s
   let won = 0;
   for (const focus of ['fighter', 'scout', 'scholar', 'healer']) for (const seed of [1, 2, 3, 5, 8, 13, 21]) {
     const { s, seen, unchanged } = playRun(focus, seed);
-    assert.ok(['won', 'dead'].includes(s.over), focus + ' ' + seed + ' did not finish');
+    assert.ok(['won', 'dead', 'fled'].includes(s.over), focus + ' ' + seed + ' did not finish');
     assert.ok(unchanged, 'the saved hero was changed');
     if (s.over === 'won') { won++; assert.equal(s.run.at, 4); assert.deepEqual(seen, s.run.order, 'the scenes were played in the order chosen'); }
   }
@@ -274,4 +274,89 @@ test('the sound effects: every one has a real note or a noise, and the art knows
     assert.ok(fs.existsSync(new URL('../site' + p.src, import.meta.url)), place + ' painting exists');
     assert.ok(ART.scene(place, null, 'p').includes(p.src), place + ' shows its painting');
   }
+});
+
+// Step 3: the solo game's own GM calls for Horror and falling (the owner's, 2026-11-06). The rules leave these to the GM; nothing in rules.js changes.
+function cryptFight(seed) {
+  const hero = T.generate('fighter', seeded(seed || 3));
+  const s = S.start(hero, A, fixed([1]));
+  S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
+  assert.ok(s.fight, 'the Candle-Eater attacks in the crypt');
+  return s;
+}
+
+test('Horror 7 shakes the hero: the next check or attack is Hard, once', () => {
+  const s = cryptFight();
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  S.act(s, A, attack.cmd, fixed([5, 1]));                 // a miss
+  s.horror = 6;
+  const push = S.choices(s, A).find((c) => c.kind === 'push');
+  S.act(s, A, push.cmd, fixed([5, 5]));                  // the push takes Horror to 7
+  assert.equal(s.horror, 7);
+  const rolls = s.log.filter((l) => l.outcome);
+  assert.equal(rolls[rolls.length - 1].outcome.note, 'Hard', 'the pushed attack was Hard');
+  assert.equal(s.shaken, false, 'shaken is used up');
+});
+
+test('Horror 14 hunts the hero: every foe met from then on has 2 more HP; Horror 21 stops resting', () => {
+  const hero = T.generate('fighter', seeded(3));
+  const s = S.start(hero, A, fixed([1]));
+  s.hunted = true;
+  S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
+  assert.equal(s.fight.hp.max, A.foes[s.fight.foe].hp + S.DREAD.huntedHp);
+  const run = S.startRun(T.generate('scout', seeded(4)), 'pilgrim-road', fixed([1]));
+  run.done = true; run.hp.cur = 1; run.arrived = true;
+  assert.ok(!S.choices(run).some((c) => c.cmd === 'rest'), 'no rest once the Horror has arrived');
+  run.arrived = false;
+  assert.ok(S.choices(run).some((c) => c.cmd === 'rest'));
+});
+
+test('falling: a hero at 0 HP is dying with a d4 of rounds, a round passing takes one off, and crawling away gets them out with 1 HP', () => {
+  const s = cryptFight();
+  s.hp.cur = 1;
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  S.act(s, A, attack.cmd, fixed([5, 1]));                 // miss
+  S.act(s, A, 'foe', fixed([20, 6, 3]));                 // the foe hits (natural 20), 6 damage, the fall rolls d4 3; the round passing takes one off
+  assert.ok(!s.over, 'falling is not the end');
+  assert.deepEqual([s.hp.cur, s.dying.left], [0, 2]);
+  const ch = S.choices(s, A).map((c) => c.cmd);
+  assert.ok(ch.includes('crawl'), 'crawl away is offered');
+  assert.ok(!ch.some((c) => c.startsWith('use') && !S.heroActions(s).find((a) => 'use ' + a.index === c.split(' ').slice(0, 2).join(' ') && a.healing)), 'only healing besides crawling');
+  s.found = ['candle']; s.hero.gear.push({ id: 'candle', eq: false });
+  const gear = s.hero.gear.length;
+  S.act(s, A, 'crawl', fixed([20]));                      // a CON check, natural 20
+  assert.equal(s.dying, null); assert.equal(s.hp.cur, 1); assert.equal(s.fight, null);
+  assert.equal(s.hero.gear.length, gear - 1, 'what was found in the scene is left behind');
+  assert.equal(s.over, 'fled', 'a single scene ends with the hero alive but gone');
+});
+
+test('a dying hero whose rounds run out is dead; a blow on a dying hero takes a round instead of HP', () => {
+  const s = cryptFight();
+  s.hp.cur = 1;
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([5, 1]));
+  S.act(s, A, 'foe', fixed([20, 6, 2]));                 // falls with 2 rounds, one passes: 1 left
+  assert.equal(s.dying.left, 1);
+  S.act(s, A, 'crawl', fixed([2]));                       // the crawl fails: the turn passes to the foe
+  S.act(s, A, 'foe', fixed([20, 6]));                    // a blow gets through: the last round
+  assert.equal(s.over, 'dead');
+});
+
+test('the foe card says what the foe will do next, from the real numbers, and bracing makes it harder', () => {
+  const s = cryptFight();
+  const card = S.cards(s, A).find((c) => c.kind === 'foe');
+  const i = S.foeIntent(s);
+  assert.match(card.next, /^Next: attacks\. Hits you on \d+\+ \(\d+%\), d\d+ damage$/);
+  S.act(s, A, 'brace', fixed([1]));
+  assert.equal(s.fight.guard, 2); assert.equal(s.fight.phase, 'foe');
+  assert.equal(S.foeIntent(s).need, Math.min(20, i.need + 2));
+});
+
+test('finds from the road: only what was found and is still carried can come home', () => {
+  const s = S.startRun(T.generate('fighter', seeded(3)), 'pilgrim-road', fixed([1]));
+  s.run.found = ['candle', 'candle'];
+  s.hero.gear.push({ id: 'candle', eq: false });
+  const carried = s.hero.gear.filter((g) => g.id === 'candle').length;
+  assert.equal(S.runFinds(s).length, Math.min(2, carried), 'two found, as many carried as can come home');
+  s.hero.gear = s.hero.gear.filter((g) => g.id !== 'candle');
+  assert.deepEqual(S.runFinds(s), [], 'nothing carried, nothing comes home');
 });

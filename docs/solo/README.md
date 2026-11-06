@@ -64,3 +64,14 @@ You play one hero alone through short written adventures in the world of Sacrame
 * Hits, wounds, Horror and finds can be felt: short sounds (when sound is on), numbers that float off the picture, a jolt on phones that support it, a small card for each find, and a "scene cleared" card. The picture darkens as Horror passes 7, 14 and 21 (looks only; no rule changed).
 * The page uses the home page's look: serif headings, gold tracked labels, red buttons with the double edge, a drop cap on each place.
 * Pictures stay drawn in code (owner's decision, 2026-11-06: painting every new place and foe would not keep up as scenes are added), in the warmer home-page colours. The support for a painting is still there if one is ever wanted: to add one, put it at `site/art/solo/<place>.webp` (about 1600 × 960) and add one line to `PAINT` in `art.js`; a foe painting goes at `site/art/solo/foe-<id>.webp` on a transparent background and one line in `FOE_PAINT`. 
+
+## Horror, falling and finds: the solo game's GM calls (owner, 2026-11-06)
+
+The rules leave a threshold's consequence to the GM; in the solo game the game is the GM. These are GM calls, not rule changes: `rules.js`, the rules page and the table are untouched.
+
+* **Horror 7, shaken:** the next check or attack is Hard (once).
+* **Horror 14, hunted:** every foe met from then on has 2 more HP.
+* **Horror 21, arrived:** the rules' pay-in-blood, and no more rest between scenes.
+* **Falling:** the rules' dying roll (d4 rounds; each new round and each blow that gets through takes one off). The dying hero may heal (any healing stands them up) or crawl away with a CON check: out of the scene with 1 HP, leaving behind what they found in it. In the last scene, crawling away ends the road alive but unfinished.
+* **Finds:** a hero from My heroes who finishes the road may press "Bring your finds home" once; each find still carried goes into the saved hero if there is room.
+* **The foe's next move** shows on its card with the real numbers (the roll it needs to hit you, the chance, its damage die). **Brace** spends the turn for +2 Defence until the hero's next turn, like the Guard ruling.
