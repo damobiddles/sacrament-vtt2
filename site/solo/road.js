@@ -102,7 +102,12 @@
     fall: function () { return 'You lie in the ditch by the cart until the rain stops. Hob Sallow is gone. So is the road.'; },
     obstacles: {
       wheel: { name: 'The sunken wheel', room: 'crossroads', max: 6, stat: 'STR', cat: 'basic',
-        text: 'One wheel of the cart sunk to the hub in the ditch. Each try is a STR check against the Target; a success rolls Basic Effort into the bar.',
+        text: 'One wheel of the cart sunk to the hub in the ditch. Heave (STR, Basic Effort), lift it on your back (STR, Weapons Effort, but a failure hurts), or pack the ditch first (INT, once: half of what is left). Each failed try brings the rain closer; once it comes, every try is Hard.',
+        clock: 'rain', hard: function (api) { return !!api.flag('rain'); },
+        ways: [
+          { id: 'lift', kind: 'bold', label: 'Lift the axle on your back', stat: 'STR', say: 'You crouch under the axle and stand up into it.', what: 'Lifting the axle', failSay: 'Something in your back gives before the wheel does' },
+          { id: 'pack', kind: 'trick', label: 'Pack the ditch with stones first', stat: 'INT', say: 'You fill the rut in front of the wheel with stones from the wall.', what: 'Packing the ditch', failSay: 'The stones sink in the mud as fast as you lay them.' }
+        ],
         isDone: function (api) { return !!api.flag('freed'); },
         done: function (api) {
           api.flag('freed', true); api.story('missing', true);
@@ -110,6 +115,11 @@
           api.say('"I carried a pilgrim from Saint Aubrel\'s," he says. "Sister Ignatia Vesper, of the Seventh Bell. Last night she climbed down off the cart and walked away toward the boundary, talking to someone I couldn\'t see. She said her mother was calling her. Her mother is ten years in the ground."', 'npc');
           api.say('You set out to find Sister Ignatia before the road takes her.', 'note');
         } }
+    },
+    timers: {
+      rain: { name: 'The rain', room: 'crossroads', max: 4, tick: 'fail',
+        text: 'Rain is coming over the hill. It loses 1 each failed try at the wheel. When it comes, every try at the wheel is Hard.',
+        out: function (api) { api.flag('rain', true); api.say('The rain comes on hard and the ditch runs like a stream. From now on every try at the wheel is Hard.', 'note'); } }
     },
     rooms: {
       crossroads: {
@@ -159,7 +169,13 @@
     fall: function () { return 'The river takes you, gently, the way it takes everything. Downstream they will find the lead box, or a pair of boots.'; },
     obstacles: {
       ford: { name: 'The ford', room: 'bank', max: 6, stat: 'STR', cat: 'basic',
-        text: 'Forty yards of stepping stones under fast brown water. Each try is a STR check against the Target (Easy with a rope to brace on, Hard once the river is over the stones). A success rolls Basic Effort into the bar; a failure knocks you down in the cold (with a rope, it only costs you time).',
+        text: 'Forty yards of stepping stones under fast brown water. Wade (STR, Basic Effort; Easy with a rope, and a failure knocks you down unless you have one), leap from stone to stone (DEX, Weapons Effort, but a failure hurts), or read the current for the shallows (WIS, once: half of what is left). Once the river is over the stones, every try is Hard.',
+        hard: function (api) { return !!api.flag('flood'); },
+        progress: function (api) { if (api.bar('ford') >= 3 && !api.flag('beat_acolyte') && !api.s.fight) api.fight('acolyte'); },
+        ways: [
+          { id: 'leap', kind: 'bold', label: 'Leap from stone to stone', stat: 'DEX', say: 'You go across the stones at a run.', what: 'Leaping the stones', failSay: 'A stone rolls under your foot and you go down hard in the shallows' },
+          { id: 'read', kind: 'trick', label: 'Read the current for the shallows', stat: 'WIS', say: 'You watch the water for a long moment, where it runs smooth and where it breaks.', what: 'Reading the current', failSay: 'The water tells you nothing you can use.' }
+        ],
         isDone: function (api) { return !!api.flag('crossed'); },
         done: function (api) { api.flag('crossed', true); api.timer('river', 'stop'); api.end('won', 'You haul yourself out on the far bank and lie there in the reeds until you can feel your hands. The road goes on, uphill, out of the valley.'); } }
     },
@@ -179,11 +195,10 @@
             run: function (api) { api.flag('hut', true); api.say('A cold hearth, a stool, and on a peg by the door, what the ferryman did not take with him.'); if (api.has(ROPES)) api.loot('The ferryman\'s hut'); else api.give('rope', 'You take'); } },
           { id: 'wade', label: 'Wade the ford', words: ['wade', 'ford', 'cross', 'stones', 'river'],
             run: function (api) {
-              var adj = api.flag('flood') ? 'hard' : api.has(ROPES) ? 'easy' : 'normal';
+              var adj = api.has(ROPES) ? 'easy' : 'normal';
               api.say(api.has(ROPES) ? 'You tie off your rope on the ferry post and go in, paying it out behind you.' : 'You go in. The cold takes your breath.');
               var c = api.work('ford', { adj: adj, what: 'Wading the ford' });
-              if (!c.success) { if (api.has(ROPES)) { api.say('The current takes your feet, and the rope holds you. You haul yourself back to the stones.'); return; } var n = api.die(4); api.hurt(n, 'The current knocks your legs out from under you (d4 ' + n + ')'); return; }
-              if (!api.flag('crossed') && api.bar('ford') >= 3 && !api.flag('beat_acolyte') && !api.s.fight) api.fight('acolyte');
+              if (!c.success) { if (api.has(ROPES)) { api.say('The current takes your feet, and the rope holds you. You haul yourself back to the stones.'); return; } var n = api.die(4); api.hurt(n, 'The current knocks your legs out from under you (d4 ' + n + ')'); }
             } }
         ]
       }
@@ -248,7 +263,11 @@
     fall: function () { return 'The reeve\'s men find you under the gibbet in the morning, and take you for another thief.'; },
     obstacles: {
       cage: { name: 'The gibbet cage', room: 'gibbet', max: 5, stat: 'DEX', cat: 'basic',
-        text: 'An iron cage on a tall post, locked. Each try is a DEX check against the Target; a success rolls Basic Effort into the bar. Fill it and the lock gives.',
+        text: 'An iron cage on a tall post, locked. Pick the lock (DEX, Basic Effort), wrench the door (STR, Weapons Effort, but a failure cuts you on the rusted iron), or work out the lock (INT, once: half of what is left). Fill the bar and it gives. The light is going while you work.',
+        ways: [
+          { id: 'wrench', kind: 'bold', label: 'Wrench the cage door', stat: 'STR', say: 'You brace your feet on the post and haul on the bars.', what: 'Wrenching the door', failSay: 'The rusted iron opens your palm' },
+          { id: 'study', kind: 'trick', label: 'Work out how the lock was made', stat: 'INT', say: 'You look at the lock the way its smith did.', what: 'Working out the lock', failSay: 'It is no make of lock you know.' }
+        ],
         isDone: function (api) { return !!api.flag('cage'); },
         done: function (api) { api.flag('cage', true); api.say('The lock gives and the cage door swings down. The hanged man leans out toward you as if to say something.'); } }
     },
@@ -294,10 +313,20 @@
     fall: function () { return 'You lie down among the bones, and the bone-house counts one more.'; },
     obstacles: {
       grille: { name: 'The iron grille', room: 'ossuary', max: 6, stat: 'STR', cat: 'basic', open: true,
-        text: 'An iron grille closes off the inner chapel. Each try is a STR check against the Target; a success rolls Basic Effort into the bar. ',
+        text: 'An iron grille closes off the inner chapel. Force it (STR, Basic Effort), throw yourself at it (STR, Weapons Effort, but a failure hurts), or find where the mortar is rotten (INT, once: half of what is left). Each failed try wakes the bones a little more.',
+        clock: 'bones',
+        ways: [
+          { id: 'throw', kind: 'bold', label: 'Throw yourself at the grille', stat: 'STR', say: 'You take a run at it across the bone-strewn floor.', what: 'Throwing yourself at it', failSay: 'The grille throws you back onto the bones' },
+          { id: 'mortar', kind: 'trick', label: 'Find where the mortar is rotten', stat: 'INT', say: 'You run your fingers along the stone where the bars are set.', what: 'Finding the rot', failSay: 'The mortar is as good as the day it was laid.' }
+        ],
         opened: 'The grille groans and comes away from the stone.',
         isDone: function (api) { return !!api.flag('grille'); },
         done: function (api) { if (!api.flag('grille')) { api.flag('grille', true); api.say('The inner chapel is open. A lamp hangs there, long out, over a small altar.'); } } }
+    },
+    timers: {
+      bones: { name: 'The bones stir', room: 'ossuary', max: 3, tick: 'fail',
+        text: 'Each failed try at the grille rattles the bones in their rows. When they wake, the Horror rises 2.',
+        out: function (api) { api.say('The bones rattle in their rows from one end of the vault to the other, and do not stop for a long time.', 'horror'); api.horror(2, 'The dead are awake.'); } }
     },
     rooms: {
       ossuary: {
@@ -334,9 +363,19 @@
     fall: function () { return 'The salt is scraped from the last stone by morning. The niche stays empty, and the lead box is never found.'; },
     obstacles: {
       salt: { name: 'The broken salt line', room: 'stones', max: 6, stat: 'WIS', cat: 'basic',
-        text: 'The salt line between the boundary stones, scraped away in long gaps. Each try is a WIS check against the Target (Easy with a salt pouch); a success rolls Basic Effort into the bar. Mend it before you meet what scraped it.',
+        text: 'The salt line between the boundary stones, scraped away in long gaps. Walk it praying (WIS, Basic Effort; Easy with a salt pouch), pour it thick and fast (WIS, Weapons Effort, but a failure costs 1 Horror), or follow the old line by the saints\' marks (INT, once: half of what is left). Each failed try draws what scraped it closer; when it comes, you fight it with the line still broken.',
+        clock: 'hag',
+        ways: [
+          { id: 'pour', kind: 'bold', label: 'Pour the salt thick and fast', stat: 'WIS', say: 'You pour it in a hurry, gap after gap.', what: 'Pouring the line', failHorror: 1, failSay: 'The salt blows away in the dark, and the gaps seem wider than before.' },
+          { id: 'marks', kind: 'trick', label: 'Follow the old line by the saints\' marks', stat: 'INT', say: 'Each stone\'s saint looks along the line to the next. You follow their eyes.', what: 'Following the marks', failSay: 'The marks are worn past reading.' }
+        ],
         isDone: function (api) { return !!api.flag('mended'); },
         done: function (api) { api.flag('mended', true); api.say('The line is whole again, white from stone to stone. Up the hill, something hisses as if burned.'); } }
+    },
+    timers: {
+      hag: { name: 'Something on the hill', room: 'stones', max: 4, tick: 'fail',
+        text: 'Each failed try at the salt line draws what scraped it closer. When it comes, the line is still broken.',
+        out: function (api) { if (api.flag('beat_hag') || api.s.fight) return; api.say('An old woman comes down the hill toward you, quickly, a horn spoon in her hand.', 'foe'); api.fight('hag'); } }
     },
     rooms: {
       stones: {

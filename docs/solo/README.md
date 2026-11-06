@@ -75,3 +75,13 @@ The rules leave a threshold's consequence to the GM; in the solo game the game i
 * **Falling:** the rules' dying roll (d4 rounds; each new round and each blow that gets through takes one off). The dying hero may heal (any healing stands them up) or crawl away with a CON check: out of the scene with 1 HP, leaving behind what they found in it. In the last scene, crawling away ends the road alive but unfinished.
 * **Finds:** a hero from My heroes who finishes the road may press "Bring your finds home" once; each find still carried goes into the saved hero if there is room.
 * **The foe's next move** shows on its card with the real numbers (the roll it needs to hit you, the chance, its damage die). **Brace** spends the turn for +2 Defence until the hero's next turn, like the Guard ruling.
+
+## Obstacles: several ways through, and a clock (owner, 2026-11-06)
+
+Every obstacle offers at least two ways through instead of one button to press again and again:
+
+* **Bold** (a stat check, then Weapons Effort d6 off the bar). A failure costs something: d4 hurt, or Horror where it fits.
+* **Trick** (a different stat, once per obstacle). A success takes half of what is left off the bar.
+* Every failed try ticks the obstacle's **clock**. When it runs out something gets worse: the rain makes every try Hard (wheel), the flood rises (ford), bones wake (+2 Horror, grille), the Hag comes (salt), the Eater wakes (door).
+
+New obstacles only need data: `ways`, `clock` (a timer with `tick: 'fail'`), and optional `hard(api)` / `progress(api)`. No rules changed: these are the solo game's own GM calls.

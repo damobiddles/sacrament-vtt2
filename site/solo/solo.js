@@ -182,6 +182,7 @@
       if (od) bits.push(od.need > 20 ? 'Cannot succeed' : 'Need ' + od.need + '+ (' + od.chance + '%)' + (od.note ? ', ' + od.note : ''));
       if (c.horror) bits.push('+' + R.sayHorrorAmount(c.horror) + ' Horror');
       if (od && od.cost.length) bits.push('Fail: ' + od.cost.join(', '));
+      if (c.hint) bits.unshift(c.hint);
       if (bits.length) { var sm = document.createElement('small'); sm.className = 'odds' + (od && od.chance <= 35 ? ' long' : ''); sm.textContent = bits.join(' · '); b.appendChild(sm); }
     }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });

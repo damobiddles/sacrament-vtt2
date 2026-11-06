@@ -94,19 +94,46 @@
   function isDark(s, adv) { var r = adv.rooms[s.room]; return !!(r && r.dark) && !lit(s) && !s.flags['mapped_' + s.room]; }
 
   /* ---------- obstacles and timers ---------- */
+  /* One try at an obstacle: a check, and on a success Effort into its bar. A failed try moves the obstacle's clock, if it has one: dawdling costs.
+     o.stat and o.cat change the check and the Effort die (a bold way); o.half puts half of what is left into the bar at once (a trick). */
   function work(api, id, o) {
     var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {};
-    var c = api.check(ob.stat, { adj: o.adj, what: o.what || ob.name });
-    if (!c.success) return c;
-    var cat = ob.cat || 'basic', e = R.effort({ cat: cat, bonus: s.hero.effort[cat] || 0, rolled: api.die(R.DEFAULT_DICE[cat]) });
-    s.bars[id] = Math.min(ob.max, int(s.bars[id], 0) + e.total);
-    api.say(ob.name + ': ' + R.sayEffort(e, 'Effort') + ' Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll', { dice: [{ die: e.die, n: e.rolled }], by: 'hero' });
+    var adj = o.adj || 'normal'; if (ob.hard && ob.hard(api)) adj = adj === 'easy' ? 'normal' : 'hard';
+    var c = api.check(o.stat || ob.stat, { adj: adj, what: o.what || ob.name });
+    if (!c.success) { if (ob.clock) clockTick(api, ob.clock); return c; }
+    var have = int(s.bars[id], 0), add, dice = null, words;
+    if (o.half) { add = Math.ceil((ob.max - have) / 2); words = 'you find the way of it: half of what is left, ' + add + '.'; }
+    else { var cat = o.cat || ob.cat || 'basic', e = R.effort({ cat: cat, bonus: s.hero.effort[cat] || 0, rolled: api.die(R.DEFAULT_DICE[cat]) }); add = e.total; dice = [{ die: e.die, n: e.rolled }]; words = R.sayEffort(e, 'Effort'); }
+    s.bars[id] = Math.min(ob.max, have + add);
+    api.say(ob.name + ': ' + words + ' Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll', dice ? { dice: dice, by: 'hero' } : null);
     if (s.bars[id] >= ob.max) clearObstacle(api, id);
+    else if (ob.progress) ob.progress(api);
     return c;
+  }
+  /* The other ways through an obstacle, beside the scene's own steady one: bold (a harder Effort die, and a failure costs), and a trick (once only: a
+     success puts half of what is left into the bar). The solo game's GM calls (the owner's, 2026-11-06), not rules. */
+  function wayOf(api, id, wid) { var ob = api._adv.obstacles[id]; return ob && (ob.ways || []).filter(function (w) { return w.id === wid; })[0] || null; }
+  function wayOpen(api, id, w) { return obstacleOpen(api, id) && !(w.kind === 'trick' && api.s.flags['trick_' + id]) && (!w.when || w.when(api)); }
+  function useWay(api, id, w) {
+    var s = api.s; if (w.say) api.say(w.say);
+    if (w.kind === 'trick') s.flags['trick_' + id] = true;
+    var c = work(api, id, { stat: w.stat, cat: w.kind === 'bold' ? 'weapons' : null, half: w.kind === 'trick', adj: w.adj ? w.adj(api) : 'normal', what: w.what || w.label });
+    if (c.success || s.over) return;
+    if (w.kind === 'bold') {
+      if (w.failHorror) raiseHorror(api, w.failHorror, w.failSay || 'It goes wrong.');
+      else { var n = api.die(4); hurt(api, n, (w.failSay || 'It goes wrong and you are hurt') + ' (d4 ' + n + ')'); }
+    } else if (w.failSay) api.say(w.failSay);
+  }
+  function clockTick(api, tid) {
+    var s = api.s, t = (s.timers || {})[tid], def = (api._adv.timers || {})[tid]; if (!t || !t.on || !def) return;
+    t.cur = Math.max(0, t.cur - 1);
+    if (t.cur > 0) api.say(def.name + ': ' + t.cur + ' left.', 'horror');
+    else { t.on = false; api.say(def.name + ': time is up.', 'horror'); if (def.out) def.out(api); }
   }
   function clearObstacle(api, id, why) {
     var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {}; s.bars[id] = ob.max;
     if (why) api.say(why, 'win');
+    if (ob.clock && s.timers && s.timers[ob.clock] && s.timers[ob.clock].cur > 0) s.timers[ob.clock].on = false;   /* done in time: the clock stops and its card goes */
     if (ob.done) ob.done(api);
   }
   function obstacleOpen(api, id) { var ob = api._adv.obstacles[id]; return !(ob.isDone ? ob.isDone(api) : int((api.s.bars || {})[id], 0) >= ob.max); }
@@ -167,6 +194,7 @@
     var first = !s.seen[to]; s.seen[to] = true;
     api.say(typeof r.text === 'function' ? r.text(api, first) : r.text);
     if (r.dark) api.say(lit(s) ? lightLine(s) : 'It is dark here. Without a light, every check and attack is Hard.', 'note');
+    Object.keys(api._adv.obstacles || {}).forEach(function (id) { var ob = api._adv.obstacles[id]; if (ob.room === to && ob.clock && obstacleOpen(api, id)) timer(api, ob.clock, 'start'); });
     if (r.enter) r.enter(api, first);
     var who = first && !s.fight && cameoNow(s); if (who) api.say(who.meet, 'npc');
   }
@@ -415,6 +443,7 @@
     var r = adv.rooms[s.room], who = cameoNow(s);
     if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
     (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
+    Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
     return out;
@@ -445,6 +474,7 @@
     if (copy.hp.cur < s.hp.cur) cost.push('you are hurt');
     if (copy.horror > s.horror) cost.push('Horror');
     if (copy.fight && !s.fight) cost.push('a fight');
+    Object.keys(copy.timers || {}).forEach(function (id) { var a0 = (s.timers || {})[id], d = (adv.timers || {})[id]; if (d && d.tick === 'fail' && a0 && copy.timers[id].cur < a0.cur) cost.push(d.name.toLowerCase() + ' draws closer'); });
     if (copy.over === 'dead') cost = ['it may kill you'];
     return { need: Math.min(need, 21), chance: chance, note: o.note, cost: cost, attack: !!o.pendingDamage || /MISS/.test(o.label) };
   }
@@ -455,7 +485,7 @@
     var out = [], api = apiFor(s, adv, function () { return 1; });
     if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', next: foeIntent(s).text, text: fd.card || '', stats: 'Attack +' + f.attack + ' · d' + f.damage + ' damage' + (f.dim ? ' · next attack rolls 3 less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
     Object.keys(adv.obstacles || {}).forEach(function (id) { var o = adv.obstacles[id]; if (o.room === s.room && obstacleOpen(api, id)) out.push({ kind: 'obstacle', id: id, name: o.name, cur: int((s.bars || {})[id], 0), max: o.max, unit: 'Effort', text: o.text || '', stats: o.stat + ' check, then ' + (R.CAT_NAMES ? R.CAT_NAMES[o.cat || 'basic'] : 'Basic') + ' Effort' }); });
-    Object.keys(s.timers || {}).forEach(function (id) { var t = s.timers[id], d = adv.timers[id]; if (d && (t.on || t.cur === 0) && (!d.room || d.room === s.room)) out.push({ kind: 'timer', id: id, name: d.name, cur: t.cur, max: t.max, unit: t.on ? 'left' : 'ended', text: d.text || '', stats: t.on ? 'Loses 1 each round' : 'Time ran out' }); });
+    Object.keys(s.timers || {}).forEach(function (id) { var t = s.timers[id], d = adv.timers[id]; if (d && (t.on || t.cur === 0) && (!d.room || d.room === s.room)) out.push({ kind: 'timer', id: id, name: d.name, cur: t.cur, max: t.max, unit: t.on ? 'left' : 'ended', text: d.text || '', stats: t.on ? (d.tick === 'fail' ? 'Loses 1 each failed try' : d.tick === 'action' ? 'Loses 1 each thing you do here' : 'Loses 1 each round') : 'Time ran out' }); });
     return out;
   }
   function exitOf(api, r, d) { var e = r.exits[d]; if (!e) return null; if (typeof e === 'string') e = { to: e }; if (e.when && !e.when(api)) return e.closed ? { to: e.to, closed: e.closed, hidden: true } : null; return e; }
@@ -549,10 +579,11 @@
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
       if (!x || (x.when && !x.when(api))) api.say('That does nothing now.', 'note'); else x.run(api);
     }
+    else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
     else api.say('That does nothing here. ' + HELP, 'note');
     /* a timer on the scene's own clock moves each time the hero does something outside a fight */
-    if (!s.over && !s.done && !s.fight && s.adventure === adv.id && /^(go|do|use)$/.test(p[0]) && !wasFight) tickTimers(apiFor(s, adv, die), 'action');
+    if (!s.over && !s.done && !s.fight && s.adventure === adv.id && /^(go|do|use|way)$/.test(p[0]) && !wasFight) tickTimers(apiFor(s, adv, die), 'action');
     return s.log.slice(before);
   }
   /* No weapon: STR and Basic Effort. */

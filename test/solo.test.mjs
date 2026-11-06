@@ -360,3 +360,49 @@ test('finds from the road: only what was found and is still carried can come hom
   s.hero.gear = s.hero.gear.filter((g) => g.id !== 'candle');
   assert.deepEqual(S.runFinds(s), [], 'nothing carried, nothing comes home');
 });
+
+// Obstacles (the owner's ask, 2026-11-06): several ways through, each with a trade-off, and a clock that makes dawdling cost.
+const ADVS = globalThis.SacramentSoloAdventures;
+test('every obstacle offers a bold way and a trick besides the steady one, with real scores', () => {
+  for (const adv of Object.values(ADVS)) for (const [id, ob] of Object.entries(adv.obstacles || {})) {
+    const kinds = (ob.ways || []).map((w) => w.kind).sort();
+    assert.deepEqual(kinds, ['bold', 'trick'], adv.id + ' ' + id + ' has a bold way and a trick');
+    for (const w of ob.ways) assert.ok(R.STATS.includes(w.stat), adv.id + ' ' + id + ' ' + w.id + ' rolls a real score');
+    if (ob.clock) assert.ok(adv.timers[ob.clock] && adv.timers[ob.clock].tick === 'fail', adv.id + ' ' + id + ' has a clock that runs on failed tries');
+  }
+});
+
+test('the bold way rolls Weapons Effort and a failure hurts; the trick works once and fills half of what is left', () => {
+  const cart = ADVS.cart, hero = T.generate('fighter', seeded(3));
+  let s = S.start(hero, cart, fixed([1]));
+  assert.ok(S.choices(s, cart).some((c) => c.cmd === 'way wheel lift'));
+  S.act(s, cart, 'way wheel lift', fixed([20, 6]));                 // natural 20 succeeds; Weapons Effort d6 shows 6
+  assert.ok(s.bars.wheel >= 6, 'a d6 went in: ' + s.bars.wheel);
+  s = S.start(hero, cart, fixed([1]));
+  const hp = s.hp.cur;
+  S.act(s, cart, 'way wheel lift', fixed([2, 3]));                  // a miss; the strain costs d4 3
+  assert.equal(s.hp.cur, hp - 3);
+  s = S.start(hero, cart, fixed([1]));
+  S.act(s, cart, 'way wheel pack', fixed([20]));
+  assert.equal(s.bars.wheel, 3, 'half of 6');
+  assert.ok(!S.choices(s, cart).some((c) => c.cmd === 'way wheel pack'), 'the trick is used up');
+});
+
+test('a clock: each failed try at the wheel brings the rain, and once it comes every try is Hard', () => {
+  const cart = ADVS.cart, s = S.start(T.generate('fighter', seeded(3)), cart, fixed([1]));
+  assert.equal(s.timers.rain.cur, 4, 'the clock starts when you arrive');
+  for (let i = 0; i < 4; i++) S.act(s, cart, 'do wheel', fixed([2]));
+  assert.equal(s.flags.rain, true);
+  S.act(s, cart, 'do wheel', fixed([15, 1]));
+  const last = s.log.filter((l) => l.outcome).at(-1);
+  assert.equal(last.outcome.note, 'Hard');
+});
+
+test('the salt line: when its clock runs out, the Salt Hag comes with the line still broken; the tower door\'s first loud failure rouses the Candle-Eater', () => {
+  const shrine = ADVS.shrine, s = S.start(T.generate('scholar', seeded(5)), shrine, fixed([1]));
+  for (let i = 0; i < 4 && !s.fight; i++) S.act(s, shrine, 'do salt', fixed([2]));
+  assert.ok(s.fight && s.fight.foe === 'hag' && !s.flags.mended);
+  const b = S.start(T.generate('fighter', seeded(3)), A, fixed([1]));
+  S.act(b, A, 'go north', fixed([1])); S.act(b, A, 'way door kick', fixed([2, 2]));
+  assert.ok(b.fight && b.fight.foe === 'eater', 'the noise brings it up the stair');
+});
