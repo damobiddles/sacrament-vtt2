@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/spells.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -405,4 +405,38 @@ test('the salt line: when its clock runs out, the Salt Hag comes with the line s
   const b = S.start(T.generate('fighter', seeded(3)), A, fixed([1]));
   S.act(b, A, 'go north', fixed([1])); S.act(b, A, 'way door kick', fixed([2, 2]));
   assert.ok(b.fight && b.fight.foe === 'eater', 'the noise brings it up the stair');
+});
+
+/* ---------- story spells and items: their tags come from the shared gear list (owner, 2026-11-06) ---------- */
+const G = globalThis.SACRAMENT_GEAR, CORE = globalThis.SacramentSheetCore;
+test('every story spell and story item carries tags from the shared list, except the two that stay the GM\'s call', () => {
+  const ids = new Set(G.tags.map((t) => t.id)), untagged = ['lastverse', 'realname'];
+  for (const t of G.tags) { assert.ok(t.name && (t.fight || t.out), t.id); }
+  const story = [...G.spells.filter((x) => !x.effort || x.effect === 'esoteric'), ...[...G.items, ...G.relics, ...G.found].filter((x) => x.effect === 'esoteric' && !x.legacyEdition)];
+  for (const x of story) {
+    if (untagged.includes(x.id)) { assert.ok(!x.tags, x.id); continue; }
+    assert.ok(x.tags && x.tags.length, x.id + ' has tags'); for (const t of x.tags) assert.ok(ids.has(t), x.id + ': ' + t);
+    assert.ok(!x.needs || ['corpse', 'undead'].includes(x.needs), x.id);
+  }
+  assert.match(CORE.tagText(G.spells.find((x) => x.id === 'pillarash')), /Hide\. In a fight: .*rolls 3 less\. Out of a fight: /);
+});
+
+test('Pillar of Ash (hide): in a fight the foe\'s next attack rolls 3 less; at the ford it hides the crossing, half of what is left, once', () => {
+  let { s, die } = withBook('embers'); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  const ash = cast(s, 'Pillar of Ash'); assert.ok(ash && !ash.idle); S.act(s, A, ash.cmd, die); assert.equal(s.fight.dim, 3);
+  const ford = ADVS.ford, hero = T.generate('scholar', seeded(4)); hero.gear = [{ id: 'embers', eq: true }];
+  const f = S.start(hero, ford, fixed([10])); assert.equal(f.room, 'bank');
+  const c = S.choices(f, ford).find((x) => x.label.includes('Pillar of Ash')); assert.ok(c && !c.idle, 'it has a use at the ford');
+  S.act(f, ford, c.cmd, fixed([10])); assert.equal(f.bars.ford, 3, 'half of 6');
+  assert.equal(f.flags.tag_ford_hide, true, 'once per obstacle');
+  assert.ok(f.fight && f.fight.foe === 'acolyte', 'halfway over, the thing in the water comes, as the ford says');
+});
+
+test('bind holds a foe only after a successful check; a story item is offered and used like a spell', () => {
+  let { s } = withBook('mourningfrost'); const die = fixed([20, 10]); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  const ice = cast(s, 'Black Ice'); assert.ok(ice && !ice.idle); S.act(s, A, ice.cmd, die); assert.equal(s.fight.skip, 1, 'held: it loses its next attack');
+  const hero = T.generate('fighter', seeded(3)); hero.gear = [{ id: 'boneflute', eq: false }];
+  const b = S.start(hero, A, fixed([10])); S.act(b, A, 'go north', fixed([10])); S.act(b, A, 'go down', fixed([10]));
+  const flute = S.choices(b, A).find((x) => x.label.startsWith('Use ') && /flute/i.test(x.label)); assert.ok(flute && !flute.idle, 'the flute is offered in a fight');
+  S.act(b, A, flute.cmd, fixed([20])); assert.equal(b.fight.dim, 3, 'Dazed, as its words say');
 });

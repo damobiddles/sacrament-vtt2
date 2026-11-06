@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { esc, parse, fmt } from './lib/markdown.mjs';
-import { rangeTable, ruleValues } from './lib/current-rules.mjs';
+import { rangeTable, ruleValues, tagTable } from './lib/current-rules.mjs';
 import '../site/vtt/rules.js';
 import { lootCatalogue } from './lib/loot-catalogue.mjs';
 import '../site/sheet/gear.js';
@@ -191,7 +191,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
     const p = read(slug), meta = PAGES.find((x) => x.slug === slug);
     let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
     if (slug === 'play-in-person') html = playInPerson(html);
-    html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules));
+    html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules)).replace('<p>{{TAGS}}</p>', tagTable(globalThis.SACRAMENT_GEAR));
     if (meta.guide) {
       const sections = [];
       html = html.replace(/<h2>(.*?)<\/h2>/g, (_, title) => {

@@ -153,7 +153,7 @@
     },
     /* Obstacles: cards with an Effort bar, as at the table. */
     obstacles: {
-      door: { name: 'The tower door', room: 'nave', max: 6, stat: 'STR', cat: 'basic', open: true,
+      door: { name: 'The tower door', room: 'nave', max: 6, stat: 'STR', cat: 'basic', open: true, answers: { silence: 'Your blows on the door make no sound at all. You can put your shoulder into it without fear.', move: 'You step into the shadow by the font and out of the shadow behind the door, and lift the bar from inside.' },
         text: 'Old oak and an iron lock. Force it (STR, Basic Effort; Easy with a crowbar), kick it in (STR, Weapons Effort, but a failure hurts), or lift it off its old hinges (INT, once: half of what is left). Fill the bar and the door gives. A failed try is loud.',
         ways: [
           { id: 'kick', kind: 'bold', label: 'Kick the tower door in', stat: 'STR', say: 'You kick at the lock with everything you have.', what: 'Kicking the door', failSay: 'Your heel comes off the oak and your knee takes it'},
@@ -177,7 +177,7 @@
           if (api.s.fight) api.foeHeal(4, 'It has fed. The Candle-Eater swells');
         } }
     },
-    /* Spells this scene answers in its own way, before the general solo rulings (spells.js). */
+    /* Spells this scene answers in its own way, before the tags in the gear list. */
     spells: {
       waxmouth: function (api) {
         var t = api.s.timers && api.s.timers.odo; if (!api.s.fight || !t || !t.on) return null;

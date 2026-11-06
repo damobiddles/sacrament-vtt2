@@ -17,3 +17,12 @@ test('public rules text no longer says the table adds no extra damage at 21', ()
   assert.ok(!read('content/landing/player-guide.md').includes('aftershock tables, extra damage'));
   assert.ok(!read('site/adventures/the-guest-at-greave/index.html').includes('adds its 1 Horror as usual'));
 });
+
+test('the Rules page lists every spell and item tag from the gear list, and the change has its entry', async () => {
+  await import('../site/sheet/gear.js'); const { tagTable } = await import('../scripts/lib/current-rules.mjs'), G = globalThis.SACRAMENT_GEAR;
+  assert.ok(read('content/landing/rules.md').includes('\n{{TAGS}}\n'), 'the Rules page draws its tag table from the gear list');
+  const html = tagTable(G);
+  for (const t of G.tags) { assert.ok(html.includes('data-tag="' + t.id + '"'), t.id); }
+  assert.ok(html.includes('Pillar of Ash'));
+  assert.ok(read('content/landing/rules-updates.md').includes('## 6 November 2026: story spells and items'));
+});

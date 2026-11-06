@@ -152,39 +152,53 @@
     });
   }
 
-  /* ---------- story spells: what the game, as GM, makes of them (spells.js) ---------- */
-  /* What a spell with no Effort die does here, or null when nothing in this scene answers it. Nothing here changes the game: it returns { run }. */
+  /* ---------- story spells and items: their tags in the gear list (site/sheet/gear.js, "When in doubt" on the Rules page) ---------- */
+  /* What a spell or item with no damage die does here, or null when nothing in this scene answers it. Nothing here changes the game: it returns { run }.
+     The tag's default is the shared rule; the scene says where it applies: a dark room (light), a secret (learn), a foe that burns, casts, is undead or an animal,
+     and each obstacle's "answers" (tag: words), which take half of what is left off its bar, once per tag (an "open" obstacle simply opens). */
   function spellUse(api, src) {
     var s = api.s, adv = api._adv, f = s.fight, room = adv.rooms[s.room], foe = f && adv.foes[f.foe];
     var own = adv.spells && adv.spells[src.id], mine = own && own(api); if (mine) return mine;
-    var r = (root.SacramentSoloSpells || {})[src.id]; if (!r) return null;
-    var kinds = [r.kind].concat(r.also ? [r.also] : []);
-    if (f) kinds.sort(function (a, b) { return (FIGHT_KINDS.indexOf(a) < 0) - (FIGHT_KINDS.indexOf(b) < 0); });
-    for (var i = 0; i < kinds.length; i++) { var u = ruling(api, kinds[i], r, f, room, foe); if (u) return u; }
+    var tags = (src.tags || []).slice(); if (!tags.length) return null;
+    if (f) tags.sort(function (a, b) { return (FIGHT_TAGS.indexOf(a) < 0) - (FIGHT_TAGS.indexOf(b) < 0); });
+    for (var i = 0; i < tags.length; i++) { var u = ruling(api, tags[i], src, f, room, foe); if (u) return u; }
     return null;
   }
-  var FIGHT_KINDS = ['daze', 'guard', 'cover', 'snuff', 'learn'];
-  function ruling(api, k, r, f, room, foe) {
+  var FIGHT_TAGS = ['daze', 'guard', 'hide', 'snuff', 'learn', 'silence', 'bind', 'beast'];
+  function ruling(api, k, src, f, room, foe) {
     var s = api.s, dark = isDark(s, api._adv), dead = typeof room.dead === 'function' ? room.dead(api) : room.dead;
+    if (src.needs === 'corpse' && !dead) return null;
     if (k === 'light' && dark) return { run: function () { s.flags.lit = true; api.say('Light gathers where you need it. The dark steps back from you.', 'note'); } };
-    if (k === 'map' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('The note comes back to you off every wall. You know the shape of this place now: the dark no longer makes your checks Hard here.', 'note'); } };
     if (!f) {
-      if (k === 'open') { var ob = obstacleHere(api); if (ob && ob.def.open) return { run: function () { clearObstacle(api, ob.id, ob.def.opened || ob.def.name + ' gives way.'); } }; }
-      if (k === 'learn' && room.secret && !s.flags['secret_' + s.room] && (!r.corpse || dead)) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
+      var ob = obstacleHere(api);
+      if (k === 'open' && ob && ob.def.open) return { run: function () { clearObstacle(api, ob.id, ob.def.opened || ob.def.name + ' gives way.'); } };
+      if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
+      var ans = ob && ob.def.answers && ob.def.answers[k];
+      if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
+      if (k === 'learn' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: it no longer makes your checks Hard here.', 'note'); } };
       return null;
     }
-    if ((k === 'daze' || k === 'cover') && !f.dim && (!r.undead || foe.undead)) return { run: function () { f.dim = 3; api.say(k === 'cover' ? f.name + ' cannot see you: its next attack rolls 3 less.' : f.name + ' is Dazed: its next attack rolls 3 less.', 'win'); } };
+    if (src.needs === 'undead' && !foe.undead) return null;
+    var checked = !!src.roll;
+    if ((k === 'daze' || k === 'hide' || (k === 'beast' && foe.beast)) && !f.dim) return { run: function () { f.dim = 3; api.say(k === 'hide' ? f.name + ' cannot see you well: its next attack rolls 3 less.' : k === 'beast' ? f.name + ' shies from you: its next attack rolls 3 less.' : f.name + ' is Dazed: its next attack rolls 3 less.', 'win'); } };
     if (k === 'guard' && !f.guard) return { run: function () { f.guard = 2; api.say('You have +2 Defence until your next turn.', 'win'); } };
-    if (k === 'snuff' && foe.flame && !f.skip) return { run: function () { f.skip = 1; api.say(foe.snuffed || f.name + '\'s flame goes out. It does not attack this turn.', 'win'); } };
-    if (k === 'learn' && foe.weakness && !f.learned && (!r.corpse || dead)) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
+    if (!f.skip && ((k === 'snuff' && foe.flame) || (k === 'silence' && foe.caster) || (k === 'bind' && checked))) return { run: function () { f.skip = 1; api.say(k === 'snuff' ? foe.snuffed || f.name + '\'s flame goes out. It does not attack this turn.' : k === 'silence' ? f.name + ' cannot get the words out. It does not attack this turn.' : f.name + ' is held fast. It does not attack this turn.', 'win'); } };
+    if (k === 'learn' && foe.weakness && !f.learned) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
     return null;
+  }
+  /* Half of what is left on an obstacle's bar, as a trick gives. */
+  function halfBar(api, id) {
+    var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {};
+    var have = int(s.bars[id], 0), add = Math.ceil((ob.max - have) / 2); s.bars[id] = Math.min(ob.max, have + add);
+    api.say(ob.name + ': half of what is left, ' + add + '. Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll');
+    if (s.bars[id] >= ob.max) clearObstacle(api, id); else if (ob.progress) ob.progress(api);
   }
   function obstacleHere(api) {
     var obs = api._adv.obstacles || {}, ids = Object.keys(obs).filter(function (id) { return obs[id].room === api.s.room && obstacleOpen(api, id); });
     return ids.length ? { id: ids[0], def: obs[ids[0]] } : null;
   }
-  /* A story spell is one with no Effort die and no healing. */
-  function isStorySpell(u) { var src = u && (u.source || u.item); return !!(u && u.spell && !u.healing && (!u.cat || (src && src.effect === 'esoteric'))); }
+  /* A story spell or item is one with no Effort die and no healing: a spell, or an item whose effect is left to the GM (its tags say what it is good for). */
+  function isStorySpell(u) { var src = u && (u.source || u.item); return !!(u && !u.healing && src && (u.spell ? !u.cat || src.effect === 'esoteric' : src.effect === 'esoteric' || (!u.cat && src.tags))); }
 
   /* ---------- moving ---------- */
   function enter(api, to) {
@@ -311,7 +325,7 @@
     }
     if (u.healing) return useHealing(api, a, u);
     var story = isStorySpell(u) ? spellUse(api, src) : null;
-    if (isStorySpell(u) && !story) { api.say('Nothing here answers ' + u.spell.name + '. You do not cast it, and it costs you nothing.', 'note'); return; }
+    if (isStorySpell(u) && !story) { api.say('Nothing here answers ' + (u.spell ? u.spell.name + '. You do not cast it' : yours(u.item.name) + '. You do not use it') + ', and it costs you nothing.', 'note'); return; }
     if (isDamage && !fight) { api.say('There is nothing here to strike.', 'note'); return; }
     if (src.once === 'scene') { if (s.used[C.powerKey(src)]) { api.say('You have already used that in this scene.', 'note'); return; } s.used[C.powerKey(src)] = true; }
     api.say((pushed ? 'You push, and ' : 'You ') + (u.spell ? 'cast ' + u.spell.name + '.' : isDamage ? 'attack with ' + yours(u.item.name) + '.' : 'use ' + yours(u.item.name) + '.'), 'act');

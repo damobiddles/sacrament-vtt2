@@ -25,6 +25,12 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 6 November 2026: story spells and items
+
+**Every story spell and item says what it is good for.** 50 of the 52 spells with no damage die, and 18 relics and supplies whose effect was left to the GM, now carry one or two tags: Light, Snuff, Open, Learn, Hide, Silence, Bind, Daze, Guard, Beast, Move or Shelter. Each tag has a default effect in a fight and out of one, listed on the [Rules](/rules/) page. The spell's own words still come first; the tag is the quick answer when they leave it open. Four defaults are new: *Hide* (the foe's next attack rolls 3 less), *Silence* (a foe that casts or calls out loses its next attack), *Bind* (the foe loses its next attack, only after a successful check) and *Beast* (an animal's next attack rolls 3 less). No Horror cost, check, die or range changed. *Prompted by:* the solo game, where a spell like Pillar of Ash had nothing to do because no GM was there to decide; the designer chose to put the answer in the shared rules so the table, play in person and the solo game agree.
+
+**Print-and-play kit.** The printed cheat sheet does not list the tags yet.
+
 ## 1 November 2026: the Horror
 
 **A natural 1 adds Horror only when it matters.** Before, every natural 1 a hero rolled added 1 Horror, even on a roll to climb a wall or read a ledger. Now a natural 1 adds 1 Horror only on an attack, a spell or a pushed second action of any kind. Plain checks are free. A Push still costs 1, spells keep their casting cost, and monsters' natural 1s still add nothing. *Prompted by:* the designer's decision.
