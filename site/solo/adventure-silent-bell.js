@@ -86,7 +86,6 @@
               var c = api.work('door', { adj: bar ? 'easy' : 'normal', what: 'Forcing the door' });
               if (c.success && !api.flag('door')) api.say('The wood groans and gives a little. Not yet.');
               else if (!c.success) api.say('The door holds. The noise goes down the crypt steps and does not come back.');
-              if (!c.success && !api.flag('beat_eater') && !api.flag('roused')) { api.flag('roused', true); api.say('Something on the crypt stair heard you. It is coming up.', 'foe'); api.fight('eater'); }
             } }
         ]
       },
@@ -155,13 +154,21 @@
     /* Obstacles: cards with an Effort bar, as at the table. */
     obstacles: {
       door: { name: 'The tower door', room: 'nave', max: 6, stat: 'STR', cat: 'basic', open: true,
-        text: 'Old oak and an iron lock. Each try is a STR check against the Target (Easy with a crowbar). A success rolls Basic Effort into the bar; fill it and the door gives. A failed try is loud.',
+        text: 'Old oak and an iron lock. Force it (STR, Basic Effort; Easy with a crowbar), kick it in (STR, Weapons Effort, but a failure hurts), or lift it off its old hinges (INT, once: half of what is left). Fill the bar and the door gives. A failed try is loud.',
+        ways: [
+          { id: 'kick', kind: 'bold', label: 'Kick the tower door in', stat: 'STR', say: 'You kick at the lock with everything you have.', what: 'Kicking the door', failSay: 'Your heel comes off the oak and your knee takes it'},
+          { id: 'hinges', kind: 'trick', label: 'Lift the door off its old hinges', stat: 'INT', say: 'The hinges are older than the lock. You look for the pins.', what: 'Working the hinges', failSay: 'The pins are rusted solid.' }
+        ],
+        clock: 'noise',
         opened: 'The lock tears out of the frame with a noise like a shot.',
         isDone: function (api) { return !!api.flag('door'); },
         done: function (api) { if (!api.flag('door')) { api.flag('door', true); api.say('The tower door stands open. The stair is behind it.'); } } }
     },
     /* Timers: they lose 1 at the start of each new round while they run, as at the table. */
     timers: {
+      noise: { name: 'The noise', room: 'nave', max: 1, tick: 'fail',
+        text: 'The chapel is very quiet. One failed try at the tower door is loud enough to be heard on the crypt stair.',
+        out: function (api) { if (api.flag('beat_eater') || api.s.fight) return; api.flag('roused', true); api.say('Something on the crypt stair heard you. It is coming up.', 'foe'); api.fight('eater'); } },
       odo: { name: 'Brother Odo\'s breath', room: 'crypt', max: 5,
         text: 'The Candle-Eater is feeding on Brother Odo. He loses a breath at the start of each new round. Kill it, or stop it eating, before it reaches 0.',
         out: function (api) {
