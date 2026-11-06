@@ -153,6 +153,10 @@
 .card .fill{display:block;height:7px;padding:0;border:0;border-radius:4px;background:linear-gradient(90deg,var(--fill) calc(var(--v)*100%),#2a2433 0);box-shadow:inset 0 0 0 1px var(--edge);margin-bottom:4px}
 .card small{color:var(--fg);font-size:.82rem}
 .card:hover{border-color:var(--candle)}
+.npc-name{color:#8fd18a;font-weight:600}
+.card .hearts{display:flex;gap:3px;margin-bottom:4px}
+.card .hearts .heart{width:15px;height:13px;clip-path:path('M7.5 12.5 L1.7 6.7 C-.8 4.2 .8 .8 3.8 .8 C5.4 .8 6.7 1.8 7.5 3.3 C8.3 1.8 9.6 .8 11.2 .8 C14.2 .8 15.8 4.2 13.3 6.7 Z')}
+.log .k-run{font:600 1.5rem/1.2 var(--px);color:var(--candle);margin-top:4px}
 .card.foe{border-top-color:#e39a8c;--fill:#e6d6b0}
 .card.obstacle{border-top-color:#86b3a1;--fill:#86b3a1}
 .card.timer{border-top-color:var(--candle);--fill:var(--candle)}

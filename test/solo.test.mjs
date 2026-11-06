@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/spells.js', 'solo/engine.js', 'solo/adventure-silent-bell.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/spells.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -167,4 +167,80 @@ test('story spells in a fight: Wax Mouth stops the feeding, Snuff Candle costs t
   ({ s, die } = withBook('rivensky', [20, 10])); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
   const clap = S.choices(s, A).find((c) => /Judgement|Clap/i.test(c.label)); S.act(s, A, clap.cmd, die); assert.equal(s.fight.dim, 3);
   S.act(s, A, 'foe', die); assert.match(s.log.find((l) => l.foeAttack).t, / - 1 = /, 'its attack rolls 3 less (+2 becomes -1)');
+});
+
+/* ---------- a run of five scenes on the pilgrim road ---------- */
+const ROAD = globalThis.SacramentSoloCampaigns['pilgrim-road'], SCENES = globalThis.SacramentSoloAdventures;
+function exitTo(s, dir) { const e = S.sceneOf(s).rooms[s.room].exits[dir]; return typeof e === 'string' ? e : e && e.to; }
+function playRun(focus, seed) {
+  const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), hero = T.generate(focus, rnd), before = JSON.stringify(hero), s = S.startRun(hero, 'pilgrim-road', die);
+  const seen = [s.adventure];
+  for (let i = 0; i < 500 && !s.over; i++) {
+    const ch = S.choices(s, null).filter((c) => !c.idle); assert.ok(ch.length, 'there is always something to do (' + s.adventure + ' ' + s.room + ')');
+    const want = [(c) => c.cmd === 'rest', (c) => c.cmd.startsWith('meet'), (c) => c.kind === 'use' && s.hp.cur <= s.hp.max / 2, (c) => c.cmd === 'damage', (c) => c.kind === 'attack', (c) => c.cmd === 'foe',
+      (c) => c.kind === 'do' && !/^do (go|follow|set|lead|turn)$/.test(c.cmd), (c) => c.kind === 'go' && c.cmd.startsWith('go ') && !s.seen[exitTo(s, c.cmd.slice(3))], (c) => c.kind === 'do', (c) => c.cmd === 'next', (c) => c.kind === 'go'];
+    let pick = null; for (const f of want) { pick = ch.find(f); if (pick) break; }
+    S.act(s, null, (pick || ch[0]).cmd, die);
+    if (seen.at(-1) !== s.adventure) seen.push(s.adventure);
+  }
+  return { s, seen, unchanged: JSON.stringify(hero) === before };
+}
+
+test('a run is five scenes that make sense: an opening, three middle scenes in a sensible order, and the finale that answers the opening', () => {
+  const LEAN = { early: 0, any: 1, late: 2 }, orders = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    const rnd = seeded(seed * 104729 + 7), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n)), sc = o.order.map((id) => SCENES[id]);
+    orders.add(o.order.join(' '));
+    assert.equal(sc.length, 5); assert.equal(new Set(o.order).size, 5, 'no scene twice');
+    assert.equal(sc[0].act, 'opening'); assert.equal(sc[4].act, 'finale'); assert.ok(sc.slice(1, 4).every((x) => x.act === 'middle'));
+    assert.equal(o.charge, sc[0].gives); assert.ok(sc[4].fits.includes(o.charge), 'the finale answers the opening');
+    for (let i = 1; i < 3; i++) assert.ok(LEAN[sc[i].lean || 'any'] <= LEAN[sc[i + 1].lean || 'any'], 'early scenes come before late ones');
+  }
+  assert.ok(orders.size >= 20, 'runs differ: ' + orders.size + ' different orders');
+});
+
+test('every hero can play whole runs to an end; HP, Horror and gear carry from scene to scene; the saved hero is never changed', () => {
+  let won = 0;
+  for (const focus of ['fighter', 'scout', 'scholar', 'healer']) for (const seed of [1, 2, 3, 5, 8, 13, 21]) {
+    const { s, seen, unchanged } = playRun(focus, seed);
+    assert.ok(['won', 'dead'].includes(s.over), focus + ' ' + seed + ' did not finish');
+    assert.ok(unchanged, 'the saved hero was changed');
+    if (s.over === 'won') { won++; assert.equal(s.run.at, 4); assert.deepEqual(seen, s.run.order, 'the scenes were played in the order chosen'); }
+  }
+  assert.ok(won > 0, 'some runs are won');
+});
+
+test('between scenes the hero may rest once, then goes on; the next scene starts fresh but the hero does not', () => {
+  const rnd = seeded(7), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', die);
+  const api = { end: null }; void api;
+  s.hp.cur = 3; s.horror = 4; s.done = true;
+  let ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), ['rest', 'next']);
+  S.act(s, null, 'rest', die); assert.ok(s.hp.cur > 3); ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), ['next']);
+  const hp = s.hp.cur, horror = s.horror, gear = JSON.stringify(s.hero.gear), first = s.adventure;
+  S.act(s, null, 'next', die);
+  assert.notEqual(s.adventure, first); assert.equal(s.run.at, 1); assert.equal(s.hp.cur, hp); assert.equal(s.horror, horror); assert.equal(JSON.stringify(s.hero.gear), gear);
+  assert.equal(s.done, false); assert.equal(s.rested, false); assert.deepEqual(s.flags, Object.assign({}, s.flags));
+});
+
+test("the owner's people of the road: a run meets up to three, never in the last scene, and their names are the owner's", () => {
+  const names = globalThis.SacramentSoloCameos.map((c) => c.name);
+  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn']);
+  for (let seed = 1; seed <= 50; seed++) {
+    const rnd = seeded(seed), s = S.startRun(T.generate('scout', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n)), c = s.run.cameos;
+    assert.equal(c.length, 5); assert.equal(c[4], ''); const met = c.filter(Boolean); assert.ok(met.length <= 3 && met.length >= 1); assert.equal(new Set(met).size, met.length);
+  }
+});
+
+test('every scene has a picture for every place and every foe, and every foe shows its Hearts', () => {
+  require('../site/solo/art.js');
+  const ART = globalThis.SacramentSoloArt;
+  for (const id of ROAD.scenes) {
+    const sc = SCENES[id]; assert.ok(sc, id);
+    for (const r of Object.values(sc.rooms)) assert.ok(ART.scenes.includes(r.art), id + ': no picture ' + r.art);
+    for (const [fid, f] of Object.entries(sc.foes || {})) {
+      const fake = { hero: T.generate('fighter', seeded(1)), flags: {}, fight: { foe: fid, art: f.art, hp: { cur: f.hp - 3, max: f.hp } } };
+      const svg = ART.scene(Object.values(sc.rooms)[0].art, fake, 't');
+      assert.ok(svg.includes('class="who foe"'), id + ' ' + fid); assert.equal((svg.match(/clip-path="url\(#tfh\d\)"/g) || []).length, Math.ceil(f.hp / 10), fid + ' Hearts');
+    }
+  }
 });

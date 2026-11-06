@@ -4,7 +4,10 @@
 (function () {
   'use strict';
   var S = window.SacramentSolo, ART = window.SacramentSoloArt, R = window.SacramentRules, C = window.SacramentSheetCore, D = window.SacramentDice;
-  var ADV = window.SacramentSoloAdventures['silent-bell'];
+  /* The game is a run of five scenes on the pilgrim road (road.js); ADV() is the scene being played. */
+  var CAMP = window.SacramentSoloCampaigns['pilgrim-road'];
+  function ADV() { return (state && S.sceneOf(state)) || window.SacramentSoloAdventures[CAMP.scenes[0]]; }
+  var NPC_NAMES = (window.SacramentSoloCameos || []).map(function (c) { return c.name; });
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
   var state = null, shown = 0, lastArt = '', dying = false;
@@ -13,7 +16,7 @@
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
 
   /* ---------- saving in this browser ---------- */
-  function load() { try { var raw = JSON.parse(localStorage.getItem(SAVE) || 'null'); return raw && S.valid(raw.game, ADV) ? raw : null; } catch { return null; } }
+  function load() { try { var raw = JSON.parse(localStorage.getItem(SAVE) || 'null'); return raw && raw.game && raw.game.run && S.valid(raw.game, S.sceneOf(raw.game)) ? raw : null; } catch { return null; } }
   function save() { try { localStorage.setItem(SAVE, JSON.stringify({ game: state, hero: state && state.origin })); } catch { /* private window: the game still plays, it just will not be there next time */ } }
   function forget() { try { localStorage.removeItem(SAVE); } catch { /* nothing to forget */ } }
 
@@ -21,10 +24,10 @@
   function showStart() {
     state = null; D.clear(); document.body.classList.remove('playing');
     $('start').hidden = false; $('game').hidden = true; $('heroBtn').hidden = true; $('menuBtn').hidden = true;
-    $('blurb').textContent = ADV.blurb;
+    $('blurb').textContent = CAMP.blurb;
     var saved = load(), resume = $('resume'); resume.textContent = '';
     if (saved && !saved.game.over) {
-      var b = pickButton('Continue as ' + saved.game.hero.name, 'In ' + ADV.rooms[saved.game.room].short + ' · HP ' + saved.game.hp.cur + ' of ' + saved.game.hp.max, 'resume');
+      var b = pickButton('Continue as ' + saved.game.hero.name, 'Scene ' + (saved.game.run.at + 1) + ' of ' + saved.game.run.order.length + ', ' + S.sceneOf(saved.game).rooms[saved.game.room].short + ' · HP ' + saved.game.hp.cur + ' of ' + saved.game.hp.max, 'resume');
       b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; showGame(false); });
       resume.appendChild(b);
     }
@@ -47,7 +50,7 @@
   });
 
   function begin(hero) {
-    D.clear(); state = S.start(hero, ADV, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
+    D.clear(); state = S.startRun(hero, CAMP.id, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
   }
 
   /* ---------- the game screen ---------- */
@@ -60,14 +63,26 @@
   function renderLog(quiet) {
     var log = $('log');
     for (; shown < state.log.length; shown++) {
-      var line = state.log[shown], p = document.createElement('p'); p.className = 'k-' + line.k + (quiet ? '' : ' new'); p.textContent = line.t; log.appendChild(p);
+      var line = state.log[shown], p = document.createElement('p'); p.className = 'k-' + line.k + (quiet ? '' : ' new'); withNames(p, line.t); log.appendChild(p);
     }
     log.scrollTop = log.scrollHeight;
   }
+  /* The people met on the road have their names in green, wherever they appear. */
+  function withNames(el, text) {
+    var at = 0, re = NPC_NAMES.length ? new RegExp(NPC_NAMES.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|'), 'g') : null, m;
+    if (!re) { el.textContent = text; return; }
+    while ((m = re.exec(text))) { el.appendChild(document.createTextNode(text.slice(at, m.index))); var b = document.createElement('span'); b.className = 'npc-name'; b.textContent = m[0]; el.appendChild(b); at = m.index + m[0].length; }
+    el.appendChild(document.createTextNode(text.slice(at)));
+  }
+  /* each place has the tune of its mood */
+  var MOOD = { gate: 'gate', crossroads: 'gate', lane: 'gate', ford: 'gate', gibbet: 'gate', stones: 'gate', nave: 'nave', cloister: 'nave', barn: 'nave', crypt: 'crypt', undercroft: 'crypt', ossuary: 'crypt', mere: 'crypt', tower: 'tower', shrine: 'tower' };
   function render() {
-    tune(state.over === 'won' ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : ADV.rooms[state.room].art);
+    tune(state.over === 'won' || state.done ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : MOOD[ADV().rooms[state.room].art] || 'gate');
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
-    var r = ADV.rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
+    var r = ADV().rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
+  }
+  function heartRow(box, cur, max) {
+    for (var i = 0, n = Math.max(1, Math.ceil(max / R.HEART)); i < n; i++) { var sp = document.createElement('span'); sp.className = 'heart'; sp.style.setProperty('--fill', String(Math.max(0, Math.min(R.HEART, cur - i * R.HEART)) / R.HEART)); box.appendChild(sp); }
   }
   function renderHud() {
     var hearts = $('hearts'); hearts.textContent = '';
@@ -81,17 +96,18 @@
     for (var j = 1; j <= R.HORROR.max; j++) { var d = document.createElement('span'); d.className = 'pip' + (j <= state.horror ? ' on' : '') + (R.HORROR.thresholds.indexOf(j) >= 0 && j < R.HORROR.max ? ' mark' : ''); pips.appendChild(d); }
     pips.setAttribute('aria-hidden', 'true');
     $('horrorText').textContent = state.horror + '/' + R.HORROR.max;
-    var info = S.sceneInfo(state, ADV);
+    var info = S.sceneInfo(state, ADV());
     $('targetText').textContent = String(info.target);
     $('darkText').hidden = !info.dark;
   }
   /* The cards in this place, as on the table: the foe, an obstacle with its Effort bar, a timer counting down. Tap one to read it. */
   function renderCards() {
-    var box = $('cards'), list = S.cards(state, ADV); box.textContent = ''; box.hidden = !list.length;
+    var box = $('cards'), list = S.cards(state, ADV()); box.textContent = ''; box.hidden = !list.length;
     list.forEach(function (c) {
       var b = document.createElement('button'), t = document.createElement('b'), bar = document.createElement('span'), n = document.createElement('small');
       b.type = 'button'; b.className = 'card ' + c.kind; t.textContent = c.name;
       bar.className = 'fill'; bar.style.setProperty('--v', String(c.max ? c.cur / c.max : 0));
+      if (c.kind === 'foe') { bar = document.createElement('span'); bar.className = 'hearts'; heartRow(bar, c.cur, c.max); }
       n.textContent = c.kind === 'timer' ? (c.unit === 'ended' ? 'Time is up' : c.cur + ' of ' + c.max + ' left') : c.cur + ' of ' + c.max + ' ' + c.unit;
       b.setAttribute('aria-label', c.name + ': ' + n.textContent + '. Read the card.');
       b.append(t, bar, n); b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats, does: c.text }); }); box.appendChild(b);
@@ -118,7 +134,7 @@
       var other = choiceButton({ label: 'Choose another hero', cmd: '' }, 'ch go'); other.addEventListener('click', function () { forget(); showStart(); });
       box.append(again, other); return;
     }
-    var list = S.choices(state, ADV), main = [], extra = [];
+    var list = S.choices(state, ADV()), main = [], extra = [];
     list.forEach(function (c) { (!state.fight && (c.kind === 'spell' || c.kind === 'use') ? extra : main).push(c); });
     main.forEach(function (c) { box.appendChild(choiceButton(c)); });
     if (extra.length) {
@@ -130,7 +146,7 @@
   function choiceButton(c, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
-    if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = 'No use here'; b.appendChild(no); }
+    if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = c.why || 'No use here'; b.appendChild(no); }
     else if (c.horror) { var sm = document.createElement('small'); sm.textContent = '+' + R.sayHorrorAmount(c.horror) + ' Horror'; b.appendChild(sm); }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });
     if (!c.about || !c.about.does) return b;
@@ -142,7 +158,7 @@
   }
   function showAbout(a) {
     $('aboutName').textContent = a.name;
-    $('aboutRoll').textContent = a.line != null ? a.line : [a.from ? 'From ' + a.from : '', a.roll ? 'Roll ' + a.roll + ' against Target ' + S.sceneInfo(state, ADV).target : 'No roll'].filter(Boolean).join(' · ');
+    $('aboutRoll').textContent = a.line != null ? a.line : [a.from ? 'From ' + a.from : '', a.roll ? 'Roll ' + a.roll + ' against Target ' + S.sceneInfo(state, ADV()).target : 'No roll'].filter(Boolean).join(' · ');
     $('aboutDoes').textContent = a.does;
     $('about').showModal();
   }
@@ -150,7 +166,7 @@
   function run(cmd) {
     if (!state || state.over || !cmd) return;
     var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null;
-    S.act(state, ADV, cmd, die);
+    S.act(state, ADV(), cmd, die);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
     save(); renderLog(false); render(); roll(state.log.slice(before));
@@ -176,14 +192,14 @@
   }
   $('cmd').addEventListener('submit', function (e) {
     e.preventDefault(); var inp = $('cmdIn'), t = inp.value; inp.value = ''; if (!t.trim() || !state) return;
-    run(S.parse(state, ADV, t));
+    run(S.parse(state, ADV(), t));
   });
 
   /* ---------- pictures ---------- */
   function reduceMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
   function paint() {
     if (!state || dying) return;
-    var html = ART.scene(ADV.rooms[state.room].art, state, 'g');
+    var html = ART.scene(ADV().rooms[state.room].art, state, 'g');
     if (html !== lastArt) { $('art').innerHTML = html; lastArt = html; }
   }
 
@@ -192,7 +208,7 @@
     var h = state.hero;
     $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, h.vow].filter(Boolean).join(' · ');
     var nums = $('sheetNums'); nums.textContent = '';
-    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', ADV.target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
+    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', ADV().target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });
     var ef = $('sheetEffort'); ef.textContent = ''; R.CATS.forEach(function (k) { ef.appendChild(stat(R.CAT_NAMES[k], 'd' + R.DEFAULT_DICE[k] + ' +' + (h.effort[k] || 0))); });
     gearList($('sheetEq'), true); gearList($('sheetPack'), false);

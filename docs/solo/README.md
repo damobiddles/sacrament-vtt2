@@ -1,6 +1,24 @@
 # Sacrament RPG solo (`/solo/`)
 
-A solo, 80s-text-adventure-style game for one hero, with dark fantasy pictures and an 8-bit soundtrack, playable on a phone, tablet or computer. **Status: first test scene, not linked from the site, `noindex`.**
+A solo, 80s-text-adventure-style game for one hero, with dark fantasy pictures and an 8-bit soundtrack, playable on a phone, tablet or computer. **Status: The Pilgrim Road, a five-scene run (2026-11-06); not linked from the site, `noindex`.**
+
+## A run: The Pilgrim Road (owner, 2026-11-06)
+
+A game is **five scenes**, picked in a semi-random order that always makes sense as a story (`site/solo/road.js`, picked by `startRun`/`pickOrder` in the engine):
+
+1. **An opening** (one of two), which sets what the hero carries along the road: *The Priory Gate* (a saint's relic to bring to a shrine) or *The Empty Cart* (a missing sister to find).
+2. **Three middle scenes** drawn from five: *The Drowned Ford*, *The Penitent's Barn*, *The Gibbet Crossroads*, *The Silent Bell*, *The Ossuary Stair*. Each says whether it fits early, anywhere or late on the road, and the three are put in that order.
+3. **A finale that matches the opening:** the relic ends at *The Salt Shrine*, the missing sister at *The Mere of Ossvaer*.
+
+HP, Horror, gear and used healing carry from scene to scene. When a scene is done the player may rest once (if hurt) before going on. Earlier scenes can leave marks that matter later (tracks found at the cart, a clue from an NPC make the finale's first attack Easy).
+
+**Friends on the road (owner's names, 2026-11-06):** Xian of Wycbold, Ser Dom of Cookham, Rupert the Druid, Matthew of the Brown Order of Farts and Lord Biddles of Wooburn. Up to three turn up per run, never in the finale, each in the first place of a scene, and each helps once (a find, a free rest, bandages, rations, or a clue). **Their names always show in green.** The names are the owner's own and stay exactly as given.
+
+**Hearts over foes (owner, 2026-11-06):** a foe's life shows as Hearts (10 HP a Heart, as at the table) above it in the picture and on its card.
+
+**Timers** can now tick per fight round (Odo's breath) or per thing done outside a fight (the rising river, full dark at the gibbet).
+
+The save version went to 2: a game saved before the run existed is not loaded, and the player starts again.
 
 ## Pitch
 
@@ -24,7 +42,9 @@ You play one hero alone through short written adventures in the world of Sacrame
 | File | What |
 |---|---|
 | `site/solo/engine.js` | The engine: no page, no clock, no random source (dice are passed in). Tested by `test/solo.test.mjs`. |
-| `site/solo/adventure-silent-bell.js` | The test scene: words, places, one foe. Words only; numbers come from the rules. |
+| `site/solo/adventure-silent-bell.js` | The Silent Bell (a middle scene): words, places, one foe. Words only; numbers come from the rules. |
+| `site/solo/road.js` | The Pilgrim Road: the run's other eight scenes and the five friends on the road. |
+| `site/solo/spells.js` | Solo rulings for story spells. |
 | `site/solo/art.js` | The dark fantasy pictures (SVG). |
 | `site/solo/music.js` | The 8-bit soundtrack (Web Audio, no files). |
 | `site/solo/solo.js`, `solo.css`, `index.html` | The screen. Saves the game in the browser under `sacrament-solo-v1`. |
@@ -34,5 +54,6 @@ You play one hero alone through short written adventures in the world of Sacrame
 1. **Falling alone.** At the table a hero at 0 HP is dying (d4 rounds) and someone can tend them. Alone there is no one, so the test scene ends the attempt. Keep that, or give solo heroes a dying roll of their own?
 2. **Horror thresholds.** At 7, 14 and 21 the GM decides what happens. Here the scene only adds a line of text. Should solo thresholds have effects?
 3. **Keep finds?** Should a hero who finishes an adventure take finds and wounds back to My heroes, or stay a copy?
-4. **Esoteric spells** (no Effort die) only show their text unless the scene handles them (Kindle lights the crypt). Each adventure would need to write more of these.
+4. **Ward on yourself.** Ward targets an ally; alone it shows "No use here". Whether it may target yourself is your call.
+6. **Balance.** In a simulated run with random choices about 4 runs in 10 reach the end. Easier or harder?
 5. Fonts are now the site's own (Cormorant Garamond, Source Sans 3).

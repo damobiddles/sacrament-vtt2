@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
   var R = root.SacramentRules, C = root.SacramentSheetCore;
-  var VERSION = 1, LOG_LIMIT = 300;
+  var VERSION = 2, LOG_LIMIT = 400;
   var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
   var int = function (v, d) { v = parseInt(v, 10); return isFinite(v) ? v : (d || 0); };
   var DIRS = { n: 'north', s: 'south', e: 'east', w: 'west', u: 'up', d: 'down', north: 'north', south: 'south', east: 'east', west: 'west', up: 'up', down: 'down' };
@@ -16,14 +16,15 @@
 
   /* ---------- a new game ---------- */
   /* hero: a hero from My heroes (or the generator). The game plays a copy: the saved hero is never changed. */
-  function start(hero, adv, die) {
+  function start(hero, adv, die, run) {
     var h = C.cleanHero(clone(hero)), hp = { cur: R.HEART, max: R.HEART };
     (h.gear || []).forEach(function (g) { var it = C.itemOf(g); if (g.eq && it && it.hearts) hp.max += it.hearts * R.HEART; });
     if (hero.hp && int(hero.hp.max, 0) > 0) hp.max = Math.max(hp.max, int(hero.hp.max, hp.max));
     hp.cur = hp.max;   /* every attempt starts rested and whole */
-    var s = { v: VERSION, adventure: adv.id, hero: h, hp: hp, horror: 0, room: adv.start, flags: {}, fight: null, rested: false, healed: {}, used: {}, over: '', moves: 0, log: [], seen: {} };
+    var s = { v: VERSION, adventure: adv.id, hero: h, hp: hp, horror: 0, room: adv.start, flags: {}, fight: null, rested: false, healed: {}, used: {}, over: '', done: false, moves: 0, log: [], seen: {}, bars: {}, timers: {}, run: run || null };
     var api = apiFor(s, adv, die);
-    api.say(adv.title, 'title');
+    if (run && run.intro) { api.say(run.title, 'run'); api.say(run.intro); }
+    api.say((run ? 'Scene 1 of ' + run.order.length + ': ' : '') + adv.title, 'title');
     if (adv.intro) adv.intro(api);
     enter(api, adv.start);
     return s;
@@ -64,7 +65,15 @@
       timerLeft: function (id) { var t = (s.timers || {})[id]; return t ? t.cur : null; },
       foeHeal: function (n, why) { var f = s.fight; if (!f) return; var ch = R.change(f.hp.cur, f.hp.max, int(n, 0)); f.hp.cur = ch.cur; if (ch.applied) api.say((why || f.name + ' recovers') + ': +' + ch.applied + ' HP.', 'foe'); },
       rest: function () { rest(api); },
-      end: function (kind, text) { s.over = kind; s.fight = null; if (text) api.say(text, kind === 'won' ? 'end' : 'hurt'); }
+      /* The end of a scene. In a run of scenes, winning one leads on to the next; falling, or winning the last, ends the run. */
+      end: function (kind, text) {
+        s.fight = null; if (text) api.say(text, kind === 'won' ? 'end' : 'hurt');
+        if (kind === 'won' && s.run && s.run.at < s.run.order.length - 1) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is done.', 'note'); return; }
+        s.over = kind;
+      },
+      /* The thread that runs through a run of scenes: why the hero is on the road (set by the opening), and what they carry from scene to scene. */
+      charge: function () { return s.run ? s.run.charge : ''; },
+      story: function (k, v) { var st = s.run ? (s.run.story = s.run.story || {}) : s.flags; if (arguments.length > 1) st[k] = v; return st[k]; }
     };
     return api;
   }
@@ -104,9 +113,10 @@
     if (what === 'start') { if (!s.timers[id]) s.timers[id] = { cur: def.max, max: def.max, on: true }; }
     else if (what === 'stop' && s.timers[id]) s.timers[id].on = false;
   }
-  function tickTimers(api) {
+  /* kind: 'round' (a fight's new round, as at the table) or 'action' (each thing the hero does outside a fight, for a timer that runs on the clock of the scene) */
+  function tickTimers(api, kind) {
     var s = api.s; Object.keys(s.timers || {}).forEach(function (id) {
-      var t = s.timers[id], def = api._adv.timers[id]; if (!t.on || !def) return;
+      var t = s.timers[id], def = (api._adv.timers || {})[id]; if (!t.on || !def || (def.tick || 'round') !== (kind || 'round')) return;
       t.cur = Math.max(0, t.cur - 1);
       if (t.cur > 0) api.say(def.name + ': ' + t.cur + ' left.', 'horror');
       else { t.on = false; api.say(def.name + ': time is up.', 'horror'); if (def.out) def.out(api); }
@@ -156,6 +166,7 @@
     api.say(typeof r.text === 'function' ? r.text(api, first) : r.text);
     if (r.dark) api.say(lit(s) ? lightLine(s) : 'It is dark here. Without a light, every check and attack is Hard.', 'note');
     if (r.enter) r.enter(api, first);
+    var who = first && !s.fight && cameoNow(s); if (who) api.say(who.meet, 'npc');
   }
   function lightLine(s) { var it = carried(s, LIGHTS); return s.flags.lit && !it ? 'Your small flame holds the dark back.' : 'You raise ' + yours(it.name) + '. The dark steps back, a little.'; }
   function yours(t) { return /^The /.test(t) ? 'the ' + t.slice(4) : 'your ' + t; }
@@ -206,7 +217,7 @@
   function startFight(api, foeId) {
     var f = api._adv.foes[foeId]; if (!f) return;
     /* Turn order, as at the table: the hero, then the foe. phase: hero (choose an action), damage (a hit waits for Roll damage), push (a miss: push or end the turn), foe (the foe's turn is next). */
-    api.s.fight = { foe: foeId, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false };
+    api.s.fight = { foe: foeId, art: f.art || foeId, undead: !!f.undead, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false };
     api.say(typeof f.appears === 'function' ? f.appears(api) : f.appears, 'foe');
   }
   /* Everything the hero can attack, cast or use, from the sheet's own list. */
@@ -298,7 +309,7 @@
   function foeTurn(api) {
     var s = api.s, f = s.fight; if (!f || s.over) return;
     var def = api._adv.foes[f.foe];
-    if (f.skip) { f.skip = 0; f.guard = 0; api.say(f.name + ' does not attack this turn.', 'win'); f.round++; f.phase = 'hero'; tickTimers(api); return; }
+    if (f.skip) { f.skip = 0; f.guard = 0; api.say(f.name + ' does not attack this turn.', 'win'); f.round++; f.phase = 'hero'; tickTimers(api, 'round'); return; }
     var dim = int(f.dim, 0), guard = int(f.guard, 0); f.dim = 0; f.guard = 0;
     var a = R.attack({ d20: api.die(20), bonus: f.attack - dim, defence: C.defence(s.hero) + guard });
     var n = a.hit ? api.die(f.damage) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: f.damage, n: n });
@@ -306,7 +317,7 @@
       d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls 3 less. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
     api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true });
     if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (d' + f.damage + ' ' + n + ')');
-    if (s.fight) { f.round++; f.phase = 'hero'; tickTimers(api); }
+    if (s.fight) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); }
   }
 
   /* ---------- the hero's own rest ---------- */
@@ -319,10 +330,16 @@
   }
 
   /* ---------- what can be done now: the buttons ---------- */
-  function choices(s, adv) {
+  function choices(s, adv) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];
+    if (s.done) {
+      var nx = sceneAt(s, s.run.at + 1);
+      if (!s.rested && (s.hp.cur < s.hp.max || s.horror > 0)) out.push({ label: 'Rest before you go on', cmd: 'rest', kind: 'do' });
+      out.push({ label: 'Go on: ' + (nx ? nx.title : 'the road'), cmd: 'next', kind: 'go' });
+      return out;
+    }
     if (s.fight) {
       var f = s.fight;
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
@@ -334,7 +351,8 @@
       heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
       return out;
     }
-    var r = adv.rooms[s.room];
+    var r = adv.rooms[s.room], who = cameoNow(s);
+    if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
     (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
@@ -342,16 +360,21 @@
   }
   function shortName(a) { return a.name.replace(/ \([^)]*\)$/, ''); }
   /* Mark a story spell that nothing in this scene answers: it shows as "No use here" and costs nothing. */
-  function markIdle(api, a, c) { if (isStorySpell(a.u) && !spellUse(api, a.u.source || a.u.item)) { c.idle = true; } return c; }
+  function markIdle(api, a, c) {
+    var h = a.u && a.u.healing;
+    if (isStorySpell(a.u) && !spellUse(api, a.u.source || a.u.item)) { c.idle = true; c.why = 'No use here'; }
+    else if (h && h.kind && !h.force && api.s.healed[h.kind]) { c.idle = true; c.why = 'Used since your last rest'; }
+    return c;
+  }
   /* What a spell or item does, in the gear list's own words: for the "What it does" card. */
   function aboutOf(a) {
     var u = a.u || {}, src = u.spell || u.item || {};
     return { name: src.name || shortName(a), roll: src.roll || '', does: src.does || src.flavour || '', from: u.spell && u.item ? u.item.name : '' };
   }
   /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
-  function sceneInfo(s, adv) { return { target: int(adv.target, 12), dark: isDark(s, adv) }; }
+  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv) }; }
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
-  function cards(s, adv) {
+  function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
     if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', text: fd.card || '', stats: 'Attack +' + f.attack + ' · d' + f.damage + ' damage' + (f.dim ? ' · next attack rolls 3 less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
     Object.keys(adv.obstacles || {}).forEach(function (id) { var o = adv.obstacles[id]; if (o.room === s.room && obstacleOpen(api, id)) out.push({ kind: 'obstacle', id: id, name: o.name, cur: int((s.bars || {})[id], 0), max: o.max, unit: 'Effort', text: o.text || '', stats: o.stat + ' check, then ' + (R.CAT_NAMES ? R.CAT_NAMES[o.cat || 'basic'] : 'Basic') + ' Effort' }); });
@@ -362,7 +385,7 @@
 
   /* ---------- typed words become commands ---------- */
   var HELP = 'Tap a choice, or type a command: LOOK, GO NORTH (or N, S, E, W, UP, DOWN), INVENTORY, a thing to do ("read ledger", "talk"), ATTACK, CAST and a spell, USE and an item, PUSH, HELP.';
-  function parse(s, adv, text) {
+  function parse(s, adv, text) { adv = sceneOf(s) || adv;
     var t = String(text || '').toLowerCase().replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!t) return '';
     /* a button's own command passes straight through */
@@ -394,18 +417,23 @@
   }
 
   /* ---------- one command ---------- */
-  function act(s, adv, cmd, die) {
+  function act(s, adv, cmd, die) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, die);
     var before = s.log.length;
     if (s.over) return [];
     var c = String(cmd || '').trim(); if (!c) return [];
     if (c.charAt(0) === '?') { api.say('> ' + c.slice(1), 'cmd'); api.say('That does nothing here. ' + HELP, 'note'); return s.log.slice(before); }
-    var p = c.split(' ');
+    var p = c.split(' '), wasFight = !!s.fight;
     var label = (choices(s, adv).filter(function (x) { return x.cmd === c; })[0] || {}).label;
     api.say('> ' + (label || c), 'cmd');
     if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (r0.dark) api.say(lit(s) ? lightLine(s) : 'It is dark here. Without a light, every check and attack is Hard.', 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
     else if (c === 'help') api.say(HELP, 'note');
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
+    else if (s.done) {
+      if (c === 'next') nextScene(api);
+      else if (c === 'rest' && !s.rested) { api.say('You find a dry corner and keep watch over yourself until the worst of it passes.'); rest(api); }
+      else api.say('This scene is done. Rest, or go on.', 'note');
+    }
     else if (s.fight) {
       var f = s.fight;
       if (f.phase === 'damage') { if (c === 'damage') rollDamage(api); else api.say('You hit: roll damage.', 'note'); }
@@ -428,12 +456,19 @@
       else if (e.closed && e.hidden) api.say(typeof e.closed === 'function' ? e.closed(api) : e.closed, 'note');
       else enter(api, e.to);
     }
+    else if (p[0] === 'meet') {
+      var w = cameoNow(s);
+      if (!w || w.id !== p[1] || (w.when && !w.when(api))) api.say('There is no one here by that name.', 'note');
+      else { s.flags['cameo_' + w.id] = true; s.run.met.push(w.id); w.run(api); }
+    }
     else if (p[0] === 'do') {
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
       if (!x || (x.when && !x.when(api))) api.say('That does nothing now.', 'note'); else x.run(api);
     }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
     else api.say('That does nothing here. ' + HELP, 'note');
+    /* a timer on the scene's own clock moves each time the hero does something outside a fight */
+    if (!s.over && !s.done && !s.fight && s.adventure === adv.id && /^(go|do|use)$/.test(p[0]) && !wasFight) tickTimers(apiFor(s, adv, die), 'action');
     return s.log.slice(before);
   }
   /* No weapon: STR and Basic Effort. */
@@ -445,7 +480,59 @@
   }
 
   /* ---------- saving ---------- */
-  function valid(s, adv) { return !!s && s.v === VERSION && s.adventure === adv.id && !!adv.rooms[s.room] && !!s.hero && !!s.hp; }
+  function valid(s, adv) { var a = sceneOf(s) || adv; return !!s && !!a && s.v === VERSION && s.adventure === a.id && !!a.rooms[s.room] && !!s.hero && !!s.hp; }
 
-  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, cards: cards };
+  /* ---------- a run: five scenes on one road ---------- */
+  /* The scenes are registered in SacramentSoloAdventures; a campaign (SacramentSoloCampaigns) lists them. A run is an opening, three middle scenes and
+     a finale. The opening sets the charge (why the hero is on the road); the middle scenes are drawn at random from those that fit it and set in a sensible
+     order (a scene that leans early comes before one that leans late); the finale is the one that answers the charge. */
+  function scenes() { return root.SacramentSoloAdventures || {}; }
+  function sceneOf(s) { return s && scenes()[s.adventure]; }
+  function sceneAt(s, i) { return s.run && s.run.order[i] ? scenes()[s.run.order[i]] : null; }
+  function pickOrder(camp, die) {
+    var all = camp.scenes.map(function (id) { return scenes()[id]; }).filter(Boolean);
+    var pick = function (list) { return list[die(list.length) - 1]; };
+    var opening = pick(all.filter(function (x) { return x.act === 'opening'; })), charge = opening.gives;
+    var fits = function (x) { return !x.fits || x.fits.indexOf(charge) >= 0; };
+    var middle = all.filter(function (x) { return x.act === 'middle' && fits(x); });
+    for (var i = middle.length - 1; i > 0; i--) { var j = die(i + 1) - 1, t = middle[i]; middle[i] = middle[j]; middle[j] = t; }
+    var LEAN = { early: 0, any: 1, late: 2 };
+    middle = middle.slice(0, camp.middle || 3).map(function (x, k) { return { x: x, k: k }; })
+      .sort(function (a, b) { return (LEAN[a.x.lean || 'any'] - LEAN[b.x.lean || 'any']) || a.k - b.k; }).map(function (o) { return o.x; });
+    var finale = pick(all.filter(function (x) { return x.act === 'finale' && fits(x); }));
+    return { charge: charge, order: [opening].concat(middle, [finale]).map(function (x) { return x.id; }) };
+  }
+  function startRun(hero, campId, die) {
+    var camp = (root.SacramentSoloCampaigns || {})[campId], o = pickOrder(camp, die);
+    var run = { campaign: camp.id, title: camp.title, intro: camp.intro, order: o.order, at: 0, charge: o.charge, story: {}, met: [] };
+    run.cameos = pickCameos(o.order.length, die);
+    return start(hero, scenes()[o.order[0]], die, run);
+  }
+  /* People met on the road (SacramentSoloCameos): a run meets up to three of them, in different scenes, never the last one. */
+  function pickCameos(n, die) {
+    var people = (root.SacramentSoloCameos || []).map(function (c) { return c.id; }), out = [];
+    for (var i = 0; i < n; i++) out.push('');
+    var slots = []; for (var k = 0; k < n - 1; k++) slots.push(k);
+    for (var m = 0; m < 3 && people.length && slots.length; m++) {
+      var who = people.splice(die(people.length) - 1, 1)[0], at = slots.splice(die(slots.length) - 1, 1)[0]; out[at] = who;
+    }
+    return out;
+  }
+  function cameoNow(s) {
+    var id = s.run && s.run.cameos && s.run.cameos[s.run.at]; if (!id || s.flags['cameo_' + id]) return null;
+    var adv = sceneOf(s); if (!adv || s.room !== adv.start) return null;
+    return (root.SacramentSoloCameos || []).filter(function (c) { return c.id === id; })[0] || null;
+  }
+  /* On to the next scene: the hero, their HP, Horror and gear go on; the place, its flags, fights, obstacles and timers are new. Once-per-scene powers come back. */
+  function nextScene(api) {
+    var s = api.s; if (!s.run || s.run.at >= s.run.order.length - 1) return;
+    s.run.at++; var adv = sceneAt(s, s.run.at);
+    s.adventure = adv.id; s.room = adv.start; s.flags = {}; s.fight = null; s.rested = false; s.used = {}; s.bars = {}; s.timers = {}; s.seen = {}; s.done = false;
+    var a2 = apiFor(s, adv, api.die);
+    a2.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ': ' + adv.title, 'title');
+    if (adv.intro) adv.intro(a2);
+    enter(a2, adv.start);
+  }
+
+  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, cards: cards, startRun: startRun, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);

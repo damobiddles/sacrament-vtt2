@@ -8,13 +8,13 @@
 
   root.SacramentSoloAdventures = root.SacramentSoloAdventures || {};
   root.SacramentSoloAdventures['silent-bell'] = {
-    id: 'silent-bell',
+    id: 'silent-bell', act: 'middle', lean: 'any',
     title: 'The Silent Bell',
     blurb: 'Wrenholt is a hamlet of nine houses and a chapel. Its bell has not rung for three nights.',
     target: 12,
     start: 'gate',
     intro: function (api) {
-      api.say('Dusk, on the pilgrim road. You reach Wrenholt as the light goes: nine houses, shutters closed, and a chapel with a squat bell tower. At this hour the bell should be ringing the vigil. It is not.');
+      api.say('Dusk. You reach Wrenholt as the light goes: nine houses, shutters closed, and a chapel with a squat bell tower. At this hour the bell should be ringing the vigil. It is not.');
     },
     /* What the game, as GM, makes of the Horror's thresholds. Words only. */
     horror: {
@@ -38,6 +38,8 @@
               api.flag('talked', true);
               api.say('"You\'re not from the Church," says a woman\'s voice. "Good. They\'d only write it down." She will not open the shutter further.');
               api.say('"Brother Odo Pell keeps the bell. Three nights ago he went in to ring the vigil and never came out. Then the candles in the houses started going out on their own. Ring the bell, stranger. Please."', 'npc');
+              if (api.charge() === 'missing') api.say('"A sister in grey? She went by at noon, walking fast, with her eyes shut. Toward the boundary."', 'npc');
+              if (api.charge() === 'relic') api.say('"The shrine at the Cross? Robbed, they say. The boundary\'s thin there now. I would not go."', 'npc');
               api.say('Her name, she says, is Tilda Crane. The shutter closes.');
             } },
           { id: 'box', label: 'Search the offering box', words: ['box', 'offering', 'search', 'tin'], when: function (api) { return !api.flag('box'); },
@@ -180,6 +182,6 @@
   function ring(api) {
     api.say('The bell speaks. Once, twice, nine times for the vigil, and the sound goes out over the fields to the boundary stones and back.', 'end');
     api.say('In Wrenholt, one by one, candles are lit behind the shutters.' + (api.flag('odo_dead') ? ' Down in the crypt, Brother Odo does not hear it.' : ' Down in the crypt, Brother Odo hears it, and weeps.'));
-    api.end('won', 'You rang the silent bell. This is the end of the test scene.');
+    api.end('won', 'You rang the silent bell, and Wrenholt will sleep tonight.');
   }
 })(typeof window !== 'undefined' ? window : globalThis);
