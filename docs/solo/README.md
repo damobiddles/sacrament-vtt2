@@ -1,6 +1,6 @@
 # Sacrament RPG solo (`/solo/`)
 
-A solo, 80s-text-adventure-style game for one hero, with dark fantasy pictures and an 8-bit soundtrack, playable on a phone, tablet or computer. **Status: The Pilgrim Road, a five-scene run (2026-11-06); not linked from the site, `noindex`.**
+A solo, 80s-text-adventure-style game for one hero, with pictures painted like an illuminated manuscript and an 8-bit soundtrack, playable on a phone, tablet or computer. **Status: The Pilgrim Road, a five-scene run (2026-11-06); not linked from the site, `noindex`.**
 
 ## A run: The Pilgrim Road (owner, 2026-11-06)
 
@@ -22,12 +22,12 @@ The save version went to 2: a game saved before the run existed is not loaded, a
 
 ## Pitch
 
-You play one hero alone through short written adventures in the world of Sacrament. Each place has a dark fantasy picture and its own tune, a few lines of text, and big buttons for what you can do (or type it: `look`, `n`, `read ledger`, `attack`). The game is the GM: it sets the Target, says when it is dark, and decides what a failure costs. Everything else is the real rules.
+You play one hero alone through short written adventures in the world of Sacrament. Each place has a picture in the style of an illuminated manuscript and its own tune, a few lines of text, and big buttons for what you can do (or type it: `look`, `n`, `read ledger`, `attack`). The game is the GM: it sets the Target, says when it is dark, and decides what a failure costs. Everything else is the real rules.
 
 * **Heroes:** bring a hero from My heroes, or take a ready-made one (the hero generator). The game plays a **copy**; My heroes is never changed.
 * **Rules reused, not rewritten:** checks (`R.check`), Effort damage (`R.effort`, natural 20 critical), monster attacks against Defence (`R.attack`, `C.defence`), the Horror meter with thresholds, the natural-1 rule (attacks, spells, pushes only), push for 1 Horror after a missed attack, pay in blood past 21, rest (a Heart back, Horror down d10), healing items and spells with their once-per-rest limit, crossbow and heavy-weapon bonuses.
 * **Gear and loot:** items, spells and grimoires come from `site/sheet/gear.js` through `C.actions`/`C.useOf`; finds are rolled on the real d100 loot table (`C.rollLoot`).
-* **Pictures:** dark fantasy, drawn in code as SVG (`art.js`): a hooded hero whose face is lost in shadow, fog, a grain over everything, light only from flames and the moon. The hero's cloak comes from their name, the weapon and lamp from what they carry. Subtle motion with CSS: drifting fog and embers, a cloak hem that stirs, eyes that blink, wax that drips, flames that flicker (all still for reduced motion). No image files. (Pixel art first, then anime; the owner asked for dark fantasy on 2026-11-06.)
+* **Pictures:** medieval miniatures, as in an illuminated book (owner, 2026-11-06), drawn in code as SVG (`art.js`): flat mineral colours (lapis, vermilion, verdigris, ochre, lead white) inside a dark ink outline, night skies of lapis sown with gold stars, walls hung with a red-and-blue chequer, light shown as gold rays, a vellum mottle and a gilded border over every picture. The hero is a pilgrim in a hooded mantle, face shown plainly, with a scallop shell; the mantle is lapis with a spell book, vermilion with armour, green otherwise. Subtle motion with CSS: stars glinting, mist drifting, a hem stirring, eyes that blink, wax that drips, flames that flicker (all still for reduced motion). No image files. (Pixel art first, then anime, then dark fantasy; the owner asked for medieval / renaissance on 2026-11-06. The dark fantasy version is in git history.)
 * **Always on show (owner, 2026-11-06):** the scene's Target sits beside HP and Horror, with a "Hard: dark" tag when the dark makes every check Hard. Every spell and item button has a **?** that opens what it does, in the gear list's own words, and the hero sheet lists each grimoire's spells with their text.
 * **Cards, obstacles and timers (owner, 2026-11-06), borrowed from the table:** a row of cards under the picture shows what is in the place: the foe (HP, attack), an **obstacle** with an Effort bar (the tower door: each try is a STR check, Easy with a crowbar; a success rolls Basic Effort into a bar of 6; a failed try is loud) and a **timer** (Brother Odo's breath: 5, loses 1 at the start of each new round while the Candle-Eater feeds; at 0 he dies and it heals 4). Tap a card to read it.
 * **Story spells (owner, 2026-11-06):** spells with no Effort die (Hush, Kindle, Open Door...) are given solo rulings in `site/solo/spells.js`, from their own words: light a dark place; learn its shape (Echo Bell: the dark stops making checks Hard); Dazed or can't see you (the foe's next attack rolls 3 less); +2 Defence until your next turn; put out a burning foe's flame (it loses its next attack); open or bring down an obstacle; learn one true thing (in a fight: your next attack is Easy; out of one: the place's secret; the dead-speaking spells need the dead nearby). An adventure can answer a spell its own way first (Mouth of Wax stops the Candle-Eater feeding on Odo). **A spell nothing here answers shows "No use here", and tapping it costs nothing.** Ward (an ally only) has no use alone: whether it may target yourself is still the owner's open call. These are solo rulings, not rules; the owner may change any of them.
@@ -45,7 +45,7 @@ You play one hero alone through short written adventures in the world of Sacrame
 | `site/solo/adventure-silent-bell.js` | The Silent Bell (a middle scene): words, places, one foe. Words only; numbers come from the rules. |
 | `site/solo/road.js` | The Pilgrim Road: the run's other eight scenes and the five friends on the road. |
 | `site/solo/spells.js` | Solo rulings for story spells. |
-| `site/solo/art.js` | The dark fantasy pictures (SVG). |
+| `site/solo/art.js` | The pictures, as illuminated miniatures (SVG). |
 | `site/solo/music.js` | The 8-bit soundtrack (Web Audio, no files). |
 | `site/solo/solo.js`, `solo.css`, `index.html` | The screen. Saves the game in the browser under `sacrament-solo-v1`. |
 

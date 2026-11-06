@@ -24,7 +24,7 @@
 @keyframes solo-sway{0%,100%{transform:skewX(0) scaleY(1)}50%{transform:skewX(-2deg) scaleY(1.03)}}
 @keyframes solo-twinkle{from{opacity:.3}to{opacity:1}}
 @keyframes solo-swing{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
-/* dark fantasy: slow fog, drifting embers, a ragged cloak, a blink, a drip of wax */
+/* the miniatures: drifting mist, glinting stars, a stirring hem, a blink, a drip of wax */
 .art .hem{transform-box:fill-box;transform-origin:50% 0;animation:solo-hem 4.5s ease-in-out infinite}
 .art .blink{animation:solo-blink 6s steps(1) infinite}
 .art .drip{animation:solo-drip 3.4s ease-in infinite}
