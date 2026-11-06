@@ -14,7 +14,7 @@
     title: 'The Pilgrim Road',
     blurb: 'Five nights on the pilgrim road, out to the boundary stones. Every road is different.',
     intro: 'The pilgrim road runs from the heartlands to the boundary of the consecrated land, five days on foot. You have walked it before. Not like this.',
-    scenes: ['priory', 'cart', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'shrine', 'mere'],
+    scenes: ['priory', 'cart', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'shrine', 'mere'],
     middle: 3
   };
 
