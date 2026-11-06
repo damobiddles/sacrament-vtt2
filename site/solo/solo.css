@@ -5,7 +5,7 @@
 .solo .home{font:600 1rem var(--px);color:var(--candle);text-decoration:none;letter-spacing:.02em}
 .solo .where{font:400 1rem var(--px);color:var(--dim)}
 .solo .grow{flex:1}
-.solo .tb{font:600 1rem var(--px);color:var(--fg);background:transparent;border:1px solid var(--edge);min-height:40px;padding:4px 14px;cursor:pointer}
+.solo .tb{white-space:nowrap;font:600 1rem var(--px);color:var(--fg);background:transparent;border:1px solid var(--edge);min-height:40px;padding:4px 14px;cursor:pointer}
 .solo .tb:hover{color:var(--candle);border-color:var(--candle)}
 .art{display:block;width:100%;aspect-ratio:320/192;background:#0b0a08;overflow:hidden}
 .art svg{display:block;width:100%;height:100%}
@@ -24,6 +24,21 @@
 @keyframes solo-sway{0%,100%{transform:skewX(0) scaleY(1)}50%{transform:skewX(-2deg) scaleY(1.03)}}
 @keyframes solo-twinkle{from{opacity:.3}to{opacity:1}}
 @keyframes solo-swing{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+/* dark fantasy: slow fog, drifting embers, a ragged cloak, a blink, a drip of wax */
+.art .hem{transform-box:fill-box;transform-origin:50% 0;animation:solo-hem 4.5s ease-in-out infinite}
+.art .blink{animation:solo-blink 6s steps(1) infinite}
+.art .drip{animation:solo-drip 3.4s ease-in infinite}
+.art .fog{animation:solo-fog 26s ease-in-out infinite alternate}
+.art .fog.f1{animation-duration:34s;animation-delay:-9s}
+.art .fog.f2{animation-duration:41s;animation-delay:-20s}
+.art .mote{animation:solo-mote 9s linear infinite}
+.art .cloud{animation:solo-cloud 60s ease-in-out infinite alternate}
+@keyframes solo-hem{0%,100%{transform:skewX(0)}50%{transform:skewX(4deg)}}
+@keyframes solo-blink{0%,96%{opacity:.85}97%,99%{opacity:0}}
+@keyframes solo-drip{0%,60%{transform:translateY(0);opacity:0}70%{opacity:1}100%{transform:translateY(10px);opacity:0}}
+@keyframes solo-fog{from{transform:translateX(-18px)}to{transform:translateX(18px)}}
+@keyframes solo-mote{0%{transform:translateY(0);opacity:0}20%{opacity:.8}100%{transform:translateY(-40px);opacity:0}}
+@keyframes solo-cloud{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
 @media (prefers-reduced-motion:reduce){.art *{animation:none !important}}
 
 /* ---------- the first screen ---------- */

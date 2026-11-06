@@ -36,6 +36,7 @@
       b.addEventListener('click', function () { begin(h); }); mine.appendChild(b);
     });
     $('titleArt').innerHTML = ART.scene('title', null, 't');
+    tune('title');
   }
   function pickButton(title, sub, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'pick' + (cls ? ' ' + cls : '');
@@ -64,6 +65,7 @@
     log.scrollTop = log.scrollHeight;
   }
   function render() {
+    tune(state.over === 'won' ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : ADV.rooms[state.room].art);
     renderHud(); renderTurns(); renderChoices(); paint();
     var r = ADV.rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
@@ -176,6 +178,15 @@
     });
     if (!any) { var li = document.createElement('li'); li.className = 'none'; li.textContent = 'Nothing.'; ul.appendChild(li); }
   }
+
+  /* ---------- the music (off until the player turns it on) ---------- */
+  var M = window.SacramentSoloMusic;
+  function tune(name) { if (M) M.play(name); }
+  function musicLabel() { var b = $('musicBtn'), on = !!(M && M.isOn()); b.textContent = '♪ ' + (on ? 'On' : 'Off'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  if (M) {
+    $('musicBtn').addEventListener('click', function () { M.setOn(!M.isOn()); musicLabel(); });
+    document.addEventListener('pointerdown', function first(e) { document.removeEventListener('pointerdown', first, true); if (e.target && e.target.id === 'musicBtn') return; M.wake(); musicLabel(); }, true);
+  } else $('musicBtn').hidden = true;
 
   /* ---------- the menu ---------- */
   $('menuBtn').addEventListener('click', function () { $('menu').showModal(); });

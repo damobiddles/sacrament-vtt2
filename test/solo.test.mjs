@@ -89,3 +89,24 @@ test('combat takes turns as at the table: a hit waits for Roll damage, then the 
   assert.equal(foe.label, 'HIT'); assert.equal(foe.versus, 'Defence');
   assert.equal(s.fight.phase, 'hero'); assert.equal(s.fight.round, 2);
 });
+
+test('the soundtrack: every room has a tune, every note is a real note, and every voice of a tune is the same length so it loops in step', () => {
+  require('../site/solo/music.js');
+  const M = globalThis.SacramentSoloMusic;
+  for (const r of Object.values(A.rooms)) assert.ok(M.TUNES[r.art], 'no tune for ' + r.art);
+  for (const name of ['title', 'fight', 'won', 'dead']) assert.ok(M.TUNES[name], 'no tune for ' + name);
+  assert.equal(M.isOn(), false, 'music must start off');
+  for (const [name, tune] of Object.entries(M.TUNES)) {
+    const lengths = Object.entries(tune.voices).map(([v, text]) => {
+      const notes = M.parse(text);
+      for (const n of notes) {
+        assert.ok(n.len > 0, name + ' ' + v + ': bad length');
+        if (n.n === '-') continue;
+        if (v === 'noise') assert.ok(['k', 'h', 'x'].includes(n.n), name + ': bad drum ' + n.n);
+        else { const f = M.freq(n.n); assert.ok(f > 30 && f < 4200, name + ' ' + v + ': bad note ' + n.n); }
+      }
+      return notes.reduce((t, n) => t + n.len, 0);
+    });
+    assert.ok(lengths.every((l) => l === lengths[0]), name + ' voices differ in length: ' + lengths.join(', '));
+  }
+});
