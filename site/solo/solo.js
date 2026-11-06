@@ -93,7 +93,8 @@
       var fill = Math.max(0, Math.min(R.HEART, state.hp.cur - i * R.HEART)) / R.HEART, sp = document.createElement('span');
       sp.className = 'heart'; sp.style.setProperty('--fill', String(fill)); hearts.appendChild(sp);
     }
-    $('hpText').textContent = state.hp.cur + '/' + state.hp.max;
+    $('hpText').textContent = state.dying ? 'Dying: ' + state.dying.left + (state.dying.left === 1 ? ' round' : ' rounds') : state.hp.cur + '/' + state.hp.max;
+    $('hpText').classList.toggle('dying', !!state.dying);
     var pips = $('pips'); pips.textContent = '';
     for (var j = 1; j <= R.HORROR.max; j++) { var d = document.createElement('span'); d.className = 'pip' + (j <= state.horror ? ' on' : '') + (R.HORROR.thresholds.indexOf(j) >= 0 && j < R.HORROR.max ? ' mark' : ''); pips.appendChild(d); }
     pips.setAttribute('aria-hidden', 'true');
@@ -111,8 +112,9 @@
       bar.className = 'fill'; bar.style.setProperty('--v', String(c.max ? c.cur / c.max : 0));
       if (c.kind === 'foe') { bar = document.createElement('span'); bar.className = 'hearts'; heartRow(bar, c.cur, c.max); }
       n.textContent = c.kind === 'timer' ? (c.unit === 'ended' ? 'Time is up' : c.cur + ' of ' + c.max + ' left') : c.cur + ' of ' + c.max + ' ' + c.unit;
-      b.setAttribute('aria-label', c.name + ': ' + n.textContent + '. Read the card.');
-      b.append(t, bar, n); b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats, does: c.text }); }); box.appendChild(b);
+      b.setAttribute('aria-label', c.name + ': ' + n.textContent + (c.next ? '. ' + c.next : '') + '. Read the card.');
+      b.append(t, bar, n);
+      if (c.next) { var nx = document.createElement('small'); nx.className = 'next'; nx.textContent = c.next; b.appendChild(nx); } b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats, does: c.text }); }); box.appendChild(b);
     });
   }
   /* The turn order, as on the table's strip: whose turn it is, and the round. */
@@ -124,7 +126,7 @@
       var chip = document.createElement('span'); chip.className = 'chip ' + x[2] + (x[1] ? ' now' : ''); chip.textContent = x[0]; box.appendChild(chip);
     });
     var whose = document.createElement('span'); whose.className = 'whose';
-    whose.textContent = f.phase === 'foe' ? 'Its turn next' : f.phase === 'damage' ? 'Your turn: roll damage' : f.phase === 'push' ? 'Your turn: push or end it' : 'Your turn';
+    whose.textContent = state.dying ? 'You are dying' : f.phase === 'foe' ? 'Its turn next' : f.phase === 'damage' ? 'Your turn: roll damage' : f.phase === 'push' ? 'Your turn: push or end it' : 'Your turn';
     box.appendChild(whose);
   }
   function renderChoices() {
@@ -133,6 +135,7 @@
       var again = choiceButton({ label: state.over === 'won' ? 'Play it again' : 'Try again', cmd: '' }, 'ch');
       again.addEventListener('click', function () { begin(state.origin); });
       var other = choiceButton({ label: 'Choose another hero', cmd: '' }, 'ch go'); other.addEventListener('click', function () { forget(); showStart(); });
+      var home = homeButton(); if (home) box.appendChild(home);
       box.append(again, other); return;
     }
     var list = S.choices(state, ADV()), main = [], extra = [];
@@ -143,6 +146,31 @@
       extra.forEach(function (c) { box.appendChild(choiceButton(c)); });
     }
     if (main.length % 2 && !extra.length) box.lastChild.classList.add('wide');
+  }
+  /* A hero from My heroes who finishes the road alive may bring their finds home (the owner's call, 2026-11-06): each find goes into the saved hero if
+     there is room for it, through the sheet's own rules; what does not fit stays behind. It can be done once. */
+  function savedHero() {
+    var st; try { st = window.SacramentHeroes.read(); } catch { return null; }
+    var id = state.origin && state.origin.id; if (!id || !st || st.readOnly) return null;
+    var h = (st.heroes || []).filter(function (x) { return x.id === id; })[0]; return h ? { st: st, h: h } : null;
+  }
+  function homeButton() {
+    if (state.over !== 'won' || !state.run) return null;
+    var finds = S.runFinds(state), saved = savedHero();
+    if (!finds.length || !saved) return null;
+    if (state.run.home) { var done = document.createElement('p'); done.className = 'more'; done.textContent = state.run.home; return done; }
+    var b = choiceButton({ label: 'Bring your finds home', cmd: '' }, 'ch wide');
+    b.addEventListener('click', function () { bringHome(); });
+    return b;
+  }
+  function bringHome() {
+    var saved = savedHero(); if (!saved || state.run.home) return;
+    var h = saved.h, came = [], left = [];
+    S.runFinds(state).forEach(function (id) { var it = C.item(id), r = C.edit(h, { op: 'add', id: id }, { gm: true }, h.hp); ((r && r.ok) ? came : left).push(it ? it.name : id); });
+    var ok = window.SacramentHeroes.save(saved.st);
+    state.run.home = !ok ? 'Your finds could not be saved in this browser.' : (came.length ? came.join(', ') + ' went home with ' + h.name + '.' : 'Nothing fitted.') + (left.length ? ' No room for: ' + left.join(', ') + '.' : '');
+    if (!ok) state.run.home = ''; save(); render();
+    toast(ok ? 'Home: ' + (came.join(', ') || 'nothing') + '.' : 'Not saved: try again.', ok ? 'Brought home' : 'Not saved');
   }
   function choiceButton(c, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
@@ -175,7 +203,7 @@
     if (!state || state.over || !cmd) return;
     var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
     S.act(state, ADV(), cmd, die);
-    var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !reduceMotion();
+    var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !state.escaped && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
     save(); renderLog(false); render(); roll(state.log.slice(before));
     if (slain) {
@@ -213,10 +241,10 @@
     if (state.done && !o.done) { setTimeout(victory, 900); }
   }
   /* a find: its card slides in over the picture for a moment */
-  function toast(text) {
+  function toast(text, label) {
     var m = /^[^:]*:\s*([^.]+)\.\s*(.*)$/.exec(text), t = document.createElement('div');
     t.className = 'toast'; t.setAttribute('role', 'status');
-    var k = document.createElement('small'); k.textContent = 'You found'; var b = document.createElement('b'); b.textContent = m ? m[1] : text;
+    var k = document.createElement('small'); k.textContent = label || 'You found'; var b = document.createElement('b'); b.textContent = m ? m[1] : text;
     t.append(k, b); document.querySelector('.stage').appendChild(t); setTimeout(function () { t.classList.add('gone'); }, 2600); setTimeout(function () { t.remove(); }, 3200);
   }
   /* a scene won: what it gave you, where you stand, and what lies ahead */
@@ -225,7 +253,7 @@
     var from = 0; state.log.forEach(function (l, n) { if (l.k === 'title') from = n; });
     var finds = state.log.slice(from).filter(function (l) { return l.k === 'loot'; }).map(function (l) { var m = /:\s*([^.]+)\./.exec(l.t); return m ? m[1] : l.t; });
     var next = S.sceneAt(state, run.at + 1), d = $('won');
-    $('wonTitle').textContent = 'Scene ' + (run.at + 1) + ' of ' + run.order.length + ' cleared';
+    $('wonTitle').textContent = 'Scene ' + (run.at + 1) + ' of ' + run.order.length + (state.escaped ? ': you got away' : ' cleared');
     $('wonFinds').textContent = finds.length ? 'Found: ' + finds.join(', ') + '.' : 'Nothing found this time.';
     $('wonState').textContent = 'HP ' + state.hp.cur + ' of ' + state.hp.max + ' · Horror ' + state.horror + ' of ' + R.HORROR.max;
     $('wonNext').textContent = next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
@@ -296,6 +324,6 @@
   $('restartBtn').addEventListener('click', function () { $('menu').close(); begin(state.origin); });
   $('newHeroBtn').addEventListener('click', function () { $('menu').close(); forget(); showStart(); });
 
-  window.__solo = { state: function () { return state; }, run: run, victory: function () { victory(); } };
+  window.__solo = { state: function () { return state; }, run: run, render: function () { render(); }, victory: function () { victory(); } };
   showStart();
 })();
