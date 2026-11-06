@@ -13,7 +13,7 @@ function playThrough(focus, seed) {
   const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), hero = T.generate(focus, rnd), before = JSON.stringify(hero), s = S.start(hero, A, die);
   for (let i = 0; i < 80 && !s.over; i++) {
     const ch = S.choices(s, A);
-    const pick = ch.find((c) => c.kind === 'do') || ch.find((c) => c.kind === 'attack' || c.kind === 'push') || ch.find((c) => c.cmd === 'go down' && !s.flags.beat_eater) || ch.find((c) => c.cmd === 'go east') || ch.find((c) => c.cmd === 'go up') || ch.find((c) => c.cmd === 'go north') || ch[0];
+    const pick = ch.find((c) => c.kind === 'do') || ch.find((c) => c.kind === 'attack' || c.kind === 'push') || ch.find((c) => c.cmd === 'foe') || ch.find((c) => c.cmd === 'go down' && !s.flags.beat_eater) || ch.find((c) => c.cmd === 'go east') || ch.find((c) => c.cmd === 'go up') || ch.find((c) => c.cmd === 'go north') || ch[0];
     S.act(s, A, pick.cmd, die);
   }
   return { s, unchanged: JSON.stringify(hero) === before };
@@ -35,7 +35,7 @@ test('a missed attack offers a push, which costs 1 Horror; a natural 1 on the pu
   assert.ok(s.fight, 'the Candle-Eater attacks in the crypt');
   const attack = S.choices(s, A).find((c) => c.kind === 'attack');
   S.act(s, A, attack.cmd, fixed([5, 1]));          // a miss, no natural 1
-  assert.equal(s.horror, 0); assert.ok(s.fight.pushOpen);
+  assert.equal(s.horror, 0); assert.equal(s.fight.phase, 'push');
   const push = S.choices(s, A).find((c) => c.kind === 'push');
   S.act(s, A, push.cmd, fixed([1, 1, 1]));         // push (+1), natural 1 on the pushed attack (+1)
   assert.equal(s.horror, 2);
@@ -71,4 +71,21 @@ test('typed commands become the same commands as the buttons', () => {
   assert.equal(S.parse(s, A, 'talk to the woman'), 'do talk');
   assert.equal(S.parse(s, A, 'look'), 'look');
   assert.match(S.parse(s, A, 'dance'), /^\?/);
+});
+
+test('combat takes turns as at the table: a hit waits for Roll damage, then the hero ends the turn and the foe attacks', () => {
+  const s = S.start(T.generate('fighter', seeded(3)), A, fixed([10]));
+  S.act(s, A, 'go north', fixed([10])); S.act(s, A, 'go down', fixed([10]));
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  S.act(s, A, attack.cmd, fixed([18]));
+  assert.equal(s.fight.phase, 'damage');
+  const reveal = s.log.filter((l) => l.outcome).pop().outcome;
+  assert.equal(reveal.label, 'SUCCESS'); assert.ok(reveal.pendingDamage);
+  assert.deepEqual(S.choices(s, A).map((c) => c.cmd), ['damage']);
+  S.act(s, A, 'damage', fixed([2]));
+  assert.equal(s.fight.phase, 'foe'); assert.ok(s.fight.hp.cur < s.fight.hp.max);
+  S.act(s, A, 'foe', fixed([20, 3]));
+  const foe = s.log.filter((l) => l.outcome).pop().outcome;
+  assert.equal(foe.label, 'HIT'); assert.equal(foe.versus, 'Defence');
+  assert.equal(s.fight.phase, 'hero'); assert.equal(s.fight.round, 2);
 });

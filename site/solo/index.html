@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solo: The Silent Bell | Sacrament RPG</title>
-<meta name="description" content="A solo Sacrament RPG adventure in words and pixels, played with the real rules, for one hero. A test scene.">
+<meta name="description" content="A solo Sacrament RPG adventure in words and pictures, played with the real rules, for one hero. A test scene.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#12100d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,6 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/theme.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
 <link rel="stylesheet" href="/solo/solo.css">
 </head>
 <body class="solo">
@@ -30,11 +28,11 @@
 </header>
 
 <main id="start" class="start">
-  <canvas id="titleArt" class="art" width="160" height="96" aria-hidden="true"></canvas>
+  <div id="titleArt" class="art" aria-hidden="true"></div>
   <p class="kicker">A solo adventure · test scene</p>
   <h1>The Silent Bell</h1>
   <p class="blurb" id="blurb"></p>
-  <p class="how">Play one hero alone, in words and pixel pictures. Tap a choice, or type what you do. Every check, attack, find and point of Horror uses the Sacrament rules.</p>
+  <p class="how">Play one hero alone, in words and pictures. Tap a choice, or type what you do. Every check, attack, find and point of Horror uses the Sacrament rules.</p>
   <div id="resume"></div>
   <h2>Choose your hero</h2>
   <div id="mine" class="heroes"></div>
@@ -50,7 +48,11 @@
 
 <main id="game" class="game" hidden>
   <div class="stage">
-    <canvas id="art" class="art" width="160" height="96" role="img" aria-label=""></canvas>
+    <div class="frame">
+      <div id="art" class="art" role="img" aria-label=""></div>
+      <div id="dice" aria-hidden="true"></div>
+    </div>
+    <div id="turns" class="turns" hidden></div>
     <div class="hud">
       <div class="meter hp"><span class="lbl">HP</span><span id="hearts" class="hearts"></span><span id="hpText" class="num"></span></div>
       <div class="meter horror"><span class="lbl">Horror</span><span id="pips" class="pips"></span><span id="horrorText" class="num"></span></div>
@@ -100,7 +102,8 @@
 <script src="/sheet/hero-tools.js"></script>
 <script src="/solo/engine.js"></script>
 <script src="/solo/adventure-silent-bell.js"></script>
-<script src="/solo/pixels.js"></script>
+<script src="/vtt/dice.js"></script>
+<script src="/solo/art.js"></script>
 <script src="/solo/solo.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "name": "Sacrament RPG Solo",
   "short_name": "Sacrament Solo",
-  "description": "A solo Sacrament RPG adventure in words and pixels.",
+  "description": "A solo Sacrament RPG adventure in words and pictures.",
   "start_url": "/solo/",
   "scope": "/solo/",
   "display": "standalone",

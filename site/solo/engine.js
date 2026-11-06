@@ -33,7 +33,7 @@
   function apiFor(s, adv, die) {
     var api = {
       s: s, die: die, R: R, C: C, _adv: adv,
-      say: function (t, k) { if (!t) return; s.log.push({ k: k || 'say', t: String(t) }); if (s.log.length > LOG_LIMIT) s.log.splice(0, s.log.length - LOG_LIMIT); },
+      say: function (t, k, extra) { if (!t) return; s.log.push(Object.assign({ k: k || 'say', t: String(t) }, extra || null)); if (s.log.length > LOG_LIMIT) s.log.splice(0, s.log.length - LOG_LIMIT); },
       flag: function (k, v) { if (arguments.length > 1) s.flags[k] = v; return s.flags[k]; },
       room: function () { return adv.rooms[s.room]; },
       target: function () { return int(adv.target, 12); },
@@ -46,7 +46,7 @@
         o = o || {}; var adj = o.adj || 'normal';
         if (api.dark() && !o.ignoreDark) adj = adj === 'easy' ? 'normal' : 'hard';
         var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: o.bonus || 0, target: api.target(), adj: adj });
-        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss');
+        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o) });
         return c;
       },
       horror: function (n, why) { raiseHorror(api, n, why); },
@@ -59,6 +59,14 @@
       end: function (kind, text) { s.over = kind; s.fight = null; if (text) api.say(text, kind === 'won' ? 'end' : 'hurt'); }
     };
     return api;
+  }
+  /* What the dice reveal shows for a check, in the table's own words (vtt-core.mjs rollOutcome): CRITICAL HIT, SUCCESS, MISS, FAILED CHECK. */
+  function heroOutcome(s, c, o) {
+    var attack = !!o.attack, critical = c.success && c.offerUltimate && !o.nonDamage;
+    return { who: s.hero.name, targetName: o.targetName || '', item: o.item || '', success: c.success, critical: critical,
+      label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : 'SUCCESS') : (attack ? 'MISS' : 'FAILED CHECK'),
+      pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
+      note: c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '' };
   }
   function itemsCarried(s) { return (s.hero.gear || []).map(function (g) { return C.itemOf(g); }).filter(Boolean); }
   function carried(s, test) { return itemsCarried(s).filter(function (it) { return typeof test === 'function' ? test(it) : (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); })[0] || null; }
@@ -90,7 +98,7 @@
       var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
       var total = rolls.reduce(function (a, b) { return a + b; }, 0);
       if (!mv.applied && why) api.say(why, 'horror');
-      api.say('The Horror can rise no further. You pay in blood: ' + rolls.map(function (x) { return 'd' + R.HORROR.bloodDie + ' ' + x; }).join(' + ') + '.', 'horror');
+      api.say('The Horror can rise no further. You pay in blood: ' + rolls.map(function (x) { return 'd' + R.HORROR.bloodDie + ' ' + x; }).join(' + ') + '.', 'horror', { dice: rolls.slice(0, 2).map(function (x) { return { die: R.HORROR.bloodDie, n: x }; }) });
       hurt(api, total, 'The price');
     }
   }
@@ -115,14 +123,15 @@
   }
   function loot(api, why) {
     var r = C.rollLoot(api.die); if (!r.ok) { api.say(r.why, 'note'); return null; }
-    api.say((why || 'Loot') + ': d100 ' + C.sayLoot(r.steps) + '.', 'roll');
+    api.say((why || 'Loot') + ': d100 ' + C.sayLoot(r.steps) + '.', 'roll', { dice: r.steps.slice(0, 2).map(function (st) { return { die: st.die, n: st.n }; }) });
     return give(api, r.item.id, 'You find');
   }
 
   /* ---------- fights ---------- */
   function startFight(api, foeId) {
     var f = api._adv.foes[foeId]; if (!f) return;
-    api.s.fight = { foe: foeId, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, pushOpen: false, pushed: false, easy: 0 };
+    /* Turn order, as at the table: the hero, then the foe. phase: hero (choose an action), damage (a hit waits for Roll damage), push (a miss: push or end the turn), foe (the foe's turn is next). */
+    api.s.fight = { foe: foeId, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, phase: 'hero', pending: null, easy: 0 };
     api.say(typeof f.appears === 'function' ? f.appears(api) : f.appears, 'foe');
   }
   /* Everything the hero can attack, cast or use, from the sheet's own list. */
@@ -151,7 +160,7 @@
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
-      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0 });   /* a crossbow's +2 to hit is in the total */
+      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
       if (chk.nat1 && R.nat1Tempts({ attack: isDamage, spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror.'); }
@@ -160,38 +169,45 @@
     var ok = !chk || chk.success;
     if (!isDamage) {
       if (ok) { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); }
-      if (fight) foeTurn(api);
+      if (fight) fight.phase = 'foe';
       return;
     }
     if (!ok) {
-      if (!pushed) { fight.pushOpen = true; api.say('You miss. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or let it come.', 'note'); }
-      else foeTurn(api);
+      if (!pushed) { fight.phase = 'push'; api.say('You miss. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or end your turn.', 'note'); }
+      else fight.phase = 'foe';
       return;
     }
-    var e = R.effort({ cat: u.cat, bonus: s.hero.effort[u.cat] || 0, rolled: api.die(R.DEFAULT_DICE[u.cat]) });
-    if (u.damageBonus) e = Object.assign({}, e, { total: e.total + u.damageBonus, weaponBonus: u.damageBonus });
-    if (chk && chk.offerUltimate) e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 });
-    api.say((chk && chk.nat20 ? 'A natural 20. ' : '') + R.sayEffort(e, 'damage'), 'win');
+    fight.phase = 'damage';
+    fight.pending = { cat: u.cat, damageBonus: u.damageBonus || 0, critical: !!(chk && chk.offerUltimate), nat20: !!(chk && chk.nat20), item: u.spell ? u.spell.name : u.item.name };
+  }
+  /* Roll damage for a hit: the Effort die for its kind plus the hero's bonus, a heavy weapon's +2, and on a natural 20 one Ultimate die. */
+  function rollDamage(api) {
+    var s = api.s, f = s.fight, p = f && f.pending; if (!p) return;
+    var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(R.DEFAULT_DICE[p.cat]) }), dice = [{ die: e.die, n: e.rolled }];
+    if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
+    if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
+    f.pending = null;
+    api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero' });
     damageFoe(api, e.total);
-    if (s.fight) foeTurn(api);
+    if (s.fight) s.fight.phase = 'foe';
   }
   function firstSentence(t) { var m = /^[^.!?]*[.!?]/.exec(t); return m ? m[0] : t; }
   function useHealing(api, a, u) {
-    var s = api.s, h = u.healing;
+    var s = api.s, h = u.healing; void a;
     if (s.hp.cur >= s.hp.max) { api.say('You are already whole.', 'note'); return; }
     if (h.kind && !h.force && s.healed[h.kind]) { api.say('That has already helped you since your last rest.', 'note'); return; }
     api.say('You use ' + (u.spell ? u.spell.name : yours(u.item.name)) + '.', 'act');
-    var chk = null; if (u.stat) { chk = api.check(u.stat); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
+    var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name }); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror.'); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     if (!chk || chk.success) {
       var n = api.die(h.die), amount = n, words = 'd' + h.die + ' ' + n;
       if (chk && chk.offerUltimate) { var c = api.die(R.DEFAULT_DICE.ultimate); amount += c; words += ' + d' + R.DEFAULT_DICE.ultimate + ' ' + c; }
-      api.say('Healing: ' + words + '.', 'roll'); api.heal(amount, 'You are mended');
+      api.say('Healing: ' + words + '.', 'roll', chk ? null : { dice: [{ die: h.die, n: n }] }); api.heal(amount, 'You are mended');
       if (h.kind) s.healed[h.kind] = true;
     } else api.say('It does not take.', 'miss');
-    if (s.fight) foeTurn(api);
+    if (s.fight) s.fight.phase = 'foe';
   }
   function damageFoe(api, n) {
     var s = api.s, f = s.fight, ch = R.change(f.hp.cur, f.hp.max, -n); f.hp.cur = ch.cur;
@@ -203,11 +219,13 @@
   /* The foe's turn: d20 + its attack bonus against the hero's Defence; a natural 1 always misses and a natural 20 always hits (owner's decision). Damage is its Effort die. */
   function foeTurn(api) {
     var s = api.s, f = s.fight; if (!f || s.over) return;
-    f.pushOpen = false; f.pushed = false;
     var def = api._adv.foes[f.foe], a = R.attack({ d20: api.die(20), bonus: f.attack, defence: C.defence(s.hero) });
-    api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win');
-    if (a.hit) { var n = api.die(f.damage); hurt(api, n, (def.hits || 'It hurts you') + ' (d' + f.damage + ' ' + n + ')'); }
-    f.round++;
+    var n = a.hit ? api.die(f.damage) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: f.damage, n: n });
+    var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
+      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
+    api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true });
+    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (d' + f.damage + ' ' + n + ')');
+    if (s.fight) { f.round++; f.phase = 'hero'; }
   }
 
   /* ---------- the hero's own rest ---------- */
@@ -216,7 +234,7 @@
     var dice = []; for (var i = 0; i < R.restDice(1); i++) dice.push(api.die(R.REST.horrorDie));
     var down = dice.reduce(function (a, b) { return a + b; }, 0), before = s.horror; s.horror = Math.max(0, s.horror - down);
     api.heal(R.REST.heal, 'Rest');
-    api.say('The Horror falls ' + (before - s.horror) + ' (d' + R.REST.horrorDie + ' ' + dice.join(' + ') + '; now ' + s.horror + ').', 'horror');
+    api.say('The Horror falls ' + (before - s.horror) + ' (d' + R.REST.horrorDie + ' ' + dice.join(' + ') + '; now ' + s.horror + ').', 'horror', { dice: dice.slice(0, 2).map(function (x) { return { die: R.REST.horrorDie, n: x }; }) });
   }
 
   /* ---------- what can be done now: the buttons ---------- */
@@ -226,7 +244,9 @@
     var out = [];
     if (s.fight) {
       var f = s.fight;
-      if (f.pushOpen) { heroActions(s).filter(function (a) { return a.ok && a.cat && !a.healing; }).forEach(function (a) { out.push({ label: 'Push: ' + shortName(a), cmd: 'push ' + actionKey(a).slice(4), kind: 'push' }); }); out.push({ label: 'Let it come', cmd: 'wait', kind: 'plain' }); return out; }
+      if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
+      if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
+      if (f.phase === 'push') { heroActions(s).filter(function (a) { return a.ok && a.cat && !a.healing; }).forEach(function (a) { out.push({ label: 'Push: ' + shortName(a), cmd: 'push ' + actionKey(a).slice(4), kind: 'push', horror: R.HORROR.push }); }); if (!out.length) out.push({ label: 'Push: bare hands', cmd: 'push punch', kind: 'push', horror: R.HORROR.push }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       var attacks = heroActions(s).filter(function (a) { return a.ok && (a.cat && !a.healing); });
       attacks.forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'attack', horror: a.horror || 0 }); });
       if (!attacks.some(function (a) { return !a.spellId; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
@@ -248,14 +268,15 @@
     var t = String(text || '').toLowerCase().replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!t) return '';
     /* a button's own command passes straight through */
-    if (/^(use \d+( [a-z0-9]+)*|push \d+( [a-z0-9]+)*|do [a-z0-9_]+|go (north|south|east|west|up|down)|punch)$/.test(t)) return t;
+    if (/^(use \d+( [a-z0-9]+)*|push \d+( [a-z0-9]+)*|do [a-z0-9_]+|go (north|south|east|west|up|down)|punch|push punch|damage|foe)$/.test(t)) return t;
     var w = t.split(' '), verb = w[0], rest = w.slice(1).join(' ');
     if (DIRS[t]) return 'go ' + DIRS[t];
     if ((verb === 'go' || verb === 'walk' || verb === 'climb' || verb === 'enter') && DIRS[rest]) return 'go ' + DIRS[rest];
     if (/^(l|look|look around)$/.test(t)) return 'look';
     if (/^(i|inv|inventory|gear|pack|sheet|hero)$/.test(t)) return 'inventory';
     if (/^(h|help|\?)$/.test(t)) return 'help';
-    if (/^(wait|end turn|let it come)$/.test(t)) return 'wait';
+    if (/^(wait|end turn|end my turn|end your turn|let it come)$/.test(t)) return 'foe';
+    if (/^(damage|roll damage)$/.test(t)) return 'damage';
     var list = choices(s, adv), api = apiFor(s, adv, function () { return 1; });
     /* the room's own things to do, by their words */
     var r = adv.rooms[s.room];
@@ -289,13 +310,17 @@
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
     else if (s.fight) {
       var f = s.fight;
-      if (p[0] === 'push' && f.pushOpen) {
-        var pa = findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
-        f.pushOpen = false; f.pushed = true; raiseHorror(api, R.HORROR.push, 'You push for a second action.'); if (!s.over) useAction(api, pa, true);
-      } else if (c === 'wait' && f.pushOpen) foeTurn(api);
-      else if (f.pushOpen) api.say('You missed: push, or let it come.', 'note');
+      if (f.phase === 'damage') { if (c === 'damage') rollDamage(api); else api.say('You hit: roll damage.', 'note'); }
+      else if (f.phase === 'foe') { if (c === 'foe' || c === 'wait') foeTurn(api); else api.say('Your turn is spent. End your turn.', 'note'); }
+      else if (f.phase === 'push') {
+        if (c === 'foe' || c === 'wait') f.phase = 'foe', foeTurn(api);
+        else if (p[0] === 'push') {
+          var pa = p[1] === 'punch' ? bareHands() : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
+          f.phase = 'hero'; raiseHorror(api, R.HORROR.push, 'You push for a second action.'); if (!s.over) useAction(api, pa, true);
+        } else api.say('You missed: push, or end your turn.', 'note');
+      }
       else if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); else api.say('You cannot use that now.', 'note'); }
-      else if (c === 'punch') punch(api);
+      else if (c === 'punch') useAction(api, bareHands(), false);
       else if (p[0] === 'go') api.say('It is between you and the way out. Fight.', 'note');
       else api.say('Not now: it is coming for you.', 'note');
     }
@@ -314,15 +339,7 @@
     return s.log.slice(before);
   }
   /* No weapon: STR and Basic Effort. */
-  function punch(api) {
-    var s = api.s, f = s.fight; api.say('You go at it with your bare hands.', 'act');
-    var adj = f.easy > 0 ? 'easy' : 'normal'; if (f.easy > 0) f.easy--;
-    var chk = api.check('STR', { adj: adj }); if (chk.nat1) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
-    if (s.over) return;
-    if (!chk.success) { f.pushOpen = true; api.say('You miss. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or let it come.', 'note'); return; }
-    var e = R.effort({ cat: 'basic', bonus: s.hero.effort.basic || 0, rolled: api.die(R.DEFAULT_DICE.basic) });
-    api.say(R.sayEffort(e, 'damage'), 'win'); damageFoe(api, e.total); if (s.fight) foeTurn(api);
-  }
+  function bareHands() { return { u: { ok: true, item: { name: 'bare hands' }, source: {}, stat: 'STR', cat: 'basic', attackBonus: 0, damageBonus: 0, horror: 0 } }; }
   function inventoryText(s) {
     var h = s.hero, eq = [], pack = [];
     (h.gear || []).forEach(function (g) { var it = C.itemOf(g); if (!it) return; var t = it.name + (it.uses != null && g.uses != null ? ' (' + g.uses + ' left)' : ''); (g.eq ? eq : pack).push(t); });

@@ -1,12 +1,13 @@
 /* Sacrament RPG solo: the page. It shows the engine's story, buttons and pictures, keeps the game in this browser, and never changes a saved hero.
-   Needs rules.js, gear.js, sheet-core.js, heroes.js, hero-tools.js, engine.js, an adventure file and pixels.js. */
+   Dice land on the picture through the table's own dice (site/vtt/dice.js), with the same result card: CRITICAL HIT, SUCCESS, MISS, FAILED CHECK, HIT.
+   Needs rules.js, gear.js, sheet-core.js, heroes.js, hero-tools.js, engine.js, an adventure file, dice.js and art.js. */
 (function () {
   'use strict';
-  var S = window.SacramentSolo, PX = window.SacramentSoloPixels, R = window.SacramentRules, C = window.SacramentSheetCore;
+  var S = window.SacramentSolo, ART = window.SacramentSoloArt, R = window.SacramentRules, C = window.SacramentSheetCore, D = window.SacramentDice;
   var ADV = window.SacramentSoloAdventures['silent-bell'];
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
-  var state = null, tick = 0, timer = null, still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var state = null, shown = 0, lastArt = '';
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
@@ -18,7 +19,7 @@
 
   /* ---------- the first screen ---------- */
   function showStart() {
-    stopAnim(); state = null; document.body.classList.remove('playing');
+    state = null; D.clear(); document.body.classList.remove('playing');
     $('start').hidden = false; $('game').hidden = true; $('heroBtn').hidden = true; $('menuBtn').hidden = true;
     $('blurb').textContent = ADV.blurb;
     var saved = load(), resume = $('resume'); resume.textContent = '';
@@ -34,8 +35,7 @@
       var b = pickButton(h.name, [h.calling, 'Defence ' + C.defence(h)].filter(Boolean).join(' · '));
       b.addEventListener('click', function () { begin(h); }); mine.appendChild(b);
     });
-    PX.draw($('titleArt').getContext('2d'), 'title', null, 0);
-    startAnim(function () { PX.draw($('titleArt').getContext('2d'), 'title', null, tick); });
+    $('titleArt').innerHTML = ART.scene('title', null, 't');
   }
   function pickButton(title, sub, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'pick' + (cls ? ' ' + cls : '');
@@ -46,18 +46,16 @@
   });
 
   function begin(hero) {
-    state = S.start(hero, ADV, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
+    D.clear(); state = S.start(hero, ADV, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
   }
 
   /* ---------- the game screen ---------- */
   function showGame(fresh) {
     document.body.classList.add('playing'); $('start').hidden = true; $('game').hidden = false; $('heroBtn').hidden = false; $('menuBtn').hidden = false;
-    var log = $('log'); log.textContent = ''; shown = 0;
+    $('log').textContent = ''; shown = 0; lastArt = '';
     renderLog(!fresh); render();
-    startAnim(paint);
     window.scrollTo(0, 0);
   }
-  var shown = 0;
   function renderLog(quiet) {
     var log = $('log');
     for (; shown < state.log.length; shown++) {
@@ -66,15 +64,15 @@
     log.scrollTop = log.scrollHeight;
   }
   function render() {
-    renderHud(); renderChoices(); paint();
-    var r = ADV.rooms[state.room]; $('art').setAttribute('aria-label', 'A pixel picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
+    renderHud(); renderTurns(); renderChoices(); paint();
+    var r = ADV.rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
   function renderHud() {
     var hearts = $('hearts'); hearts.textContent = '';
     var n = Math.max(1, Math.ceil(state.hp.max / R.HEART));
     for (var i = 0; i < n; i++) {
-      var fill = Math.max(0, Math.min(R.HEART, state.hp.cur - i * R.HEART)) / R.HEART, img = document.createElement('img');
-      img.className = 'heart'; img.alt = ''; img.src = heartIcon(fill); hearts.appendChild(img);
+      var fill = Math.max(0, Math.min(R.HEART, state.hp.cur - i * R.HEART)) / R.HEART, sp = document.createElement('span');
+      sp.className = 'heart'; sp.style.setProperty('--fill', String(fill)); hearts.appendChild(sp);
     }
     $('hpText').textContent = state.hp.cur + '/' + state.hp.max;
     var pips = $('pips'); pips.textContent = '';
@@ -82,14 +80,18 @@
     pips.setAttribute('aria-hidden', 'true');
     $('horrorText').textContent = state.horror + '/' + R.HORROR.max;
   }
-  /* a pixel heart, filled from the bottom by how much of its ten points is left */
-  var heartCache = {};
-  function heartIcon(fill) {
-    var key = Math.round(fill * 10); if (heartCache[key]) return heartCache[key];
-    var rows = ['.kk..kk.', 'krrkkrrk', 'krrrrrrk', 'krrrrrrk', '.krrrrk.', '..krrk..', '...kk...'];
-    var cv = document.createElement('canvas'); cv.width = 8; cv.height = 7; var ctx = cv.getContext('2d'), top = 7 - Math.round(fill * 6);
-    rows.forEach(function (row, y) { for (var x = 0; x < 8; x++) { var ch = row[x]; if (ch === '.') continue; ctx.fillStyle = ch === 'k' ? '#0b0a08' : y >= top && fill > 0 ? (y === 1 && x === 2 ? '#e8a090' : '#c0392b') : '#3a2622'; ctx.fillRect(x, y, 1, 1); } });
-    return (heartCache[key] = cv.toDataURL());
+  /* The turn order, as on the table's strip: whose turn it is, and the round. */
+  function renderTurns() {
+    var box = $('turns'), f = state.fight; box.hidden = !f; if (!f) return;
+    box.textContent = '';
+    var round = document.createElement('span'); round.className = 'round'; round.textContent = 'Round ' + f.round; box.appendChild(round);
+    [[state.hero.name, f.phase !== 'foe', 'hero'], [f.name, f.phase === 'foe', 'foe']].forEach(function (x) {
+      var chip = document.createElement('span'); chip.className = 'chip ' + x[2] + (x[1] ? ' now' : ''); chip.textContent = x[0]; box.appendChild(chip);
+    });
+    var bar = document.createElement('span'); bar.className = 'foehp'; bar.title = f.name; bar.style.setProperty('--hp', String(f.hp.cur / f.hp.max)); box.appendChild(bar);
+    var whose = document.createElement('span'); whose.className = 'whose';
+    whose.textContent = f.phase === 'foe' ? 'Its turn next' : f.phase === 'damage' ? 'Your turn: roll damage' : f.phase === 'push' ? 'Your turn: push or end it' : 'Your turn';
+    box.appendChild(whose);
   }
   function renderChoices() {
     var box = $('choices'); box.textContent = '';
@@ -119,12 +121,24 @@
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
-    var hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null;
+    var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null;
     S.act(state, ADV, cmd, die);
-    save(); renderLog(false); render();
-    var stage = document.querySelector('.stage'); stage.classList.remove('hit', 'good');
-    if (state.hp.cur < hpBefore) stage.classList.add('hit'); else if (foeBefore != null && (!state.fight || state.fight.hp.cur < foeBefore)) stage.classList.add('good');
-    setTimeout(function () { stage.classList.remove('hit', 'good'); }, 450);
+    save(); renderLog(false); render(); roll(state.log.slice(before));
+    var frame = document.querySelector('.frame'); frame.classList.remove('hit', 'good');
+    void frame.offsetWidth;
+    if (state.hp.cur < hpBefore) frame.classList.add('hit'); else if (foeBefore != null && (!state.fight || state.fight.hp.cur < foeBefore)) frame.classList.add('good');
+  }
+  /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */
+  function roll(fresh) {
+    var checks = fresh.filter(function (l) { return l.outcome; });
+    if (checks.length) {
+      var last = checks[checks.length - 1], o = last.outcome;
+      D.show(last.dice || [], o.who, !last.foeAttack, o);
+      if (o.pendingDamage && state.fight && state.fight.phase === 'damage') D.action({ label: 'Roll damage', run: function () { run('damage'); } });
+      return;
+    }
+    var plain = fresh.filter(function (l) { return l.dice; });
+    if (plain.length) { var p = plain[plain.length - 1]; D.show(p.dice, p.by === 'hero' ? state.hero.name : '', true); }
   }
   $('cmd').addEventListener('submit', function (e) {
     e.preventDefault(); var inp = $('cmdIn'), t = inp.value; inp.value = ''; if (!t.trim() || !state) return;
@@ -132,9 +146,11 @@
   });
 
   /* ---------- pictures ---------- */
-  function paint() { if (state) PX.draw($('art').getContext('2d'), ADV.rooms[state.room].art, state, tick); }
-  function startAnim(fn) { stopAnim(); if (still) return; timer = setInterval(function () { if (document.hidden) return; tick++; fn(); }, 220); }
-  function stopAnim() { if (timer) clearInterval(timer); timer = null; }
+  function paint() {
+    if (!state) return;
+    var html = ART.scene(ADV.rooms[state.room].art, state, 'g');
+    if (html !== lastArt) { $('art').innerHTML = html; lastArt = html; }
+  }
 
   /* ---------- the hero sheet ---------- */
   $('heroBtn').addEventListener('click', function () {
@@ -154,7 +170,7 @@
     (state.hero.gear || []).forEach(function (g) {
       var it = C.itemOf(g); if (!it || !!g.eq !== eq) return; any = true;
       var li = document.createElement('li'), img = document.createElement('img'), div = document.createElement('div'), sm = document.createElement('small');
-      img.src = PX.icon(it.kind); img.alt = '';
+      img.src = ART.icon(it.kind); img.alt = '';
       div.textContent = it.name + (it.uses != null && g.uses != null ? ' (' + g.uses + ' left)' : '');
       sm.textContent = it.does || it.flavour || ''; div.appendChild(sm); li.append(img, div); ul.appendChild(li);
     });
