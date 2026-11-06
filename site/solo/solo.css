@@ -175,12 +175,6 @@
 @keyframes solo-melt{0%{transform:none;opacity:1;filter:none}25%{transform:scale(1.04,.96)}60%{transform:scale(1.25,.45);opacity:.9;filter:brightness(1.4)}100%{transform:scale(1.45,.05);opacity:0;filter:brightness(.4)}}
 @keyframes solo-snuff{0%{opacity:1}100%{opacity:0;transform:translateY(-6px) scaleX(.3)}}
 .ch small{display:block;font:400 .82rem var(--body);opacity:1;color:inherit;margin-top:1px}
-.cmd{display:flex;align-items:center;gap:6px;margin-top:8px}
-.cmd .prompt{font:700 1.4rem/1 var(--display);color:var(--candle)}
-.cmd input{flex:1;min-width:0;min-height:44px;padding:4px 10px;font:1rem var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--edge);border-radius:0}
-.cmd input::placeholder{color:#8f8570}
-.cmd input:focus{outline:2px solid var(--candle);outline-offset:1px}
-.cmd .go{min-height:44px;padding:4px 16px;font:600 1rem var(--px);color:var(--fg);background:transparent;border:1px solid var(--edge);cursor:pointer}
 .over{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 
 /* tablet and wider, landscape: picture and choices on the left, the story on the right */

@@ -22,7 +22,7 @@ The save version went to 2: a game saved before the run existed is not loaded, a
 
 ## Pitch
 
-You play one hero alone through short written adventures in the world of Sacrament. Each place has a picture in the style of an illuminated manuscript and its own tune, a few lines of text, and big buttons for what you can do (or type it: `look`, `n`, `read ledger`, `attack`). The game is the GM: it sets the Target, says when it is dark, and decides what a failure costs. Everything else is the real rules.
+You play one hero alone through short written adventures in the world of Sacrament. Each place has a picture in the style of an illuminated manuscript and its own tune, a few lines of text, and big buttons for what you can do. (A box for typing commands, in the old text-adventure way, was removed at the owner's request on 2026-11-06: every move has a button.) The game is the GM: it sets the Target, says when it is dark, and decides what a failure costs. Everything else is the real rules.
 
 * **Heroes:** bring a hero from My heroes, or take a ready-made one (the hero generator). The game plays a **copy**; My heroes is never changed.
 * **Rules reused, not rewritten:** checks (`R.check`), Effort damage (`R.effort`, natural 20 critical), monster attacks against Defence (`R.attack`, `C.defence`), the Horror meter with thresholds, the natural-1 rule (attacks, spells, pushes only), push for 1 Horror after a missed attack, pay in blood past 21, rest (a Heart back, Horror down d10), healing items and spells with their once-per-rest limit, crossbow and heavy-weapon bonuses.
