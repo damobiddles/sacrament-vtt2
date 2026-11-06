@@ -12,6 +12,16 @@
   /* a thing only the GM gives out: a relic, or anything from the loot table that is not one of the starter items */
   var isFind = function (it) { return !!it && (it.kind === 'relic' || it.found === true); };
   var SPELL = {}; G.spells.forEach(function (s) { SPELL[s.id] = s; });
+  var TAG = {}; (G.tags || []).forEach(function (t) { TAG[t.id] = t; });
+  /* What a story spell or item is good for when its words leave it to the GM: its tags from the gear list, each with its default in a fight and out of one. */
+  function tagsOf(src) { return ((src && src.tags) || []).map(function (id) { return TAG[id]; }).filter(Boolean); }
+  var NEEDS = { corpse: 'needs a corpse close by', undead: 'only against the undead' };
+  function tagText(src) {
+    var list = tagsOf(src); if (!list.length) return '';
+    return 'When in doubt' + (src.needs ? ' (' + (NEEDS[src.needs] || src.needs) + ')' : '') + ': ' + list.map(function (t) {
+      return t.name + '. ' + [t.fight ? 'In a fight: ' + t.fight : '', t.out ? 'Out of a fight: ' + t.out : ''].filter(Boolean).join(' ');
+    }).join(' ');
+  }
 
   var int = function (v, d) { v = parseInt(v, 10); return isFinite(v) ? v : d; };
   var clamp = function (n, lo, hi) { return Math.max(lo, Math.min(hi, n)); };
@@ -371,5 +381,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

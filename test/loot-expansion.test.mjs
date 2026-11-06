@@ -10,6 +10,9 @@ const G = globalThis.SACRAMENT_GEAR, C = globalThis.SacramentSheetCore;
 const original = [...G.items, ...G.relics, ...G.grimoires, ...G.found.slice(0, 47)];
 const added = G.found.slice(47);
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+// Owner decision 2026-11-06: story spells and items gained "tags" and "needs" (what each is good for). They are locked by the catalogue fingerprint in
+// current-rules-audit.test; here they are set aside so these fingerprints still prove that nothing else about an item or spell moved.
+const untag = ({ tags, needs, ...rest }) => rest;
 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
   // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
@@ -24,11 +27,11 @@ test('the expansion doubles each item category with stable catalogue definitions
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = { ...i }; delete copy.loot; delete copy.table; return copy; })), '8bab618847fd8b1dd98e5686ee0b1514c8df3b23624980441625293b1dc439cb');
+  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '8bab618847fd8b1dd98e5686ee0b1514c8df3b23624980441625293b1dc439cb');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
-  assert.equal(hash(G.spells.slice(0,23).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
-  assert.equal(hash(G.spells), 'a4e36ead81334f9fd57b31813ae838b6ad6111328ab3051f5d3c74dfa23585e9');
+  assert.equal(hash(G.spells.slice(0,23).map(untag).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
+  assert.equal(hash(G.spells.map(untag)), 'a4e36ead81334f9fd57b31813ae838b6ad6111328ab3051f5d3c74dfa23585e9');
 });
 
 test('every new find is reachable at both range boundaries, visible in the public reference, and GM-awarded only', () => {

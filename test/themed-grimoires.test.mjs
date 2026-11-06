@@ -15,7 +15,8 @@ test('every previously owned book, spell and backup retains its original mechani
  for(const old of before.books){const gear={id:old.id,eq:true},it=C.itemOf(gear);assert.ok(it);assert.equal(it.name,old.name);assert.deepEqual(it.spells,old.spells);assert.equal(it.slots,old.slots);assert.equal(it.pick,old.pick);
  const h=C.cleanHero({...C.blankHero('Compatibility'),gear:[gear]});assert.deepEqual(C.itemOf(h.gear[0]).spells,old.spells);}
  // Owner decision 2026-11-01: descriptions were rewritten for clarity. Saved heroes store spell ids, so every field except the wording stays locked.
- const rules=s=>Object.fromEntries(Object.entries(s).filter(([key])=>key!=='does'));
+ // Owner decision 2026-11-06: story spells gained tags (what each is good for); these are new fields, not changes to the old mechanics.
+ const rules=s=>Object.fromEntries(Object.entries(s).filter(([key])=>!['does','tags','needs'].includes(key)));
  for(const spell of before.spells){const now=G.spells.find(s=>s.id===spell.id);assert.ok(now,spell.id);assert.deepEqual(rules(now),rules(spell));assert.ok(now.does.length>=spell.does.length,spell.id+' keeps at least as much detail');}
  const retired=G.retiredGrimoires||[];assert.ok(retired.length>0);for(const old of retired)assert.ok(!C.items.some(i=>i.id===old.id));
 });

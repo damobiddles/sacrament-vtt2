@@ -60,7 +60,8 @@ test('power completion preserves all catalogue IDs, slots, spell assignments and
  // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
- const stable=Object.fromEntries(Object.entries(globalThis.SACRAMENT_GEAR).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>['id','kind','slots','table','loot','spells','pick','pickDie','die'].includes(key))))]));
+ // Owner decision 2026-11-06: the list of spell and item tags is not part of the catalogue's IDs, slots or odds, so it is left out here.
+ const stable=Object.fromEntries(Object.entries(globalThis.SACRAMENT_GEAR).filter(([k])=>k!=='tags').map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>['id','kind','slots','table','loot','spells','pick','pickDie','die'].includes(key))))]));
  assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'ba66150e22f95325aedd53aa9ee79410210fec73a6a4ef6624461a53ef322d27');
 });
 
