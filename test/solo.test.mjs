@@ -259,7 +259,7 @@ test('every choice that rolls shows its odds from the real rules, and working ou
   assert.equal(S.odds(s, A, ''), null);
 });
 
-test('the sound effects: every one has a real note or a noise, and the art knows where each foe stands', async () => {
+test('the sound effects: every one has a real note or a noise, and the art knows where each foe stands, and every place is drawn', async () => {
   require('../site/solo/music.js'); require('../site/solo/art.js');
   const M = globalThis.SacramentSoloMusic, ART = globalThis.SacramentSoloArt;
   for (const name of ['hit', 'crit', 'miss', 'hurt', 'horror', 'heart', 'find', 'win']) {
@@ -268,6 +268,7 @@ test('the sound effects: every one has a real note or a noise, and the art knows
     for (const n of fx.n || []) assert.ok(M.freq(n[1]) > 0, name + ': ' + n[1] + ' is a real note');
   }
   for (const place of ['crypt', 'cloister', 'nowhere']) { const p = ART.spot(place); assert.equal(p.length, 3); }
+  for (const place of ['crossroads', 'cloister', 'shrine']) assert.ok(ART.scene(place, null, 'd').includes('<path'), place + ' is drawn');
   for (const [place, p] of Object.entries(ART.paintings)) {
     const fs = await import('node:fs');
     assert.ok(fs.existsSync(new URL('../site' + p.src, import.meta.url)), place + ' painting exists');

@@ -437,11 +437,7 @@
   /* Paintings. A place with a painting shows it instead of its drawn picture; the foe, hearts and the dark still go on top.
      To add one: put the picture at site/art/solo/<place>.webp (about 1600 x 960) and add a line here. hero: false hides the drawn hero
      (paintings are seen through the hero's eyes). A foe painting goes at site/art/solo/foe-<id>.webp, on a transparent background, listed in FOE_PAINT. */
-  var PAINT = {
-    cloister: { src: '/art/sacrament-home-1.webp', y: 'YMid' },
-    crossroads: { src: '/art/vtt-gifts/hollowmere-pilgrim-road.webp', y: 'YMid' },
-    shrine: { src: '/art/sacrament-home-3.webp', y: 'YMid' }
-  };
+  var PAINT = {}; /* owner, 2026-11-06: keep the drawn pictures, so no place uses a painting for now */
   var FOE_PAINT = {};
   function painting(name, id) {
     var p = PAINT[name];
