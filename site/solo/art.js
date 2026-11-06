@@ -171,7 +171,9 @@
   function defs(id) {
     return '<defs>'
       + '<linearGradient id="' + id + 'wax" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4ead0"/><stop offset=".6" stop-color="#dcc89a"/><stop offset="1" stop-color="#b09868"/></linearGradient>'
-      + '<linearGradient id="' + id + 'sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + P.deep + '"/><stop offset=".6" stop-color="' + P.lapis + '"/><stop offset="1" stop-color="' + P.azure + '"/></linearGradient>'
+      + '<linearGradient id="' + id + 'sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1630"/><stop offset=".45" stop-color="#4a2f52"/><stop offset=".78" stop-color="#9a5a4a"/><stop offset="1" stop-color="#d9894a"/></linearGradient>'
+      /* the soft dark at the edges of every picture, like the home page's paintings */
+      + '<radialGradient id="' + id + 'vig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#0b0806" stop-opacity="0"/><stop offset="1" stop-color="#0b0806" stop-opacity=".7"/></radialGradient>'
       + '<linearGradient id="' + id + 'bronze" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6a2a"/><stop offset=".45" stop-color="' + P.goldHi + '"/><stop offset=".6" stop-color="' + P.gold + '"/><stop offset="1" stop-color="#7a5a20"/></linearGradient>'
       /* the diaper: a chequer of vermilion and lapis with a gold quatrefoil in each square, the classic wall of a painted room */
       + '<pattern id="' + id + 'dia" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="' + P.verm + '"/><rect width="6" height="6" fill="' + P.lapis + '"/><rect x="6" y="6" width="6" height="6" fill="' + P.lapis + '"/>'
@@ -198,20 +200,17 @@
     for (var i = 0; i < n; i++) out += '<circle class="mote" style="animation-delay:-' + (r() * 9).toFixed(1) + 's;animation-duration:' + (7 + r() * 6).toFixed(1) + 's" cx="' + Math.round(x0 + r() * (x1 - x0)) + '" cy="' + Math.round(y0 + r() * (y1 - y0)) + '" r="' + (0.6 + r() * 0.6).toFixed(1) + '" fill="' + P.goldHi + '"/>';
     return out;
   }
-  /* the vellum mottle and the gilded border, over every picture */
+  /* a faint grain and a soft vignette over every picture (the gilded border went in favour of the home page's look) */
   function page(id) {
-    return '<rect width="320" height="192" filter="url(#' + id + 'grain)" opacity=".22" style="mix-blend-mode:multiply"/>'
-      + '<rect x="2.5" y="2.5" width="315" height="187" fill="none" stroke="' + P.gold + '" stroke-width="5"/>'
-      + '<rect x="1" y="1" width="318" height="190" fill="none" stroke="' + P.ink + '" stroke-width="1"/><rect x="5.5" y="5.5" width="309" height="181" fill="none" stroke="' + P.ink + '" stroke-width="1"/>'
-      + '<rect x="7" y="7" width="306" height="178" fill="none" stroke="' + P.verm + '" stroke-width="1.4"/>'
-      + [[5, 5], [315, 5], [5, 187], [315, 187]].map(function (c) { return '<rect x="' + (c[0] - 4) + '" y="' + (c[1] - 4) + '" width="8" height="8" fill="' + P.lapis + '"' + O + '/><circle cx="' + c[0] + '" cy="' + c[1] + '" r="2" fill="' + P.goldHi + '"/>'; }).join('');
+    return '<rect width="320" height="192" filter="url(#' + id + 'grain)" opacity=".12" style="mix-blend-mode:multiply"/>'
+      + '<rect width="320" height="192" fill="url(#' + id + 'vig)"/>';
   }
   /* a gold star of four points, glinting */
   function star(x, y, r, d) { return '<path class="twinkle" style="animation-delay:-' + d + 's" d="M' + x + ' ' + (y - r) + ' L' + (x + r * 0.3) + ' ' + (y - r * 0.3) + ' L' + (x + r) + ' ' + y + ' L' + (x + r * 0.3) + ' ' + (y + r * 0.3) + ' L' + x + ' ' + (y + r) + ' L' + (x - r * 0.3) + ' ' + (y + r * 0.3) + ' L' + (x - r) + ' ' + y + ' L' + (x - r * 0.3) + ' ' + (y - r * 0.3) + ' Z" fill="' + P.goldHi + '"/>'; }
   /* the night sky: lapis sown with gold stars, a pale crescent moon */
   function sky(id, h) {
     var out = '<rect width="320" height="' + (h || 192) + '" fill="url(#' + id + 'sky)"/>', r = rnd(17);
-    for (var i = 0; i < 22; i++) out += star(Math.round(14 + r() * 292), Math.round(14 + r() * ((h || 120) - 40)), Math.round((1.4 + r() * 1.8) * 10) / 10, (r() * 3).toFixed(1));
+    for (var i = 0; i < 9; i++) out += star(Math.round(14 + r() * 292), Math.round(14 + r() * ((h || 120) - 40)), Math.round((0.9 + r() * 1.1) * 10) / 10, (r() * 3).toFixed(1));
     return out + '<g class="cloud"><path d="M262 18 A16 16 0 1 0 262 50 A22 22 0 0 1 262 18 Z" fill="' + P.white + '"' + O + '/><circle cx="252" cy="32" r=".9" fill="' + P.ink + '"/></g>';
   }
   /* rolling ground, with the furrow lines a limner scratched into it */
@@ -435,12 +434,27 @@
     return '<defs><radialGradient id="' + id + 'dark" gradientUnits="userSpaceOnUse" cx="' + light[0] + '" cy="' + light[1] + '" r="160"><stop offset=".3" stop-color="#120a04" stop-opacity="0"/><stop offset=".65" stop-color="#120a04" stop-opacity=".62"/><stop offset="1" stop-color="#120a04" stop-opacity=".9"/></radialGradient></defs><rect width="320" height="192" fill="url(#' + id + 'dark)"/>';
   }
 
-  /* One picture: the place, the foe if there is one, the dark if the place is dark, then the vellum and the gilded border over all. */
+  /* Paintings. A place with a painting shows it instead of its drawn picture; the foe, hearts and the dark still go on top.
+     To add one: put the picture at site/art/solo/<place>.webp (about 1600 x 960) and add a line here. hero: false hides the drawn hero
+     (paintings are seen through the hero's eyes). A foe painting goes at site/art/solo/foe-<id>.webp, on a transparent background, listed in FOE_PAINT. */
+  var PAINT = {}; /* owner, 2026-11-06: keep the drawn pictures, so no place uses a painting for now */
+  var FOE_PAINT = {};
+  function painting(name, id) {
+    var p = PAINT[name];
+    return '<image href="' + p.src + '" x="0" y="0" width="320" height="192" preserveAspectRatio="xMid' + (p.y || 'YMid') + ' slice"/>'
+      + '<rect width="320" height="192" fill="#2a1408" opacity=".12" style="mix-blend-mode:multiply"/>' + motes(40, 280, 90, 180, '', 5, hash(name) % 97);
+  }
+  function foePainted(art, x, y, sc) {
+    return '<g class="who foe" transform="translate(' + x + ' ' + y + ') scale(' + sc + ')"><image href="' + FOE_PAINT[art] + '" x="0" y="0" width="80" height="140"/></g>';
+  }
+  function spot(name) { return SPOT[name] || [196, 64, 0.78]; }
+
+  /* One picture: the place, the foe if there is one, the dark if the place is dark, then the grain and vignette over all. */
   function scene(name, s, id) {
     id = id || 'a';
-    var fn = SCENES[name] || SCENES.title, body = fn(s, id);
-    var spot = SPOT[name] || [196, 64, 0.78], f = s && s.fight;
-    if (f) body += foe(f.art || 'eater', id, spot[0], spot[1], spot[2], f.hp.cur / f.hp.max);
+    var fn = SCENES[name] || SCENES.title, body = PAINT[name] ? painting(name, id) : fn(s, id);
+    var spot = SPOT[name] || [196, 64, 0.78], f = s && s.fight, art = f && (f.art || 'eater');
+    if (f) body += FOE_PAINT[art] ? foePainted(art, spot[0], spot[1], spot[2]) : foe(art, id, spot[0], spot[1], spot[2], f.hp.cur / f.hp.max);
     if (DARK[name]) { var lit = s && (s.flags.lit || hasLight(s)); body += dark(id, lit ? DARK[name] : null); if (f && (f.art || 'eater') === 'eater') body += '<ellipse class="flame foeflame" cx="' + (spot[0] + 35) + '" cy="' + spot[1] + '" rx="2.4" ry="4" fill="' + P.goldHi + '" opacity=".9"/>'; }
     if (f) body += hearts(id + 'f', spot[0] + 40 * spot[2], Math.max(12, spot[1] - 14), f.hp);
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">' + defs(id) + body + page(id) + '</svg>';
@@ -454,5 +468,5 @@
     grimoire: '<rect x="7" y="5" width="18" height="23" rx="2" fill="#24407e" stroke="#2a1a10" stroke-width="1"/><path d="M10 5 V28" stroke="#16244a" stroke-width="2"/><path d="M16 11 V21 M12 15 H20" stroke="#ecc85e" stroke-width="1.6"/>'
   };
   function icon(kind) { return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' + (ICONS[kind] || ICONS.supply) + '</svg>'); }
-  root.SacramentSoloArt = { W: W, H: H, scene: scene, icon: icon, scenes: Object.keys(SCENES) };
+  root.SacramentSoloArt = { W: W, H: H, scene: scene, icon: icon, spot: spot, scenes: Object.keys(SCENES), paintings: PAINT, foePaintings: FOE_PAINT };
 })(typeof window !== 'undefined' ? window : globalThis);

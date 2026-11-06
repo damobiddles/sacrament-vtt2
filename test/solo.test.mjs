@@ -244,3 +244,34 @@ test('every scene has a picture for every place and every foe, and every foe sho
     }
   }
 });
+
+test('every choice that rolls shows its odds from the real rules, and working out the odds changes nothing', () => {
+  const hero = T.generate('fighter', seeded(3));
+  const s = S.start(hero, A, fixed([1]));
+  S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  const before = JSON.stringify(s);
+  const o = S.odds(s, A, attack.cmd);
+  assert.equal(JSON.stringify(s), before, 'the odds changed the game');
+  assert.ok(o && o.need >= 1 && o.need <= 21, 'a need between 1 and 21');
+  assert.equal(o.chance, Math.max(0, Math.min(20, 21 - o.need)) * 5);
+  assert.ok(o.attack, 'an attack is marked as one');
+  assert.equal(S.odds(s, A, ''), null);
+});
+
+test('the sound effects: every one has a real note or a noise, and the art knows where each foe stands, and every place is drawn', async () => {
+  require('../site/solo/music.js'); require('../site/solo/art.js');
+  const M = globalThis.SacramentSoloMusic, ART = globalThis.SacramentSoloArt;
+  for (const name of ['hit', 'crit', 'miss', 'hurt', 'horror', 'heart', 'find', 'win']) {
+    const fx = M.SFX[name];
+    assert.ok(fx && ((fx.n || []).length + (fx.x || []).length) > 0, name + ' makes a sound');
+    for (const n of fx.n || []) assert.ok(M.freq(n[1]) > 0, name + ': ' + n[1] + ' is a real note');
+  }
+  for (const place of ['crypt', 'cloister', 'nowhere']) { const p = ART.spot(place); assert.equal(p.length, 3); }
+  for (const place of ['crossroads', 'cloister', 'shrine']) assert.ok(ART.scene(place, null, 'd').includes('<path'), place + ' is drawn');
+  for (const [place, p] of Object.entries(ART.paintings)) {
+    const fs = await import('node:fs');
+    assert.ok(fs.existsSync(new URL('../site' + p.src, import.meta.url)), place + ' painting exists');
+    assert.ok(ART.scene(place, null, 'p').includes(p.src), place + ' shows its painting');
+  }
+});
