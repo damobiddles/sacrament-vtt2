@@ -113,5 +113,23 @@
   }
   /* Browsers start sound only after a tap: the first tap on the page brings back music the player left on last time. */
   function wake() { if (readOn() && !on) setOn(true); }
-  root.SacramentSoloMusic = { play: play, setOn: setOn, isOn: function () { return on; }, wanted: readOn, wake: wake, tunes: Object.keys(TUNES), TUNES: TUNES, parse: parse, freq: freq };
+  /* Sound effects: short and made the same way as the music. They play only while the sound is on.
+     Each is a list of notes [voice, note, start in 16ths, length in 16ths] and noise hits [kind, start]. */
+  var SFX = {
+    hit: { step: 0.035, n: [['lead', 'A4', 0, 2], ['lead', 'E5', 2, 3]], x: [['s', 0]] },
+    crit: { step: 0.04, n: [['lead', 'A4', 0, 2], ['lead', 'E5', 2, 2], ['lead', 'A5', 4, 6], ['arp', 'C#6', 4, 6]], x: [['s', 0], ['s', 4]] },
+    miss: { step: 0.05, n: [['bass', 'D3', 0, 2], ['bass', 'A2', 2, 4]], x: [['k', 0]] },
+    hurt: { step: 0.04, n: [['lead', 'E4', 0, 2], ['lead', 'C4', 2, 2], ['lead', 'G#3', 4, 5], ['bass', 'E2', 0, 8]], x: [['k', 0], ['s', 0]] },
+    horror: { step: 0.08, n: [['bass', 'D2', 0, 14], ['arp', 'Eb5', 2, 10], ['arp', 'A4', 4, 10]], x: [] },
+    heart: { step: 0.06, n: [['bass', 'D2', 0, 2], ['bass', 'D2', 3, 2]], x: [['k', 0], ['k', 3]] },
+    find: { step: 0.05, n: [['lead', 'D5', 0, 2], ['lead', 'F#5', 2, 2], ['lead', 'A5', 4, 2], ['lead', 'D6', 6, 6], ['arp', 'A5', 6, 6]], x: [] },
+    win: { step: 0.07, n: [['lead', 'D5', 0, 3], ['lead', 'D5', 3, 1], ['lead', 'F5', 4, 3], ['lead', 'A5', 7, 9], ['bass', 'D3', 0, 8], ['bass', 'A2', 8, 8]], x: [['k', 0], ['k', 8]] }
+  };
+  function sfx(name) {
+    var e = SFX[name]; if (!e || !on || !setup()) return;
+    var at = ctx.currentTime + 0.02;
+    e.n.forEach(function (n) { tone(n[0], freq(n[1]), at + n[2] * e.step, n[3] * e.step); });
+    e.x.forEach(function (x) { hit(x[0], at + x[1] * e.step); });
+  }
+  root.SacramentSoloMusic = { sfx: sfx, SFX: SFX, play: play, setOn: setOn, isOn: function () { return on; }, wanted: readOn, wake: wake, tunes: Object.keys(TUNES), TUNES: TUNES, parse: parse, freq: freq };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -20,10 +20,10 @@
 </head>
 <body class="solo">
 <header class="bar">
-  <a class="home" href="/">Sacrament RPG</a>
+  <a class="home" href="/"><img src="/favicon.svg" alt="" width="24" height="24">Sacrament RPG</a>
   <span class="where">Solo</span>
   <span class="grow"></span>
-  <button type="button" class="tb" id="musicBtn" aria-label="Music" aria-pressed="false">♪ Off</button>
+  <button type="button" class="tb" id="musicBtn" aria-label="Sound" aria-pressed="false">♪ Off</button>
   <button type="button" class="tb" id="heroBtn" hidden>Hero</button>
   <button type="button" class="tb" id="menuBtn" hidden>Menu</button>
 </header>
@@ -33,7 +33,7 @@
   <p class="kicker">A solo adventure in five scenes</p>
   <h1>The Pilgrim Road</h1>
   <p class="blurb" id="blurb"></p>
-  <p class="how">Play one hero alone, in words and pictures. Tap a choice, or type what you do. Every check, attack, find and point of Horror uses the Sacrament rules.</p>
+  <p class="how">Play one hero alone, in words and pictures. Tap what you do: each choice shows the roll it needs and what failing costs. Every check, attack, find and point of Horror uses the Sacrament rules.</p>
   <div id="resume"></div>
   <h2>Choose your hero</h2>
   <div id="mine" class="heroes"></div>
@@ -87,6 +87,17 @@
     <p id="aboutRoll" class="calling"></p>
     <p id="aboutDoes" class="does"></p>
     <form method="dialog"><button class="btn">Close</button></form>
+  </div>
+</dialog>
+
+<dialog id="won" class="sheet won" aria-labelledby="wonTitle">
+  <div class="sheet-in">
+    <p class="label">The road goes on</p>
+    <h2 id="wonTitle"></h2>
+    <p id="wonFinds" class="does"></p>
+    <p id="wonState" class="calling"></p>
+    <p id="wonNext" class="next"></p>
+    <form method="dialog"><button class="btn">On</button></form>
   </div>
 </dialog>
 

@@ -371,6 +371,22 @@
     var u = a.u || {}, src = u.spell || u.item || {};
     return { name: src.name || shortName(a), roll: src.roll || '', does: src.does || src.flavour || '', from: u.spell && u.item ? u.item.name : '' };
   }
+  /* What a choice risks, shown on its button before you pick it: the number the die must show, the chance of that, and what a failure costs here.
+     Found by trying the choice on a copy of the game with a low die (2: a failure, but not a natural 1). Nothing in the real game changes. */
+  function odds(s, adv, cmd) { adv = sceneOf(s) || adv;
+    if (!cmd || s.over) return null;
+    var copy = JSON.parse(JSON.stringify(s)), from = s.log.length;
+    try { act(copy, adv, cmd, function (n) { return n === 20 ? 2 : 1; }); } catch (e) { return null; }
+    var first = copy.log.slice(from).filter(function (l) { return l.outcome; })[0];
+    if (!first) return null;
+    var o = first.outcome, need = Math.max(1, o.target - o.mod), chance = Math.max(0, Math.min(20, 21 - need)) * 5;
+    var cost = [];
+    if (copy.hp.cur < s.hp.cur) cost.push('you are hurt');
+    if (copy.horror > s.horror) cost.push('Horror');
+    if (copy.fight && !s.fight) cost.push('a fight');
+    if (copy.over === 'dead') cost = ['it may kill you'];
+    return { need: Math.min(need, 21), chance: chance, note: o.note, cost: cost, attack: !!o.pendingDamage || /MISS/.test(o.label) };
+  }
   /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
   function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv) }; }
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
@@ -534,5 +550,5 @@
     enter(a2, adv.start);
   }
 
-  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, cards: cards, startRun: startRun, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);

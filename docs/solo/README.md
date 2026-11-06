@@ -57,3 +57,10 @@ You play one hero alone through short written adventures in the world of Sacrame
 4. **Ward on yourself.** Ward targets an ally; alone it shows "No use here". Whether it may target yourself is your call.
 6. **Balance.** In a simulated run with random choices about 4 runs in 10 reach the end. Easier or harder?
 5. Fonts are now the site's own (Cormorant Garamond, Source Sans 3).
+
+## Feedback and the home-page look (2026-11-06)
+
+* Every choice that rolls shows the number it needs, the chance, and what failing costs. The game works this out by playing the choice on a copy of the game with a low die (`odds()` in `engine.js`), so no adventure needs extra data and the real game is never touched.
+* Hits, wounds, Horror and finds can be felt: short sounds (when sound is on), numbers that float off the picture, a jolt on phones that support it, a small card for each find, and a "scene cleared" card. The picture darkens as Horror passes 7, 14 and 21 (looks only; no rule changed).
+* The page uses the home page's look: serif headings, gold tracked labels, red buttons with the double edge, a drop cap on each place.
+* Paintings: three places use the home page's paintings (cloister, crossroads, shrine). To add a painting, put it at `site/art/solo/<place>.webp` (about 1600 × 960) and add one line to `PAINT` in `art.js`; a foe painting goes at `site/art/solo/foe-<id>.webp` on a transparent background and one line in `FOE_PAINT`. A place without a painting keeps its drawn picture.

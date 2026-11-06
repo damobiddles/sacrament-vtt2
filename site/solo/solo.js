@@ -79,6 +79,8 @@
   function render() {
     tune(state.over === 'won' || state.done ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : MOOD[ADV().rooms[state.room].art] || 'gate');
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
+    /* the Horror darkens the picture a little at each threshold passed */
+    document.querySelector('.frame').dataset.dread = String(R.HORROR.thresholds.filter(function (n) { return state.horror >= n; }).length);
     var r = ADV().rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
   function heartRow(box, cur, max) {
@@ -146,7 +148,14 @@
     var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
     if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = c.why || 'No use here'; b.appendChild(no); }
-    else if (c.horror) { var sm = document.createElement('small'); sm.textContent = '+' + R.sayHorrorAmount(c.horror) + ' Horror'; b.appendChild(sm); }
+    else {
+      /* every choice that rolls shows its bet: the number needed, the chance, and what failing costs here */
+      var od = c.cmd && c.kind !== 'go' && c.kind !== 'plain' ? S.odds(state, ADV(), c.cmd) : null, bits = [];
+      if (od) bits.push(od.need > 20 ? 'Cannot succeed' : 'Need ' + od.need + '+ (' + od.chance + '%)' + (od.note ? ', ' + od.note : ''));
+      if (c.horror) bits.push('+' + R.sayHorrorAmount(c.horror) + ' Horror');
+      if (od && od.cost.length) bits.push('Fail: ' + od.cost.join(', '));
+      if (bits.length) { var sm = document.createElement('small'); sm.className = 'odds' + (od && od.chance <= 35 ? ' long' : ''); sm.textContent = bits.join(' · '); b.appendChild(sm); }
+    }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });
     if (!c.about || !c.about.does) return b;
     /* spells and items carry a small "?" that opens what they do, in the gear list's own words */
@@ -164,7 +173,7 @@
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
-    var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null;
+    var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
     S.act(state, ADV(), cmd, die);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
@@ -173,9 +182,54 @@
       var foe = document.querySelector('#art .who.foe'); if (foe) foe.classList.add('dying'); document.querySelectorAll('#art .foeflame').forEach(function (f) { f.classList.add('out'); });
       setTimeout(function () { dying = false; paint(); }, 1900);
     }
-    var frame = document.querySelector('.frame'); frame.classList.remove('hit', 'good');
-    void frame.offsetWidth;
-    if (state.hp.cur < hpBefore) frame.classList.add('hit'); else if (foeBefore != null && (!state.fight || state.fight.hp.cur < foeBefore)) frame.classList.add('good');
+    feel({ fresh: state.log.slice(before), hp: hpBefore, foe: foeBefore, horror: horrorBefore, done: doneBefore, place: place, slain: slain });
+  }
+  /* ---------- feeling it: what each action does to the picture, the sound and the phone ---------- */
+  function sfx(name) { if (M && M.sfx) M.sfx(name); }
+  function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch { /* not on this device */ } }
+  /* a number that rises from where the blow landed and fades: x and y in hundredths of the picture */
+  function float(text, x, y, cls) {
+    var f = document.createElement('span'); f.className = 'float ' + cls; f.textContent = text; f.style.left = x + '%'; f.style.top = y + '%';
+    document.querySelector('.frame').appendChild(f); setTimeout(function () { f.remove(); }, 1300);
+  }
+  function feel(o) {
+    var frame = document.querySelector('.frame'), checks = o.fresh.filter(function (l) { return l.outcome; }), last = checks[checks.length - 1];
+    frame.classList.remove('hit', 'good'); void frame.offsetWidth;
+    var spot = ART.spot(o.place), foeLoss = o.foe != null ? o.foe - (state.fight ? state.fight.hp.cur : 0) : 0, hpLoss = o.hp - state.hp.cur;
+    if (foeLoss > 0) {
+      frame.classList.add('good'); float('-' + foeLoss, (spot[0] + 40 * spot[2]) / 3.2, Math.max(8, spot[1] - 6) / 1.92, 'dmg');
+      var foe = document.querySelector('#art .who.foe'); if (foe && !o.slain) { foe.classList.remove('flinch'); void foe.getBoundingClientRect(); foe.classList.add('flinch'); }
+      sfx(o.fresh.some(function (l) { return l.outcome && l.outcome.critical; }) || /natural 20/i.test(o.fresh.map(function (l) { return l.t; }).join(' ')) ? 'crit' : 'hit');
+    } else if (last && !last.outcome.success && !last.foeAttack) sfx('miss');
+    if (hpLoss > 0) { frame.classList.add('hit'); float('-' + hpLoss, 26, 48, 'hurt'); buzz(70); setTimeout(function () { sfx('hurt'); }, foeLoss > 0 ? 160 : 0); }
+    else if (last && last.foeAttack && !last.outcome.success) sfx('miss');
+    if (state.horror > o.horror) {
+      setTimeout(function () { sfx('horror'); }, 250);
+      var pips = $('pips'); pips.classList.remove('pulse'); void pips.offsetWidth; pips.classList.add('pulse');
+      if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) buzz([40, 60, 40]);
+    } else if (state.horror >= 14 && !state.over) setTimeout(function () { sfx('heart'); }, 400);
+    var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
+    if (finds.length) { setTimeout(function () { sfx('find'); }, 300); finds.forEach(function (l, n) { setTimeout(function () { toast(l.t); }, 350 + n * 900); }); }
+    if (state.done && !o.done) { setTimeout(victory, 900); }
+  }
+  /* a find: its card slides in over the picture for a moment */
+  function toast(text) {
+    var m = /^[^:]*:\s*([^.]+)\.\s*(.*)$/.exec(text), t = document.createElement('div');
+    t.className = 'toast'; t.setAttribute('role', 'status');
+    var k = document.createElement('small'); k.textContent = 'You found'; var b = document.createElement('b'); b.textContent = m ? m[1] : text;
+    t.append(k, b); document.querySelector('.stage').appendChild(t); setTimeout(function () { t.classList.add('gone'); }, 2600); setTimeout(function () { t.remove(); }, 3200);
+  }
+  /* a scene won: what it gave you, where you stand, and what lies ahead */
+  function victory() {
+    var run = state.run; if (!run) return;
+    var from = 0; state.log.forEach(function (l, n) { if (l.k === 'title') from = n; });
+    var finds = state.log.slice(from).filter(function (l) { return l.k === 'loot'; }).map(function (l) { var m = /:\s*([^.]+)\./.exec(l.t); return m ? m[1] : l.t; });
+    var next = S.sceneAt(state, run.at + 1), d = $('won');
+    $('wonTitle').textContent = 'Scene ' + (run.at + 1) + ' of ' + run.order.length + ' cleared';
+    $('wonFinds').textContent = finds.length ? 'Found: ' + finds.join(', ') + '.' : 'Nothing found this time.';
+    $('wonState').textContent = 'HP ' + state.hp.cur + ' of ' + state.hp.max + ' · Horror ' + state.horror + ' of ' + R.HORROR.max;
+    $('wonNext').textContent = next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
+    if (!d.open) d.showModal();
   }
   /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */
   function roll(fresh) {
@@ -242,6 +296,6 @@
   $('restartBtn').addEventListener('click', function () { $('menu').close(); begin(state.origin); });
   $('newHeroBtn').addEventListener('click', function () { $('menu').close(); forget(); showStart(); });
 
-  window.__solo = { state: function () { return state; }, run: run };
+  window.__solo = { state: function () { return state; }, run: run, victory: function () { victory(); } };
   showStart();
 })();
