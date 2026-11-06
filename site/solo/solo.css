@@ -143,7 +143,21 @@
 .ch.use{background:var(--verdigris-deep);color:#e6f1ec;border-color:#4f8574}
 .ch.push{background:#5b4316;color:#f6e7c3;border-color:var(--candle)}
 .ch.plain{background:var(--bg);color:var(--fg);border-color:var(--edge)}
-.ch.wide{grid-column:1/-1}
+.ch.wide,.chw.wide{grid-column:1/-1}
+.chw{display:flex;gap:4px;min-width:0}
+.chw .ch{flex:1;min-width:0}
+.why{flex:none;width:44px;min-height:44px;font:700 1.1rem var(--px);color:var(--fg);background:var(--bg);border:1px solid var(--edge);cursor:pointer}
+.why:hover{color:var(--candle);border-color:var(--candle)}
+.meter.target .num{color:var(--candle)}
+.tag{font:600 .8rem/1 var(--label);color:#f3d8a8;background:#4a2f12;border:1px solid var(--candle);padding:3px 6px}
+.sheet .does{line-height:1.5;margin:8px 0 14px}
+.gear .spell{margin:6px 0 0;font:400 .9rem/1.4 var(--body);color:var(--fg)}
+/* the foe's end: it sags, melts into its own wax and its flame goes out */
+.art .who.foe.dying .sway{transform-box:fill-box;transform-origin:50% 100%;animation:solo-melt 1.8s ease-in forwards}
+.art .foeflame.out{animation:solo-snuff .7s ease-out forwards !important}
+.art .who.foe.dying .flame{animation:solo-snuff .7s ease-out forwards}
+@keyframes solo-melt{0%{transform:none;opacity:1;filter:none}25%{transform:scale(1.04,.96)}60%{transform:scale(1.25,.45);opacity:.9;filter:brightness(1.4)}100%{transform:scale(1.45,.05);opacity:0;filter:brightness(.4)}}
+@keyframes solo-snuff{0%{opacity:1}100%{opacity:0;transform:translateY(-6px) scaleX(.3)}}
 .ch small{display:block;font:400 .82rem var(--body);opacity:1;color:inherit;margin-top:1px}
 .cmd{display:flex;align-items:center;gap:6px;margin-top:8px}
 .cmd .prompt{font:700 1.4rem/1 var(--display);color:var(--candle)}

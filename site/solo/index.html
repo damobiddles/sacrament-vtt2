@@ -56,6 +56,7 @@
     <div id="turns" class="turns" hidden></div>
     <div class="hud">
       <div class="meter hp"><span class="lbl">HP</span><span id="hearts" class="hearts"></span><span id="hpText" class="num"></span></div>
+      <div class="meter target" title="The number a check or attack must reach in this scene"><span class="lbl">Target</span><span id="targetText" class="num"></span><span id="darkText" class="tag" hidden>Hard: dark</span></div>
       <div class="meter horror"><span class="lbl">Horror</span><span id="pips" class="pips"></span><span id="horrorText" class="num"></span></div>
     </div>
   </div>
@@ -80,6 +81,15 @@
     <h3>Equipped</h3><ul id="sheetEq" class="gear"></ul>
     <h3>Pack</h3><ul id="sheetPack" class="gear"></ul>
     <p class="fine">A copy of your hero for this adventure. Finds stay with this copy.</p>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </div>
+</dialog>
+
+<dialog id="about" class="sheet" aria-labelledby="aboutName">
+  <div class="sheet-in">
+    <h2 id="aboutName"></h2>
+    <p id="aboutRoll" class="calling"></p>
+    <p id="aboutDoes" class="does"></p>
     <form method="dialog"><button class="btn">Close</button></form>
   </div>
 </dialog>

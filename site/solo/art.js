@@ -202,7 +202,7 @@
     id = id || 'a';
     var fn = SCENES[name] || SCENES.title, body = fn(s, id);
     if (s && s.fight) { var f = s.fight, fx = name === 'crypt' ? 170 : 196; body += eater(id, fx, name === 'crypt' ? 60 : 64, 0.78, f.hp.cur / f.hp.max); }
-    if (name === 'crypt') { var lit = s && (s.flags.lit || hasLight(s)); body += dark(id, lit ? [120, 140] : null); if (s && s.fight) body += '<ellipse class="flame" cx="' + (name === 'crypt' ? 205 : 231) + '" cy="64" rx="2.4" ry="4" fill="#ffa040" opacity=".9"/>'; }
+    if (name === 'crypt') { var lit = s && (s.flags.lit || hasLight(s)); body += dark(id, lit ? [120, 140] : null); if (s && s.fight) body += '<ellipse class="flame foeflame" cx="' + (name === 'crypt' ? 205 : 231) + '" cy="64" rx="2.4" ry="4" fill="#ffa040" opacity=".9"/>'; }
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">' + defs(id) + body + grain(id) + '</svg>';
   }
   /* a small picture for a kind of gear, for the hero sheet */

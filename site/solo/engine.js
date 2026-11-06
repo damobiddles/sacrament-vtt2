@@ -246,20 +246,27 @@
       var f = s.fight;
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
       if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
-      if (f.phase === 'push') { heroActions(s).filter(function (a) { return a.ok && a.cat && !a.healing; }).forEach(function (a) { out.push({ label: 'Push: ' + shortName(a), cmd: 'push ' + actionKey(a).slice(4), kind: 'push', horror: R.HORROR.push }); }); if (!out.length) out.push({ label: 'Push: bare hands', cmd: 'push punch', kind: 'push', horror: R.HORROR.push }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
+      if (f.phase === 'push') { heroActions(s).filter(function (a) { return a.ok && a.cat && !a.healing; }).forEach(function (a) { out.push({ label: 'Push: ' + shortName(a), cmd: 'push ' + actionKey(a).slice(4), kind: 'push', horror: R.HORROR.push, about: aboutOf(a) }); }); if (!out.length) out.push({ label: 'Push: bare hands', cmd: 'push punch', kind: 'push', horror: R.HORROR.push }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       var attacks = heroActions(s).filter(function (a) { return a.ok && (a.cat && !a.healing); });
-      attacks.forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'attack', horror: a.horror || 0 }); });
+      attacks.forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'attack', horror: a.horror || 0, about: aboutOf(a) }); });
       if (!attacks.some(function (a) { return !a.spellId; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
-      heroActions(s).filter(function (a) { return a.ok && (a.healing || (!a.cat && a.spellId)); }).forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0 }); });
+      heroActions(s).filter(function (a) { return a.ok && (a.healing || (!a.cat && a.spellId)); }).forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) }); });
       return out;
     }
     var r = adv.rooms[s.room];
     (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
-    heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : !a.cat && a.spellId); }).forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0 }); });
+    heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : !a.cat && a.spellId); }).forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) }); });
     return out;
   }
   function shortName(a) { return a.name.replace(/ \([^)]*\)$/, ''); }
+  /* What a spell or item does, in the gear list's own words: for the "What it does" card. */
+  function aboutOf(a) {
+    var u = a.u || {}, src = u.spell || u.item || {};
+    return { name: src.name || shortName(a), roll: src.roll || '', does: src.does || src.flavour || '', from: u.spell && u.item ? u.item.name : '' };
+  }
+  /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
+  function sceneInfo(s, adv) { var r = adv.rooms[s.room]; return { target: int(adv.target, 12), dark: !!(r && r.dark) && !lit(s) }; }
   function exitOf(api, r, d) { var e = r.exits[d]; if (!e) return null; if (typeof e === 'string') e = { to: e }; if (e.when && !e.when(api)) return e.closed ? { to: e.to, closed: e.closed, hidden: true } : null; return e; }
 
   /* ---------- typed words become commands ---------- */
@@ -349,5 +356,5 @@
   /* ---------- saving ---------- */
   function valid(s, adv) { return !!s && s.v === VERSION && s.adventure === adv.id && !!adv.rooms[s.room] && !!s.hero && !!s.hp; }
 
-  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions };
+  root.SacramentSolo = { VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -7,7 +7,7 @@
   var ADV = window.SacramentSoloAdventures['silent-bell'];
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
-  var state = null, shown = 0, lastArt = '';
+  var state = null, shown = 0, lastArt = '', dying = false;
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
@@ -53,7 +53,7 @@
   /* ---------- the game screen ---------- */
   function showGame(fresh) {
     document.body.classList.add('playing'); $('start').hidden = true; $('game').hidden = false; $('heroBtn').hidden = false; $('menuBtn').hidden = false;
-    $('log').textContent = ''; shown = 0; lastArt = '';
+    $('log').textContent = ''; shown = 0; lastArt = ''; dying = false;
     renderLog(!fresh); render();
     window.scrollTo(0, 0);
   }
@@ -81,6 +81,9 @@
     for (var j = 1; j <= R.HORROR.max; j++) { var d = document.createElement('span'); d.className = 'pip' + (j <= state.horror ? ' on' : '') + (R.HORROR.thresholds.indexOf(j) >= 0 && j < R.HORROR.max ? ' mark' : ''); pips.appendChild(d); }
     pips.setAttribute('aria-hidden', 'true');
     $('horrorText').textContent = state.horror + '/' + R.HORROR.max;
+    var info = S.sceneInfo(state, ADV);
+    $('targetText').textContent = String(info.target);
+    $('darkText').hidden = !info.dark;
   }
   /* The turn order, as on the table's strip: whose turn it is, and the round. */
   function renderTurns() {
@@ -118,14 +121,31 @@
     b.textContent = c.label;
     if (c.horror) { var sm = document.createElement('small'); sm.textContent = '+' + R.sayHorrorAmount(c.horror) + ' Horror'; b.appendChild(sm); }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });
-    return b;
+    if (!c.about || !c.about.does) return b;
+    /* spells and items carry a small "?" that opens what they do, in the gear list's own words */
+    var w = document.createElement('div'), q = document.createElement('button');
+    w.className = 'chw'; q.type = 'button'; q.className = 'why'; q.textContent = '?'; q.setAttribute('aria-label', 'What ' + c.about.name + ' does');
+    q.addEventListener('click', function () { showAbout(c.about); });
+    w.append(b, q); return w;
+  }
+  function showAbout(a) {
+    $('aboutName').textContent = a.name;
+    $('aboutRoll').textContent = [a.from ? 'From ' + a.from : '', a.roll ? 'Roll ' + a.roll + ' against Target ' + S.sceneInfo(state, ADV).target : 'No roll'].filter(Boolean).join(' · ');
+    $('aboutDoes').textContent = a.does;
+    $('about').showModal();
   }
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
     var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null;
     S.act(state, ADV, cmd, die);
+    var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !reduceMotion();
+    if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
     save(); renderLog(false); render(); roll(state.log.slice(before));
+    if (slain) {
+      var foe = document.querySelector('#art .who.foe'); if (foe) foe.classList.add('dying'); document.querySelectorAll('#art .foeflame').forEach(function (f) { f.classList.add('out'); });
+      setTimeout(function () { dying = false; paint(); }, 1900);
+    }
     var frame = document.querySelector('.frame'); frame.classList.remove('hit', 'good');
     void frame.offsetWidth;
     if (state.hp.cur < hpBefore) frame.classList.add('hit'); else if (foeBefore != null && (!state.fight || state.fight.hp.cur < foeBefore)) frame.classList.add('good');
@@ -148,8 +168,9 @@
   });
 
   /* ---------- pictures ---------- */
+  function reduceMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
   function paint() {
-    if (!state) return;
+    if (!state || dying) return;
     var html = ART.scene(ADV.rooms[state.room].art, state, 'g');
     if (html !== lastArt) { $('art').innerHTML = html; lastArt = html; }
   }
@@ -174,7 +195,12 @@
       var li = document.createElement('li'), img = document.createElement('img'), div = document.createElement('div'), sm = document.createElement('small');
       img.src = ART.icon(it.kind); img.alt = '';
       div.textContent = it.name + (it.uses != null && g.uses != null ? ' (' + g.uses + ' left)' : '');
-      sm.textContent = it.does || it.flavour || ''; div.appendChild(sm); li.append(img, div); ul.appendChild(li);
+      sm.textContent = it.does || it.flavour || ''; div.appendChild(sm);
+      if (it.kind === 'grimoire') C.spellsOf(it).forEach(function (sp) {
+        var p = document.createElement('p'), b = document.createElement('b'); p.className = 'spell'; b.textContent = sp.name + (sp.roll ? ' (' + sp.roll + ')' : '') + ': ';
+        p.append(b, document.createTextNode(sp.does || '')); div.appendChild(p);
+      });
+      li.append(img, div); ul.appendChild(li);
     });
     if (!any) { var li = document.createElement('li'); li.className = 'none'; li.textContent = 'Nothing.'; ul.appendChild(li); }
   }

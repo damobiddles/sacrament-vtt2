@@ -110,3 +110,13 @@ test('the soundtrack: every room has a tune, every note is a real note, and ever
     assert.ok(lengths.every((l) => l === lengths[0]), name + ' voices differ in length: ' + lengths.join(', '));
   }
 });
+
+test('the scene Target is always known, the dark is flagged, and every spell button says what the spell does', () => {
+  const rnd = seeded(3), die = (n) => 1 + Math.floor(rnd() * n), s = S.start(T.generate('scholar', rnd), A, die);
+  assert.deepEqual(S.sceneInfo(s, A), { target: 12, dark: false });
+  const spells = S.choices(s, A).filter((c) => c.kind === 'spell');
+  assert.ok(spells.length > 0, 'the scholar has spells to cast');
+  for (const c of spells) assert.ok(c.about && c.about.does.length > 20 && c.about.name, c.label + ' has no description');
+  s.room = 'crypt'; s.hero.gear = []; s.flags.lit = false;
+  assert.equal(S.sceneInfo(s, A).dark, true, 'an unlit crypt is dark');
+});
