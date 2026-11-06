@@ -127,7 +127,6 @@
   }
   function renderChoices() {
     var box = $('choices'); box.textContent = '';
-    $('cmd').hidden = !!state.over;
     if (state.over) {
       var again = choiceButton({ label: state.over === 'won' ? 'Play it again' : 'Try again', cmd: '' }, 'ch');
       again.addEventListener('click', function () { begin(state.origin); });
@@ -190,10 +189,6 @@
     var plain = fresh.filter(function (l) { return l.dice; });
     if (plain.length) { var p = plain[plain.length - 1]; D.show(p.dice, p.by === 'hero' ? state.hero.name : '', true); }
   }
-  $('cmd').addEventListener('submit', function (e) {
-    e.preventDefault(); var inp = $('cmdIn'), t = inp.value; inp.value = ''; if (!t.trim() || !state) return;
-    run(S.parse(state, ADV(), t));
-  });
 
   /* ---------- pictures ---------- */
   function reduceMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
