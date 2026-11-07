@@ -350,12 +350,17 @@
       else if (l.k === 'room' && (!pick || pick.k === 'room')) { var next = fresh[i + 1], first = next && next.k === 'say' ? (/^.*?[.!?](\s|$)/.exec(next.t) || [next.t])[0] : ''; pick = { title: l.t, t: first.trim(), k: 'room' }; }
       else if (l.k === 'horror' && /^The Horror (stirs|draws near|has arrived)/.test(l.t) && (!pick || pick.k === 'room')) pick = { t: l.t, k: 'horror' };
     });
+    /* a spell or item you used: what it did goes on the picture, so a use never looks like it did nothing (a Horror threshold it crossed rides along) */
+    var at = -1; fresh.forEach(function (l, i) { if (at < 0 && l.k === 'act' && /^You (push, and )?(use|cast) /.test(l.t)) at = i; });
+    var did = at < 0 ? null : fresh.slice(at + 1).filter(function (l) { return ['roll', 'horror', 'act', 'cmd', 'loot'].indexOf(l.k) < 0 && !/ against (Target|Defence) /.test(l.t) && !/^(You are shaken|You are hunted|There is no more rest)/.test(l.t); })[0];
+    if (did && (!pick || pick.k === 'room' || pick.k === 'horror')) pick = { t: did.t, k: 'use', sub: pick && pick.k === 'horror' ? pick.t : '' };
     if (!pick) return;
     var old = document.querySelector('.frame .caption'); if (old) old.remove();
     var held = Array.prototype.slice.call(document.querySelectorAll('.stage .toast'));   /* a find still showing joins the caption, so the two never sit on each other */
     var c = document.createElement('button'); c.type = 'button'; c.className = 'caption k-' + pick.k;
     if (pick.title) { var b = document.createElement('b'); b.textContent = pick.title; c.appendChild(b); }
     if (pick.t) { var s = document.createElement('span'); withNames(s, pick.t); c.appendChild(s); }
+    if (pick.sub) { var d = document.createElement('small'); d.className = 'dread'; d.textContent = pick.sub; c.appendChild(d); }
     c.addEventListener('click', function () { c.remove(); whole = false; foldLog(); var l = $('log'); l.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); });
     document.querySelector('.frame').appendChild(c);
     held.forEach(function (t) { var k = t.querySelector('small'), b = t.querySelector('b'); t.remove(); if (b) addFound(c, k ? k.textContent : '', b.textContent); });
@@ -408,6 +413,16 @@
     $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
     $('endSaved').hidden = true;
     var d = $('end'); clearOverlays(); if (!d.open) d.showModal();
+    squeeze($('endCard').querySelector('svg'));
+  }
+  /* the card's lines are wrapped for Georgia; a device with a wider font could still push a line past the border, so any line that would is drawn a little narrower */
+  function squeeze(svg) {
+    if (!svg) return; var W = +svg.getAttribute('width') || 360, edge = 24;
+    svg.querySelectorAll('text').forEach(function (t) {
+      var bb; try { bb = t.getBBox(); } catch { return; }
+      var mid = t.getAttribute('text-anchor') === 'middle', room = mid ? W - 2 * edge : W - edge - bb.x;
+      if (bb.width > room) { t.setAttribute('textLength', String(Math.floor(room))); t.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
+    });
   }
   function saveCard() {
     var el = $('endCard').querySelector('svg'); if (!el) return;

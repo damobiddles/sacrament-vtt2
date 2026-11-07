@@ -774,3 +774,32 @@ test('Gussetweasel, the Necromancer gives a light to a hero with none; a hero wi
     else assert.match(words, /Gussetweasel, the Necromancer gives you: Hooded Lantern/);
   }
 });
+
+test('a lasting effect (the Cord of Quiet Hours: silenced until the end of the scene) works once on a foe; again it shows "Already done" and costs nothing', () => {
+  const C = globalThis.SacramentSheetCore;
+  let checked = 0;
+  for (let seed = 1; seed <= 120 && checked < 2; seed++) {
+    const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', die);
+    for (let i = 0; i < 300 && !s.over; i++) {
+      const f = s.fight, foe = f && S.sceneOf(s).foes[f.foe];
+      if (f && foe.caster && f.phase === 'hero' && !f.skip) {
+        C.edit(s.hero, { op: 'add', id: 'quietcord' }, { gm: true }, s.hp);
+        const cord = () => S.choices(s).find((c) => /Cord of Quiet Hours/.test(c.label));
+        if (!cord() || cord().idle) break;
+        S.act(s, null, cord().cmd, () => 10);
+        assert.match(s.log.map((l) => l.t).join(' '), /cannot get the words out/);
+        while (s.fight && s.fight.phase !== 'hero' && !s.over) S.act(s, null, S.choices(s).find((c) => c.cmd === 'foe' || c.cmd === 'damage').cmd, () => 10);
+        if (!s.fight || s.over) break;
+        const again = cord(), h = s.horror;
+        assert.ok(again && again.idle, 'the second time it is not offered as useful');
+        assert.match(again.why, /Already done/);
+        S.act(s, null, again.cmd, () => 10);
+        assert.equal(s.horror, h, 'using it again costs no Horror');
+        checked++; break;
+      }
+      const ch = S.choices(s), pick = ch.find((c) => c.kind === 'attack') || ch.find((c) => c.cmd === 'damage') || ch.find((c) => c.cmd === 'foe') || ch.find((c) => c.kind === 'do') || ch[Math.floor(rnd() * ch.length)];
+      if (!pick) break; S.act(s, null, pick.cmd, die);
+    }
+  }
+  assert.ok(checked > 0, 'a fight with a foe that casts was found');
+});

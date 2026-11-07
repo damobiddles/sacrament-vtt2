@@ -669,6 +669,8 @@
     String(text || '').split(/\s+/).forEach(function (w) { if (!w) return; if (line && (line + ' ' + w).length > n) { out.push(line); line = w; } else line = line ? line + ' ' + w : w; });
     if (line) out.push(line); return out;
   }
+  /* wrap to a width in the card's own units: Georgia runs about 0.55 of its size a letter (0.6 bold), so the line breaks before the edge, never past it */
+  function fit(text, size, width, bold) { return wrap(text, Math.max(8, Math.floor(width / (size * (bold ? 0.58 : 0.52))))); }
   var ENDS = { won: 'Came home', dead: 'Fell on the road', fled: 'Got away' };
   function endCard(sum, s, when) {
     var CW = 360, F = ' font-family="Georgia, \'Times New Roman\', serif"', y = 0, body = '';
@@ -679,23 +681,23 @@
     body += text(CW / 2, 76, ENDS[sum.end] || 'The road', 28, { anchor: 'middle', fill: sum.end === 'won' ? P.lapis : P.verm, bold: true });
     body += '<path d="M120 90 H240" stroke="' + P.gold + '" stroke-width="1.4"/><circle cx="180" cy="90" r="3" fill="' + P.gold + '"/>';
     body += hero(s, 'e', 34, 104, 0.82, false);
-    y = 128; lines(wrap(sum.hero, 20), 20, { x: 100, bold: true });
-    if (sum.calling) lines(wrap(sum.calling, 30), 13, { x: 100, fill: P.umber });
+    y = 128; lines(fit(sum.hero, 20, 230, true), 20, { x: 100, bold: true });
+    if (sum.calling) lines(fit(sum.calling, 13, 230), 13, { x: 100, fill: P.umber });
     y += 4; lines(['Highest Horror: ' + sum.peak + ' of ' + sum.horrorMax], 13, { x: 100 });
     y = Math.max(y, 222);
     head('The road' + (sum.to ? ' to ' + sum.to : ''));
     sum.places.forEach(function (pl, k) {
       var last = k === sum.places.length - 1, mark = last && sum.end === 'dead' ? ' (fell here)' : last && sum.end === 'fled' ? ' (got away)' : '';
-      lines(wrap((k + 1) + '. ' + pl + mark, 44), 14, { bold: last && sum.end === 'won' && k === sum.total - 1 });
+      var b = last && sum.end === 'won' && k === sum.total - 1; lines(fit((k + 1) + '. ' + pl + mark, 14, 300, b), 14, { bold: b });
     });
     if (sum.places.length < sum.total) lines([(sum.total - sum.places.length) + ' more ' + (sum.total - sum.places.length === 1 ? 'place' : 'places') + ' not reached'], 12, { fill: P.umber, italic: true });
     head('Foes beaten');
-    lines(sum.beaten.length ? wrap(sum.beaten.join(', ') + '.', 46) : ['None.'], 14);
+    lines(sum.beaten.length ? fit(sum.beaten.join(', ') + '.', 14, 300) : ['None.'], 14);
     head(sum.end === 'won' ? 'Brought home' : 'Carried at the end');
-    lines(sum.finds.length ? wrap(sum.finds.join(', ') + '.', 46) : ['Nothing found on the road.'], 14);
-    if (sum.deeds && sum.deeds.length) { head('Deeds earned'); lines(wrap(sum.deeds.join(', ') + '.', 46), 14, { bold: true }); }
-    if (sum.used && sum.used.length) { head('Put to use'); lines(wrap(sum.used.join(', ') + '.', 46), 14); }
-    if (sum.line) { y += 18; lines(wrap(sum.line, 40), 15, { anchor: 'middle', x: CW / 2, italic: true, fill: P.umber }); }
+    lines(sum.finds.length ? fit(sum.finds.join(', ') + '.', 14, 300) : ['Nothing found on the road.'], 14);
+    if (sum.deeds && sum.deeds.length) { head('Deeds earned'); lines(fit(sum.deeds.join(', ') + '.', 14, 300, true), 14, { bold: true }); }
+    if (sum.used && sum.used.length) { head('Put to use'); lines(fit(sum.used.join(', ') + '.', 14, 300), 14); }
+    if (sum.line) { y += 18; lines(fit(sum.line, 15, 290), 15, { anchor: 'middle', x: CW / 2, italic: true, fill: P.umber }); }
     y += 30; body += text(CW / 2, y, 'Sacrament RPG · Solo' + (when ? ' · ' + when : ''), 10, { anchor: 'middle', fill: P.earth, spacing: 1 });
     var CH = y + 26;
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + CW + ' ' + CH + '" width="' + CW + '" height="' + CH + '">'
