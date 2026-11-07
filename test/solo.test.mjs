@@ -226,7 +226,7 @@ test('between scenes the hero may rest once, then goes on; the next scene starts
 
 test("the owner's people of the road: a run meets up to three, never in the last scene, and their names are the owner's", () => {
   const names = globalThis.SacramentSoloCameos.map((c) => c.name);
-  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar']);
+  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar', 'Gussetweasel, the Necromancer']);
   for (let seed = 1; seed <= 50; seed++) {
     const rnd = seeded(seed), s = S.startRun(T.generate('scout', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n)), c = s.run.cameos;
     assert.equal(c.length, 5); assert.equal(c[4], ''); const met = c.filter(Boolean); assert.ok(met.length <= 3 && met.length >= 1); assert.equal(new Set(met).size, met.length);
@@ -758,4 +758,19 @@ test('two of the same item in the pack make one button, not two the same', () =>
   const labels = S.choices(s, A).map((c) => c.kind + '|' + c.label);
   assert.ok(labels.some((l) => /Bandages/.test(l)), 'the bandages are offered');
   assert.equal(new Set(labels).size, labels.length, 'no two buttons say the same thing: ' + labels.join(', '));
+});
+
+test('Gussetweasel, the Necromancer gives a light to a hero with none; a hero with a light hears what his bats have seen', () => {
+  const C = globalThis.SacramentSheetCore, LIGHTS = ['lantern', 'candles', 'stubs', 'candle', 'lastrites', 'drownedlantern'];
+  for (const withLight of [false, true]) {
+    const rnd = seeded(3), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n));
+    s.hero.gear = (s.hero.gear || []).filter((g) => !LIGHTS.includes((C.itemOf(g) || {}).id));
+    if (withLight) C.edit(s.hero, { op: 'add', id: 'lantern' }, { gm: true }, s.hp);
+    s.run.cameos[s.run.at] = 'gussetweasel';
+    S.act(s, null, 'meet gussetweasel', fixed([10]));
+    const words = s.log.map((l) => l.t).join(' ');
+    assert.match(words, /My amazing invisible bats/);
+    if (withLight) { assert.match(words, /next foe's ways/); assert.doesNotMatch(words, /gives you: Hooded Lantern/); }
+    else assert.match(words, /Gussetweasel, the Necromancer gives you: Hooded Lantern/);
+  }
 });
