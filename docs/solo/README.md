@@ -44,6 +44,7 @@ You play one hero alone through short written adventures in the world of Sacrame
 | `site/solo/engine.js` | The engine: no page, no clock, no random source (dice are passed in). Tested by `test/solo.test.mjs`. |
 | `site/solo/adventure-silent-bell.js` | The Silent Bell (a middle scene): words, places, one foe. Words only; numbers come from the rules. |
 | `site/solo/road.js` | The Pilgrim Road: the run's other eight scenes and the five friends on the road. |
+| `site/solo/road-wilds.js` | More middle scenes for the road: the Hospice at Dray, the Charcoal Wood, the Toll Bridge at Crane's Holt. |
 | `site/solo/art.js` | The pictures, as illuminated miniatures (SVG). |
 | `site/solo/music.js` | The 8-bit soundtrack (Web Audio, no files). |
 | `site/solo/solo.js`, `solo.css`, `index.html` | The screen. Saves the game in the browser under `sacrament-solo-v1`. |

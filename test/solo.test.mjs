@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -439,4 +439,29 @@ test('bind holds a foe only after a successful check; a story item is offered an
   const b = S.start(hero, A, fixed([10])); S.act(b, A, 'go north', fixed([10])); S.act(b, A, 'go down', fixed([10]));
   const flute = S.choices(b, A).find((x) => x.label.startsWith('Use ') && /flute/i.test(x.label)); assert.ok(flute && !flute.idle, 'the flute is offered in a fight');
   S.act(b, A, flute.cmd, fixed([20])); assert.equal(b.fight.dim, 3, 'Dazed, as its words say');
+});
+
+/* ---------- more scenes on the road (owner, 2026-11-06): the hospice, the charcoal wood, the toll bridge ---------- */
+test('three new middle scenes join the road, and each gives the spell tags something to answer', () => {
+  for (const id of ['hospice', 'wood', 'bridge']) { assert.ok(ROAD.scenes.includes(id), id); assert.equal(ADVS[id].act, 'middle'); }
+  /* the hospice: salt at the door burns the Lullaby Sister, knowing her name makes the first blow Easy, and Hush silences her song */
+  const hospice = ADVS.hospice, hero = T.generate('scholar', seeded(4)); hero.gear = [{ id: 'quietmouths', eq: true }, { id: 'saltpouch', eq: false }];
+  let s = S.start(hero, hospice, fixed([20]));
+  S.act(s, hospice, 'do salt', fixed([20])); S.act(s, hospice, 'do register', fixed([20])); S.act(s, hospice, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'sister'); assert.equal(s.fight.hp.cur, 8, 'the salt burned her'); assert.ok(s.fight.easy >= 1);
+  S.act(s, hospice, cast(s, 'Hush').cmd, fixed([10])); assert.equal(s.fight.skip, 1, 'she cannot sing: she loses her next attack');
+  /* the wood: three failed tries bring the Cinder Boar out of the smoke; snuffing its fire costs it an attack */
+  const wood = ADVS.wood, h2 = T.generate('scholar', seeded(4)); h2.gear = [{ id: 'processional', eq: true }];
+  s = S.start(h2, wood, fixed([2]));
+  for (let i = 0; i < 3; i++) S.act(s, wood, 'do cut', fixed([2]));
+  assert.equal(s.fight && s.fight.foe, 'boar');
+  S.act(s, wood, cast(s, 'Snuffed Candle').cmd, fixed([10])); assert.equal(s.fight.skip, 1);
+  /* the bridge: nobody crosses until the toll-keeper is answered or beaten, not even by a spell */
+  const bridge = ADVS.bridge, h3 = T.generate('scholar', seeded(4)); h3.gear = [{ id: 'lodestone', eq: true }];
+  s = S.start(h3, bridge, fixed([10]));
+  assert.ok(!S.choices(s, bridge).some((c) => /way span|do cross/.test(c.cmd)), 'the toll-keeper stands in the road');
+  const beam = cast(s, 'Held Beam'); assert.ok(beam && beam.idle, 'no spell gets you past him either');
+  S.act(s, bridge, 'do answer', fixed([20])); assert.equal(s.flags.passed, true);
+  assert.ok(S.choices(s, bridge).some((c) => c.cmd === 'way span sound'));
+  S.act(s, bridge, cast(s, 'Held Beam').cmd, fixed([20])); assert.equal(s.bars.span, 3, 'the bridge holds still: half of what is left');
 });
