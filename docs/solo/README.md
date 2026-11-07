@@ -89,3 +89,5 @@ Every obstacle offers at least two ways through instead of one button to press a
 * Every failed try ticks the obstacle's **clock**. When it runs out something gets worse: the rain makes every try Hard (wheel), the flood rises (ford), bones wake (+2 Horror, grille), the Hag comes (salt), the Eater wakes (door).
 
 New obstacles only need data: `ways`, `clock` (a timer with `tick: 'fail'`), and optional `hard(api)` / `progress(api)`. No rules changed: these are the solo game's own GM calls.
+
+**The Hard Road (owner's tick, 2026-11-07):** opens after three roads come home (counted from the Chronicle). A switch on the start screen turns it on: the same road with one more middle scene, every Target 1 higher and every foe 2 more HP (the GM's numbers, so no rule changes; `SacramentSolo.HARD`). The Chronicle, the end card and a deed ("The Hard Road home") mark it.

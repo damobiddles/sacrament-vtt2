@@ -42,7 +42,7 @@
       say: function (t, k, extra) { if (!t) return; s.log.push(Object.assign({ k: k || 'say', t: String(t) }, extra || null)); if (s.log.length > LOG_LIMIT) s.log.splice(0, s.log.length - LOG_LIMIT); },
       flag: function (k, v) { if (arguments.length > 1) s.flags[k] = v; return s.flags[k]; },
       room: function () { return adv.rooms[s.room]; },
-      target: function () { return int(adv.target, 12); },
+      target: function () { return int(adv.target, 12) + hardTarget(s); },
       dark: function () { return isDark(s, adv); },
       lit: function () { return lit(s); },
       has: function (test) { return carried(s, test); },
@@ -357,6 +357,7 @@
     api.say(typeof f.appears === 'function' ? f.appears(api) : f.appears, 'foe');
     /* forewarned (Simon the Scholar): the hero has read about this foe, so their first attack against it is Easy, as when learning a foe's ways */
     if (api.story('forewarned')) { api.story('forewarned', false); api.s.fight.easy = 1; api.s.fight.learned = true; api.say('You have read about this one. Your first attack against it is Easy.', 'note'); }
+    if (api.s.run && api.s.run.hard) { var hh = api.s.fight.hp; hh.cur += HARD.hp; hh.max += HARD.hp; }
     if (api.s.hunted) { var hp = api.s.fight.hp; hp.cur += DREAD.huntedHp; hp.max += DREAD.huntedHp; api.say('You are hunted: it has ' + DREAD.huntedHp + ' more HP (' + hp.max + ').', 'note'); }
   }
   /* Everything the hero can attack, cast or use, from the sheet's own list. */
@@ -590,7 +591,11 @@
     return { need: Math.min(need, 21), chance: chance, note: o.note, cost: cost, attack: !!o.pendingDamage || /MISS/.test(o.label) };
   }
   /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
-  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv), time: nightfall(s) }; }
+  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12) + hardTarget(s), dark: isDark(s, adv), time: nightfall(s) }; }
+  /* The Hard Road (the owner's tick, 2026-11-07): the same road with every Target 1 higher, every foe 2 more HP and one more scene in the middle.
+     Targets and foes are the GM's numbers, so no rule changes. It opens after HARD.wins roads come home (solo.js reads the Chronicle). */
+  var HARD = { target: 1, hp: 2, scenes: 1, wins: 3 };
+  function hardTarget(s) { return s.run && s.run.hard ? HARD.target : 0; }
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
   function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
@@ -733,7 +738,7 @@
   function scenes() { return root.SacramentSoloAdventures || {}; }
   function sceneOf(s) { return s && scenes()[s.adventure]; }
   function sceneAt(s, i) { return s.run && s.run.order[i] ? scenes()[s.run.order[i]] : null; }
-  function pickOrder(camp, die) {
+  function pickOrder(camp, die, extra) {
     var all = camp.scenes.map(function (id) { return scenes()[id]; }).filter(Boolean);
     var pick = function (list) { return list[die(list.length) - 1]; };
     var opening = pick(all.filter(function (x) { return x.act === 'opening'; })), charge = opening.gives;
@@ -741,7 +746,7 @@
     var middle = all.filter(function (x) { return x.act === 'middle' && fits(x); });
     for (var i = middle.length - 1; i > 0; i--) { var j = die(i + 1) - 1, t = middle[i]; middle[i] = middle[j]; middle[j] = t; }
     var LEAN = { early: 0, any: 1, late: 2 };
-    middle = middle.slice(0, camp.middle || 3).map(function (x, k) { return { x: x, k: k }; })
+    middle = middle.slice(0, (camp.middle || 3) + (extra || 0)).map(function (x, k) { return { x: x, k: k }; })
       .sort(function (a, b) { return (LEAN[a.x.lean || 'any'] - LEAN[b.x.lean || 'any']) || a.k - b.k; }).map(function (o) { return o.x; });
     var finale = pick(all.filter(function (x) { return x.act === 'finale' && fits(x); }));
     var order = [opening].concat(middle, [finale]).map(function (x) { return x.id; });
@@ -750,9 +755,9 @@
     for (var k = spare.length - 1; k > 0; k--) { var m = die(k + 1) - 1, sw = spare[k]; spare[k] = spare[m]; spare[m] = sw; }
     return { charge: charge, order: order, spare: spare };
   }
-  function startRun(hero, campId, die) {
-    var camp = (root.SacramentSoloCampaigns || {})[campId], o = pickOrder(camp, die);
-    var run = { campaign: camp.id, title: camp.title, intro: camp.intro, order: o.order, spare: o.spare, at: 0, charge: o.charge, story: {}, met: [] };
+  function startRun(hero, campId, die, opts) {
+    var hard = !!(opts && opts.hard), camp = (root.SacramentSoloCampaigns || {})[campId], o = pickOrder(camp, die, hard ? HARD.scenes : 0);
+    var run = { campaign: camp.id, title: camp.title, intro: camp.intro, order: o.order, spare: o.spare, at: 0, charge: o.charge, story: {}, met: [], hard: hard };
     run.cameos = pickCameos(o.order.length, die);
     return start(hero, scenes()[o.order[0]], die, run);
   }
@@ -827,12 +832,12 @@
     var lines = (camp.endings || {})[end] || [], pick = 0; walked.concat(s.hero.name).join('|').split('').forEach(function (ch) { pick = (pick * 31 + ch.charCodeAt(0)) >>> 0; });
     var last = scenes()[run.order[run.order.length - 1]];
     return {
-      hero: s.hero.name, calling: s.hero.calling || '', road: run.title || '', to: last ? last.title : '', end: end, total: run.order.length,
+      hero: s.hero.name, calling: s.hero.calling || '', road: (run.title || '') + (run.hard ? ': the Hard Road' : ''), hard: !!run.hard, to: last ? last.title : '', end: end, total: run.order.length,
       places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }), placeIds: walked.slice(), met: (run.met || []).slice(), escapes: int(run.escapes, 0),
       beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }), used: (run.used || []).slice(),
       peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
     };
   }
 
-  root.SacramentSolo = { nightfall: nightfall, summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  root.SacramentSolo = { HARD: HARD, nightfall: nightfall, summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -28,7 +28,7 @@
     if (!state || !state.over || !state.run || state.run.logged) return;
     var sum = S.summary(state); state.run.logged = today() || true;
     var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
-      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes });
+      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
   }
@@ -61,7 +61,7 @@
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
-      w.textContent = (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
+      w.textContent = (e.hard ? ' · the Hard Road' : '') + (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
       w.style.whiteSpace = 'normal'; d.textContent = e.date || '';
       var left = document.createElement('div'); left.append(b, w); li.append(left, d); box.appendChild(li);
     });
@@ -78,7 +78,7 @@
       b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; showGame(false); });
       resume.appendChild(b);
     }
-    showChronicle();
+    showChronicle(); showHard();
     var mine = $('mine'); mine.textContent = '';
     var list; try { list = window.SacramentHeroes.read().heroes || []; } catch { list = []; }
     if (!list.length) { var p = document.createElement('p'); p.className = 'empty'; p.innerHTML = 'You have no heroes saved in this browser yet. Make one in <a href="/character/">My heroes</a>, or take a ready-made hero below.'; mine.appendChild(p); }
@@ -89,6 +89,20 @@
     $('titleArt').innerHTML = ART.scene('title', null, 't');
     tune('title');
   }
+  /* The Hard Road opens after S.HARD.wins roads come home; until then the start screen says how far off it is. The choice is remembered in this browser. */
+  var HARD_KEY = 'sacrament-solo-hard';
+  function wins() { return chronicle().filter(function (e) { return e.end === 'won'; }).length; }
+  function hardOn() { if (wins() < S.HARD.wins) return false; try { return localStorage.getItem(HARD_KEY) === '1'; } catch { return false; } }
+  function showHard() {
+    var box = $('hard'), n = wins(), open = n >= S.HARD.wins; box.textContent = '';
+    if (!open) { var p = document.createElement('p'); p.className = 'fine'; p.textContent = n ? 'Come home ' + S.HARD.wins + ' times to open the Hard Road (' + n + ' of ' + S.HARD.wins + ').' : ''; if (n) box.appendChild(p); return; }
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'pick hardroad'; b.setAttribute('aria-pressed', hardOn() ? 'true' : 'false');
+    var t = document.createElement('b'), sub = document.createElement('span');
+    var draw = function () { var on = hardOn(); b.setAttribute('aria-pressed', on ? 'true' : 'false'); t.textContent = on ? 'The Hard Road: on' : 'The Hard Road: off'; sub.textContent = 'Every Target ' + S.HARD.target + ' higher, every foe ' + S.HARD.hp + ' more HP, one more scene. Tap to turn ' + (on ? 'off' : 'on') + '.'; };
+    b.append(t, sub); draw();
+    b.addEventListener('click', function () { try { localStorage.setItem(HARD_KEY, hardOn() ? '0' : '1'); } catch { /* not kept in a private window */ } draw(); });
+    box.appendChild(b);
+  }
   function pickButton(title, sub, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'pick' + (cls ? ' ' + cls : '');
     var t = document.createElement('b'); t.textContent = title; var s = document.createElement('span'); s.textContent = sub || ''; b.append(t, s); return b;
@@ -98,7 +112,7 @@
   });
 
   function begin(hero) {
-    D.clear(); state = S.startRun(hero, CAMP.id, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
+    D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
   }
 
   /* ---------- the game screen ---------- */
@@ -489,7 +503,7 @@
     var h = state.hero;
     $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, h.vow].filter(Boolean).join(' · ');
     var nums = $('sheetNums'); nums.textContent = '';
-    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', ADV().target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
+    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', S.sceneInfo(state, ADV()).target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });
     var ef = $('sheetEffort'); ef.textContent = ''; R.CATS.forEach(function (k) { ef.appendChild(stat(R.CAT_NAMES[k], 'd' + R.DEFAULT_DICE[k] + ' +' + (h.effort[k] || 0))); });
     gearList($('sheetEq'), true); gearList($('sheetPack'), false);

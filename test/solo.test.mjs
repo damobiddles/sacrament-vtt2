@@ -822,3 +822,17 @@ test('Simon the Scholar asks a riddle with three answers: the right one gets his
     assert.ok(!S.choices(s).some((c) => /^meet simon/.test(c.cmd)), 'he helps once, either way');
   }
 });
+
+test('the Hard Road: one more scene, every Target 1 higher, every foe 2 more HP; the summary and the deed know it', () => {
+  const D = globalThis.SacramentSoloDeeds;
+  const rnd = seeded(11), plain = S.startRun(T.generate('fighter', seeded(2)), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n));
+  const rnd2 = seeded(11), hard = S.startRun(T.generate('fighter', seeded(2)), 'pilgrim-road', (n) => 1 + Math.floor(rnd2() * n), { hard: true });
+  assert.equal(hard.run.order.length, plain.run.order.length + S.HARD.scenes);
+  assert.equal(S.sceneInfo(hard).target, S.sceneInfo(plain).target + S.HARD.target);
+  for (let i = 0; i < 200 && !hard.fight && !hard.over; i++) { const ch = S.choices(hard); const p = ch.find((c) => c.kind === 'do' && !/^meet/.test(c.cmd)) || ch.find((c) => c.kind === 'go') || ch[0]; S.act(hard, null, p.cmd, (n) => Math.min(n, 12)); }
+  assert.ok(hard.fight, 'a fight on the Hard Road');
+  const def = S.sceneOf(hard).foes[hard.fight.foe];
+  assert.equal(hard.fight.hp.max, def.hp + S.HARD.hp + (hard.hunted ? 2 : 0));
+  assert.match(S.summary(hard).road, /Hard Road/);
+  assert.ok(D.earned([{ end: 'won', hard: true }]).includes('hard')); assert.ok(!D.earned([{ end: 'won' }]).includes('hard'));
+});
