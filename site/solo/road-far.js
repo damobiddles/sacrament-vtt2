@@ -130,7 +130,7 @@
   /* ---------- the plague pit: helping the sexton bury the dead before what eats them comes up ---------- */
   var thanks = function (api) { if (api.flag('thanked')) return; api.flag('thanked', true); api.say('Wulf gives you what the dead had on them that the lime would only waste.'); api.loot('The sexton\'s thanks'); };
   A.pit = {
-    id: 'pit', act: 'middle', lean: 'early', title: 'The Plague Pit at Pellstead', target: 12, start: 'pit',
+    id: 'pit', act: 'middle', lean: 'early', tease: 'A rope across the road, and a bell on the rope.', title: 'The Plague Pit at Pellstead', target: 12, start: 'pit',
     intro: function (api) { api.say('Pellstead has the plague. A rope across the road, and a bell on the rope. Past it, at the edge of the churchyard, an old man is filling a pit.'); },
     fall: function () { return 'The sexton puts you in the pit with the others and says the words over all of you at once, which is quicker.'; },
     obstacles: {
@@ -205,7 +205,7 @@
       } };
   };
   A.inn = {
-    id: 'inn', act: 'middle', lean: 'any', title: 'The Players at Tarnby', target: 12, start: 'yard',
+    id: 'inn', act: 'middle', lean: 'any', tease: 'Players in the inn yard tonight.', title: 'The Players at Tarnby', target: 12, start: 'yard',
     intro: function (api) { api.say('At Tarnby the inn yard is full. A company of travelling players has made a stage of their cart, and tonight they play the Binding as the Church tells it: a Saint, a Demon, and a Fool to make the children laugh.'); },
     fall: function () { return 'The players move on in the morning, three of them, or four. Nobody at Tarnby can say which.'; },
     timers: {
@@ -260,7 +260,7 @@
 
   /* ---------- the old battlefield: sneak past the knight who holds it, fight him, or give him his rites ---------- */
   A.field = {
-    id: 'field', act: 'middle', lean: 'late', title: 'The Field at Fallowby', target: 12, start: 'field',
+    id: 'field', act: 'middle', lean: 'late', tease: 'An old battlefield that the crows keep.', title: 'The Field at Fallowby', target: 12, start: 'field',
     intro: function (api) { api.say('Past Fallowby the road crosses an old battlefield, where the lords of the heartlands fought each other a hundred years ago. Nobody ploughs it. The crows have it.'); },
     fall: function () { return 'You lie down on the field with the others. The crows come, and in a hundred years somebody will plough you up.'; },
     obstacles: {

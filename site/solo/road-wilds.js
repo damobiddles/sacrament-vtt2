@@ -10,7 +10,7 @@
 
   /* ---------- the hospice: a vigil with the sick, and the sister who sings them to sleep ---------- */
   A.hospice = {
-    id: 'hospice', act: 'middle', lean: 'any', title: 'The Hospice at Dray', target: 12, start: 'ward',
+    id: 'hospice', act: 'middle', lean: 'any', tease: 'Someone is singing in the hospice at Dray.', title: 'The Hospice at Dray', target: 12, start: 'ward',
     intro: function (api) { api.say('At Dray the Church keeps a hospice for travellers who fall sick on the road. The door is open. Somebody inside is singing.'); },
     fall: function () { return 'Sister Gisela lays you out with the others at dawn, and writes your name in the register in a careful hand.'; },
     timers: {
@@ -71,7 +71,7 @@
 
   /* ---------- the charcoal wood: a road choked with briars, and the boar that lives in the clamps ---------- */
   A.wood = {
-    id: 'wood', act: 'middle', lean: 'early', title: 'The Charcoal Wood', target: 12, start: 'wood',
+    id: 'wood', act: 'middle', lean: 'early', tease: 'Smoke lying under the trees ahead.', title: 'The Charcoal Wood', target: 12, start: 'wood',
     intro: function (api) { api.say('The road goes into Wulfram\'s Wood, where the charcoal burners work. Smoke lies under the trees like water.'); },
     fall: function () { return 'The charcoal burners find what the boar left, and bury it under a clamp, which is a warm grave, they say, and an honest one.'; },
     obstacles: {
@@ -125,7 +125,7 @@
 
   /* ---------- the toll bridge: a rotten bridge over a gorge, and a dead man who still takes the toll ---------- */
   A.bridge = {
-    id: 'bridge', act: 'middle', lean: 'late', title: 'The Toll Bridge at Crane\'s Holt', target: 12, start: 'bridge',
+    id: 'bridge', act: 'middle', lean: 'late', tease: 'A rope bridge over a gorge, and a toll to pay.', title: 'The Toll Bridge at Crane\'s Holt', target: 12, start: 'bridge',
     intro: function (api) { api.say('At Crane\'s Holt the road crosses a gorge on a bridge of rope and plank. There has been a toll here as long as there has been a bridge.'); },
     fall: function () { return 'The gorge keeps you. In spring the river brings what is left down to the villages, and the reeve writes it up as a fall.'; },
     obstacles: {
