@@ -360,3 +360,12 @@
 @keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.caption{animation:none}}
 .log .k-npc.friend{border-left-color:#8fd18a}
+/* a story spell or item that answers something here glows; a foe card says what the foe is */
+.ch.useful{box-shadow:inset 0 0 0 1px #e0c27a,inset 0 0 0 4px var(--indigo-deep),inset 0 0 0 5px #e0c27a88,0 0 14px #e0c27a66;animation:solo-glow 2.4s ease-in-out infinite}
+.ch.use.useful{box-shadow:inset 0 0 0 1px #e0c27a,inset 0 0 0 4px #3d3124,inset 0 0 0 5px #e0c27a88,0 0 14px #e0c27a66}
+@keyframes solo-glow{50%{filter:brightness(1.15)}}
+@media (prefers-reduced-motion:reduce){.ch.useful{animation:none}}
+.card .traits{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.card .traits i{font:600 .7rem/1.3 var(--label);font-style:normal;letter-spacing:.04em;color:#f1e6cf;background:#2a2420;border:1px solid #8a7458;padding:1px 6px;border-radius:999px}
+.choices .more.useful{color:#e0c27a}
+@media (max-width:699px) and (max-aspect-ratio:1/1){.choices .more.useful{border-color:#e0c27a;box-shadow:0 0 12px #e0c27a55}}
