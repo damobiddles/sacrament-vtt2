@@ -204,6 +204,9 @@
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
     return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? src.horror : 0 };
   }
+  /* Which spell a grimoire read by the die casts when the die shows n: the faces are shared out in the order the spells are listed (a d6 over three spells:
+     1-2 the first, 3-4 the second, 5-6 the third, as the book's own words say). One rule for the table, the solo game and the printed sheet. */
+  function pickSpell(u, n) { var sides = int(u.pickDie || u.pick, 1), k = clamp(int(n, 1), 1, sides); return u.spells[Math.floor((k - 1) * int(u.pick, 1) / sides)]; }
   /* A spell of a grimoire read by the die, as if the reader had chosen it: the same checks have already been made for the book. */
   function useSpell(u, sp) { return { ok: true, item: u.item, spell: sp, source: sp, area: sp.area === true, gear: u.gear, name: sp.name + ' (' + u.item.name + ')', stat: STATS.indexOf(sp.roll) >= 0 ? sp.roll : '', cat: sp.cat || '', healing: healingOf(sp), horror: sp.temptsHorror ? sp.horror : 0 }; }
   /* Every way this hero could use what they carry, with a reason where it cannot be done now: for the Use buttons. */
@@ -381,5 +384,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });
