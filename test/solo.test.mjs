@@ -113,7 +113,7 @@ test('the soundtrack: every room has a tune, every note is a real note, and ever
 
 test('the scene Target is always known, the dark is flagged, and every spell button says what the spell does', () => {
   const rnd = seeded(3), die = (n) => 1 + Math.floor(rnd() * n), s = S.start(T.generate('scholar', rnd), A, die);
-  assert.deepEqual(S.sceneInfo(s, A), { target: 12, dark: false });
+  assert.deepEqual(S.sceneInfo(s, A), { target: 12, dark: false, time: '' });
   const spells = S.choices(s, A).filter((c) => c.kind === 'spell');
   assert.ok(spells.length > 0, 'the scholar has spells to cast');
   for (const c of spells) assert.ok(c.about && c.about.does.length > 20 && c.about.name, c.label + ' has no description');
@@ -635,4 +635,28 @@ test('Flask of Holy Oil works as the gear list says: against the unquiet dead th
   s.fight.undead = false; s.fight.phase = 'hero';
   S.act(s, adv, attack.cmd, fixed([18])); S.act(s, adv, 'damage', fixed([8]));
   assert.ok(/\bd6 6\b/.test(s.log.filter((l) => l.k === 'win').at(-1).t), 'against the living it stays a d6');
+});
+
+test('night falls along the road: evening, then dusk from scene 3, and the finale at night, where every place is dark under the Rules page\'s own darkness rule', () => {
+  require('../site/solo/art.js');
+  const ART = globalThis.SacramentSoloArt, rnd = seeded(12), die = (n) => 1 + Math.floor(rnd() * n);
+  const hero = T.generate('scholar', seeded(5)); hero.gear = hero.gear.filter((g) => !S.LIGHTS.includes(g.id) && g.id !== 'candles');
+  const s = S.startRun(hero, 'pilgrim-road', die), skies = [];
+  for (let at = 0; at < 5; at++) {
+    const adv = SCENES[s.adventure], time = S.nightfall(s);
+    assert.equal(time, at < 2 ? 'evening' : at < 4 ? 'dusk' : 'night', 'scene ' + (at + 1));
+    skies.push(/id="tsky"[^>]*><stop offset="0" stop-color="(#[0-9a-f]+)"/.exec(ART.scene(adv.rooms[s.room].art, s, 't'))[1]);
+    if (at === 4) {
+      assert.equal(adv.act, 'finale');
+      for (const room of Object.keys(adv.rooms)) { s.room = room; s.flags = {}; assert.ok(S.sceneInfo(s, adv).dark, 'without a light every place in the finale is dark: ' + room); }
+      assert.ok(s.log.some((l) => /full night/.test(l.t)), 'the story says night has fallen');
+      s.room = adv.start; s.hero.gear.push({ id: 'lantern', eq: true });
+      assert.ok(!S.sceneInfo(s, adv).dark, 'a lantern answers it, as the Rules page says');
+      break;
+    }
+    if (at < 2) assert.ok(Object.keys(adv.rooms).some((r) => { s.room = r; return !S.sceneInfo(s, adv).dark; }), 'places without their own dark are not dark before nightfall');
+    s.done = true; s.fight = null; s.dying = null; s.over = ''; s.hp.cur = s.hp.max;
+    S.act(s, adv, S.choices(s, adv).find((c) => c.cmd.startsWith('next')).cmd, die);
+  }
+  assert.equal(new Set(skies).size, 3, 'the sky darkens in three steps: ' + skies.join(' '));
 });

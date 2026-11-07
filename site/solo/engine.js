@@ -104,7 +104,15 @@
   }
   var DARK_LINE = 'It is dark here. Without a light, a WIS check to search or notice is Hard.';
   /* Dark: a dark place with no light. A place whose shape the hero has learned (Echo Bell) no longer makes those checks Hard, though it stays dark. */
-  function isDark(s, adv) { var r = adv.rooms[s.room]; return !!(r && r.dark) && !lit(s) && !s.flags['mapped_' + s.room]; }
+  function darkRoom(s, r) { return !!(r && (r.dark || nightfall(s) === 'night')); }
+  function isDark(s, adv) { var r = adv.rooms[s.room]; return darkRoom(s, r) && !lit(s) && !s.flags['mapped_' + s.room]; }
+  /* Night falls along the road (the owner's choice, 2026-11-07): the first scenes are at evening, the light goes earlier through the middle of the road, and the
+     finale is at night, where every place counts as dark. Darkness is the GM's call about a place; the rule for it is the Rules page's own (a WIS check to search
+     or notice is Hard without a light), so nothing about the rules changes. */
+  function nightfall(s) {
+    var run = s && s.run; if (!run) return '';
+    return run.at >= run.order.length - 1 ? 'night' : run.at >= 2 ? 'dusk' : 'evening';
+  }
 
   /* ---------- obstacles and timers ---------- */
   /* One try at an obstacle: a check, and on a success Effort into its bar. A failed try moves the obstacle's clock, if it has one: dawdling costs.
@@ -188,7 +196,7 @@
       if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
       if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
-      if (k === 'learn' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
+      if (k === 'learn' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
     if (src.needs === 'undead' && !foe.undead) return null;
@@ -221,7 +229,7 @@
     api.say(r.name, 'room');
     var first = !s.seen[to]; s.seen[to] = true;
     api.say(typeof r.text === 'function' ? r.text(api, first) : r.text);
-    if (r.dark) { lightCandle(api); api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); }
+    if (darkRoom(s, r)) { lightCandle(api); api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); }
     Object.keys(api._adv.obstacles || {}).forEach(function (id) { var ob = api._adv.obstacles[id]; if (ob.room === to && ob.clock && obstacleOpen(api, id)) timer(api, ob.clock, 'start'); });
     if (r.enter) r.enter(api, first);
     var who = first && !s.fight && cameoNow(s); if (who) api.say(who.meet, 'npc');
@@ -547,7 +555,7 @@
     return { need: Math.min(need, 21), chance: chance, note: o.note, cost: cost, attack: !!o.pendingDamage || /MISS/.test(o.label) };
   }
   /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
-  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv) }; }
+  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv), time: nightfall(s) }; }
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
   function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
@@ -601,7 +609,7 @@
     var p = c.split(' '), wasFight = !!s.fight;
     var label = (choices(s, adv).filter(function (x) { return x.cmd === c; })[0] || {}).label;
     api.say('> ' + (label || c), 'cmd');
-    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (r0.dark) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
+    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (darkRoom(s, r0)) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
     else if (c === 'help') api.say(HELP, 'note');
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
     else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
@@ -740,6 +748,9 @@
     var a2 = apiFor(s, adv, api.die);
     a2.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ': ' + adv.title, 'title');
     if (adv.intro) adv.intro(a2);
+    var when = nightfall(s);
+    if (when === 'dusk' && s.run.at === 2) a2.say('Out here the light goes earlier every evening. You will walk the last of the road in the dark.', 'note');
+    if (when === 'night') a2.say('By the time you reach it the light is gone. It is full night, and every place here is dark: without a light, a WIS check to search or notice is Hard.', 'note');
     enter(a2, adv.start);
   }
 
@@ -758,5 +769,5 @@
     };
   }
 
-  root.SacramentSolo = { summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  root.SacramentSolo = { nightfall: nightfall, summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);
