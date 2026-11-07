@@ -481,7 +481,9 @@
   }
 
   /* ---------- what can be done now: the buttons ---------- */
-  function choices(s, adv) { adv = sceneOf(s) || adv;
+  /* two of the same thing in the pack (two rolls of bandages) make one button, not two the same */
+  function choices(s, adv) { var seen = {}; return choicesAll(s, adv).filter(function (c) { var k = c.kind + '|' + c.label; if (seen[k]) return false; seen[k] = true; return true; }); }
+  function choicesAll(s, adv) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];

@@ -750,3 +750,12 @@ test('a road remembers the places, the friends met, and each getaway, for the de
   const sum = S.summary(s);
   assert.deepEqual(sum.placeIds, [s.run.order[0]]); assert.deepEqual(sum.met, ['simon']); assert.equal(sum.escapes, 2);
 });
+
+test('two of the same item in the pack make one button, not two the same', () => {
+  const C = globalThis.SacramentSheetCore, hero = T.generate('healer', seeded(5)), s = S.start(hero, A, fixed([10]));
+  s.hp.cur = 1;
+  for (let i = 0; i < 2; i++) C.edit(s.hero, { op: 'add', id: 'bandages' }, { gm: true }, s.hp);
+  const labels = S.choices(s, A).map((c) => c.kind + '|' + c.label);
+  assert.ok(labels.some((l) => /Bandages/.test(l)), 'the bandages are offered');
+  assert.equal(new Set(labels).size, labels.length, 'no two buttons say the same thing: ' + labels.join(', '));
+});

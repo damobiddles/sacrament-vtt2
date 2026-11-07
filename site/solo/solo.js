@@ -298,7 +298,7 @@
     S.act(state, ADV(), cmd, die);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !state.escaped && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
-    remember(); save(); renderLog(false); roll(state.log.slice(before)); render(); caption(state.log.slice(before));
+    remember(); save(); renderLog(false); roll(state.log.slice(before)); render(); caption(state.log.slice(before), before);
     if (slain) {
       var foe = document.querySelector('#art .who.foe'); if (foe) foe.classList.add('dying'); document.querySelectorAll('#art .foeflame').forEach(function (f) { f.classList.add('out'); });
       setTimeout(function () { dying = false; paint(); }, 1900);
@@ -341,25 +341,47 @@
   /* A caption across the top of the picture for the moments that matter: a new place, one of the owner's friends, the end of a scene, a Horror threshold.
      The full words stay in the story; a tap on the caption opens it. */
   var capTimer = 0;
-  function caption(fresh) {
-    var pick = null;
+  function caption(fresh, from) {
+    var pick = null, scene = 0; state.log.forEach(function (l, n) { if (l.k === 'title' && n < from) scene = n; });
+    var been = function (name) { return state.log.slice(scene, from).some(function (l) { return l.k === 'room' && l.t === name; }); };   /* a place you come back to needs no caption */
     fresh.forEach(function (l, i) {
+      if (l.k === 'room' && been(l.t)) return;
       if ((l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; })) || l.k === 'end') pick = { t: l.t, k: l.k };
       else if (l.k === 'room' && (!pick || pick.k === 'room')) { var next = fresh[i + 1], first = next && next.k === 'say' ? (/^.*?[.!?](\s|$)/.exec(next.t) || [next.t])[0] : ''; pick = { title: l.t, t: first.trim(), k: 'room' }; }
       else if (l.k === 'horror' && /^The Horror (stirs|draws near|has arrived)/.test(l.t) && (!pick || pick.k === 'room')) pick = { t: l.t, k: 'horror' };
     });
     if (!pick) return;
     var old = document.querySelector('.frame .caption'); if (old) old.remove();
+    var held = Array.prototype.slice.call(document.querySelectorAll('.stage .toast'));   /* a find still showing joins the caption, so the two never sit on each other */
     var c = document.createElement('button'); c.type = 'button'; c.className = 'caption k-' + pick.k;
     if (pick.title) { var b = document.createElement('b'); b.textContent = pick.title; c.appendChild(b); }
     if (pick.t) { var s = document.createElement('span'); withNames(s, pick.t); c.appendChild(s); }
     c.addEventListener('click', function () { c.remove(); whole = false; foldLog(); var l = $('log'); l.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); });
     document.querySelector('.frame').appendChild(c);
-    clearTimeout(capTimer); capTimer = setTimeout(function () { c.classList.add('gone'); setTimeout(function () { c.remove(); }, 400); }, pick.k === 'npc' ? 6500 : 4500);
+    held.forEach(function (t) { var k = t.querySelector('small'), b = t.querySelector('b'); t.remove(); if (b) addFound(c, k ? k.textContent : '', b.textContent); });
+    fadeCaption(c, pick.k === 'npc' ? 6500 : 4500, true);
+  }
+  function addFound(cap, label, what) {
+    var line = document.createElement('small'); line.className = 'found'; line.append((label || 'You found') + ': ');
+    var w = document.createElement('b'); w.textContent = what; line.appendChild(w); cap.appendChild(line);
+  }
+  /* a dialog over the picture (a scene won) says it all: what was on the picture goes */
+  function clearOverlays() {
+    clearTimeout(cardTimer); cardTimer = 0; D.clear();
+    document.querySelectorAll('.frame .caption, .stage .toast').forEach(function (e) { e.remove(); });
+  }
+  var capEnd = 0;   /* when the caption on screen fades: a find joining it can only make it stay longer */
+  function fadeCaption(c, ms, fresh) {
+    var end = Date.now() + ms; if (!fresh && end < capEnd) return; capEnd = end;
+    clearTimeout(capTimer); capTimer = setTimeout(function () { c.classList.add('gone'); setTimeout(function () { c.remove(); }, 400); }, ms);
   }
   /* a find: its card slides in over the picture for a moment */
   function toast(text, label) {
-    var m = /^[^:]*:\s*([^.]+)\.\s*(.*)$/.exec(text), t = document.createElement('div');
+    var m = /^[^:]*:\s*([^.]+)\.\s*(.*)$/.exec(text), cap = document.querySelector('.frame .caption:not(.gone)');
+    if (cap) {   /* a caption is up (a friend speaking, the end of the road): the find joins it as one line, and the caption stays long enough to read both */
+      addFound(cap, label, m ? m[1] : text); fadeCaption(cap, 5000); return;
+    }
+    var t = document.createElement('div');
     t.className = 'toast'; t.setAttribute('role', 'status');
     var k = document.createElement('small'); k.textContent = label || 'You found'; var b = document.createElement('b'); b.textContent = m ? m[1] : text;
     t.append(k, b); document.querySelector('.stage').appendChild(t); setTimeout(function () { t.classList.add('gone'); }, 2600); setTimeout(function () { t.remove(); }, 3200);
@@ -375,7 +397,7 @@
     $('wonState').textContent = 'HP ' + state.hp.cur + ' of ' + state.hp.max + ' · Horror ' + state.horror + ' of ' + R.HORROR.max;
     var fork = S.forkAt(state);
     $('wonNext').textContent = fork ? 'The road forks: ' + fork.map(function (id) { return S.sceneOf({ adventure: id }).title; }).join(', or ') + '.' : next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
-    if (!d.open) d.showModal();
+    clearOverlays(); if (!d.open) d.showModal();
   }
   /* The end card: the whole road on one page from the book. It can be saved as a picture (or shared, where the device can). */
   function showEnd() {
@@ -385,7 +407,7 @@
     $('endCard').innerHTML = svg;
     $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
     $('endSaved').hidden = true;
-    var d = $('end'); if (!d.open) d.showModal();
+    var d = $('end'); clearOverlays(); if (!d.open) d.showModal();
   }
   function saveCard() {
     var el = $('endCard').querySelector('svg'); if (!el) return;

@@ -357,6 +357,8 @@
 .caption.k-horror{border-left-color:#d0574a;color:#f0b3a8}
 .caption.k-end{border-left-color:var(--candle);font-family:var(--display);font-size:1.05rem}
 .caption.gone{opacity:0;transition:opacity .4s}
+.caption .found{display:block;margin-top:6px;padding-top:6px;border-top:1px solid #b8955a55;font:600 .72rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--candle);animation:solo-cap .35s ease-out both}
+.caption .found b{font:600 1.05rem var(--display);letter-spacing:0;text-transform:none;color:#f1e3c2}
 @keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.caption{animation:none}}
 .log .k-npc.friend{border-left-color:#8fd18a}
