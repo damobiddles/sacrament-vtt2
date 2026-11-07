@@ -7,6 +7,8 @@
   var A = root.SacramentSoloAdventures = root.SacramentSoloAdventures || {};
   var LIGHTS = ['lantern', 'candles', 'stubs', 'candle', 'lastrites', 'drownedlantern'], FIRE = LIGHTS.concat(['tinder']), ROPES = ['rope', 'hemprope'];
   var relic = function (api) { return api.charge() === 'relic'; };
+  /* What the road says about the hero's charge: the stolen relic, the missing sister, or the runaway deacon (road-far.js). */
+  var told = function (api, t) { return t[api.charge()] || t.missing; };
 
   root.SacramentSoloCampaigns = root.SacramentSoloCampaigns || {};
   root.SacramentSoloCampaigns['pilgrim-road'] = {
@@ -14,7 +16,7 @@
     title: 'The Pilgrim Road',
     blurb: 'Five nights on the pilgrim road, out to the boundary stones. Every road is different.',
     intro: 'The pilgrim road runs from the heartlands to the boundary of the consecrated land, five days on foot. You have walked it before. Not like this.',
-    scenes: ['priory', 'cart', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'shrine', 'mere'],
+    scenes: ['priory', 'cart', 'warrant', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'pit', 'inn', 'field', 'shrine', 'mere', 'barrow'],
     middle: 3
   };
 
@@ -33,7 +35,7 @@
       run: function (api) { api.say('"The Church calls this a sin," says Rupert the Druid, pressing a bundle into your hands. "The Church has never had a cut go bad on it in a ditch."', 'npc'); api.give('bandages', 'Rupert the Druid gives you'); } },
     { id: 'matthew', name: 'Matthew of the Brown Order of Farts', label: 'Hear out Matthew of the Brown Order',
       meet: 'A friar in a brown habit, stained browner, is begging at the roadside: Matthew of the Brown Order of Farts. The Church has never recognised the order. The order has never asked.',
-      run: function (api) { api.story('clue', true); api.story('tracks', true); api.say('"I have walked to the boundary and back nine times," says Matthew of the Brown Order of Farts. "I know what waits at the end of this road, and how it moves. Listen."', 'npc'); api.say('You know the last foe\'s ways now: your first attack in the last scene will be Easy.', 'note'); } },
+      run: function (api) { api.story('clue', true); api.story('tracks', true); api.story('notes', true); api.say('"I have walked to the boundary and back nine times," says Matthew of the Brown Order of Farts. "I know what waits at the end of this road, and how it moves. Listen."', 'npc'); api.say('You know the last foe\'s ways now: your first attack in the last scene will be Easy.', 'note'); } },
     { id: 'biddles', name: 'Lord Biddles of Wooburn', label: 'Accept Lord Biddles of Wooburn\'s hospitality',
       meet: 'A coach is stopped on the road, and out of it climbs Lord Biddles of Wooburn, a minor lord with a major appetite, who insists that you eat.',
       run: function (api) { api.say('"Nobody walks past my coach hungry," says Lord Biddles of Wooburn. "Bad luck. Worse manners." He gives you a parcel from his own hamper.', 'npc'); api.give('rations', 'Lord Biddles of Wooburn gives you'); } }
@@ -235,7 +237,7 @@
                 api.flag('calm', true);
                 api.say('He turns. "Faustin," he says. "Penitent. I walked from Aubrecht." He gives you the half of his grain without being asked, and from his shirt, something he says he no longer needs.', 'npc');
                 api.loot('Faustin\'s gift');
-                api.say(relic(api) ? '"The shrine at Saint Aubrel\'s Cross? Empty. I prayed there to nothing. At night something scrapes at the boundary stones, and laughs."' : '"A sister in grey? She slept here two nights ago. She talked in her sleep, to her mother. In the morning I could not wake her and she walked away anyway."', 'npc');
+                api.say(told(api, { relic: '"The shrine at Saint Aubrel\'s Cross? Empty. I prayed there to nothing. At night something scrapes at the boundary stones, and laughs."', missing: '"A sister in grey? She slept here two nights ago. She talked in her sleep, to her mother. In the morning I could not wake her and she walked away anyway."', warrant: '"A deacon in black? He came in out of the rain three nights ago and read all night by a stub of candle. He would not tell me what. He would not let me see."' }), 'npc');
               } else { api.say('He turns. He has not eaten anything but grain in a long time, and he has decided that you are a sin.'); api.fight('penitent'); }
             } },
           { id: 'pack', label: 'Search his pack', words: ['search', 'pack', 'bag'], when: function (api) { return api.flag('beat_penitent') && !api.flag('pack'); },
@@ -283,7 +285,7 @@
       gibbet: {
         name: 'Holloway Cross', short: 'the crossing', art: 'gibbet', dead: true,
         text: function (api) { return 'An iron cage creaks on a tall post over the crossing. The man in it has been dead a week. Crows. ' + (api.flag('candle') ? 'The wayshrine\'s candle burns.' : 'A wayshrine stands by the road with its candle out.') + ' The light is going.'; },
-        secret: function (api) { return relic(api) ? 'The hanged man answers in a voice like a sack of gravel. He did the theft they hanged him for: he took the relic from the shrine at Saint Aubrel\'s Cross, and sold it to an old woman who was scraping salt off the boundary stones. "She paid in salt," he says. "I should have known."' : 'The hanged man answers in a voice like a sack of gravel. "A sister in grey passed under me two nights back, walking in her sleep, toward the mere past the boundary. Someone was calling her, in a voice she knew. I knew it too. It was my mother\'s."'; },
+        secret: function (api) { return api.charge() === 'warrant' ? 'The hanged man answers in a voice like a sack of gravel. "A deacon on a horse stopped under me to read by the wayshrine\'s candle. He read aloud. I wish he had not. He went on toward the boundary, and the candle went out behind him."' : relic(api) ? 'The hanged man answers in a voice like a sack of gravel. He did the theft they hanged him for: he took the relic from the shrine at Saint Aubrel\'s Cross, and sold it to an old woman who was scraping salt off the boundary stones. "She paid in salt," he says. "I should have known."' : 'The hanged man answers in a voice like a sack of gravel. "A sister in grey passed under me two nights back, walking in her sleep, toward the mere past the boundary. Someone was calling her, in a voice she knew. I knew it too. It was my mother\'s."'; },
         enter: function (api, first) { if (first) api.timer('dark', 'start'); },
         actions: [
           { id: 'cage', label: 'Open the gibbet cage', words: ['cage', 'open', 'climb', 'lock'], when: function (api) { return !api.flag('cage'); },

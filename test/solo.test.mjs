@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -464,4 +464,57 @@ test('three new middle scenes join the road, and each gives the spell tags somet
   S.act(s, bridge, 'do answer', fixed([20])); assert.equal(s.flags.passed, true);
   assert.ok(S.choices(s, bridge).some((c) => c.cmd === 'way span sound'));
   S.act(s, bridge, cast(s, 'Held Beam').cmd, fixed([20])); assert.equal(s.bars.span, 3, 'the bridge holds still: half of what is left');
+});
+
+test('a third reason to be on the road: the Inquisitor\'s warrant opens it, the barrow ends it, and the road talks about the deacon', () => {
+  assert.equal(ADVS.warrant.gives, 'warrant'); assert.deepEqual(ADVS.barrow.fits, ['warrant']);
+  let warrantRuns = 0;
+  for (let seed = 1; seed <= 120; seed++) {
+    const rnd = seeded(seed * 7919 + 3), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n));
+    if (o.charge === 'warrant') { warrantRuns++; assert.equal(o.order[0], 'warrant'); assert.equal(o.order[4], 'barrow'); }
+  }
+  assert.ok(warrantRuns > 10, 'about a third of runs hunt the deacon: ' + warrantRuns);
+  /* the opening: the warrant, then the pardoner talks (or is beaten) and tells you how the deacon moves */
+  const W = ADVS.warrant, hero = T.generate('fighter', seeded(3));
+  let s = S.start(hero, W, fixed([20]));
+  assert.ok(!S.choices(s, W).some((c) => c.cmd === 'do go'), 'not before the Inquisitor has spoken');
+  S.act(s, W, 'do inquisitor', fixed([20])); assert.equal(s.flags.warrant, true);
+  S.act(s, W, 'do pardoner', fixed([20])); assert.equal(s.flags.notes, true, 'he talks');
+  s = S.start(hero, W, fixed([2])); S.act(s, W, 'do inquisitor', fixed([2])); S.act(s, W, 'do pardoner', fixed([2]));
+  assert.equal(s.fight && s.fight.foe, 'pardoner', 'he had a knife up his sleeve');
+  /* the finale: the deacon casts, so Hush stops him; knowing his ways makes the first blow Easy; or he can be talked down */
+  const B = ADVS.barrow, scholar = T.generate('scholar', seeded(4)); scholar.gear = [{ id: 'quietmouths', eq: true }];
+  s = S.start(scholar, B, fixed([10])); s.flags.notes = true;
+  S.act(s, B, 'do rush', fixed([10])); assert.equal(s.fight.foe, 'deacon'); assert.ok(s.fight.easy >= 1);
+  S.act(s, B, cast(s, 'Hush').cmd, fixed([10])); assert.equal(s.fight.skip, 1, 'he cannot read aloud: he loses his next attack');
+  s = S.start(scholar, B, fixed([20])); S.act(s, B, 'do call', fixed([20])); assert.equal(s.flags.yielded, true); assert.ok(!s.fight);
+  S.act(s, B, 'do lead', fixed([20])); assert.equal(s.over, 'won');
+  /* the road knows which charge the hero carries */
+  const pit = ADVS.pit, api = { charge: () => 'warrant', flag: () => false };
+  assert.match(pit.rooms.pit.secret(api), /deacon/); assert.match(ADVS.hospice.rooms.ward.secret(api), /deacon/); assert.match(ADVS.wood.rooms.wood.secret(api), /deacon/);
+  assert.match(ADVS.bridge.rooms.bridge.secret(api), /deacon/); assert.match(ADVS.gibbet.rooms.gibbet.secret(api), /deacon/); assert.match(ADVS.field.rooms.field.secret(api), /deacon/);
+});
+
+test('three more middle scenes: the plague pit, the players at the inn, and the old battlefield, each with more than one way through', () => {
+  for (const id of ['pit', 'inn', 'field']) { assert.ok(ROAD.scenes.includes(id), id); assert.equal(ADVS[id].act, 'middle'); assert.ok(!ADVS[id].fits, id + ' fits every charge'); }
+  const hero = T.generate('fighter', seeded(5));
+  /* the pit: three failed tries and the Pit Ghoul climbs out; a full pit buries it, and the sexton pays you */
+  const P = ADVS.pit;
+  let s = S.start(hero, P, fixed([2])); for (let i = 0; i < 3; i++) S.act(s, P, 'do shovel', fixed([2]));
+  assert.equal(s.fight && s.fight.foe, 'ghoul');
+  s = S.start(hero, P, fixed([20])); for (let i = 0; i < 6 && !s.flags.filled; i++) S.act(s, P, 'do shovel', fixed([20]));
+  assert.equal(s.flags.filled, true); assert.ok(!s.fight); assert.equal(s.flags.thanked, true);
+  /* the inn: one player is a stranger; name the right one and your first blow is Easy, name the wrong one and the Horror rises */
+  const I = ADVS.inn;
+  s = S.start(hero, I, fixed([2])); assert.equal(s.flags.false, 'demon');
+  S.act(s, I, 'do watch', fixed([20])); assert.equal(s.flags.clued, true);
+  S.act(s, I, 'do accuse_demon', fixed([20])); assert.equal(s.fight.foe, 'mummer'); assert.ok(s.fight.easy >= 1); assert.equal(s.horror, 0);
+  s = S.start(hero, I, fixed([2])); S.act(s, I, 'do accuse_saint', fixed([10])); assert.equal(s.fight.foe, 'mummer'); assert.equal(s.fight.easy, 0); assert.equal(s.horror, 1);
+  assert.match(I.rooms.yard.secret({ flag: () => 'fool' }), /the Fool/, 'learning the yard\'s secret names the stranger');
+  /* the field: give the knight his rites and he lies down; fail them, or take his challenge, and he fights */
+  const F = ADVS.field;
+  s = S.start(hero, F, fixed([20])); S.act(s, F, 'do rites', fixed([20])); assert.equal(s.flags.rites, true); assert.ok(!s.fight);
+  S.act(s, F, 'do go', fixed([20])); assert.equal(s.over, 'won');
+  s = S.start(hero, F, fixed([2])); S.act(s, F, 'do rites', fixed([2])); assert.equal(s.fight.foe, 'knight');
+  s = S.start(hero, F, fixed([2])); for (let i = 0; i < 3; i++) S.act(s, F, 'do cross', fixed([2])); assert.equal(s.fight && s.fight.foe, 'knight', 'three failed tries and he sees you');
 });

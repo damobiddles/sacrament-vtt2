@@ -75,7 +75,7 @@
     el.appendChild(document.createTextNode(text.slice(at)));
   }
   /* each place has the tune of its mood */
-  var MOOD = { gate: 'gate', crossroads: 'gate', lane: 'gate', ford: 'gate', gibbet: 'gate', stones: 'gate', nave: 'nave', cloister: 'nave', barn: 'nave', crypt: 'crypt', undercroft: 'crypt', ossuary: 'crypt', mere: 'crypt', tower: 'tower', shrine: 'tower', hospice: 'nave', wood: 'gate', bridge: 'gate' };
+  var MOOD = { gate: 'gate', crossroads: 'gate', lane: 'gate', ford: 'gate', gibbet: 'gate', stones: 'gate', nave: 'nave', cloister: 'nave', barn: 'nave', crypt: 'crypt', undercroft: 'crypt', ossuary: 'crypt', mere: 'crypt', tower: 'tower', shrine: 'tower', hospice: 'nave', wood: 'gate', bridge: 'gate', chapter: 'nave', barrow: 'tower', pit: 'crypt', inn: 'gate', field: 'gate' };
   function render() {
     tune(state.over === 'won' || state.done ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : MOOD[ADV().rooms[state.room].art] || 'gate');
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
