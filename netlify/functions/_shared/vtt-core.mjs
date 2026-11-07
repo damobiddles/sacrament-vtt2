@@ -845,7 +845,7 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     const tc = target && s.cards[target], priv = !!(tc && !isPublic(s, tc)), out = { rollId: null };
     if (u.pick) { /* a grimoire read by the die: the die chooses the spell, and the reader casts it */
-      const sides = u.pickDie || u.pick, n = d(ctx, sides), sp = u.spells[Math.floor((n - 1) * u.pick / sides)]; u = SC.useSpell(u, sp); out.picked = { n, spellId: sp.id, name: sp.name };
+      const sides = u.pickDie || u.pick, n = d(ctx, sides), sp = SC.pickSpell(u, n); u = SC.useSpell(u, sp); out.picked = { n, spellId: sp.id, name: sp.name };
       L(s, a, ctx, ch.name + ' reads ' + u.item.name + ': d' + sides + ' shows ' + n + ', ' + sp.name + '.', { kind: 'roll', dice: diceOf(false, sides, n) });
     }
     powerBlock(s, ch, u);
