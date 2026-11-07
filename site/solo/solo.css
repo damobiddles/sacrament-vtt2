@@ -122,7 +122,7 @@
 .log .k-win{color:#d9c48a;border-left-color:var(--candle)}
 .log .k-miss{color:var(--dim)}
 .log .k-hurt{color:#e39a8c}
-.log .k-heal{color:var(--verdigris)}
+.log .k-heal{color:#f0c4b4}
 .log .k-horror{color:#d88d80;padding-left:10px;border-left:2px solid #a4443b}
 .log .k-loot{color:#e8cf8a;padding-left:10px;border-left:2px solid var(--candle)}
 .log .k-foe{color:#eadfc6}
@@ -140,7 +140,9 @@
 .ch.go{background:var(--bg);color:var(--fg);border-color:var(--edge)}
 .ch.go:hover{border-color:var(--candle);color:var(--candle)}
 .ch.spell{background:var(--indigo-deep);color:#e4e8f6;border-color:#56619a}
-.ch.use{background:var(--verdigris-deep);color:#e6f1ec;border-color:#4f8574}
+.ch.use{background:#3d3124;color:#f1e6cf;border-color:#8a7458}
+.ch.friend{background:#1d4424;color:#e9f7e5;border-color:#8fd18a}
+.ch.friend:hover{background:#255a2e}
 .ch.push{background:#5b4316;color:#f6e7c3;border-color:var(--candle)}
 .ch.plain{background:var(--bg);color:var(--fg);border-color:var(--edge)}
 .ch.wide,.chw.wide{grid-column:1/-1}
@@ -223,7 +225,8 @@
 .ch{font:600 1rem/1.25 var(--label);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--on-blood) 35%,transparent),inset 0 0 0 4px var(--blood),inset 0 0 0 5px color-mix(in srgb,var(--on-blood) 28%,transparent);border:0;padding:9px 12px}
 .ch.go,.ch.plain,.ch.idle{box-shadow:inset 0 0 0 1px var(--edge)}
 .ch.spell{box-shadow:inset 0 0 0 1px #56619a,inset 0 0 0 4px var(--indigo-deep),inset 0 0 0 5px #56619a88}
-.ch.use{box-shadow:inset 0 0 0 1px #4f8574,inset 0 0 0 4px var(--verdigris-deep),inset 0 0 0 5px #4f857488}
+.ch.use{box-shadow:inset 0 0 0 1px #8a7458,inset 0 0 0 4px #3d3124,inset 0 0 0 5px #8a745888}
+.ch.friend{box-shadow:inset 0 0 0 1px #8fd18a,inset 0 0 0 4px #1d4424,inset 0 0 0 5px #8fd18a88,0 0 12px #8fd18a55}
 .ch.push{box-shadow:inset 0 0 0 1px var(--candle),inset 0 0 0 4px #5b4316,inset 0 0 0 5px #b8955a88}
 .ch small.odds{font:600 .78rem var(--label);letter-spacing:.06em;color:#f1dcc4;margin-top:3px}
 .ch.go small.odds,.ch.plain small.odds{color:var(--dim)}
@@ -356,3 +359,4 @@
 .caption.gone{opacity:0;transition:opacity .4s}
 @keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.caption{animation:none}}
+.log .k-npc.friend{border-left-color:#8fd18a}

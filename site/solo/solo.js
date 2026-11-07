@@ -93,6 +93,7 @@
     }
     for (; shown < state.log.length; shown++) {
       var line = state.log[shown], p = document.createElement('p'); p.className = 'k-' + line.k + (quiet ? '' : ' new'); withNames(p, line.t);
+      if (line.k === 'npc' && p.querySelector('.npc-name')) p.classList.add('friend');
       if (line.k === 'cmd') log.querySelectorAll('p:not(.old)').forEach(function (o) { o.classList.add('old'); });
       log.appendChild(p);
     }
@@ -231,7 +232,7 @@
     toast(ok ? 'Home: ' + (came.join(', ') || 'nothing') + '.' : 'Not saved: try again.', ok ? 'Brought home' : 'Not saved');
   }
   function choiceButton(c, cls) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
+    var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (/^meet /.test(c.cmd || '') ? 'friend' : c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
     if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = c.why || 'No use here'; b.appendChild(no); }
     else {
@@ -297,6 +298,7 @@
       var pips = $('pips'); pips.classList.remove('pulse'); void pips.offsetWidth; pips.classList.add('pulse');
       if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) buzz([40, 60, 40]);
     } else if (state.horror >= 14 && !state.over) setTimeout(function () { sfx('heart'); }, 400);
+    if (o.fresh.some(function (l) { return l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; }); })) setTimeout(function () { sfx('friend'); }, 150);
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
     if (finds.length) { setTimeout(function () { sfx('find'); }, 300); finds.forEach(function (l, n) { setTimeout(function () { toast(l.t); }, 350 + n * 900); }); }
     if (state.done && !o.done) { setTimeout(victory, 900); }
