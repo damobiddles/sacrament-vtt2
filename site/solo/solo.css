@@ -330,6 +330,29 @@
   .ch{min-height:48px;font-size:.95rem}
   .ch small{font-size:.74rem}
   .toast{top:44px}
+  /* only the latest beat of the story shows; the rest folds behind its button */
+  .log p.old{display:none}
+  .log.whole-open p.old{display:block}
+  .log .whole{display:block;width:100%;min-height:40px;margin:0 0 8px;padding:6px 12px;font:600 .9rem var(--px);color:var(--fg);background:none;border:1px solid var(--edge);text-align:left;cursor:pointer}
+  .log .whole:hover,.log .whole:focus-visible{color:var(--candle);border-color:var(--candle)}
+  .caption{top:44px}
+  /* two dice (a foe's attack and its damage) sit side by side, so the card fits the short picture */
+  #dice{--ui-die-size:48px;padding:6px}
+  .reveal-result{grid-template-columns:auto minmax(0,1fr)}
+  .reveal-dice .dice-roll{display:flex;gap:6px}
 }
 /* opened from the Home Screen there is no browser bar */
 @media (display-mode:standalone) and (max-width:699px) and (max-aspect-ratio:1/1){.controls{padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}}
+
+/* ---------- playing from the picture (2026-11-07) ---------- */
+.log .whole{display:none}
+.choices .waiting{grid-column:1/-1;margin:0;min-height:44px;display:flex;align-items:center;padding:6px 12px;font:600 1rem var(--px);color:var(--dim);border:1px dashed var(--edge)}
+.caption{position:absolute;z-index:4;left:8px;right:8px;top:10px;margin:0 auto;max-width:46ch;display:block;padding:8px 12px;text-align:left;font:1rem/1.35 var(--tty);color:#f3ead6;background:#0b0a08e8;border:0;border-left:3px solid var(--candle);box-shadow:0 4px 18px #000a;cursor:pointer;animation:solo-cap .35s ease-out both}
+.caption b{display:block;font:600 1.15rem/1.2 var(--display);color:var(--candle)}
+.caption>span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.caption.k-npc{border-left-color:#8fd18a}
+.caption.k-horror{border-left-color:#d0574a;color:#f0b3a8}
+.caption.k-end{border-left-color:var(--candle);font-family:var(--display);font-size:1.05rem}
+.caption.gone{opacity:0;transition:opacity .4s}
+@keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.caption{animation:none}}

@@ -702,3 +702,15 @@ test('break away: no running from a finale, and running at a full Horror meter c
   S.act(s, adv, 'flee', fixed([20]));
   assert.ok(s.fight, 'there is nowhere to run at the end of the road');
 });
+
+test('a natural 1 says on the dice card whether it raised the Horror, in the Rules page\'s terms', () => {
+  const s = cryptFight();
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([1]));
+  const atk = s.log.filter((l) => l.outcome).at(-1).outcome;
+  assert.match(atk.note, new RegExp('Natural 1 on an attack: \\+' + R.HORROR.nat1 + ' Horror'));
+  const cart = ADVS.cart, c = S.start(T.generate('fighter', seeded(3)), cart, fixed([1]));
+  S.act(c, cart, 'way wheel lift', fixed([1]));
+  const plain = c.log.filter((l) => l.outcome).at(-1).outcome;
+  assert.match(plain.note, /Natural 1 on a plain check: no Horror/);
+  assert.equal(c.horror, 0);
+});
