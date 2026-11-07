@@ -649,5 +649,46 @@
     grimoire: '<rect x="7" y="5" width="18" height="23" rx="2" fill="#24407e" stroke="#2a1a10" stroke-width="1"/><path d="M10 5 V28" stroke="#16244a" stroke-width="2"/><path d="M16 11 V21 M12 15 H20" stroke="#ecc85e" stroke-width="1.6"/>'
   };
   function icon(kind) { return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' + (ICONS[kind] || ICONS.supply) + '</svg>'); }
-  root.SacramentSoloArt = { W: W, H: H, scene: scene, icon: icon, spot: spot, scenes: Object.keys(SCENES), paintings: PAINT, foePaintings: FOE_PAINT };
+  /* ---------- the end card: a page from the book, for the end of a run ----------
+     sum is SacramentSolo.summary(state). The same picture shows on screen and is saved as a picture, so it uses only plain fonts the device has. */
+  function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function wrap(text, n) {
+    var out = [], line = '';
+    String(text || '').split(/\s+/).forEach(function (w) { if (!w) return; if (line && (line + ' ' + w).length > n) { out.push(line); line = w; } else line = line ? line + ' ' + w : w; });
+    if (line) out.push(line); return out;
+  }
+  var ENDS = { won: 'Came home', dead: 'Fell on the road', fled: 'Got away' };
+  function endCard(sum, s, when) {
+    var CW = 360, F = ' font-family="Georgia, \'Times New Roman\', serif"', y = 0, body = '';
+    var text = function (x, yy, t, size, o) { o = o || {}; return '<text x="' + x + '" y="' + yy + '"' + F + ' font-size="' + size + '" fill="' + (o.fill || P.ink) + '"' + (o.anchor ? ' text-anchor="' + o.anchor + '"' : '') + (o.bold ? ' font-weight="bold"' : '') + (o.italic ? ' font-style="italic"' : '') + (o.spacing ? ' letter-spacing="' + o.spacing + '"' : '') + '>' + esc(t) + '</text>'; };
+    var head = function (t) { y += 26; body += text(28, y, t.toUpperCase(), 11, { fill: P.verm, bold: true, spacing: 1.6 }) + '<path d="M28 ' + (y + 6) + ' H332" stroke="' + P.gold + '" stroke-width="1"/>'; y += 8; };
+    var lines = function (list, size, o) { list.forEach(function (l) { y += size + 6; body += text(o && o.x || 28, y, l, size, o); }); };
+    body += text(CW / 2, 40, (sum.road || 'The Pilgrim Road').toUpperCase(), 12, { anchor: 'middle', fill: P.umber, bold: true, spacing: 2.4 });
+    body += text(CW / 2, 76, ENDS[sum.end] || 'The road', 28, { anchor: 'middle', fill: sum.end === 'won' ? P.lapis : P.verm, bold: true });
+    body += '<path d="M120 90 H240" stroke="' + P.gold + '" stroke-width="1.4"/><circle cx="180" cy="90" r="3" fill="' + P.gold + '"/>';
+    body += hero(s, 'e', 34, 104, 0.82, false);
+    y = 128; lines(wrap(sum.hero, 20), 20, { x: 100, bold: true });
+    if (sum.calling) lines(wrap(sum.calling, 30), 13, { x: 100, fill: P.umber });
+    y += 4; lines(['Highest Horror: ' + sum.peak + ' of ' + sum.horrorMax], 13, { x: 100 });
+    y = Math.max(y, 222);
+    head('The road' + (sum.to ? ' to ' + sum.to : ''));
+    sum.places.forEach(function (pl, k) {
+      var last = k === sum.places.length - 1, mark = last && sum.end === 'dead' ? ' (fell here)' : last && sum.end === 'fled' ? ' (got away)' : '';
+      lines(wrap((k + 1) + '. ' + pl + mark, 44), 14, { bold: last && sum.end === 'won' && k === sum.total - 1 });
+    });
+    if (sum.places.length < sum.total) lines([(sum.total - sum.places.length) + ' more ' + (sum.total - sum.places.length === 1 ? 'place' : 'places') + ' not reached'], 12, { fill: P.umber, italic: true });
+    head('Foes beaten');
+    lines(sum.beaten.length ? wrap(sum.beaten.join(', ') + '.', 46) : ['None.'], 14);
+    head(sum.end === 'won' ? 'Brought home' : 'Carried at the end');
+    lines(sum.finds.length ? wrap(sum.finds.join(', ') + '.', 46) : ['Nothing found on the road.'], 14);
+    if (sum.line) { y += 18; lines(wrap(sum.line, 40), 15, { anchor: 'middle', x: CW / 2, italic: true, fill: P.umber }); }
+    y += 30; body += text(CW / 2, y, 'Sacrament RPG · Solo' + (when ? ' · ' + when : ''), 10, { anchor: 'middle', fill: P.earth, spacing: 1 });
+    var CH = y + 26;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + CW + ' ' + CH + '" width="' + CW + '" height="' + CH + '">'
+      + '<rect width="' + CW + '" height="' + CH + '" fill="' + P.vellum + '"/>'
+      + '<rect x="8" y="8" width="' + (CW - 16) + '" height="' + (CH - 16) + '" fill="none" stroke="' + P.gold + '" stroke-width="3"/>'
+      + '<rect x="14" y="14" width="' + (CW - 28) + '" height="' + (CH - 28) + '" fill="none" stroke="' + P.ink + '" stroke-width=".8"/>'
+      + body + '</svg>';
+  }
+  root.SacramentSoloArt = { endCard: endCard, W: W, H: H, scene: scene, icon: icon, spot: spot, scenes: Object.keys(SCENES), paintings: PAINT, foePaintings: FOE_PAINT };
 })(typeof window !== 'undefined' ? window : globalThis);

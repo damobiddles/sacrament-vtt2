@@ -17,7 +17,13 @@
     blurb: 'Five nights on the pilgrim road, out to the boundary stones. Every road is different.',
     intro: 'The pilgrim road runs from the heartlands to the boundary of the consecrated land, five days on foot. You have walked it before. Not like this.',
     scenes: ['priory', 'cart', 'warrant', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'pit', 'inn', 'field', 'shrine', 'mere', 'barrow'],
-    middle: 3
+    middle: 3,
+    /* the closing line on the end card, by how the run ended (won, dead, or fled: crawled out of the finale alive) */
+    endings: {
+      won: ['You came to the end of the road and walked back from it. Few can say as much.', 'The road is quiet behind you. It will not stay quiet.', 'What you set out to do is done. You do not speak of the rest.'],
+      dead: ['The road keeps what it takes. Someone will find your scallop shell in the spring.', 'No bell was rung for you. The road does not ring bells.', 'You fell short of the boundary stones, as many have.'],
+      fled: ['You lived. That is all the road gave you, and it was not nothing.', 'You got away with your life and nothing else. The road remembers your face.']
+    }
   };
 
   /* ---------- people met on the road (the owner's own, 2026-11-06) ----------

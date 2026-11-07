@@ -44,6 +44,11 @@
     <button type="button" class="pick" data-focus="healer"><b>Healer</b><span>Prayers that mend</span></button>
   </div>
   <p class="fine">Your hero plays as a copy: nothing you do here changes the hero saved in <a href="/character/">My heroes</a>. The adventure saves itself in this browser.</p>
+  <section id="chronicle" class="chronicle" hidden aria-labelledby="chronicleTitle">
+    <h2 id="chronicleTitle">Chronicle</h2>
+    <ol id="chronicleList"></ol>
+    <p class="fine">Your past roads, kept in this browser on this device.</p>
+  </section>
 </main>
 
 <main id="game" class="game" hidden>
@@ -97,6 +102,18 @@
     <p id="wonState" class="calling"></p>
     <p id="wonNext" class="next"></p>
     <form method="dialog"><button class="btn">On</button></form>
+  </div>
+</dialog>
+
+<dialog id="end" class="sheet end" aria-labelledby="endTitle">
+  <div class="sheet-in">
+    <h2 id="endTitle" class="vh">The end of the road</h2>
+    <div id="endCard" class="endcard" role="img"></div>
+    <p id="endSaved" class="fine" hidden></p>
+    <div class="end-btns">
+      <button type="button" class="btn" id="endSave">Save as a picture</button>
+      <form method="dialog"><button class="btn ghost">Close</button></form>
+    </div>
   </div>
 </dialog>
 

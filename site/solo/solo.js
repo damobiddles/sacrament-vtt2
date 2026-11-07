@@ -19,6 +19,28 @@
   function load() { try { var raw = JSON.parse(localStorage.getItem(SAVE) || 'null'); return raw && raw.game && raw.game.run && S.valid(raw.game, S.sceneOf(raw.game)) ? raw : null; } catch { return null; } }
   function save() { try { localStorage.setItem(SAVE, JSON.stringify({ game: state, hero: state && state.origin })); } catch { /* private window: the game still plays, it just will not be there next time */ } }
   function forget() { try { localStorage.removeItem(SAVE); } catch { /* nothing to forget */ } }
+  /* The Chronicle: one line for each finished road, newest first, kept in this browser (like My heroes). */
+  var CHRONICLE = 'sacrament-solo-chronicle-v1', CHRONICLE_MAX = 50;
+  function chronicle() { try { var l = JSON.parse(localStorage.getItem(CHRONICLE) || '[]'); return Array.isArray(l) ? l : []; } catch { return []; } }
+  function today() { try { return new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return ''; } }
+  /* a run that has just ended goes into the Chronicle, once */
+  function remember() {
+    if (!state || !state.over || !state.run || state.run.logged) return;
+    var sum = S.summary(state); state.run.logged = today() || true;
+    var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged });
+    try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
+  }
+  var HOW = { won: 'came home', dead: 'fell', fled: 'got away' };
+  function showChronicle() {
+    var l = chronicle(), box = $('chronicleList'); box.textContent = ''; $('chronicle').hidden = !l.length;
+    l.slice(0, 12).forEach(function (e) {
+      var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
+      li.className = e.end || ''; b.textContent = e.hero;
+      w.textContent = (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
+      w.style.whiteSpace = 'normal'; d.textContent = e.date || '';
+      var left = document.createElement('div'); left.append(b, w); li.append(left, d); box.appendChild(li);
+    });
+  }
 
   /* ---------- the first screen ---------- */
   function showStart() {
@@ -31,6 +53,7 @@
       b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; showGame(false); });
       resume.appendChild(b);
     }
+    showChronicle();
     var mine = $('mine'); mine.textContent = '';
     var list; try { list = window.SacramentHeroes.read().heroes || []; } catch { list = []; }
     if (!list.length) { var p = document.createElement('p'); p.className = 'empty'; p.innerHTML = 'You have no heroes saved in this browser yet. Make one in <a href="/character/">My heroes</a>, or take a ready-made hero below.'; mine.appendChild(p); }
@@ -136,6 +159,7 @@
       again.addEventListener('click', function () { begin(state.origin); });
       var other = choiceButton({ label: 'Choose another hero', cmd: '' }, 'ch go'); other.addEventListener('click', function () { forget(); showStart(); });
       var home = homeButton(); if (home) box.appendChild(home);
+      var card = choiceButton({ label: 'See the end card', cmd: '' }, 'ch go wide'); card.addEventListener('click', showEnd); box.appendChild(card);
       box.append(again, other); return;
     }
     var list = S.choices(state, ADV()), main = [], extra = [];
@@ -202,16 +226,16 @@
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
-    var before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
+    var overBefore = state.over, before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
     S.act(state, ADV(), cmd, die);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !state.escaped && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
-    save(); renderLog(false); render(); roll(state.log.slice(before));
+    remember(); save(); renderLog(false); render(); roll(state.log.slice(before));
     if (slain) {
       var foe = document.querySelector('#art .who.foe'); if (foe) foe.classList.add('dying'); document.querySelectorAll('#art .foeflame').forEach(function (f) { f.classList.add('out'); });
       setTimeout(function () { dying = false; paint(); }, 1900);
     }
-    feel({ fresh: state.log.slice(before), hp: hpBefore, foe: foeBefore, horror: horrorBefore, done: doneBefore, place: place, slain: slain });
+    feel({ over: overBefore, fresh: state.log.slice(before), hp: hpBefore, foe: foeBefore, horror: horrorBefore, done: doneBefore, place: place, slain: slain });
   }
   /* ---------- feeling it: what each action does to the picture, the sound and the phone ---------- */
   function sfx(name) { if (M && M.sfx) M.sfx(name); }
@@ -240,6 +264,7 @@
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
     if (finds.length) { setTimeout(function () { sfx('find'); }, 300); finds.forEach(function (l, n) { setTimeout(function () { toast(l.t); }, 350 + n * 900); }); }
     if (state.done && !o.done) { setTimeout(victory, 900); }
+    if (state.over && state.run && state.run.logged && !o.over) setTimeout(showEnd, 1400);
   }
   /* a find: its card slides in over the picture for a moment */
   function toast(text, label) {
@@ -261,6 +286,38 @@
     $('wonNext').textContent = fork ? 'The road forks: ' + fork.map(function (id) { return S.sceneOf({ adventure: id }).title; }).join(', or ') + '.' : next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
     if (!d.open) d.showModal();
   }
+  /* The end card: the whole road on one page from the book. It can be saved as a picture (or shared, where the device can). */
+  function showEnd() {
+    if (!state || !state.over || !state.run) return;
+    var sum = S.summary(state), svg = ART.endCard(sum, state, state.run.logged === true ? '' : state.run.logged);
+    $('endCard').innerHTML = svg;
+    $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
+    $('endSaved').hidden = true;
+    var d = $('end'); if (!d.open) d.showModal();
+  }
+  function saveCard() {
+    var el = $('endCard').querySelector('svg'); if (!el) return;
+    var w = el.viewBox.baseVal.width, h = el.viewBox.baseVal.height, k = 3, img = new Image(), name = 'sacrament-solo-' + (state ? state.hero.name : 'road').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+    var said = function (t) { $('endSaved').textContent = t; $('endSaved').hidden = false; };
+    img.onload = function () {
+      var c = document.createElement('canvas'); c.width = w * k; c.height = h * k;
+      var g = c.getContext('2d'); g.scale(k, k); g.drawImage(img, 0, 0, w, h);
+      c.toBlob(function (blob) {
+        if (!blob) { said('The picture could not be made on this device.'); return; }
+        var file; try { file = new File([blob], name, { type: 'image/png' }); } catch { file = null; }
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: 'Sacrament RPG: the end of the road' }).catch(function () { /* the player closed the share sheet */ });
+          return;
+        }
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); said('Saved as ' + name + '.');
+      }, 'image/png');
+    };
+    img.onerror = function () { said('The picture could not be made on this device.'); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(el));
+  }
+  $('endSave').addEventListener('click', saveCard);
+
   /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */
   function roll(fresh) {
     var checks = fresh.filter(function (l) { return l.outcome; });
@@ -328,6 +385,6 @@
   $('restartBtn').addEventListener('click', function () { $('menu').close(); begin(state.origin); });
   $('newHeroBtn').addEventListener('click', function () { $('menu').close(); forget(); showStart(); });
 
-  window.__solo = { state: function () { return state; }, run: run, render: function () { render(); }, victory: function () { victory(); } };
+  window.__solo = { state: function () { return state; }, run: run, render: function () { render(); }, victory: function () { victory(); }, end: function () { showEnd(); } };
   showStart();
 })();
