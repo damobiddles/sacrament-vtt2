@@ -394,3 +394,7 @@
 @media (prefers-reduced-motion:reduce){#dice .reveal-result{transition:none}}
 /* words on the picture and a dice card at once: the card drops to the foot of the picture so both can be read */
 .frame:has(.caption:not(.gone)) #dice{align-items:flex-end}
+
+/* Use now on the hero sheet: a small button under the thing it uses */
+.sheet .usenow{display:flex;width:max-content;max-width:100%;margin:8px 0 2px;min-height:36px;padding:4px 12px;font-size:.85rem}
+.sheet .usenow.useful{box-shadow:0 0 0 1px #e0c27a,0 0 10px #e0c27a66}

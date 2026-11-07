@@ -498,8 +498,8 @@
   function stat(k, v) { var s = document.createElement('span'), b = document.createElement('b'); b.textContent = k; s.append(b, String(v)); return s; }
   function gearList(ul, eq) {
     ul.textContent = '';
-    var any = false;
-    (state.hero.gear || []).forEach(function (g) {
+    var any = false, now = state.over ? [] : S.choices(state, ADV()).filter(function (c) { return !c.idle && /^(use|push) \d+/.test(c.cmd || ''); });
+    (state.hero.gear || []).forEach(function (g, i) {
       var it = C.itemOf(g); if (!it || !!g.eq !== eq) return; any = true;
       var li = document.createElement('li'), img = document.createElement('img'), div = document.createElement('div'), sm = document.createElement('small');
       img.src = ART.icon(it.kind); img.alt = '';
@@ -507,10 +507,21 @@
       sm.textContent = it.does || it.flavour || ''; div.appendChild(sm);
       if (it.kind === 'grimoire') C.spellsOf(it).forEach(function (sp) {
         var p = document.createElement('p'), b = document.createElement('b'); p.className = 'spell'; b.textContent = sp.name + (sp.roll ? ' (' + sp.roll + ')' : '') + ': ';
-        p.append(b, document.createTextNode(sp.does || '')); div.appendChild(p);
+        p.append(b, document.createTextNode(sp.does || '')); useNow(p, i, sp.id); div.appendChild(p);
       });
+      else useNow(div, i, '');
       li.append(img, div); ul.appendChild(li);
     });
+    /* the sheet is for looking, and when something on it can be used this moment, it says so with a button that does it (the owner's tick, 2026-11-07) */
+    function useNow(el, i, spell) {
+      now.filter(function (c) { var p = c.cmd.split(' '); return +p[1] === i && (p[2] && p[2] !== 'ultimate' ? p[2] : '') === spell; }).forEach(function (c) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn usenow' + (c.useful ? ' useful' : '');
+        b.textContent = c.kind === 'push' ? 'Push now' : c.kind === 'attack' ? 'Attack now' : c.kind === 'spell' ? 'Cast now' : 'Use now';
+        if (c.horror) b.textContent += ' (+' + c.horror + ' Horror)';
+        b.addEventListener('click', function () { $('sheet').close(); run(c.cmd); });
+        el.appendChild(b);
+      });
+    }
     if (!any) { var li = document.createElement('li'); li.className = 'none'; li.textContent = 'Nothing.'; ul.appendChild(li); }
   }
 
