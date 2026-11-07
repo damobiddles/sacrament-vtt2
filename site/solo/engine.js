@@ -513,7 +513,9 @@
       return out;
     }
     var r = adv.rooms[s.room], who = cameoNow(s);
-    if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
+    var asked = who && s.flags['riddle_' + who.id];
+    if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
+    else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
     (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
@@ -699,6 +701,7 @@
     else if (p[0] === 'meet') {
       var w = cameoNow(s);
       if (!w || w.id !== p[1] || (w.when && !w.when(api))) api.say('There is no one here by that name.', 'note');
+      else if (w.riddles) riddle(api, w, p[2]);
       else { s.flags['cameo_' + w.id] = true; s.run.met.push(w.id); w.run(api); }
     }
     else if (p[0] === 'do') {
@@ -770,15 +773,30 @@
     var k = run.at + 1, was = run.order[k]; if (id === was) return;
     run.order[k] = id; run.spare = run.spare.filter(function (x) { return x !== id; }); run.spare.push(was);
   }
-  /* People met on the road (SacramentSoloCameos): a run meets up to three of them, in different scenes, never the last one. */
+  /* People met on the road (SacramentSoloCameos): a run meets up to two of them, in different scenes, never the last one. */
+  var FRIENDS_PER_ROAD = 2;   /* rare, so meeting one is luck (the owner's tick, 2026-11-07) */
   function pickCameos(n, die) {
     var people = (root.SacramentSoloCameos || []).map(function (c) { return c.id; }), out = [];
     for (var i = 0; i < n; i++) out.push('');
     var slots = []; for (var k = 0; k < n - 1; k++) slots.push(k);
-    for (var m = 0; m < 3 && people.length && slots.length; m++) {
+    for (var m = 0; m < FRIENDS_PER_ROAD && people.length && slots.length; m++) {
       var who = people.splice(die(people.length) - 1, 1)[0], at = slots.splice(die(slots.length) - 1, 1)[0]; out[at] = who;
     }
     return out;
+  }
+  /* A friend who asks a riddle first (Simon the Scholar): three answers to tap. The right one gets his help; a wrong one gets nothing. Wits, not a roll. */
+  function riddle(api, w, pick) {
+    var s = api.s, key = 'riddle_' + w.id, asked = s.flags[key];
+    if (!asked) {
+      var i = api.die(w.riddles.length) - 1, order = [0, 1, 2];
+      for (var k = 2; k > 0; k--) { var j = api.die(k + 1) - 1, t = order[k]; order[k] = order[j]; order[j] = t; }
+      s.flags[key] = { i: i, order: order }; if (s.run && s.run.met.indexOf(w.id) < 0) s.run.met.push(w.id);
+      api.say(w.ask(w.riddles[i].q), 'npc'); return;
+    }
+    var n = asked.order[int(pick, 0) - 1]; if (n == null) { api.say('Choose one of the three answers.', 'note'); return; }
+    s.flags['cameo_' + w.id] = true; delete s.flags[key];
+    api.say('"' + w.riddles[asked.i].a[n] + '," you say.', 'act');
+    if (n === 0) w.run(api); else api.say(w.wrong(w.riddles[asked.i].a[0]), 'npc');
   }
   function cameoNow(s) {
     var id = s.run && s.run.cameos && s.run.cameos[s.run.at]; if (!id || s.flags['cameo_' + id]) return null;

@@ -212,6 +212,8 @@
     /* the foe's turn plays out by itself, a moment after yours */
     if (f && f.phase === 'foe') { box.appendChild(waiting(f.name + ' moves…')); foeSoon(); return; }
     var list = S.choices(state, ADV()), main = [], extra = [];
+    var rid = list.filter(function (c) { return c.riddle; })[0];   /* a friend's riddle: the question stays above the three answers while you think */
+    if (rid) { var q = document.createElement('p'); q.className = 'riddle'; var who = document.createElement('b'); who.textContent = rid.by + ' asks'; q.append(who, document.createTextNode(rid.riddle)); box.appendChild(q); }
     list.forEach(function (c) { ((c.kind === 'use' || (c.kind === 'spell' && !c.strike)) ? extra : main).push(c); });
     main.forEach(function (c) { box.appendChild(choiceButton(c)); });
     if (main.length % 2) box.lastChild.classList.add('wide');
