@@ -317,6 +317,8 @@
     /* Turn order, as at the table: the hero, then the foe. phase: hero (choose an action), damage (a hit waits for Roll damage), push (a miss: push or end the turn), foe (the foe's turn is next). */
     api.s.fight = { foe: foeId, art: f.art || foeId, undead: !!f.undead, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false };
     api.say(typeof f.appears === 'function' ? f.appears(api) : f.appears, 'foe');
+    /* forewarned (Simon the Scholar): the hero has read about this foe, so their first attack against it is Easy, as when learning a foe's ways */
+    if (api.story('forewarned')) { api.story('forewarned', false); api.s.fight.easy = 1; api.s.fight.learned = true; api.say('You have read about this one. Your first attack against it is Easy.', 'note'); }
     if (api.s.hunted) { var hp = api.s.fight.hp; hp.cur += DREAD.huntedHp; hp.max += DREAD.huntedHp; api.say('You are hunted: it has ' + DREAD.huntedHp + ' more HP (' + hp.max + ').', 'note'); }
   }
   /* Everything the hero can attack, cast or use, from the sheet's own list. */

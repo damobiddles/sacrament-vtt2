@@ -12,7 +12,7 @@ A game is **five scenes**, picked in a semi-random order that always makes sense
 
 HP, Horror, gear and used healing carry from scene to scene. When a scene is done the player may rest once (if hurt) before going on. Earlier scenes can leave marks that matter later (tracks found at the cart, a clue from an NPC make the finale's first attack Easy).
 
-**Friends on the road (owner's names, 2026-11-06):** Xian of Wycbold, Ser Dom of Cookham, Rupert the Druid, Matthew of the Brown Order of Farts and Lord Biddles of Wooburn. Up to three turn up per run, never in the finale, each in the first place of a scene, and each helps once (a find, a free rest, bandages, rations, or a clue). **Their names always show in green.** The names are the owner's own and stay exactly as given.
+**Friends on the road (owner's names, 2026-11-06 and 2026-11-07):** Xian of Wycbold, Ser Dom of Cookham, Rupert the Druid, Matthew of the Brown Order of Farts, Lord Biddles of Wooburn, Rachel, Witch-finder General and Simon the Scholar. Up to three turn up per run, never in the finale, each in the first place of a scene, and each helps once (a find, a free rest, bandages, rations, a clue, a Flask of Holy Oil, or reading up on the next foe: the first attack against it is Easy). **Their names always show in green.** The names are the owner's own and stay exactly as given.
 
 **Hearts over foes (owner, 2026-11-06):** a foe's life shows as Hearts (10 HP a Heart, as at the table) above it in the picture and on its card.
 

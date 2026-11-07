@@ -226,7 +226,7 @@ test('between scenes the hero may rest once, then goes on; the next scene starts
 
 test("the owner's people of the road: a run meets up to three, never in the last scene, and their names are the owner's", () => {
   const names = globalThis.SacramentSoloCameos.map((c) => c.name);
-  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn']);
+  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar']);
   for (let seed = 1; seed <= 50; seed++) {
     const rnd = seeded(seed), s = S.startRun(T.generate('scout', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n)), c = s.run.cameos;
     assert.equal(c.length, 5); assert.equal(c[4], ''); const met = c.filter(Boolean); assert.ok(met.length <= 3 && met.length >= 1); assert.equal(new Set(met).size, met.length);
@@ -591,4 +591,24 @@ test('the end of a run: the end card says where the hero went, what they beat, w
   assert.ok(ends.size >= 2, 'runs end in more than one way: ' + [...ends].join(', '));
   const odd = ART.endCard({ hero: 'A <b>&"', places: ['X'], beaten: [], finds: [], peak: 0, horrorMax: 21, end: 'dead', total: 5, line: '' }, null, '');
   assert.ok(odd.includes('A &lt;b&gt;&amp;&quot;') && !odd.includes('<b>'), 'names are written safely into the picture');
+});
+
+test('the new people of the road: Rachel, Witch-finder General gives Holy Oil; Simon the Scholar makes the first attack on the next foe Easy', () => {
+  const priory = (who) => {
+    for (let seed = 1; seed < 200; seed++) {
+      const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', seeded(4)), 'pilgrim-road', die);
+      if (s.adventure === 'priory') { s.run.cameos[0] = who; return { s, die }; }
+    }
+    throw new Error('no run opened at the priory');
+  };
+  { const { s, die } = priory('rachel'), had = s.hero.gear.filter((g) => g.id === 'oil').length;
+    assert.ok(S.choices(s, null).some((c) => c.cmd === 'meet rachel'), 'Rachel is met where the scene begins');
+    S.act(s, null, 'meet rachel', die);
+    assert.equal(s.hero.gear.filter((g) => g.id === 'oil').length, had + 1, 'a Flask of Holy Oil, from the gear list');
+    assert.ok(s.log.some((l) => l.t.includes('Rachel, Witch-finder General'))); }
+  { const { s, die } = priory('simon');
+    S.act(s, null, 'meet simon', die);
+    assert.equal(s.run.story.forewarned, true);
+    S.act(s, null, 'go down', die);
+    assert.ok(s.fight, 'the rats in the undercroft'); assert.equal(s.fight.easy, 1, 'the first attack is Easy'); assert.ok(!s.run.story.forewarned, 'used up on that foe'); }
 });
