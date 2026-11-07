@@ -8,7 +8,7 @@
 
   root.SacramentSoloAdventures = root.SacramentSoloAdventures || {};
   root.SacramentSoloAdventures['silent-bell'] = {
-    id: 'silent-bell', act: 'middle', lean: 'any',
+    id: 'silent-bell', act: 'middle', lean: 'any', tease: 'A village where the bell has stopped ringing.',
     title: 'The Silent Bell',
     blurb: 'Wrenholt is a hamlet of nine houses and a chapel. Its bell has not rung for three nights.',
     target: 12,

@@ -166,7 +166,7 @@
 
   /* ---------- the middle of the road ---------- */
   A.ford = {
-    id: 'ford', act: 'middle', lean: 'early', title: 'The Drowned Ford', target: 12, start: 'bank',
+    id: 'ford', act: 'middle', lean: 'early', tease: 'The river is up, and the ferry is gone.', title: 'The Drowned Ford', target: 12, start: 'bank',
     intro: function (api) { api.say('The road comes down to the river Tarn, and the river has come up to meet it.'); },
     fall: function () { return 'The river takes you, gently, the way it takes everything. Downstream they will find the lead box, or a pair of boots.'; },
     obstacles: {
@@ -216,7 +216,7 @@
   };
 
   A.barn = {
-    id: 'barn', act: 'middle', lean: 'any', title: 'The Tithe Barn', target: 12, start: 'barn',
+    id: 'barn', act: 'middle', lean: 'any', tease: 'A shuttered village, and a tithe barn with its door open.', title: 'The Tithe Barn', target: 12, start: 'barn',
     intro: function (api) { api.say('Night catches you at Nether Ashby. The village is barred and shuttered. The tithe barn is not.'); },
     fall: function () { return 'In the morning the reeve finds two bodies in the Church\'s grain, and has to decide whose sin it was.'; },
     rooms: {
@@ -260,7 +260,7 @@
   };
 
   A.gibbet = {
-    id: 'gibbet', act: 'middle', lean: 'early', title: 'The Gibbet at Holloway Cross', target: 12, start: 'gibbet',
+    id: 'gibbet', act: 'middle', lean: 'early', tease: 'A cage on a post where the roads meet.', title: 'The Gibbet at Holloway Cross', target: 12, start: 'gibbet',
     intro: function (api) { api.say('At Holloway Cross the reeve hangs thieves where the roads meet, so every road can see them.'); },
     fall: function () { return 'The reeve\'s men find you under the gibbet in the morning, and take you for another thief.'; },
     obstacles: {
@@ -310,7 +310,7 @@
   };
 
   A.ossuary = {
-    id: 'ossuary', act: 'middle', lean: 'late', title: 'The Bone-House at Mourne', target: 12, start: 'ossuary',
+    id: 'ossuary', act: 'middle', lean: 'late', tease: 'A burned abbey whose bone-house did not burn.', title: 'The Bone-House at Mourne', target: 12, start: 'ossuary',
     intro: function (api) { api.say('Mourne Abbey burned a hundred years ago. Its bone-house did not. The road goes past its door, and the rain makes you go in.'); },
     fall: function () { return 'You lie down among the bones, and the bone-house counts one more.'; },
     obstacles: {

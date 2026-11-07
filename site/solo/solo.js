@@ -257,7 +257,8 @@
     $('wonTitle').textContent = 'Scene ' + (run.at + 1) + ' of ' + run.order.length + (state.escaped ? ': you got away' : ' cleared');
     $('wonFinds').textContent = finds.length ? 'Found: ' + finds.join(', ') + '.' : 'Nothing found this time.';
     $('wonState').textContent = 'HP ' + state.hp.cur + ' of ' + state.hp.max + ' · Horror ' + state.horror + ' of ' + R.HORROR.max;
-    $('wonNext').textContent = next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
+    var fork = S.forkAt(state);
+    $('wonNext').textContent = fork ? 'The road forks: ' + fork.map(function (id) { return S.sceneOf({ adventure: id }).title; }).join(', or ') + '.' : next ? 'Next: ' + next.title + (next.tease ? '. ' + next.tease : '') : '';
     if (!d.open) d.showModal();
   }
   /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */

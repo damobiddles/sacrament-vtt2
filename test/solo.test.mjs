@@ -214,8 +214,10 @@ test('between scenes the hero may rest once, then goes on; the next scene starts
   const rnd = seeded(7), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', die);
   const api = { end: null }; void api;
   s.hp.cur = 3; s.horror = 4; s.done = true;
-  let ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), ['rest', 'next']);
-  S.act(s, null, 'rest', die); assert.ok(s.hp.cur > 3); ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), ['next']);
+  /* going on is a fork in the road when the next scene is in the middle (see the forks test): the two roads, or one Go on */
+  const onward = () => { const f = S.forkAt(s); return f ? f.map((id) => 'next ' + id) : ['next']; };
+  let ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), ['rest'].concat(onward()));
+  S.act(s, null, 'rest', die); assert.ok(s.hp.cur > 3); ch = S.choices(s, null); assert.deepEqual(ch.map((c) => c.cmd), onward());
   const hp = s.hp.cur, horror = s.horror, gear = JSON.stringify(s.hero.gear), first = s.adventure;
   S.act(s, null, 'next', die);
   assert.notEqual(s.adventure, first); assert.equal(s.run.at, 1); assert.equal(s.hp.cur, hp); assert.equal(s.horror, horror); assert.equal(JSON.stringify(s.hero.gear), gear);
@@ -540,4 +542,32 @@ test('iPhone: turning the sound on asks to play as media, so the silent switch d
     globalThis.AudioContext = saved.AudioContext; globalThis.Audio = saved.Audio; globalThis.localStorage = saved.ls;
     if (saved.nav) Object.defineProperty(globalThis, 'navigator', saved.nav); else delete globalThis.navigator;
   }
+});
+
+test('forks in the road: after a scene the hero chooses between two next places, and the order stays sensible', () => {
+  const LEAN = { early: 0, any: 1, late: 2 }, hero = T.generate('fighter', seeded(9));
+  for (const id of ROAD.scenes.filter((x) => SCENES[x].act === 'middle')) assert.ok(SCENES[id].tease, id + ' has a line for the fork');
+  let forks = 0, swaps = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    const rnd = seeded(seed * 31 + 5), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(hero, 'pilgrim-road', die);
+    assert.ok(Array.isArray(s.run.spare) && s.run.spare.length > 0, 'the roads not taken are kept');
+    for (let at = 0; at < 4; at++) {
+      s.done = true; s.fight = null; s.dying = null; s.over = '';
+      const fork = S.forkAt(s), ch = S.choices(s, SCENES[s.adventure]);
+      if (at === 3) { assert.equal(fork, null, 'no fork before the finale'); break; }
+      if (!fork) { assert.ok(ch.some((c) => c.cmd === 'next')); S.act(s, SCENES[s.adventure], 'next', die); continue; }
+      forks++;
+      assert.equal(fork.length, 2); assert.notEqual(fork[0], fork[1]);
+      const roads = ch.filter((c) => c.cmd.startsWith('next '));
+      assert.equal(roads.length, 2); assert.ok(roads.every((c) => c.label.startsWith('Take the road to ') && c.hint));
+      assert.ok(!ch.some((c) => c.cmd === 'next'), 'no plain Go on button at a fork');
+      const pickId = fork[die(2) - 1]; if (pickId !== fork[0]) swaps++;
+      S.act(s, SCENES[s.adventure], 'next ' + pickId, die);
+      assert.equal(s.adventure, pickId, 'the hero goes where they chose');
+    }
+    const o = s.run.order, sc = o.map((id) => SCENES[id]);
+    assert.equal(new Set(o).size, 5, 'no scene twice'); assert.equal(sc[4].act, 'finale');
+    for (let i = 1; i < 3; i++) assert.ok(LEAN[sc[i].lean || 'any'] <= LEAN[sc[i + 1].lean || 'any'], 'early scenes still come before late ones: ' + o.join(' '));
+  }
+  assert.ok(forks > 100, 'most steps of the road fork: ' + forks); assert.ok(swaps > 20, 'and the other road is taken sometimes: ' + swaps);
 });

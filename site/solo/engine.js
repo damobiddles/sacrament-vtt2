@@ -455,7 +455,9 @@
     if (s.done) {
       var nx = sceneAt(s, s.run.at + 1);
       if (!s.rested && !s.arrived && (s.hp.cur < s.hp.max || s.horror > 0)) out.push({ label: 'Rest before you go on', cmd: 'rest', kind: 'do' });
-      out.push({ label: 'Go on: ' + (nx ? nx.title : 'the road'), cmd: 'next', kind: 'go' });
+      var fork = forkAt(s);
+      if (fork) fork.forEach(function (id) { var sc = scenes()[id]; out.push({ label: 'Take the road to ' + sc.title, cmd: 'next ' + id, kind: 'go', hint: sc.tease || '' }); });
+      else out.push({ label: 'Go on: ' + (nx ? nx.title : 'the road'), cmd: 'next', kind: 'go' });
       return out;
     }
     if (s.fight) {
@@ -579,7 +581,8 @@
       else api.say('You are dying: heal yourself, or crawl away.', 'note');
     }
     else if (s.done) {
-      if (c === 'next') nextScene(api);
+      if (c === 'next') nextScene(api);   /* typed "next" at a fork takes the first road */
+      else if (p[0] === 'next' && p[1] && forkAt(s) && forkAt(s).indexOf(p[1]) >= 0) { takeRoad(s, p[1]); nextScene(api); }
       else if (c === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
       else if (c === 'rest' && !s.rested) { api.say('You find a dry corner and keep watch over yourself until the worst of it passes.'); rest(api); }
       else api.say('This scene is done. Rest, or go on.', 'note');
@@ -654,13 +657,34 @@
     middle = middle.slice(0, camp.middle || 3).map(function (x, k) { return { x: x, k: k }; })
       .sort(function (a, b) { return (LEAN[a.x.lean || 'any'] - LEAN[b.x.lean || 'any']) || a.k - b.k; }).map(function (o) { return o.x; });
     var finale = pick(all.filter(function (x) { return x.act === 'finale' && fits(x); }));
-    return { charge: charge, order: [opening].concat(middle, [finale]).map(function (x) { return x.id; }) };
+    var order = [opening].concat(middle, [finale]).map(function (x) { return x.id; });
+    /* the roads not taken: every other middle scene that fits, in the shuffled order, for the forks (see forkAt) */
+    var spare = all.filter(function (x) { return x.act === 'middle' && fits(x) && order.indexOf(x.id) < 0; }).map(function (x) { return x.id; });
+    for (var k = spare.length - 1; k > 0; k--) { var m = die(k + 1) - 1, sw = spare[k]; spare[k] = spare[m]; spare[m] = sw; }
+    return { charge: charge, order: order, spare: spare };
   }
   function startRun(hero, campId, die) {
     var camp = (root.SacramentSoloCampaigns || {})[campId], o = pickOrder(camp, die);
-    var run = { campaign: camp.id, title: camp.title, intro: camp.intro, order: o.order, at: 0, charge: o.charge, story: {}, met: [] };
+    var run = { campaign: camp.id, title: camp.title, intro: camp.intro, order: o.order, spare: o.spare, at: 0, charge: o.charge, story: {}, met: [] };
     run.cameos = pickCameos(o.order.length, die);
     return start(hero, scenes()[o.order[0]], die, run);
+  }
+  /* A fork in the road: after a scene, when the next one is in the middle of the road, the hero chooses between it and one road not taken.
+     The other road is the first spare scene that keeps the order sensible (early scenes before late ones), so a fork never breaks it. */
+  var LEANS = { early: 0, any: 1, late: 2 };
+  function forkAt(s) {
+    var run = s.run; if (!run || !run.spare || run.at >= run.order.length - 2) return null;
+    var k = run.at + 1, here = scenes()[run.order[k]]; if (!here || here.act !== 'middle') return null;
+    var lean = function (id) { var x = scenes()[id]; return LEANS[(x && x.lean) || 'any']; };
+    var before = scenes()[run.order[k - 1]], after = scenes()[run.order[k + 1]];
+    var lo = before && before.act === 'middle' ? lean(before.id) : 0, hi = after && after.act === 'middle' ? lean(after.id) : 2;
+    var other = run.spare.filter(function (id) { return scenes()[id] && lean(id) >= lo && lean(id) <= hi; })[0];
+    return other ? [run.order[k], other] : null;
+  }
+  function takeRoad(s, id) {
+    var run = s.run, fork = forkAt(s); if (!fork || fork.indexOf(id) < 0) return;
+    var k = run.at + 1, was = run.order[k]; if (id === was) return;
+    run.order[k] = id; run.spare = run.spare.filter(function (x) { return x !== id; }); run.spare.push(was);
   }
   /* People met on the road (SacramentSoloCameos): a run meets up to three of them, in different scenes, never the last one. */
   function pickCameos(n, die) {
@@ -688,5 +712,5 @@
     enter(a2, adv.start);
   }
 
-  root.SacramentSolo = { DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  root.SacramentSolo = { DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);
