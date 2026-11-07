@@ -28,6 +28,8 @@ Select an enemy or obstacle, then use a weapon or spell. Choose a target when as
 
 Only a failed attack can be pushed. Push adds 1 Horror and makes the next action the second action; that action cannot itself be pushed. Players can Push only during their own active turn, once. For an explicit exception, the GM selects the hero and presses **Allow this Push (+1 Horror)** beside their latest failed attack. This grants the extra action and charges Horror once; the extra action cannot be pushed. Without turn order, only this GM exception can grant a Push. A fresh round begins a new exchange; the VTT does not count all narrative Moves and Actions.
 
+**Break away.** On your turn, instead of acting, make a DEX check against the Target. On a success you get clear: the foe does not attack you as you go. On a failure you stay put and the foe attacks as usual. Where you can run to is the GM's call. Breaking away is a plain check, so its natural 1 adds no Horror, and it cannot be pushed.
+
 ## Distance and range
 
 {{RANGES}}
@@ -66,7 +68,7 @@ Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, conditional bonu
 
 ## Playing alone
 
-The [solo game](/solo/) uses every rule on this page. There the game is the GM, and it makes the GM's calls itself: each scene's Target, its foes and obstacles, when a place is dark, what Horror 7, 14 and 21 bring, and a rest after each scene. One rule is different, because no one else is there to help:
+The [solo game](/solo/) uses every rule on this page. There the game is the GM, and it makes the GM's calls itself: each scene's Target, its foes and obstacles, when a place is dark, what Horror 7, 14 and 21 bring, a rest after each scene, and where a hero who breaks away can run to: on to the next scene, leaving behind what they found in this one, with the Horror rising 1 for running (no blood is paid for it, as for any GM's raise). There is nowhere to run in the last scene of a road. One rule is different, because no one else is there to help:
 
 - **Falling alone.** At 0 HP a hero alone is dying as usual (d4 rounds), but may still act on their turn in two ways: use healing on themselves (a spell or relic; bandages cannot tend yourself), or crawl away with a CON check, leaving the scene at 1 HP and leaving behind what they found in it. A failed crawl costs a round.
 - Spells and items that protect **an ally**, such as Ward, have no use alone.

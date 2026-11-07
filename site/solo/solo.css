@@ -122,7 +122,7 @@
 .log .k-win{color:#d9c48a;border-left-color:var(--candle)}
 .log .k-miss{color:var(--dim)}
 .log .k-hurt{color:#e39a8c}
-.log .k-heal{color:var(--verdigris)}
+.log .k-heal{color:#f0c4b4}
 .log .k-horror{color:#d88d80;padding-left:10px;border-left:2px solid #a4443b}
 .log .k-loot{color:#e8cf8a;padding-left:10px;border-left:2px solid var(--candle)}
 .log .k-foe{color:#eadfc6}
@@ -140,7 +140,9 @@
 .ch.go{background:var(--bg);color:var(--fg);border-color:var(--edge)}
 .ch.go:hover{border-color:var(--candle);color:var(--candle)}
 .ch.spell{background:var(--indigo-deep);color:#e4e8f6;border-color:#56619a}
-.ch.use{background:var(--verdigris-deep);color:#e6f1ec;border-color:#4f8574}
+.ch.use{background:#3d3124;color:#f1e6cf;border-color:#8a7458}
+.ch.friend{background:#1d4424;color:#e9f7e5;border-color:#8fd18a}
+.ch.friend:hover{background:#255a2e}
 .ch.push{background:#5b4316;color:#f6e7c3;border-color:var(--candle)}
 .ch.plain{background:var(--bg);color:var(--fg);border-color:var(--edge)}
 .ch.wide,.chw.wide{grid-column:1/-1}
@@ -223,7 +225,8 @@
 .ch{font:600 1rem/1.25 var(--label);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--on-blood) 35%,transparent),inset 0 0 0 4px var(--blood),inset 0 0 0 5px color-mix(in srgb,var(--on-blood) 28%,transparent);border:0;padding:9px 12px}
 .ch.go,.ch.plain,.ch.idle{box-shadow:inset 0 0 0 1px var(--edge)}
 .ch.spell{box-shadow:inset 0 0 0 1px #56619a,inset 0 0 0 4px var(--indigo-deep),inset 0 0 0 5px #56619a88}
-.ch.use{box-shadow:inset 0 0 0 1px #4f8574,inset 0 0 0 4px var(--verdigris-deep),inset 0 0 0 5px #4f857488}
+.ch.use{box-shadow:inset 0 0 0 1px #8a7458,inset 0 0 0 4px #3d3124,inset 0 0 0 5px #8a745888}
+.ch.friend{box-shadow:inset 0 0 0 1px #8fd18a,inset 0 0 0 4px #1d4424,inset 0 0 0 5px #8fd18a88,0 0 12px #8fd18a55}
 .ch.push{box-shadow:inset 0 0 0 1px var(--candle),inset 0 0 0 4px #5b4316,inset 0 0 0 5px #b8955a88}
 .ch small.odds{font:600 .78rem var(--label);letter-spacing:.06em;color:#f1dcc4;margin-top:3px}
 .ch.go small.odds,.ch.plain small.odds{color:var(--dim)}
@@ -272,3 +275,88 @@
 .chronicle li span{color:var(--dim);font-size:.9rem;white-space:nowrap}
 .chronicle li b{font-weight:600}
 .chronicle .won b{color:var(--candle)}
+
+/* ---------- phone, held upright (owner, 2026-11-07: "reimagine how this is laid out on a phone") ----------
+   The story gets the room: HP, Target and Horror ride along the foot of the picture, the turn order along its top, each card is a slim strip,
+   spells and items fold behind one button, and the buttons keep clear of the browser's own bar at the bottom of the screen. */
+.choices .more{grid-column:1/-1;justify-self:start;font:600 .95rem var(--px);color:var(--dim);margin:4px 2px 0;padding:6px 2px;background:none;border:0;cursor:default;text-align:left;pointer-events:none}
+@media (max-width:699px) and (max-aspect-ratio:1/1){
+  .solo .bar{min-height:0;padding-top:max(4px,env(safe-area-inset-top,0px));padding-bottom:4px;gap:6px}
+  .solo .home{font-size:1rem;white-space:nowrap}
+  .solo .where{display:none}
+  .solo .tb{min-height:34px;padding:2px 9px;font-size:.7rem;letter-spacing:.1em}
+  .stage{padding:0;display:flex;flex-direction:column}
+  .frame{border-radius:0;border:0;box-shadow:none;width:100%;height:31dvh;max-height:none;aspect-ratio:auto}
+  .turns{position:absolute;top:6px;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));padding:0;gap:6px;z-index:3;pointer-events:none}
+  .turns .round{background:#000c;padding:3px 7px;font-size:.72rem}
+  .turns .chip{font-size:.78rem;padding:2px 8px;background:#000c}
+  .turns .chip.now{background:var(--candle)}
+  .turns .chip.foe.now{background:#e39a8c}
+  .turns .whose{flex-basis:auto;margin-left:auto;background:#000c;padding:2px 8px;font-size:.8rem;border-radius:999px}
+  .hud{position:absolute;left:0;right:0;top:31dvh;transform:translateY(-100%);z-index:3;padding:16px max(10px,env(safe-area-inset-right,0px)) 5px max(10px,env(safe-area-inset-left,0px));gap:2px 12px;background:linear-gradient(transparent,#000d 45%)}
+  .meter{min-height:0}
+  .meter .lbl{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#d8ccb2}
+  .meter .num{color:#f3ead6}
+  .meter.horror{flex-basis:100%;order:3}
+  .meter.horror .lbl{font-size:.62rem}
+  .pips{flex:1;display:grid;grid-template-columns:repeat(21,1fr);gap:1px}
+  .pip{width:auto;height:6px;background:#2a2420;box-shadow:inset 0 0 0 1px #8a7a62}
+  .pip.on{background:#d0574a;box-shadow:none}
+  .pip.mark{margin-right:0;box-shadow:inset 0 0 0 1px #8a7a62,2px 0 0 #e0c27a}
+  .pip.mark.on{box-shadow:2px 0 0 #e0c27a}
+  #horrorText{font-size:.78rem}
+  .tag{font-size:.68rem;padding:2px 5px}
+  .cards{padding:6px max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px));gap:6px}
+  .card{min-width:0;max-width:none;flex:1 1 0;padding:5px 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;align-content:start}
+  .card b{margin:0;font-size:.85rem}
+  .card .hearts,.card .fill{margin:0}
+  .card small{grid-column:1/-1;font-size:.75rem}
+  .card.foe>small:not(.next){display:none}
+  .cards{flex-wrap:wrap}
+  .card.foe{flex-basis:100%}
+  .card .next{margin:0}
+  .log{font-size:1rem;line-height:1.45;padding-top:8px}
+  .log .k-title{font-size:1.35rem}
+  .log .k-room{font-size:1.2rem}
+  .log .k-room + p::first-letter{font-size:2.3rem}
+  /* the browser's own floating bar (Safari on a recent iPhone) sits over the bottom of the page: keep the buttons above it */
+  .controls{padding:6px max(8px,env(safe-area-inset-right,0px)) calc(max(8px,env(safe-area-inset-bottom,0px)) + 56px) max(8px,env(safe-area-inset-left,0px))}
+  .choices{max-height:42dvh;gap:6px}
+  .choices .more{pointer-events:auto;cursor:pointer;min-height:40px;color:var(--fg);border:1px solid var(--edge);padding:6px 12px;justify-self:stretch}
+  .choices .more:hover,.choices .more:focus-visible{color:var(--candle);border-color:var(--candle)}
+  .choices .more::after{content:" ▾"}
+  .choices.open .more::after{content:" ▴"}
+  .choices .extra{display:none}
+  .choices.open .extra{display:flex}
+  .choices.open .ch.extra{display:block}
+  .choices .chw.extra,.choices .ch.extra{grid-column:1/-1}
+  .ch{min-height:48px;font-size:.95rem}
+  .ch small{font-size:.74rem}
+  .toast{top:44px}
+  /* only the latest beat of the story shows; the rest folds behind its button */
+  .log p.old{display:none}
+  .log.whole-open p.old{display:block}
+  .log .whole{display:block;width:100%;min-height:40px;margin:0 0 8px;padding:6px 12px;font:600 .9rem var(--px);color:var(--fg);background:none;border:1px solid var(--edge);text-align:left;cursor:pointer}
+  .log .whole:hover,.log .whole:focus-visible{color:var(--candle);border-color:var(--candle)}
+  .caption{top:44px}
+  /* two dice (a foe's attack and its damage) sit side by side, so the card fits the short picture */
+  #dice{--ui-die-size:48px;padding:6px}
+  .reveal-result{grid-template-columns:auto minmax(0,1fr)}
+  .reveal-dice .dice-roll{display:flex;gap:6px}
+}
+/* opened from the Home Screen there is no browser bar */
+@media (display-mode:standalone) and (max-width:699px) and (max-aspect-ratio:1/1){.controls{padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}}
+
+/* ---------- playing from the picture (2026-11-07) ---------- */
+.log .whole{display:none}
+.choices .waiting{grid-column:1/-1;margin:0;min-height:44px;display:flex;align-items:center;padding:6px 12px;font:600 1rem var(--px);color:var(--dim);border:1px dashed var(--edge)}
+.caption{position:absolute;z-index:4;left:8px;right:8px;top:10px;margin:0 auto;max-width:46ch;display:block;padding:8px 12px;text-align:left;font:1rem/1.35 var(--tty);color:#f3ead6;background:#0b0a08e8;border:0;border-left:3px solid var(--candle);box-shadow:0 4px 18px #000a;cursor:pointer;animation:solo-cap .35s ease-out both}
+.caption b{display:block;font:600 1.15rem/1.2 var(--display);color:var(--candle)}
+.caption>span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.caption.k-npc{border-left-color:#8fd18a}
+.caption.k-horror{border-left-color:#d0574a;color:#f0b3a8}
+.caption.k-end{border-left-color:var(--candle);font-family:var(--display);font-size:1.05rem}
+.caption.gone{opacity:0;transition:opacity .4s}
+@keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.caption{animation:none}}
+.log .k-npc.friend{border-left-color:#8fd18a}

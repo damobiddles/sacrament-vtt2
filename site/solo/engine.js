@@ -91,7 +91,12 @@
     return { who: s.hero.name, targetName: o.targetName || '', item: o.item || '', success: c.success, critical: critical,
       label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : 'SUCCESS') : (attack ? 'MISS' : 'FAILED CHECK'),
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
-      note: c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '' };
+      note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
+  }
+  /* Why a natural 1 did or did not raise the Horror, in the Rules page's terms, so the player learns the rule by seeing it (the owner's ask, 2026-11-07). */
+  function nat1Note(o) {
+    return R.nat1Tempts({ attack: !!o.attack, spell: !!o.spell, pushed: !!o.pushed }) ? 'Natural 1 on ' + (o.pushed ? 'a pushed action' : o.spell ? 'a spell' : 'an attack') + ': +' + R.HORROR.nat1 + ' Horror'
+      : 'Natural 1 on a plain check: no Horror';
   }
   function itemsCarried(s) { return (s.hero.gear || []).map(function (g) { return C.itemOf(g); }).filter(Boolean); }
   function carried(s, test) { return itemsCarried(s).filter(function (it) { return typeof test === 'function' ? test(it) : (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); })[0] || null; }
@@ -104,7 +109,15 @@
   }
   var DARK_LINE = 'It is dark here. Without a light, a WIS check to search or notice is Hard.';
   /* Dark: a dark place with no light. A place whose shape the hero has learned (Echo Bell) no longer makes those checks Hard, though it stays dark. */
-  function isDark(s, adv) { var r = adv.rooms[s.room]; return !!(r && r.dark) && !lit(s) && !s.flags['mapped_' + s.room]; }
+  function darkRoom(s, r) { return !!(r && (r.dark || nightfall(s) === 'night')); }
+  function isDark(s, adv) { var r = adv.rooms[s.room]; return darkRoom(s, r) && !lit(s) && !s.flags['mapped_' + s.room]; }
+  /* Night falls along the road (the owner's choice, 2026-11-07): the first scenes are at evening, the light goes earlier through the middle of the road, and the
+     finale is at night, where every place counts as dark. Darkness is the GM's call about a place; the rule for it is the Rules page's own (a WIS check to search
+     or notice is Hard without a light), so nothing about the rules changes. */
+  function nightfall(s) {
+    var run = s && s.run; if (!run) return '';
+    return run.at >= run.order.length - 1 ? 'night' : run.at >= 2 ? 'dusk' : 'evening';
+  }
 
   /* ---------- obstacles and timers ---------- */
   /* One try at an obstacle: a check, and on a success Effort into its bar. A failed try moves the obstacle's clock, if it has one: dawdling costs.
@@ -188,7 +201,7 @@
       if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
       if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
-      if (k === 'learn' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
+      if (k === 'learn' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
     if (src.needs === 'undead' && !foe.undead) return null;
@@ -221,7 +234,7 @@
     api.say(r.name, 'room');
     var first = !s.seen[to]; s.seen[to] = true;
     api.say(typeof r.text === 'function' ? r.text(api, first) : r.text);
-    if (r.dark) { lightCandle(api); api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); }
+    if (darkRoom(s, r)) { lightCandle(api); api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); }
     Object.keys(api._adv.obstacles || {}).forEach(function (id) { var ob = api._adv.obstacles[id]; if (ob.room === to && ob.clock && obstacleOpen(api, id)) timer(api, ob.clock, 'start'); });
     if (r.enter) r.enter(api, first);
     var who = first && !s.fight && cameoNow(s); if (who) api.say(who.meet, 'npc');
@@ -232,13 +245,13 @@
 
   /* ---------- Horror ---------- */
   /* Raise the meter. A cost that cannot go on a full meter is paid in blood: one d4 of HP for each point (the owner's rule, 2026-11-01). */
-  function raiseHorror(api, n, why) {
+  function raiseHorror(api, n, why, o) {
     var s = api.s; n = int(n, 0); if (n <= 0) return;
     var mv = R.horrorMove(s.horror, n); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
     if (mv.applied) api.say((why ? why + ' ' : '') + 'The Horror rises ' + mv.applied + ' (now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror');
     mv.crossed.forEach(function (t) { api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
     var left = n - mv.applied;
-    if (left > 0 && s.hp.cur > 0) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood */
+    if (left > 0 && s.hp.cur > 0 && !(o && o.gm)) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood, nor does the GM's own raise */
       var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
       var total = rolls.reduce(function (a, b) { return a + b; }, 0);
       if (!mv.applied && why) api.say(why, 'horror');
@@ -288,12 +301,34 @@
     if (s.over) return;
     if (!c.success) { if (s.fight) s.fight.phase = 'foe'; else dyingTick(api, 'You do not get far.'); return; }
     s.dying = null; s.hp.cur = 1; s.fight = null;
-    var lost = (s.found || []).map(function (id) { var at = -1; (s.hero.gear || []).forEach(function (g, k) { if (g.id === id) at = k; }); if (at < 0) return ''; var g = s.hero.gear.splice(at, 1)[0], it = C.itemOf(g); return it ? it.name : ''; }).filter(Boolean);
-    (s.found || []).forEach(function (id) { var rf = (s.run && s.run.found) || [], k = rf.lastIndexOf(id); if (k >= 0) rf.splice(k, 1); });
-    s.found = []; s.escaped = true;
+    var lost = leaveFinds(s);
     api.say('You drag yourself out and away, and live. ' + (lost.length ? 'You leave behind what you found here: ' + lost.join(', ') + '.' : 'You leave nothing behind but blood.') + ' (1 HP)', 'hurt');
     if (s.run && s.run.at < s.run.order.length - 1) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is over. You got away.', 'note'); }
     else s.over = 'fled';
+  }
+  /* Getting out of a scene early (crawling away, breaking away) leaves behind what was found in it. Returns the names left behind. */
+  function leaveFinds(s) {
+    var lost = (s.found || []).map(function (id) { var at = -1; (s.hero.gear || []).forEach(function (g, k) { if (g.id === id) at = k; }); if (at < 0) return ''; var g = s.hero.gear.splice(at, 1)[0], it = C.itemOf(g); return it ? it.name : ''; }).filter(Boolean);
+    (s.found || []).forEach(function (id) { var rf = (s.run && s.run.found) || [], k = rf.lastIndexOf(id); if (k >= 0) rf.splice(k, 1); });
+    s.found = []; s.escaped = true;
+    return lost;
+  }
+  /* Break away (the Rules page): on your turn, instead of acting, a DEX check against the Target. Success: you get clear and the foe does not attack you as you
+     go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call, and in the solo game (the owner's calls, 2026-11-07) there is
+     somewhere to run only before the finale; getting away ends the scene, leaves its find behind, and the Horror rises 1 (a GM's raise: no blood). */
+  var FLEE = { horror: 1 };
+  function canFlee(s) { return !!(s.run && s.run.at < s.run.order.length - 1 && s.fight && !s.dying); }
+  function breakAway(api) {
+    var s = api.s, f = s.fight; if (!canFlee(s)) return false;
+    var c = api.check(R.BREAK_AWAY.stat, { what: 'You break away', nonDamage: true });
+    if (s.over) return true;
+    if (!c.success) { api.say(f.name + ' is on you before you can get clear.', 'miss'); f.phase = 'foe'; return true; }
+    s.fight = null;
+    var lost = leaveFinds(s);
+    api.say('You turn and run, and ' + f.name.replace(/^The /, 'the ') + ' does not catch you. ' + (lost.length ? 'You leave behind what you found here: ' + lost.join(', ') + '.' : ''), 'act');
+    raiseHorror(api, FLEE.horror, 'Running stays with you.', { gm: true });
+    if (!s.over) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is over. You got away.', 'note'); }
+    return true;
   }
 
   /* ---------- finds ---------- */
@@ -317,6 +352,8 @@
     /* Turn order, as at the table: the hero, then the foe. phase: hero (choose an action), damage (a hit waits for Roll damage), push (a miss: push or end the turn), foe (the foe's turn is next). */
     api.s.fight = { foe: foeId, art: f.art || foeId, undead: !!f.undead, name: f.name, hp: { cur: f.hp, max: f.hp }, attack: f.attack, damage: f.damage || 6, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false };
     api.say(typeof f.appears === 'function' ? f.appears(api) : f.appears, 'foe');
+    /* forewarned (Simon the Scholar): the hero has read about this foe, so their first attack against it is Easy, as when learning a foe's ways */
+    if (api.story('forewarned')) { api.story('forewarned', false); api.s.fight.easy = 1; api.s.fight.learned = true; api.say('You have read about this one. Your first attack against it is Easy.', 'note'); }
     if (api.s.hunted) { var hp = api.s.fight.hp; hp.cur += DREAD.huntedHp; hp.max += DREAD.huntedHp; api.say('You are hunted: it has ' + DREAD.huntedHp + ' more HP (' + hp.max + ').', 'note'); }
   }
   /* Everything the hero can attack, cast or use, from the sheet's own list. */
@@ -347,7 +384,7 @@
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
-      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
+      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
       if (chk.nat1 && R.nat1Tempts({ attack: isDamage, spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror.'); }
@@ -371,7 +408,8 @@
   /* Roll damage for a hit: the Effort die for its kind plus the hero's bonus, a heavy weapon's +2, and on a natural 20 one Ultimate die. */
   function rollDamage(api) {
     var s = api.s, f = s.fight, p = f && f.pending; if (!p) return;
-    var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(R.DEFAULT_DICE[p.cat]) }), dice = [{ die: e.die, n: e.rolled }];
+    var size = stepped(s, f, p.cat), dice0 = {}; dice0[p.cat] = size;
+    var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(size), settings: { dice: dice0 } }), dice = [{ die: e.die, n: e.rolled }];
     if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
     if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
     f.pending = null;
@@ -386,7 +424,7 @@
     if (h.kind && !h.force && s.hp.cur > 0 && s.healed[h.kind]) { api.say('That has already helped you since your last rest.', 'note'); return; }
     if (h.tend && s.dying) { api.say('A dying hero cannot tend themselves.', 'note'); return; }
     api.say('You use ' + (u.spell ? u.spell.name : yours(u.item.name)) + '.', 'act');
-    var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name }); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
+    var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed }); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror.'); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
@@ -465,7 +503,7 @@
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
       if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
       /* A push gives a second action of any kind, as at the table (the Rules page: "Push ... makes the next action the second action"): the same list, each one pushed. */
-      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
+      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       out = fightOptions(api, s, f);
       return out;
     }
@@ -477,12 +515,39 @@
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
     return out;
   }
+  /* Anointing (Flask of Holy Oil, from its fx in the gear list): "Until the end of the scene its Effort steps up one size against the unquiet dead and
+     anything marked Unholy." An item whose fx is a buff to Effort against the unholy is offered in a fight with an undead foe while it has uses left; it takes
+     the hero's action, and from then the hero's weapon Effort die is one size bigger against the undead until the scene ends. */
+  var DIE_SIZES = [4, 6, 8, 10, 12];
+  function anointer(s) {
+    var out = null;
+    (s.hero.gear || []).forEach(function (g, i) {
+      var it = C.itemOf(g), fx = it && (it.fx || []).filter(function (x) { return x.do === 'buff' && x.to === 'effort' && x.vs === 'unholy'; })[0];
+      if (fx && !out && (g.uses == null ? it.uses : g.uses) > 0) out = { index: i, gear: g, item: it, fx: fx };
+    });
+    return out;
+  }
+  function anoint(api) {
+    var s = api.s, f = s.fight, o = anointer(s); if (!f || !o || s.flags.anointed) return false;
+    o.gear.uses = Math.max(0, (o.gear.uses == null ? o.item.uses : o.gear.uses) - 1);
+    s.flags.anointed = o.fx.step || 1;
+    api.say('You use ' + yours(o.item.name) + ' and anoint your weapon (' + o.gear.uses + ' left). Until the end of the scene its Effort is one size bigger against the unquiet dead.', 'act');
+    f.phase = 'foe'; return true;
+  }
+  function stepped(s, f, cat) {
+    var base = R.DEFAULT_DICE[cat], k = DIE_SIZES.indexOf(base);
+    if (!s.flags.anointed || !f || !f.undead || cat !== 'weapons' || k < 0) return base;
+    return DIE_SIZES[Math.min(DIE_SIZES.length - 1, k + s.flags.anointed)];
+  }
   /* Everything the hero can do on their turn in a fight: attack (a weapon, a damage spell, a grimoire read by the die), bare hands if they carry no weapon, brace, heal, or a story spell. */
   function fightOptions(api, s, f) {
     var out = [], attacks = heroActions(s).filter(function (a) { return a.ok && (a.pick || (a.cat && !a.healing && !isStorySpell(a.u))); });
-    attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', horror: a.horror || 0, about: aboutOf(a) }); });
+    attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', strike: true, horror: a.horror || 0, about: aboutOf(a) }); });
     if (!attacks.some(function (a) { return !a.spellId && !a.pick; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
     if (!f.guard) out.push({ label: 'Brace: +2 Defence until your next turn', cmd: 'brace', kind: 'plain' });
+    if (canFlee(s)) out.push({ label: 'Break away: run (DEX)', cmd: 'flee', kind: 'do', flee: true, hint: 'Get away: lose this scene\'s find, Horror +1' });
+    var oil = f.undead && !s.flags.anointed && anointer(s);
+    if (oil) out.push({ label: 'Use ' + oil.item.name, cmd: 'anoint', kind: 'use', hint: 'Your weapon\'s Effort steps up against the dead', about: { name: oil.item.name, roll: '', does: oil.item.does || '' } });
     heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: !!a.healing })); });
     return out;
   }
@@ -518,7 +583,7 @@
     return { need: Math.min(need, 21), chance: chance, note: o.note, cost: cost, attack: !!o.pendingDamage || /MISS/.test(o.label) };
   }
   /* The scene's numbers, always on show: its Target, and whether the dark makes every check Hard. */
-  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv) }; }
+  function sceneInfo(s, adv) { adv = sceneOf(s) || adv; return { target: int(adv.target, 12), dark: isDark(s, adv), time: nightfall(s) }; }
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
   function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
@@ -530,7 +595,7 @@
   function exitOf(api, r, d) { var e = r.exits[d]; if (!e) return null; if (typeof e === 'string') e = { to: e }; if (e.when && !e.when(api)) return e.closed ? { to: e.to, closed: e.closed, hidden: true } : null; return e; }
 
   /* ---------- typed words become commands ---------- */
-  var HELP = 'Tap a choice, or type a command: LOOK, GO NORTH (or N, S, E, W, UP, DOWN), INVENTORY, a thing to do ("read ledger", "talk"), ATTACK, CAST and a spell, USE and an item, PUSH, HELP.';
+  var HELP = 'Tap a choice, or type a command: LOOK, GO NORTH (or N, S, E, W, UP, DOWN), INVENTORY, a thing to do ("read ledger", "talk"), ATTACK, CAST and a spell, USE and an item, PUSH, RUN, HELP.';
   function parse(s, adv, text) { adv = sceneOf(s) || adv;
     var t = String(text || '').toLowerCase().replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!t) return '';
@@ -544,6 +609,7 @@
     if (/^(h|help|\?)$/.test(t)) return 'help';
     if (/^(wait|end turn|end my turn|end your turn|let it come)$/.test(t)) return 'foe';
     if (/^(damage|roll damage)$/.test(t)) return 'damage';
+    if (s.fight && /^(run|run away|flee|break away|escape|retreat)$/.test(t)) return 'flee';
     var list = choices(s, adv), api = apiFor(s, adv, function () { return 1; });
     /* the room's own things to do, by their words */
     var r = adv.rooms[s.room];
@@ -572,7 +638,7 @@
     var p = c.split(' '), wasFight = !!s.fight;
     var label = (choices(s, adv).filter(function (x) { return x.cmd === c; })[0] || {}).label;
     api.say('> ' + (label || c), 'cmd');
-    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (r0.dark) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
+    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (darkRoom(s, r0)) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
     else if (c === 'help') api.say(HELP, 'note');
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
     else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
@@ -594,15 +660,18 @@
       else if (f.phase === 'push') {
         if (c === 'foe' || c === 'wait') f.phase = 'foe', foeTurn(api);
         else if (p[0] === 'push') {
-          var pa = p[1] === 'punch' ? bareHands() : p[1] === 'brace' ? 'brace' : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
+          var pa = p[1] === 'punch' ? bareHands() : p[1] === 'brace' ? 'brace' : p[1] === 'anoint' ? 'anoint' : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
           f.phase = 'hero'; raiseHorror(api, R.HORROR.push, 'You push for a second action.');
           if (!s.over && pa === 'brace') { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
+          else if (!s.over && pa === 'anoint') { if (!anoint(api)) f.phase = 'foe'; }
           else if (!s.over) { useAction(api, pa, true); if (s.fight && f.phase === 'hero') f.phase = 'foe'; }   /* the second action cannot itself be pushed */
         } else api.say('You missed: push, or end your turn.', 'note');
       }
       else if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); else api.say('You cannot use that now.', 'note'); }
       else if (c === 'punch') useAction(api, bareHands(), false);
       else if (c === 'brace' && !f.guard) { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
+      else if (c === 'anoint') { if (!anoint(api)) api.say('You cannot use that now.', 'note'); }
+      else if (c === 'flee') { if (!breakAway(api)) api.say('There is nowhere to run to. This ends here.', 'note'); }
       else if (p[0] === 'go') api.say('It is between you and the way out. Fight.', 'note');
       else api.say('Not now: it is coming for you.', 'note');
     }
@@ -709,6 +778,9 @@
     var a2 = apiFor(s, adv, api.die);
     a2.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ': ' + adv.title, 'title');
     if (adv.intro) adv.intro(a2);
+    var when = nightfall(s);
+    if (when === 'dusk' && s.run.at === 2) a2.say('Out here the light goes earlier every evening. You will walk the last of the road in the dark.', 'note');
+    if (when === 'night') a2.say('By the time you reach it the light is gone. It is full night, and every place here is dark: without a light, a WIS check to search or notice is Hard.', 'note');
     enter(a2, adv.start);
   }
 
@@ -727,5 +799,5 @@
     };
   }
 
-  root.SacramentSolo = { summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  root.SacramentSolo = { nightfall: nightfall, summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);

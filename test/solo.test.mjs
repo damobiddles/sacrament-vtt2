@@ -113,7 +113,7 @@ test('the soundtrack: every room has a tune, every note is a real note, and ever
 
 test('the scene Target is always known, the dark is flagged, and every spell button says what the spell does', () => {
   const rnd = seeded(3), die = (n) => 1 + Math.floor(rnd() * n), s = S.start(T.generate('scholar', rnd), A, die);
-  assert.deepEqual(S.sceneInfo(s, A), { target: 12, dark: false });
+  assert.deepEqual(S.sceneInfo(s, A), { target: 12, dark: false, time: '' });
   const spells = S.choices(s, A).filter((c) => c.kind === 'spell');
   assert.ok(spells.length > 0, 'the scholar has spells to cast');
   for (const c of spells) assert.ok(c.about && c.about.does.length > 20 && c.about.name, c.label + ' has no description');
@@ -226,7 +226,7 @@ test('between scenes the hero may rest once, then goes on; the next scene starts
 
 test("the owner's people of the road: a run meets up to three, never in the last scene, and their names are the owner's", () => {
   const names = globalThis.SacramentSoloCameos.map((c) => c.name);
-  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn']);
+  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar']);
   for (let seed = 1; seed <= 50; seed++) {
     const rnd = seeded(seed), s = S.startRun(T.generate('scout', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n)), c = s.run.cameos;
     assert.equal(c.length, 5); assert.equal(c[4], ''); const met = c.filter(Boolean); assert.ok(met.length <= 3 && met.length >= 1); assert.equal(new Set(met).size, met.length);
@@ -591,4 +591,126 @@ test('the end of a run: the end card says where the hero went, what they beat, w
   assert.ok(ends.size >= 2, 'runs end in more than one way: ' + [...ends].join(', '));
   const odd = ART.endCard({ hero: 'A <b>&"', places: ['X'], beaten: [], finds: [], peak: 0, horrorMax: 21, end: 'dead', total: 5, line: '' }, null, '');
   assert.ok(odd.includes('A &lt;b&gt;&amp;&quot;') && !odd.includes('<b>'), 'names are written safely into the picture');
+});
+
+test('the new people of the road: Rachel, Witch-finder General gives Holy Oil; Simon the Scholar makes the first attack on the next foe Easy', () => {
+  const priory = (who) => {
+    for (let seed = 1; seed < 200; seed++) {
+      const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', seeded(4)), 'pilgrim-road', die);
+      if (s.adventure === 'priory') { s.run.cameos[0] = who; return { s, die }; }
+    }
+    throw new Error('no run opened at the priory');
+  };
+  { const { s, die } = priory('rachel'), had = s.hero.gear.filter((g) => g.id === 'oil').length;
+    assert.ok(S.choices(s, null).some((c) => c.cmd === 'meet rachel'), 'Rachel is met where the scene begins');
+    S.act(s, null, 'meet rachel', die);
+    assert.equal(s.hero.gear.filter((g) => g.id === 'oil').length, had + 1, 'a Flask of Holy Oil, from the gear list');
+    assert.ok(s.log.some((l) => l.t.includes('Rachel, Witch-finder General'))); }
+  { const { s, die } = priory('simon');
+    S.act(s, null, 'meet simon', die);
+    assert.equal(s.run.story.forewarned, true);
+    S.act(s, null, 'go down', die);
+    assert.ok(s.fight, 'the rats in the undercroft'); assert.equal(s.fight.easy, 1, 'the first attack is Easy'); assert.ok(!s.run.story.forewarned, 'used up on that foe'); }
+});
+
+test('Flask of Holy Oil works as the gear list says: against the unquiet dead the anointed weapon rolls one Effort die bigger, until the scene ends', () => {
+  assert.match(globalThis.SacramentSheetCore.item('oil').does, /Effort steps up one size against the unquiet dead/);
+  const hero = T.generate('fighter', seeded(4)); hero.gear.push({ id: 'oil' });
+  const sceneId = Object.keys(SCENES).find((id) => Object.values(SCENES[id].foes || {}).some((f) => f.undead));
+  const adv = SCENES[sceneId], [foeId, def] = Object.entries(adv.foes).find(([, f]) => f.undead);
+  const s = S.start(hero, adv, fixed([1]));
+  const fight = (undead) => ({ foe: foeId, art: def.art, undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(false);
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'anoint'), 'no use against the living');
+  s.fight = fight(true);
+  assert.ok(S.choices(s, adv).some((c) => c.cmd === 'anoint' && c.label === 'Use Flask of Holy Oil'), 'offered against the dead');
+  S.act(s, adv, 'anoint', fixed([1]));
+  assert.equal(s.fight.phase, 'foe', 'it takes your action'); assert.equal(s.hero.gear.find((g) => g.id === 'oil').uses, 1, 'one of 2 uses spent');
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'anoint'), 'once is enough for the scene');
+  S.act(s, adv, 'foe', fixed([1]));   // a natural 1: the foe misses
+  const attack = S.choices(s, adv).find((c) => c.kind === 'attack' && c.cmd.startsWith('use '));
+  S.act(s, adv, attack.cmd, fixed([18])); assert.equal(s.fight.phase, 'damage');
+  S.act(s, adv, 'damage', fixed([8]));
+  assert.ok(s.log.some((l) => /\bd8 8\b/.test(l.t)), 'the weapon Effort die is a d8, not a d6: ' + s.log.at(-3).t);
+  s.fight.undead = false; s.fight.phase = 'hero';
+  S.act(s, adv, attack.cmd, fixed([18])); S.act(s, adv, 'damage', fixed([8]));
+  assert.ok(/\bd6 6\b/.test(s.log.filter((l) => l.k === 'win').at(-1).t), 'against the living it stays a d6');
+});
+
+test('night falls along the road: evening, then dusk from scene 3, and the finale at night, where every place is dark under the Rules page\'s own darkness rule', () => {
+  require('../site/solo/art.js');
+  const ART = globalThis.SacramentSoloArt, rnd = seeded(12), die = (n) => 1 + Math.floor(rnd() * n);
+  const hero = T.generate('scholar', seeded(5)); hero.gear = hero.gear.filter((g) => !S.LIGHTS.includes(g.id) && g.id !== 'candles');
+  const s = S.startRun(hero, 'pilgrim-road', die), skies = [];
+  for (let at = 0; at < 5; at++) {
+    const adv = SCENES[s.adventure], time = S.nightfall(s);
+    assert.equal(time, at < 2 ? 'evening' : at < 4 ? 'dusk' : 'night', 'scene ' + (at + 1));
+    skies.push(/id="tsky"[^>]*><stop offset="0" stop-color="(#[0-9a-f]+)"/.exec(ART.scene(adv.rooms[s.room].art, s, 't'))[1]);
+    if (at === 4) {
+      assert.equal(adv.act, 'finale');
+      for (const room of Object.keys(adv.rooms)) { s.room = room; s.flags = {}; assert.ok(S.sceneInfo(s, adv).dark, 'without a light every place in the finale is dark: ' + room); }
+      assert.ok(s.log.some((l) => /full night/.test(l.t)), 'the story says night has fallen');
+      s.room = adv.start; s.hero.gear.push({ id: 'lantern', eq: true });
+      assert.ok(!S.sceneInfo(s, adv).dark, 'a lantern answers it, as the Rules page says');
+      break;
+    }
+    if (at < 2) assert.ok(Object.keys(adv.rooms).some((r) => { s.room = r; return !S.sceneInfo(s, adv).dark; }), 'places without their own dark are not dark before nightfall');
+    s.done = true; s.fight = null; s.dying = null; s.over = ''; s.hp.cur = s.hp.max;
+    S.act(s, adv, S.choices(s, adv).find((c) => c.cmd.startsWith('next')).cmd, die);
+  }
+  assert.equal(new Set(skies).size, 3, 'the sky darkens in three steps: ' + skies.join(' '));
+});
+
+test('break away, as the Rules page has it: a DEX check against the Target; a success gets clear with no attack, a failure lets the foe attack as usual', () => {
+  assert.equal(R.BREAK_AWAY.stat, 'DEX');
+  let s, adv;
+  for (let seed = 1; seed < 200 && !adv; seed++) { s = S.startRun(T.generate('fighter', seeded(seed)), 'pilgrim-road', fixed([1])); if (Object.keys(SCENES[s.adventure].foes || {}).length) adv = SCENES[s.adventure]; }
+  const [foeId, def] = Object.entries(adv.foes)[0];
+  const fight = () => ({ foe: foeId, art: def.art, undead: !!def.undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(); s.horror = 0; s.shaken = false;
+  const run = S.choices(s, adv).find((c) => c.cmd === 'flee');
+  assert.ok(run && /Break away/.test(run.label), 'a Break away choice in a fight before the finale');
+  assert.equal(S.parse(s, adv, 'run away'), 'flee', 'typing "run away" means the same');
+  // a failure: you stay put and the foe attacks as usual
+  S.act(s, adv, 'flee', fixed([1]));
+  assert.ok(s.fight, 'still in the fight'); assert.equal(s.fight.phase, 'foe');
+  assert.equal(s.horror, 0, 'a failed break away is a plain check: its natural 1 costs nothing');
+  const hp = s.hp.cur; S.act(s, adv, 'foe', fixed([20, 3]));
+  assert.equal(s.hp.cur, hp - 3, 'the foe attacks as usual');
+  assert.ok(!S.choices(s, adv).filter((c) => c.kind === 'push').length, 'breaking away is not an attack, so it cannot be pushed');
+  // a success: clear, no attack, the find left behind, the Horror +1, and on to the next scene
+  s.hero.gear.push({ id: 'candle', eq: false }); s.found = ['candle']; s.run.found = ['candle'];
+  const gear = s.hero.gear.length, hp2 = s.hp.cur;
+  S.act(s, adv, 'flee', fixed([20]));
+  assert.equal(s.fight, null); assert.equal(s.hp.cur, hp2, 'the foe does not attack as you go');
+  assert.equal(s.hero.gear.length, gear - 1, 'the scene\'s find is left behind'); assert.deepEqual(s.run.found, []);
+  assert.equal(s.horror, 1, 'the Horror rises 1 for running');
+  assert.ok(s.done && !s.over, 'the scene is over and the road goes on');
+  assert.ok(S.choices(s, adv).some((c) => c.kind === 'go'));
+});
+
+test('break away: no running from a finale, and running at a full Horror meter costs no blood (it is the GM\'s raise)', () => {
+  let s, adv;
+  for (let seed = 1; seed < 200 && !adv; seed++) { s = S.startRun(T.generate('fighter', seeded(seed)), 'pilgrim-road', fixed([1])); if (Object.keys(SCENES[s.adventure].foes || {}).length) adv = SCENES[s.adventure]; }
+  const [foeId, def] = Object.entries(adv.foes)[0];
+  const fight = () => ({ foe: foeId, art: def.art, undead: !!def.undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(); s.horror = R.HORROR.max; s.shaken = false;
+  const hp = s.hp.cur; S.act(s, adv, 'flee', fixed([20]));
+  assert.equal(s.hp.cur, hp, 'no blood paid for running'); assert.equal(s.horror, R.HORROR.max);
+  s.done = false; s.fight = fight(); s.run.at = s.run.order.length - 1;
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'flee'), 'no Break away in the finale');
+  S.act(s, adv, 'flee', fixed([20]));
+  assert.ok(s.fight, 'there is nowhere to run at the end of the road');
+});
+
+test('a natural 1 says on the dice card whether it raised the Horror, in the Rules page\'s terms', () => {
+  const s = cryptFight();
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([1]));
+  const atk = s.log.filter((l) => l.outcome).at(-1).outcome;
+  assert.match(atk.note, new RegExp('Natural 1 on an attack: \\+' + R.HORROR.nat1 + ' Horror'));
+  const cart = ADVS.cart, c = S.start(T.generate('fighter', seeded(3)), cart, fixed([1]));
+  S.act(c, cart, 'way wheel lift', fixed([1]));
+  const plain = c.log.filter((l) => l.outcome).at(-1).outcome;
+  assert.match(plain.note, /Natural 1 on a plain check: no Horror/);
+  assert.equal(c.horror, 0);
 });

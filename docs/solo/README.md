@@ -12,7 +12,7 @@ A game is **five scenes**, picked in a semi-random order that always makes sense
 
 HP, Horror, gear and used healing carry from scene to scene. When a scene is done the player may rest once (if hurt) before going on. Earlier scenes can leave marks that matter later (tracks found at the cart, a clue from an NPC make the finale's first attack Easy).
 
-**Friends on the road (owner's names, 2026-11-06):** Xian of Wycbold, Ser Dom of Cookham, Rupert the Druid, Matthew of the Brown Order of Farts and Lord Biddles of Wooburn. Up to three turn up per run, never in the finale, each in the first place of a scene, and each helps once (a find, a free rest, bandages, rations, or a clue). **Their names always show in green.** The names are the owner's own and stay exactly as given.
+**Friends on the road (owner's names, 2026-11-06 and 2026-11-07):** Xian of Wycbold, Ser Dom of Cookham, Rupert the Druid, Matthew of the Brown Order of Farts, Lord Biddles of Wooburn, Rachel, Witch-finder General and Simon the Scholar. Up to three turn up per run, never in the finale, each in the first place of a scene, and each helps once (a find, a free rest, bandages, rations, a clue, a Flask of Holy Oil, or reading up on the next foe: the first attack against it is Easy). **Their names always show in green.** The names are the owner's own and stay exactly as given.
 
 **Hearts over foes (owner, 2026-11-06):** a foe's life shows as Hearts (10 HP a Heart, as at the table) above it in the picture and on its card.
 
@@ -76,6 +76,7 @@ The rules leave a threshold's consequence to the GM; in the solo game the game i
 * **Horror 14, hunted:** every foe met from then on has 2 more HP.
 * **Horror 21, arrived:** the rules' pay-in-blood, and no more rest between scenes.
 * **Falling:** the rules' dying roll (d4 rounds; each new round and each blow that gets through takes one off). The dying hero may heal (any healing stands them up) or crawl away with a CON check: out of the scene with 1 HP, leaving behind what they found in it. In the last scene, crawling away ends the road alive but unfinished.
+* **Break away (shared rule, Rules page, 2026-11-07):** in a fight, instead of acting, a DEX check against the Target (`R.BREAK_AWAY`). Success: clear, no attack; failure: the foe attacks as usual. Solo's GM calls (owner, 2026-11-07): only before the finale; getting away ends the scene, leaves its find behind and raises the Horror 1 (a GM's raise, so no blood at 21). Night falls: scenes 1-2 evening, 3-4 dusk, the finale at night with every place dark.
 * **Finds:** a hero from My heroes who finishes the road may press "Bring your finds home" once; each find still carried goes into the saved hero if there is room.
 * **The foe's next move** shows on its card with the real numbers (the roll it needs to hit you, the chance, its damage die). **Brace** spends the turn for +2 Defence until the hero's next turn, like the Guard ruling.
 

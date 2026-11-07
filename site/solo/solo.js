@@ -10,7 +10,7 @@
   var NPC_NAMES = (window.SacramentSoloCameos || []).map(function (c) { return c.name; });
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
-  var state = null, shown = 0, lastArt = '', dying = false;
+  var state = null, shown = 0, lastArt = '', dying = false, moreOpen = false, cardDamage = false, foeTimer = 0, whole = false;
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
@@ -79,16 +79,32 @@
   /* ---------- the game screen ---------- */
   function showGame(fresh) {
     document.body.classList.add('playing'); $('start').hidden = true; $('game').hidden = false; $('heroBtn').hidden = false; $('menuBtn').hidden = false;
-    $('log').textContent = ''; shown = 0; lastArt = ''; dying = false;
+    $('log').textContent = ''; shown = 0; lastArt = ''; dying = false; whole = false; cardDamage = false; clearTimeout(foeTimer); foeTimer = 0;
     renderLog(!fresh); render();
     window.scrollTo(0, 0);
   }
+  /* The story so far. On a phone only the latest beat (what the last thing you did brought) shows; the rest folds behind "The story so far", so play stays
+     on the picture and nothing is lost (the owner's ask, 2026-11-07). On a laptop the whole log stays in its column. */
   function renderLog(quiet) {
     var log = $('log');
-    for (; shown < state.log.length; shown++) {
-      var line = state.log[shown], p = document.createElement('p'); p.className = 'k-' + line.k + (quiet ? '' : ' new'); withNames(p, line.t); log.appendChild(p);
+    if (!log.querySelector('.whole')) {
+      var w = document.createElement('button'); w.type = 'button'; w.className = 'whole'; w.addEventListener('click', function () { whole = !whole; foldLog(); });
+      log.appendChild(w);
     }
+    for (; shown < state.log.length; shown++) {
+      var line = state.log[shown], p = document.createElement('p'); p.className = 'k-' + line.k + (quiet ? '' : ' new'); withNames(p, line.t);
+      if (line.k === 'npc' && p.querySelector('.npc-name')) p.classList.add('friend');
+      if (line.k === 'cmd') log.querySelectorAll('p:not(.old)').forEach(function (o) { o.classList.add('old'); });
+      log.appendChild(p);
+    }
+    foldLog();
     log.scrollTop = log.scrollHeight;
+  }
+  function foldLog() {
+    var log = $('log'), b = log.querySelector('.whole'), n = log.querySelectorAll('p.old').length;
+    log.classList.toggle('whole-open', whole); b.hidden = !n;
+    b.textContent = whole ? 'Show only the latest' : 'The story so far (' + n + ' lines)'; b.setAttribute('aria-expanded', whole ? 'true' : 'false');
+    log.insertBefore(b, whole ? log.firstChild : log.querySelector('p:not(.old)'));
   }
   /* The people met on the road have their names in green, wherever they appear. */
   function withNames(el, text) {
@@ -162,14 +178,33 @@
       var card = choiceButton({ label: 'See the end card', cmd: '' }, 'ch go wide'); card.addEventListener('click', showEnd); box.appendChild(card);
       box.append(again, other); return;
     }
+    var f = state.fight;
+    /* one Roll damage button: the dice card's, when the card is showing it */
+    if (f && f.phase === 'damage' && cardDamage) { box.appendChild(waiting('Roll damage on the dice')); return; }
+    /* the foe's turn plays out by itself, a moment after yours */
+    if (f && f.phase === 'foe') { box.appendChild(waiting(f.name + ' moves…')); foeSoon(); return; }
     var list = S.choices(state, ADV()), main = [], extra = [];
-    list.forEach(function (c) { (!state.fight && (c.kind === 'spell' || c.kind === 'use') ? extra : main).push(c); });
+    list.forEach(function (c) { ((c.kind === 'use' || (c.kind === 'spell' && !c.strike)) ? extra : main).push(c); });
     main.forEach(function (c) { box.appendChild(choiceButton(c)); });
+    if (main.length % 2) box.lastChild.classList.add('wide');
+    /* Spells and items sit under their own heading; on a phone the heading is a button that folds them away, so the main choices stay big. */
+    box.classList.toggle('open', moreOpen);
     if (extra.length) {
-      var h = document.createElement('p'); h.className = 'more'; h.textContent = 'Spells and items'; box.appendChild(h);
-      extra.forEach(function (c) { box.appendChild(choiceButton(c)); });
+      var h = document.createElement('button'); h.type = 'button'; h.className = 'more'; h.setAttribute('aria-expanded', moreOpen ? 'true' : 'false');
+      h.textContent = 'Spells and items (' + extra.length + ')';
+      h.addEventListener('click', function () { moreOpen = !moreOpen; renderChoices(); });
+      box.appendChild(h);
+      extra.forEach(function (c) { var el = choiceButton(c); el.classList.add('extra'); box.appendChild(el); });
     }
-    if (main.length % 2 && !extra.length) box.lastChild.classList.add('wide');
+  }
+  function waiting(text) { var p = document.createElement('p'); p.className = 'waiting'; p.setAttribute('role', 'status'); p.textContent = text; return p; }
+  function foeSoon() {
+    if (foeTimer) return;
+    var wait = D.off() || reduceMotion() ? 700 : 1700;
+    foeTimer = setTimeout(function go() {
+      if (document.querySelector('dialog[open]') || document.hidden) { foeTimer = setTimeout(go, 500); return; }   /* wait while the sheet or a card is open */
+      foeTimer = 0; if (state && state.fight && state.fight.phase === 'foe' && !state.over) run('foe');
+    }, wait);
   }
   /* A hero from My heroes who finishes the road alive may bring their finds home (the owner's call, 2026-11-06): each find goes into the saved hero if
      there is room for it, through the sheet's own rules; what does not fit stays behind. It can be done once. */
@@ -197,7 +232,7 @@
     toast(ok ? 'Home: ' + (came.join(', ') || 'nothing') + '.' : 'Not saved: try again.', ok ? 'Brought home' : 'Not saved');
   }
   function choiceButton(c, cls) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
+    var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (/^meet /.test(c.cmd || '') ? 'friend' : c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
     if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = c.why || 'No use here'; b.appendChild(no); }
     else {
@@ -206,7 +241,7 @@
       if (od) bits.push(od.need > 20 ? 'Cannot succeed' : 'Need ' + od.need + '+ (' + od.chance + '%)' + (od.note ? ', ' + od.note : ''));
       if (c.horror) bits.push('+' + R.sayHorrorAmount(c.horror) + ' Horror');
       if (od && od.cost.length) bits.push('Fail: ' + od.cost.join(', '));
-      if (c.hint) bits.unshift(c.hint);
+      if (c.hint) { if (c.flee) bits.push(c.hint); else bits.unshift(c.hint); }
       if (bits.length) { var sm = document.createElement('small'); sm.className = 'odds' + (od && od.chance <= 35 ? ' long' : ''); sm.textContent = bits.join(' · '); b.appendChild(sm); }
     }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });
@@ -226,11 +261,13 @@
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
+    clearTimeout(foeTimer); foeTimer = 0; cardDamage = false;
+    var cap = document.querySelector('.frame .caption'); if (cap) cap.remove();
     var overBefore = state.over, before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
     S.act(state, ADV(), cmd, die);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !state.escaped && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
-    remember(); save(); renderLog(false); render(); roll(state.log.slice(before));
+    remember(); save(); renderLog(false); roll(state.log.slice(before)); render(); caption(state.log.slice(before));
     if (slain) {
       var foe = document.querySelector('#art .who.foe'); if (foe) foe.classList.add('dying'); document.querySelectorAll('#art .foeflame').forEach(function (f) { f.classList.add('out'); });
       setTimeout(function () { dying = false; paint(); }, 1900);
@@ -261,10 +298,30 @@
       var pips = $('pips'); pips.classList.remove('pulse'); void pips.offsetWidth; pips.classList.add('pulse');
       if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) buzz([40, 60, 40]);
     } else if (state.horror >= 14 && !state.over) setTimeout(function () { sfx('heart'); }, 400);
+    if (o.fresh.some(function (l) { return l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; }); })) setTimeout(function () { sfx('friend'); }, 150);
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
     if (finds.length) { setTimeout(function () { sfx('find'); }, 300); finds.forEach(function (l, n) { setTimeout(function () { toast(l.t); }, 350 + n * 900); }); }
     if (state.done && !o.done) { setTimeout(victory, 900); }
     if (state.over && state.run && state.run.logged && !o.over) setTimeout(showEnd, 1400);
+  }
+  /* A caption across the top of the picture for the moments that matter: a new place, one of the owner's friends, the end of a scene, a Horror threshold.
+     The full words stay in the story; a tap on the caption opens it. */
+  var capTimer = 0;
+  function caption(fresh) {
+    var pick = null;
+    fresh.forEach(function (l, i) {
+      if ((l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; })) || l.k === 'end') pick = { t: l.t, k: l.k };
+      else if (l.k === 'room' && (!pick || pick.k === 'room')) { var next = fresh[i + 1], first = next && next.k === 'say' ? (/^.*?[.!?](\s|$)/.exec(next.t) || [next.t])[0] : ''; pick = { title: l.t, t: first.trim(), k: 'room' }; }
+      else if (l.k === 'horror' && /^The Horror (stirs|draws near|has arrived)/.test(l.t) && (!pick || pick.k === 'room')) pick = { t: l.t, k: 'horror' };
+    });
+    if (!pick) return;
+    var old = document.querySelector('.frame .caption'); if (old) old.remove();
+    var c = document.createElement('button'); c.type = 'button'; c.className = 'caption k-' + pick.k;
+    if (pick.title) { var b = document.createElement('b'); b.textContent = pick.title; c.appendChild(b); }
+    if (pick.t) { var s = document.createElement('span'); withNames(s, pick.t); c.appendChild(s); }
+    c.addEventListener('click', function () { c.remove(); whole = false; foldLog(); var l = $('log'); l.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); });
+    document.querySelector('.frame').appendChild(c);
+    clearTimeout(capTimer); capTimer = setTimeout(function () { c.classList.add('gone'); setTimeout(function () { c.remove(); }, 400); }, pick.k === 'npc' ? 6500 : 4500);
   }
   /* a find: its card slides in over the picture for a moment */
   function toast(text, label) {
@@ -324,7 +381,7 @@
     if (checks.length) {
       var last = checks[checks.length - 1], o = last.outcome;
       D.show(last.dice || [], o.who, !last.foeAttack, o);
-      if (o.pendingDamage && state.fight && state.fight.phase === 'damage') D.action({ label: 'Roll damage', run: function () { run('damage'); } });
+      if (o.pendingDamage && state.fight && state.fight.phase === 'damage' && !D.off() && !reduceMotion()) { cardDamage = true; D.action({ label: 'Roll damage', run: function () { run('damage'); } }); }
       return;
     }
     var plain = fresh.filter(function (l) { return l.dice; });

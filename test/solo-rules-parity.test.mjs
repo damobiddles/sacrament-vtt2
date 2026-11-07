@@ -120,8 +120,8 @@ test('the Black Candle gives light only when it is lit, and lighting it costs it
 });
 
 test('the solo engine keeps no rules of its own: every number and roll comes from the shared rules', () => {
-  for (const name of ['HORROR', 'DYING', 'REST', 'HEART', 'ADJ', 'BUILD', 'DEFENCE_BASE', 'ARMOUR_CAP']) assert.doesNotMatch(ENGINE, new RegExp('\\b' + name + '\\s*=\\s*[{0-9]'), name + ' is defined in the rules, not here');
-  for (const use of ['R.check(', 'R.effort(', 'R.criticalEffort(', 'R.attack(', 'C.defence(', 'R.horrorMove(', 'R.nat1Tempts(', 'R.rollHorror(', 'R.HORROR.push', 'R.HORROR.nat1', 'R.HORROR.bloodDie', 'R.dyingFall(', 'R.dyingTick(', 'R.REST.heal', 'R.restDice(', 'C.useOf(', 'C.actions(', 'C.pickSpell(', 'C.rollLoot(']) assert.ok(ENGINE.includes(use), 'the engine uses ' + use);
+  for (const name of ['HORROR', 'DYING', 'BREAK_AWAY', 'REST', 'HEART', 'ADJ', 'BUILD', 'DEFENCE_BASE', 'ARMOUR_CAP']) assert.doesNotMatch(ENGINE, new RegExp('\\b' + name + '\\s*=\\s*[{0-9]'), name + ' is defined in the rules, not here');
+  for (const use of ['R.check(', 'R.effort(', 'R.criticalEffort(', 'R.attack(', 'C.defence(', 'R.horrorMove(', 'R.nat1Tempts(', 'R.rollHorror(', 'R.HORROR.push', 'R.HORROR.nat1', 'R.HORROR.bloodDie', 'R.dyingFall(', 'R.BREAK_AWAY.stat', 'R.dyingTick(', 'R.REST.heal', 'R.restDice(', 'C.useOf(', 'C.actions(', 'C.pickSpell(', 'C.rollLoot(']) assert.ok(ENGINE.includes(use), 'the engine uses ' + use);
   assert.doesNotMatch(ENGINE, /% *u\.spells\.length|Math\.floor\(\(n - 1\)/, 'a grimoire read by the die uses the shared C.pickSpell');
 });
 

@@ -44,7 +44,13 @@
       run: function (api) { api.story('clue', true); api.story('tracks', true); api.story('notes', true); api.say('"I have walked to the boundary and back nine times," says Matthew of the Brown Order of Farts. "I know what waits at the end of this road, and how it moves. Listen."', 'npc'); api.say('You know the last foe\'s ways now: your first attack in the last scene will be Easy.', 'note'); } },
     { id: 'biddles', name: 'Lord Biddles of Wooburn', label: 'Accept Lord Biddles of Wooburn\'s hospitality',
       meet: 'A coach is stopped on the road, and out of it climbs Lord Biddles of Wooburn, a minor lord with a major appetite, who insists that you eat.',
-      run: function (api) { api.say('"Nobody walks past my coach hungry," says Lord Biddles of Wooburn. "Bad luck. Worse manners." He gives you a parcel from his own hamper.', 'npc'); api.give('rations', 'Lord Biddles of Wooburn gives you'); } }
+      run: function (api) { api.say('"Nobody walks past my coach hungry," says Lord Biddles of Wooburn. "Bad luck. Worse manners." He gives you a parcel from his own hamper.', 'npc'); api.give('rations', 'Lord Biddles of Wooburn gives you'); } },
+    { id: 'rachel', name: 'Rachel, Witch-finder General', label: 'Answer Rachel, Witch-finder General',
+      meet: 'Three riders block the road, and the one in front wears a black hat and a silver pin: Rachel, Witch-finder General. She looks at you for a long time before she speaks.',
+      run: function (api) { api.say('"You are not what I am hunting," says Rachel, Witch-finder General, at last. "But you will meet it before I do." She presses a stoppered flask into your hand. "Oil from the chrism at Saint Aubrel\'s. On the blade, not on yourself."', 'npc'); api.give('oil', 'Rachel, Witch-finder General gives you'); } },
+    { id: 'simon', name: 'Simon the Scholar', label: 'Hear what Simon the Scholar has read',
+      meet: 'Under a hawthorn sits Simon the Scholar, a thin man with ink to the elbows and a satchel of borrowed books, reading by what is left of the light.',
+      run: function (api) { api.story('forewarned', true); api.say('"Everything on this road has been written down by someone," says Simon the Scholar, turning pages. "Here. This is what you will meet next, and here is where it is weak."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); } }
   ];
 
   /* ---------- openings ---------- */

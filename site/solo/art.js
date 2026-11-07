@@ -242,11 +242,22 @@
     return '<g class="foehearts">' + out + '</g>';
   }
 
+  /* ---------- the hour: night falls along the road (engine.js nightfall): evening, then a deeper dusk, then full night at the end ---------- */
+  var SKIES = { evening: ['#1e1630', '#4a2f52', '#9a5a4a', '#d9894a'], dusk: ['#141024', '#2e2042', '#5e3a48', '#8a5040'], night: ['#05070f', '#0b1024', '#141a34', '#1c2038'] };
+  var TIME = 'evening';
+  function hourOf(s) { var S = root.SacramentSolo, t = S && S.nightfall ? S.nightfall(s) : ''; return SKIES[t] ? t : 'evening'; }
+  /* the hour over the whole picture: a little shade at dusk; at night the dark, eased where the hero carries a light */
+  function hourShade(s) {
+    if (TIME === 'dusk') return '<rect width="320" height="192" fill="#120c1c" opacity=".16"/>';
+    if (TIME !== 'night') return '';
+    var lit = s && ((s.flags && (s.flags.lit || s.flags.candle)) || hasLight(s));
+    return '<rect width="320" height="192" fill="#04060f" opacity="' + (lit ? '.42' : '.68') + '"/>';
+  }
   /* ---------- shared pieces ---------- */
   function defs(id) {
     return '<defs>'
       + '<linearGradient id="' + id + 'wax" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4ead0"/><stop offset=".6" stop-color="#dcc89a"/><stop offset="1" stop-color="#b09868"/></linearGradient>'
-      + '<linearGradient id="' + id + 'sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1630"/><stop offset=".45" stop-color="#4a2f52"/><stop offset=".78" stop-color="#9a5a4a"/><stop offset="1" stop-color="#d9894a"/></linearGradient>'
+      + '<linearGradient id="' + id + 'sky" x1="0" y1="0" x2="0" y2="1">' + SKIES[TIME].map(function (c, k) { return '<stop offset="' + [0, 0.45, 0.78, 1][k] + '" stop-color="' + c + '"/>'; }).join('') + '</linearGradient>'
       /* the soft dark at the edges of every picture, like the home page's paintings */
       + '<radialGradient id="' + id + 'vig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#0b0806" stop-opacity="0"/><stop offset="1" stop-color="#0b0806" stop-opacity=".7"/></radialGradient>'
       + '<linearGradient id="' + id + 'bronze" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6a2a"/><stop offset=".45" stop-color="' + P.goldHi + '"/><stop offset=".6" stop-color="' + P.gold + '"/><stop offset="1" stop-color="#7a5a20"/></linearGradient>'
@@ -632,11 +643,12 @@
 
   /* One picture: the place, the foe if there is one, the dark if the place is dark, then the grain and vignette over all. */
   function scene(name, s, id) {
-    id = id || 'a';
+    id = id || 'a'; TIME = s && s.run ? hourOf(s) : 'evening';
     var fn = SCENES[name] || SCENES.title, body = PAINT[name] ? painting(name, id) : fn(s, id);
     var spot = SPOT[name] || [196, 64, 0.78], f = s && s.fight, art = f && (f.art || 'eater');
     if (f) body += FOE_PAINT[art] ? foePainted(art, spot[0], spot[1], spot[2]) : foe(art, id, spot[0], spot[1], spot[2], f.hp.cur / f.hp.max);
     if (DARK[name]) { var lit = s && (s.flags.lit || hasLight(s)); body += dark(id, lit ? DARK[name] : null); if (f && (f.art || 'eater') === 'eater') body += '<ellipse class="flame foeflame" cx="' + (spot[0] + 35) + '" cy="' + spot[1] + '" rx="2.4" ry="4" fill="' + P.goldHi + '" opacity=".9"/>'; }
+    body += hourShade(s);
     if (f) body += hearts(id + 'f', spot[0] + 40 * spot[2], Math.max(12, spot[1] - 14), f.hp);
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">' + defs(id) + body + page(id) + '</svg>';
   }
