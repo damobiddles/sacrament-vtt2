@@ -50,7 +50,15 @@
       run: function (api) { api.say('"You are not what I am hunting," says Rachel, Witch-finder General, at last. "But you will meet it before I do." She presses a stoppered flask into your hand. "Oil from the chrism at Saint Aubrel\'s. On the blade, not on yourself."', 'npc'); api.give('oil', 'Rachel, Witch-finder General gives you'); } },
     { id: 'simon', name: 'Simon the Scholar', label: 'Hear what Simon the Scholar has read',
       meet: 'Under a hawthorn sits Simon the Scholar, a thin man with ink to the elbows and a satchel of borrowed books, reading by what is left of the light.',
-      run: function (api) { api.story('forewarned', true); api.say('"Everything on this road has been written down by someone," says Simon the Scholar, turning pages. "Here. This is what you will meet next, and here is where it is weak."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); } }
+      run: function (api) { api.story('forewarned', true); api.say('"Everything on this road has been written down by someone," says Simon the Scholar, turning pages. "Here. This is what you will meet next, and here is where it is weak."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); } },
+    { id: 'gussetweasel', name: 'Gussetweasel, the Necromancer', label: 'Admire the invisible bats of Gussetweasel, the Necromancer',
+      meet: 'A man in a moth-eaten cloak is bowing to an empty sky: Gussetweasel, the Necromancer, with his amazing invisible bats. He swears there are a great many of them.',
+      run: function (api) {
+        api.say('"Behold!" says Gussetweasel, the Necromancer, sweeping his arm at nothing. "My amazing invisible bats. They see in the dark, so I need not, and you, friend, plainly cannot."', 'npc');
+        /* what he offers is the gear list's own: a light if you have none (the dark makes searching Hard), otherwise what his bats have seen ahead */
+        if (!api.has(LIGHTS)) api.give('lantern', 'Gussetweasel, the Necromancer gives you');
+        else { api.story('forewarned', true); api.say('"They have flown ahead," he adds, listening to the empty air. "They tell me what waits for you, and where it is soft."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); }
+      } }
   ];
 
   /* ---------- openings ---------- */
