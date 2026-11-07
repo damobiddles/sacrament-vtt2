@@ -714,3 +714,15 @@ test('a natural 1 says on the dice card whether it raised the Horror, in the Rul
   assert.match(plain.note, /Natural 1 on a plain check: no Horror/);
   assert.equal(c.horror, 0);
 });
+
+test('spells and items that matter: a useful one is marked, the foe card says what the foe is, and the end card lists what was put to use', () => {
+  const { s, die } = withBook('quietmouths');
+  assert.ok(!cast(s, 'Hush').useful, 'no use here, so not marked');
+  S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
+  const wax = cast(s, 'Mouth of Wax'); assert.ok(wax.useful && !wax.idle, 'Wax Mouth answers the feeding: marked useful');
+  const foe = S.cards(s, A).find((c) => c.kind === 'foe');
+  assert.ok(foe.traits.includes('Burns') && foe.traits.includes('Has a weakness to learn'), foe.traits.join(', '));
+  const r = S.startRun(T.generate('scholar', seeded(4)), 'pilgrim-road', fixed([10]));
+  r.run.used = ['Mouth of Wax']; assert.deepEqual(S.summary(r).used, ['Mouth of Wax']);
+  require('../site/solo/art.js'); assert.match(globalThis.SacramentSoloArt.endCard(S.summary(r), r, ''), /PUT TO USE/);
+});

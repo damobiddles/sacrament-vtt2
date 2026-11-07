@@ -693,6 +693,7 @@
     lines(sum.beaten.length ? wrap(sum.beaten.join(', ') + '.', 46) : ['None.'], 14);
     head(sum.end === 'won' ? 'Brought home' : 'Carried at the end');
     lines(sum.finds.length ? wrap(sum.finds.join(', ') + '.', 46) : ['Nothing found on the road.'], 14);
+    if (sum.used && sum.used.length) { head('Put to use'); lines(wrap(sum.used.join(', ') + '.', 46), 14); }
     if (sum.line) { y += 18; lines(wrap(sum.line, 40), 15, { anchor: 'middle', x: CW / 2, italic: true, fill: P.umber }); }
     y += 30; body += text(CW / 2, y, 'Sacrament RPG · Solo' + (when ? ' · ' + when : ''), 10, { anchor: 'middle', fill: P.earth, spacing: 1 });
     var CH = y + 26;

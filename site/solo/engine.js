@@ -392,7 +392,7 @@
     if (s.over) return;
     var ok = !chk || chk.success;
     if (!isDamage) {
-      if (ok) { if (story) story.run(api); else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
+      if (ok) { if (story) { story.run(api); putToUse(s, u.spell ? u.spell.name : u.item.name); } else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
       else if (story) api.say('It does not take.', 'miss');
       if (fight) fight.phase = 'foe';
       return;
@@ -530,7 +530,7 @@
   function anoint(api) {
     var s = api.s, f = s.fight, o = anointer(s); if (!f || !o || s.flags.anointed) return false;
     o.gear.uses = Math.max(0, (o.gear.uses == null ? o.item.uses : o.gear.uses) - 1);
-    s.flags.anointed = o.fx.step || 1;
+    s.flags.anointed = o.fx.step || 1; putToUse(s, o.item.name);
     api.say('You use ' + yours(o.item.name) + ' and anoint your weapon (' + o.gear.uses + ' left). Until the end of the scene its Effort is one size bigger against the unquiet dead.', 'act');
     f.phase = 'foe'; return true;
   }
@@ -556,7 +556,7 @@
   /* Mark a story spell that nothing in this scene answers: it shows as "No use here" and costs nothing. */
   function markIdle(api, a, c) {
     var h = a.u && a.u.healing;
-    if (isStorySpell(a.u) && !spellUse(api, a.u.source || a.u.item)) { c.idle = true; c.why = 'No use here'; }
+    if (isStorySpell(a.u)) { if (!spellUse(api, a.u.source || a.u.item)) { c.idle = true; c.why = 'No use here'; } else c.useful = true; }
     else if (h && h.kind && !h.force && api.s.healed[h.kind]) { c.idle = true; c.why = 'Used since your last rest'; }
     return c;
   }
@@ -587,9 +587,19 @@
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
   function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
-    if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', next: foeIntent(s).text, text: fd.card || '', stats: 'Attack +' + f.attack + ' · d' + f.damage + ' damage' + (f.dim ? ' · next attack rolls 3 less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
+    if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', next: foeIntent(s).text, text: fd.card || '', traits: foeTraits(fd, f), stats: 'Attack +' + f.attack + ' · d' + f.damage + ' damage' + (f.dim ? ' · next attack rolls 3 less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
     Object.keys(adv.obstacles || {}).forEach(function (id) { var o = adv.obstacles[id]; if (o.room === s.room && obstacleOpen(api, id)) out.push({ kind: 'obstacle', id: id, name: o.name, cur: int((s.bars || {})[id], 0), max: o.max, unit: 'Effort', text: o.text || '', stats: o.stat + ' check, then ' + (R.CAT_NAMES ? R.CAT_NAMES[o.cat || 'basic'] : 'Basic') + ' Effort' }); });
     Object.keys(s.timers || {}).forEach(function (id) { var t = s.timers[id], d = adv.timers[id]; if (d && (t.on || t.cur === 0) && (!d.room || d.room === s.room)) out.push({ kind: 'timer', id: id, name: d.name, cur: t.cur, max: t.max, unit: t.on ? 'left' : 'ended', text: d.text || '', stats: t.on ? (d.tick === 'fail' ? 'Loses 1 each failed try' : d.tick === 'action' ? 'Loses 1 each thing you do here' : 'Loses 1 each round') : 'Time ran out' }); });
+    return out;
+  }
+  /* What a foe is, as the spell tags read it (the Rules page's tag table): what a spell or item from the gear list can do about it. */
+  function foeTraits(fd, f) {
+    var out = [];
+    if (fd.undead) out.push('Unquiet dead');
+    if (fd.flame) out.push('Burns');
+    if (fd.caster) out.push('Casts');
+    if (fd.beast) out.push('Animal');
+    if (fd.weakness && !f.learned) out.push('Has a weakness to learn');
     return out;
   }
   function exitOf(api, r, d) { var e = r.exits[d]; if (!e) return null; if (typeof e === 'string') e = { to: e }; if (e.when && !e.when(api)) return e.closed ? { to: e.to, closed: e.closed, hidden: true } : null; return e; }
@@ -786,6 +796,8 @@
 
   /* The end of a run, for the end card and the Chronicle: the places walked, the foes beaten, what came home, the highest Horror, and a closing line
      from the campaign's endings (chosen by the run itself, so the same run always shows the same line). */
+  /* The spells and items that answered something on the road, for the end card. */
+  function putToUse(s, name) { if (!s.run || !name) return; var l = s.run.used = s.run.used || []; if (l.indexOf(name) < 0) l.push(name); }
   function summary(s) {
     var run = s.run || { order: [s.adventure], at: 0 }, camp = (root.SacramentSoloCampaigns || {})[run.campaign] || {};
     var walked = run.order.slice(0, run.at + 1), end = s.over || '';
@@ -794,7 +806,7 @@
     return {
       hero: s.hero.name, calling: s.hero.calling || '', road: run.title || '', to: last ? last.title : '', end: end, total: run.order.length,
       places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }),
-      beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }),
+      beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }), used: (run.used || []).slice(),
       peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
     };
   }

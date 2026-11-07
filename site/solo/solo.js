@@ -153,7 +153,10 @@
       n.textContent = c.kind === 'timer' ? (c.unit === 'ended' ? 'Time is up' : c.cur + ' of ' + c.max + ' left') : c.cur + ' of ' + c.max + ' ' + c.unit;
       b.setAttribute('aria-label', c.name + ': ' + n.textContent + (c.next ? '. ' + c.next : '') + '. Read the card.');
       b.append(t, bar, n);
-      if (c.next) { var nx = document.createElement('small'); nx.className = 'next'; nx.textContent = c.next; b.appendChild(nx); } b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats, does: c.text }); }); box.appendChild(b);
+      if (c.next) { var nx = document.createElement('small'); nx.className = 'next'; nx.textContent = c.next; b.appendChild(nx); }
+      /* what the foe is, so a player can see which spell or item answers it */
+      if (c.traits && c.traits.length) { var tr = document.createElement('span'); tr.className = 'traits'; c.traits.forEach(function (x) { var i = document.createElement('i'); i.textContent = x; tr.appendChild(i); }); b.appendChild(tr); b.setAttribute('aria-label', b.getAttribute('aria-label').replace(/\. Read the card\.$/, '. ' + c.traits.join(', ') + '. Read the card.')); }
+      b.addEventListener('click', function () { showAbout({ name: c.name, line: c.stats + (c.traits && c.traits.length ? ' · ' + c.traits.join(' · ') : ''), does: c.text }); }); box.appendChild(b);
     });
   }
   /* The turn order, as on the table's strip: whose turn it is, and the round. */
@@ -191,7 +194,8 @@
     box.classList.toggle('open', moreOpen);
     if (extra.length) {
       var h = document.createElement('button'); h.type = 'button'; h.className = 'more'; h.setAttribute('aria-expanded', moreOpen ? 'true' : 'false');
-      h.textContent = 'Spells and items (' + extra.length + ')';
+      var good = extra.filter(function (c) { return c.useful; }).length;
+      h.textContent = 'Spells and items (' + extra.length + (good ? ', ' + good + ' useful here' : '') + ')'; if (good) h.classList.add('useful');
       h.addEventListener('click', function () { moreOpen = !moreOpen; renderChoices(); });
       box.appendChild(h);
       extra.forEach(function (c) { var el = choiceButton(c); el.classList.add('extra'); box.appendChild(el); });
@@ -234,6 +238,7 @@
   function choiceButton(c, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = cls || 'ch ' + (/^meet /.test(c.cmd || '') ? 'friend' : c.kind === 'do' || c.kind === 'attack' ? '' : c.kind);
     b.textContent = c.label;
+    if (c.useful) b.className += ' useful';
     if (c.idle) { b.className += ' idle'; var no = document.createElement('small'); no.textContent = c.why || 'No use here'; b.appendChild(no); }
     else {
       /* every choice that rolls shows its bet: the number needed, the chance, and what failing costs here */
@@ -242,6 +247,7 @@
       if (c.horror) bits.push('+' + R.sayHorrorAmount(c.horror) + ' Horror');
       if (od && od.cost.length) bits.push('Fail: ' + od.cost.join(', '));
       if (c.hint) { if (c.flee) bits.push(c.hint); else bits.unshift(c.hint); }
+      if (c.useful) bits.unshift('Useful here');
       if (bits.length) { var sm = document.createElement('small'); sm.className = 'odds' + (od && od.chance <= 35 ? ' long' : ''); sm.textContent = bits.join(' · '); b.appendChild(sm); }
     }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });

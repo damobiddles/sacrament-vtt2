@@ -115,7 +115,7 @@
     intro: function (api) { api.say('Grimsby Fold, where the pilgrim road meets the drove road. Dusk, with rain coming.'); },
     fall: function () { return 'You lie in the ditch by the cart until the rain stops. Hob Sallow is gone. So is the road.'; },
     obstacles: {
-      wheel: { name: 'The sunken wheel', room: 'crossroads', max: 6, stat: 'STR', cat: 'basic', answers: { bind: 'The cart stops sliding and stays where it is held. The wheel comes up out of the ditch more easily.', move: 'The stones under the axle shift, and you never touch them. The wheel sits higher.' },
+      wheel: { name: 'The sunken wheel', room: 'crossroads', max: 6, stat: 'STR', cat: 'basic', answers: { shelter: 'The rain bends away from the ditch, and the mud firms under the wheel.', bind: 'The cart stops sliding and stays where it is held. The wheel comes up out of the ditch more easily.', move: 'The stones under the axle shift, and you never touch them. The wheel sits higher.' },
         text: 'One wheel of the cart sunk to the hub in the ditch. Heave (STR, Basic Effort), lift it on your back (STR, Weapons Effort, but a failure hurts), or pack the ditch first (INT, once: half of what is left). Each failed try brings the rain closer; once it comes, every try is Hard.',
         clock: 'rain', hard: function (api) { return !!api.flag('rain'); },
         ways: [
