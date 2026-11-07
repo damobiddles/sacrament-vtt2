@@ -27,12 +27,37 @@
   function remember() {
     if (!state || !state.over || !state.run || state.run.logged) return;
     var sum = S.summary(state); state.run.logged = today() || true;
-    var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged });
+    var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
+      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes });
+    state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
+  }
+  /* Deeds (deeds.js): measured against every friend, every last place and every place on this road. */
+  var DEEDS = window.SacramentSoloDeeds;
+  function world() {
+    var A = window.SacramentSoloAdventures;
+    return { friends: (window.SacramentSoloCameos || []).map(function (c) { return c.id; }), places: CAMP.scenes.slice(),
+      finales: CAMP.scenes.filter(function (id) { return A[id] && A[id].act === 'finale'; }) };
+  }
+  function showDeeds(l) {
+    var box = $('deeds'), got = DEEDS.earned(l, world()); box.textContent = '';
+    $('deedCount').textContent = got.length + ' of ' + DEEDS.DEEDS.length;
+    DEEDS.DEEDS.forEach(function (d) {
+      var li = document.createElement('li'), b = document.createElement('b'), s = document.createElement('span'), have = got.indexOf(d.id) >= 0;
+      li.className = have ? 'got' : 'not'; b.textContent = d.name; s.textContent = (have ? '' : 'Not yet. ') + d.hint;
+      li.append(b, s); box.appendChild(li);
+    });
+    var rec = $('record'); rec.textContent = '';
+    DEEDS.record(l).slice(0, 6).forEach(function (r) {
+      var p = document.createElement('p'), b = document.createElement('b'); b.textContent = r.hero;
+      p.append(b, document.createTextNode(': ' + r.roads + (r.roads === 1 ? ' road' : ' roads') + ', home ' + r.home + ', ' + r.beaten + ' foes beaten, highest Horror ' + r.peak));
+      rec.appendChild(p);
+    });
   }
   var HOW = { won: 'came home', dead: 'fell', fled: 'got away' };
   function showChronicle() {
     var l = chronicle(), box = $('chronicleList'); box.textContent = ''; $('chronicle').hidden = !l.length;
+    if (l.length) showDeeds(l);
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
@@ -308,7 +333,10 @@
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
     if (finds.length) { setTimeout(function () { sfx('find'); }, 300); finds.forEach(function (l, n) { setTimeout(function () { toast(l.t); }, 350 + n * 900); }); }
     if (state.done && !o.done) { setTimeout(victory, 900); }
-    if (state.over && state.run && state.run.logged && !o.over) setTimeout(showEnd, 1400);
+    if (state.over && state.run && state.run.logged && !o.over) {
+      (state.run.deeds || []).forEach(function (id, k) { var d = DEEDS.byId(id); if (d) setTimeout(function () { sfx('find'); toast(d.name, 'Deed earned'); }, 300 + k * 1200); });
+      setTimeout(showEnd, 1400 + (state.run.deeds || []).length * 1200);
+    }
   }
   /* A caption across the top of the picture for the moments that matter: a new place, one of the owner's friends, the end of a scene, a Horror threshold.
      The full words stay in the story; a tap on the caption opens it. */
@@ -352,7 +380,8 @@
   /* The end card: the whole road on one page from the book. It can be saved as a picture (or shared, where the device can). */
   function showEnd() {
     if (!state || !state.over || !state.run) return;
-    var sum = S.summary(state), svg = ART.endCard(sum, state, state.run.logged === true ? '' : state.run.logged);
+    var sum = S.summary(state); sum.deeds = (state.run.deeds || []).map(function (id) { var d = DEEDS.byId(id); return d ? d.name : ''; }).filter(Boolean);
+    var svg = ART.endCard(sum, state, state.run.logged === true ? '' : state.run.logged);
     $('endCard').innerHTML = svg;
     $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
     $('endSaved').hidden = true;
