@@ -45,6 +45,7 @@ You play one hero alone through short written adventures in the world of Sacrame
 | `site/solo/adventure-silent-bell.js` | The Silent Bell (a middle scene): words, places, one foe. Words only; numbers come from the rules. |
 | `site/solo/road.js` | The Pilgrim Road: the run's other eight scenes and the five friends on the road. |
 | `site/solo/road-wilds.js` | More middle scenes for the road: the Hospice at Dray, the Charcoal Wood, the Toll Bridge at Crane's Holt. |
+| `site/solo/road-far.js` | A third reason to be on the road (the Inquisitor's Warrant, answered at the Barrow at Ulm Vethra) and three more middle scenes: the Plague Pit at Pellstead, the Players at Tarnby, the Field at Fallowby. |
 | `site/solo/art.js` | The pictures, as illuminated miniatures (SVG). |
 | `site/solo/music.js` | The 8-bit soundtrack (Web Audio, no files). |
 | `site/solo/solo.js`, `solo.css`, `index.html` | The screen. Saves the game in the browser under `sacrament-solo-v1`. |

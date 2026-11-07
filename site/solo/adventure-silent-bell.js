@@ -40,6 +40,7 @@
               api.say('"Brother Odo Pell keeps the bell. Three nights ago he went in to ring the vigil and never came out. Then the candles in the houses started going out on their own. Ring the bell, stranger. Please."', 'npc');
               if (api.charge() === 'missing') api.say('"A sister in grey? She went by at noon, walking fast, with her eyes shut. Toward the boundary."', 'npc');
               if (api.charge() === 'relic') api.say('"The shrine at the Cross? Robbed, they say. The boundary\'s thin there now. I would not go."', 'npc');
+              if (api.charge() === 'warrant') api.say('"A deacon? He rode through yesterday without stopping, with a book open on the saddle in front of him. Toward the boundary."', 'npc');
               api.say('Her name, she says, is Tilda Crane. The shutter closes.');
             } },
           { id: 'box', label: 'Search the offering box', words: ['box', 'offering', 'search', 'tin'], when: function (api) { return !api.flag('box'); },

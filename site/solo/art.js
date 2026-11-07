@@ -149,6 +149,56 @@
         + '<ellipse cx="40" cy="32" rx="9" ry="12" fill="' + P.grey + '"' + OF + '/><path d="M28 24 H52 L48 14 H32 Z M24 24 H56" fill="' + P.ink + '" stroke="' + P.ink + '" stroke-width="1.6"/>'
         + '<path d="M35 32 h3 M42 32 h3" stroke="' + P.ink + '" stroke-width="1.6"/><path d="M36 40 h8" stroke="' + P.ink + '" stroke-width="1"/>';
     },
+    pardoner: function () {
+      return '<ellipse cx="40" cy="139" rx="26" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path d="M26 46 C20 74 18 106 16 136 L34 136 L37 106 L43 106 L46 136 L64 136 C62 106 60 74 54 46 Z" fill="' + P.ochre + '"' + OF + '/>'
+        + [[30, 60], [48, 64], [28, 84], [50, 90], [34, 110], [46, 118], [40, 76]].map(function (d) { return '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="2.2" fill="' + P.grey + '"' + O + '/>'; }).join('')
+        + '<path d="M54 58 C62 64 66 70 70 76" stroke="' + P.ochre + '" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M54 58 C62 64 66 70 70 76" stroke="' + P.ink + '" stroke-width=".8" fill="none"/>'
+        + '<circle cx="71" cy="78" r="2.6" fill="' + P.flesh + '"' + O + '/><path d="M72 78 L80 70" stroke="' + P.white + '" stroke-width="1.6"/><path d="M72 78 L80 70" stroke="' + P.ink + '" stroke-width=".4"/>'
+        + '<ellipse cx="40" cy="34" rx="9" ry="11" fill="' + P.flesh + '"' + OF + '/><path d="M26 26 H54 L50 18 C46 12 34 12 30 18 Z" fill="' + P.verm + '"' + OF + '/>'
+        + '<path d="M35 33 q2 -1.4 4 0 M41 33 q2 -1.4 4 0" stroke="' + P.ink + '" stroke-width="1" fill="none"/><path d="M35 40 Q40 44 45 40" stroke="' + P.ink + '" stroke-width="1" fill="none"/>';
+    },
+    deacon: function () {
+      return '<ellipse cx="40" cy="139" rx="28" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path class="hem" d="M24 44 C16 72 12 106 8 138 L72 138 C68 106 64 72 56 44 Z" fill="#2c2630"' + OF + '/>'
+        + '<path d="M36 46 L30 136 M44 46 L50 136" stroke="' + P.verm + '" stroke-width="3" fill="none"/>'
+        + '<path d="M30 54 C28 80 26 110 24 136 M50 54 C52 80 54 110 56 136" stroke="' + P.grey + '" stroke-width=".8" fill="none" opacity=".5"/>'
+        + '<path d="M24 56 C16 64 14 72 18 78" stroke="#2c2630" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M24 56 C16 64 14 72 18 78" stroke="' + P.ink + '" stroke-width=".8" fill="none"/>'
+        + '<path d="M6 70 L20 74 L34 70 L34 88 L20 92 L6 88 Z" fill="' + P.white + '"' + OF + '/><path d="M20 74 V92" stroke="' + P.ink + '" stroke-width=".8"/><path d="M9 76 h8 M9 80 h8 M9 84 h7 M23 76 h8 M23 80 h8 M23 84 h6" stroke="' + P.verm + '" stroke-width=".6"/>'
+        + '<g class="glow">' + rays(20, 80, 12, 24, 8) + '</g>'
+        + '<ellipse cx="40" cy="32" rx="9" ry="11" fill="#e0c8ac"' + OF + '/><path d="M31 28 C32 18 48 18 49 28" stroke="' + P.ink + '" stroke-width="2" fill="none"/><path d="M33 44 H47 V48 H33 Z" fill="' + P.white + '"' + O + '/>'
+        + '<path d="M35 32 h4 M41 32 h4" stroke="' + P.ink + '" stroke-width="1.2"/><ellipse cx="40" cy="38" rx="2.2" ry="1.6" fill="' + P.ink + '"/>';
+    },
+    ghoul: function () {
+      return '<ellipse cx="40" cy="139" rx="40" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path d="M10 136 L16 110 L8 96 M70 136 L64 112 L76 98" stroke="#a8a49a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 136 L16 110 L8 96 M70 136 L64 112 L76 98" stroke="' + P.ink + '" stroke-width=".8" fill="none"/>'
+        + '<path d="M14 100 C18 84 34 78 50 82 C62 84 70 90 72 98 C70 106 60 112 46 112 C32 112 18 110 14 100 Z" fill="#a8a49a"' + OF + '/>'
+        + '<path d="M24 90 q6 -4 12 0 M40 88 q6 -4 12 0 M30 100 q6 -4 12 0" stroke="' + P.ink + '" stroke-width=".7" fill="none" opacity=".6"/>'
+        + '<ellipse cx="34" cy="96" rx="7" ry="4" fill="' + P.white + '"/><ellipse cx="56" cy="92" rx="5" ry="3" fill="' + P.white + '"/>'
+        + '<path d="M22 112 L26 136 M54 112 L50 136" stroke="#a8a49a" stroke-width="4" fill="none" stroke-linecap="round"/>'
+        + '<path d="M66 86 C70 74 82 74 84 84 C86 92 80 98 72 96 Z" fill="#a8a49a"' + OF + '/><circle cx="76" cy="84" r="1.6" fill="' + P.verm + '" class="blink"/><path d="M74 92 l2 2 l2 -2 l2 2" stroke="' + P.white + '" stroke-width=".8" fill="none"/>';
+    },
+    mummer: function () {
+      return '<ellipse cx="40" cy="139" rx="26" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path d="M26 44 C20 74 18 106 16 136 L40 136 L40 44 Z" fill="' + P.verm + '"' + OF + '/><path d="M40 44 L40 136 L64 136 C62 106 60 74 54 44 Z" fill="' + P.lapis + '"' + OF + '/>'
+        + '<path d="M22 80 L58 80 M20 104 L60 104" stroke="' + P.goldHi + '" stroke-width="1.4"/>'
+        + '<path d="M26 54 C16 60 10 50 6 42 M54 54 C64 60 70 50 74 42" stroke="' + P.ochre + '" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 54 C16 60 10 50 6 42 M54 54 C64 60 70 50 74 42" stroke="' + P.ink + '" stroke-width=".7" fill="none"/>'
+        + '<path d="M28 18 L22 6 L34 16 L40 4 L46 16 L58 6 L52 18 Z" fill="' + P.gold + '"' + O + '/>'
+        + '<ellipse cx="40" cy="32" rx="11" ry="14" fill="' + P.white + '"' + OF + '/><path d="M33 29 q3 -3 6 0 M41 29 q3 -3 6 0" stroke="' + P.ink + '" stroke-width="1.6" fill="none"/><path d="M33 38 Q40 46 47 38" stroke="' + P.verm + '" stroke-width="1.6" fill="none"/>'
+        + '<path d="M31 32 q-2 4 0 6 M49 32 q2 4 0 6" stroke="' + P.rose + '" stroke-width="1.4" fill="none"/><circle cx="36" cy="30" r=".9" fill="' + P.goldHi + '" class="blink"/><circle cx="44" cy="30" r=".9" fill="' + P.goldHi + '" class="blink"/>';
+    },
+    knight: function () {
+      var plate = '#9a988f';
+      return '<ellipse cx="40" cy="139" rx="30" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path d="M28 96 L24 136 L36 136 L38 104 L42 104 L44 136 L56 136 L52 96 Z" fill="' + plate + '"' + OF + '/>'
+        + '<path d="M24 46 C20 60 22 80 26 98 L54 98 C58 80 60 60 56 46 C50 40 30 40 24 46 Z" fill="' + plate + '"' + OF + '/>'
+        + '<path d="M30 56 q4 6 2 12 M48 60 q-3 8 0 14 M26 116 q4 4 2 8" stroke="' + P.earth + '" stroke-width="2.4" fill="none" opacity=".8"/>'
+        + '<path d="M26 98 L54 98 L56 106 L24 106 Z" fill="' + P.verm + '"' + O + '/>'
+        + '<path d="M24 50 C14 60 14 76 22 86 M56 50 C66 60 66 76 58 86" stroke="' + plate + '" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M24 50 C14 60 14 76 22 86 M56 50 C66 60 66 76 58 86" stroke="' + P.ink + '" stroke-width=".8" fill="none"/>'
+        + '<path d="M38 88 L38 138 L42 138 L42 88 Z" fill="' + P.white + '"' + OF + '/><path d="M30 86 H50" stroke="' + P.gold + '" stroke-width="3" stroke-linecap="round"/><path d="M40 86 V76" stroke="' + P.umber + '" stroke-width="3"/>'
+        + '<path d="M30 40 V22 C30 12 50 12 50 22 V40 Z" fill="' + plate + '"' + OF + '/><path d="M32 28 H48" stroke="' + P.ink + '" stroke-width="2.2"/><path d="M40 12 Q46 4 54 8" stroke="' + P.verm + '" stroke-width="2" fill="none"/>'
+        + '<path d="M58 30 q3 -3 6 0 q3 -3 6 0" stroke="' + P.ink + '" stroke-width="1.6" fill="none"/>';
+    },
     wraith: function () {
       return '<path class="hem" d="M20 36 C12 64 10 96 8 124 L14 118 L20 128 L26 116 L32 130 L38 118 L44 128 L50 116 L56 130 L62 118 L68 126 L70 124 C68 96 66 64 58 36 C54 20 26 20 20 36 Z" fill="' + P.white + '" opacity=".85"' + OF + '/>'
         + '<path d="M30 46 C28 70 26 96 24 118 M40 48 V122 M50 46 C52 70 54 96 56 118" stroke="' + P.azure + '" stroke-width="1" fill="none" opacity=".6"/>'
@@ -414,6 +464,72 @@
         + (f.passed || f.beat_tollman || (s && s.fight) ? '' : '<g class="who" transform="translate(116 58) scale(.56)"><g class="sway">' + FOES.tollman() + '</g></g>')
         + hero(s, id, 54, 66, 0.56, hasLight(s)) + fog(id, 150, '', 3) + motes(120, 300, 100, 180, '', 3, 151);
     },
+    chapter: function (s, id) {
+      var f = (s && s.flags) || {}, books = '', r = rnd(61), cols = [P.verm, P.lapis, P.umber, P.verd, P.ochre];
+      for (var row = 0; row < 3; row++) for (var i = 0; i < 26; i++) books += '<rect x="' + (8 + i * 12) + '" y="' + (18 + row * 30 + Math.round(r() * 4)) + '" width="9" height="' + (22 - Math.round(r() * 4)) + '" fill="' + cols[(i + row) % 5] + '"' + O + '/>';
+      var caged = !f.beat_pardoner && !f.questioned && !(s && s.fight);
+      return '<rect width="320" height="192" fill="#3a2a1c"/>' + books
+        + [42, 72, 102].map(function (y) { return '<rect x="0" y="' + y + '" width="320" height="4" fill="' + P.umber + '"' + O + '/>'; }).join('')
+        + '<path d="M156 6 H164 V40 H156 Z M146 14 H174 V22 H146 Z" fill="' + P.gold + '"' + O + '/>'
+        + floor(id, 150)
+        /* the Inquisitor at her table, writing */
+        + '<path d="M118 118 C116 100 136 98 134 118 Z" fill="' + P.verm + '"' + OF + '/><circle cx="126" cy="96" r="7" fill="' + P.flesh + '"' + OF + '/><path d="M118 94 C118 82 134 82 134 94" fill="' + P.ink + '"/>'
+        + '<rect x="96" y="116" width="96" height="8" fill="' + P.earth + '"' + O + '/><path d="M104 124 V152 M184 124 V152" stroke="' + P.umber + '" stroke-width="4"/><rect x="140" y="110" width="22" height="6" fill="' + P.white + '"' + O + '/><path d="M150 110 L158 98" stroke="' + P.ink + '" stroke-width="1"/>'
+        + '<path d="M168 108 V114" stroke="' + P.gold + '" stroke-width="2"/><ellipse class="flame" cx="168" cy="105" rx="1.4" ry="2.6" fill="' + P.goldHi + '"/>'
+        /* the cell at the back, with the pardoner tied in it */
+        + '<rect x="240" y="96" width="70" height="56" fill="#1c140e"' + O + '/>'
+        + (caged ? '<g transform="translate(262 112) scale(.3)">' + FOES.pardoner() + '</g>' : '')
+        + [248, 260, 272, 284, 296].map(function (x) { return '<path d="M' + x + ' 96 V152" stroke="' + P.grey + '" stroke-width="2"/>'; }).join('')
+        + hero(s, id, 40, 74, 0.56, false) + motes(100, 220, 90, 140, '', 4, 161);
+    },
+    barrow: function (s, id) {
+      var f = (s && s.flags) || {}, reading = !(s && s.fight) && !f.beat_deacon;
+      return sky(id, 150) + hill(260, 120, 160, 30, P.sap)
+        + '<path d="M40 150 C70 96 220 92 260 150 Z" fill="' + P.moss + '"' + O + '/><path d="M70 128 q20 -6 40 0 M150 118 q20 -6 40 0" stroke="' + P.ink + '" stroke-width=".6" fill="none" opacity=".5"/>'
+        + '<rect x="72" y="116" width="10" height="36" fill="' + P.grey + '"' + O + '/><rect x="108" y="116" width="10" height="36" fill="' + P.grey + '"' + O + '/><rect x="66" y="108" width="58" height="10" fill="' + P.grey + '"' + O + '/><rect x="82" y="118" width="26" height="34" fill="' + P.ink + '"/>'
+        + '<path d="M74 122 l4 4 M74 132 l4 -2 M110 124 l4 3 M110 136 l4 -4 M80 110 l3 4 M96 110 l3 4" stroke="' + P.stoneDk + '" stroke-width=".9"/>'
+        + land(148, P.sap, 71)
+        + '<g class="glow">' + rays(150, 152, 6, 22, 10) + '</g><path d="M142 158 L158 158 L154 154 L146 154 Z" fill="' + P.umber + '"' + O + '/><path class="flame" d="M150 140 C156 148 156 152 150 156 C144 152 144 148 150 140 Z" fill="' + P.verm + '"' + O + '/><path class="flame" d="M150 146 C152 149 152 152 150 154 C148 152 148 149 150 146 Z" fill="' + P.goldHi + '"/>'
+        + (reading ? '<g class="who" transform="translate(162 96) scale(.44)"><g class="sway">' + FOES.deacon() + '</g></g>' : '')
+        + hero(s, id, 236, 76, 0.56, hasLight(s)) + fog(id, 160, '', 3) + motes(120, 200, 110, 160, '', 5, 171);
+    },
+    pit: function (s, id) {
+      var f = (s && s.flags) || {};
+      return sky(id, 150) + chapel(id, 250, 0.7) + '<path d="M232 124 l10 10 M242 124 l-10 10" stroke="' + P.verm + '" stroke-width="2"/>' + tree(30, 148, 1, true) + land(140, P.moss, 81)
+        + [[64, 134, -4], [84, 138, 5]].map(function (g) { return '<path transform="rotate(' + g[2] + ' ' + (g[0] + 5) + ' ' + (g[1] + 14) + ')" d="M' + g[0] + ' ' + (g[1] + 14) + ' V' + (g[1] + 4) + ' Q' + (g[0] + 5) + ' ' + (g[1] - 3) + ' ' + (g[0] + 10) + ' ' + (g[1] + 4) + ' V' + (g[1] + 14) + ' Z" fill="' + P.grey + '"' + O + '/>'; }).join('')
+        + (f.filled ? '<path d="M110 166 L230 166 L224 176 L116 176 Z" fill="' + P.earth + '"' + O + '/>'
+          : '<path d="M108 160 L232 160 L222 186 L118 186 Z" fill="#1c140e"' + O + '/><path d="M112 162 L228 162 L226 168 L114 168 Z" fill="' + P.white + '" opacity=".85"/><path d="M130 172 q8 -4 16 0 M160 176 q8 -4 16 0 M190 172 q8 -4 16 0" stroke="' + P.white + '" stroke-width="3" fill="none" opacity=".6"/>'
+            + '<path d="M236 162 C244 140 270 140 286 162 Z" fill="' + P.earth + '"' + O + '/>')
+        /* the sexton and his spade */
+        + '<path d="M96 118 C92 132 92 146 94 160 L110 160 C112 146 112 132 108 118 Z" fill="' + P.umber + '"' + OF + '/><circle cx="102" cy="112" r="6" fill="' + P.flesh + '"' + OF + '/><path d="M96 108 C98 102 106 102 108 108" stroke="' + P.white + '" stroke-width="2" fill="none"/>'
+        + '<path d="M110 128 L126 168" stroke="' + P.umber + '" stroke-width="2.4"/><path d="M122 166 L132 166 L130 176 L124 176 Z" fill="' + P.grey + '"' + O + '/>'
+        + hero(s, id, 34, 80, 0.54, false) + fog(id, 150, '', 3) + motes(100, 240, 120, 170, '', 3, 181);
+    },
+    inn: function (s, id) {
+      var crowd = '', r = rnd(91);
+      for (var i = 0; i < 16; i++) { var x = 6 + i * 20 + Math.round(r() * 8), y = 172 + Math.round(r() * 8); crowd += '<path d="M' + (x - 9) + ' 192 C' + (x - 9) + ' ' + (y + 4) + ' ' + (x + 9) + ' ' + (y + 4) + ' ' + (x + 9) + ' 192 Z" fill="' + ['#3a2e24', '#4a3a2a', '#2e2620'][i % 3] + '"' + O + '/><circle cx="' + x + '" cy="' + (y - 2) + '" r="5" fill="' + ['#3a2e24', '#4a3a2a', '#2e2620'][(i + 1) % 3] + '"' + O + '/>'; }
+      var player = function (x, body, head) { return '<path d="M' + (x - 7) + ' 132 C' + (x - 8) + ' 120 ' + (x - 6) + ' 110 ' + (x - 4) + ' 104 L' + (x + 4) + ' 104 C' + (x + 6) + ' 110 ' + (x + 8) + ' 120 ' + (x + 7) + ' 132 Z" fill="' + body + '"' + O + '/><circle cx="' + x + '" cy="99" r="5" fill="' + P.flesh + '"' + O + '/>' + head; };
+      return sky(id, 120)
+        + '<rect x="0" y="40" width="320" height="110" fill="' + P.parch + '"' + O + '/><path d="M0 40 L60 14 L120 40 M200 40 L260 14 L320 40" fill="' + P.verm + '"' + O + '/>'
+        + [0, 40, 80, 120, 160, 200, 240, 280, 320].map(function (x) { return '<path d="M' + x + ' 40 V150" stroke="' + P.umber + '" stroke-width="3"/>'; }).join('') + '<path d="M0 80 H320 M0 40 L40 80 M80 40 L120 80 M200 40 L240 80 M280 40 L320 80" stroke="' + P.umber + '" stroke-width="2.4"/>'
+        + [52, 268].map(function (x) { return '<path d="M' + x + ' 96 V120" stroke="' + P.umber + '" stroke-width="2.6"/><g class="glow">' + rays(x, 92, 4, 16, 9) + '</g><path class="flame" d="M' + x + ' 84 C' + (x + 4) + ' 90 ' + (x + 4) + ' 93 ' + x + ' 96 C' + (x - 4) + ' 93 ' + (x - 4) + ' 90 ' + x + ' 84 Z" fill="' + P.verm + '"/>'; }).join('')
+        + '<rect x="96" y="132" width="128" height="12" fill="' + P.earth + '"' + O + '/><circle cx="114" cy="150" r="9" fill="' + P.umber + '"' + O + '/><circle cx="206" cy="150" r="9" fill="' + P.umber + '"' + O + '/>'
+        + player(126, P.gold, '<circle cx="126" cy="99" r="8" fill="none" stroke="' + P.goldHi + '" stroke-width="1.4"/>')
+        + player(160, P.verm, '<path d="M155 95 l-3 -7 l5 4 M165 95 l3 -7 l-5 4" fill="' + P.verm + '"' + O + '/>')
+        + player(194, P.lapis, '<path d="M188 96 L184 88 L194 93 L204 88 L200 96 Z" fill="' + P.ochre + '"' + O + '/>')
+        + crowd + hero(s, id, 30, 86, 0.5, false) + motes(40, 290, 80, 150, '', 5, 191);
+    },
+    field: function (s, id) {
+      var f = (s && s.flags) || {}, standing = !(s && s.fight) && !f.beat_knight && !f.rites, crows = '', r = rnd(101);
+      for (var i = 0; i < 9; i++) { var x = 20 + Math.round(r() * 280), y = 20 + Math.round(r() * 70); crows += '<path class="cloud" d="M' + x + ' ' + y + ' q3 -3 6 0 q3 -3 6 0" stroke="' + P.ink + '" stroke-width="1.4" fill="none"/>'; }
+      return sky(id, 140) + '<rect width="320" height="140" fill="#6a6a64" opacity=".55"/>' + crows + hill(70, 108, 180, 30, '#5e6a4a') + land(124, '#6a7452', 103)
+        + [[40, 150], [96, 170], [210, 146], [262, 172], [150, 182]].map(function (h) { return '<path d="M' + (h[0] - 18) + ' ' + h[1] + ' Q' + h[0] + ' ' + (h[1] - 12) + ' ' + (h[0] + 18) + ' ' + h[1] + ' Z" fill="#5e6a4a"' + O + '/>'; }).join('')
+        + '<path d="M70 176 l8 -10 M80 182 l12 -4 M232 160 l10 -6 M250 186 l-8 -10" stroke="' + P.earth + '" stroke-width="2"/><circle cx="118" cy="160" r="3" fill="' + P.white + '"' + O + '/><circle cx="238" cy="178" r="2.6" fill="' + P.white + '"' + O + '/>'
+        + tree(290, 146, 0.9, true)
+        + (standing ? '<g class="who" transform="translate(150 74) scale(.5)"><g class="sway">' + FOES.knight() + '</g></g>'
+          : (s && s.fight) ? '' : '<path d="M140 150 L184 146 L186 152 L142 156 Z" fill="#9a988f"' + O + '/><path d="M184 144 C192 142 194 152 186 154" fill="#9a988f"' + O + '/><path d="M132 158 L176 158" stroke="' + P.white + '" stroke-width="1.6"/>')
+        + hero(s, id, 40, 76, 0.54, false) + fog(id, 136, '', 4) + motes(60, 280, 100, 170, '', 3, 201);
+    },
     lane: function (s, id) {
       var hedge = '';
       [[0, 100], [30, 86], [64, 92], [96, 104], [320, 100], [290, 86], [256, 92], [224, 104]].forEach(function (b, i) { hedge += '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + (26 - (i % 4) * 2) + '" fill="' + (i % 2 ? P.moss : P.verd) + '"' + O + '/>'; });
@@ -489,7 +605,8 @@
   /* where the foe stands in each place [x, y, scale], and where the light falls in a dark place */
   var SPOT = { crypt: [170, 60, 0.78], gate: [196, 64, 0.78], nave: [196, 64, 0.78], tower: [196, 64, 0.78], cloister: [190, 62, 0.72], undercroft: [180, 66, 0.7],
     crossroads: [200, 66, 0.7], ford: [190, 70, 0.62], barn: [200, 58, 0.72], gibbet: [196, 70, 0.66], ossuary: [186, 60, 0.74], shrine: [196, 66, 0.7], stones: [200, 70, 0.66], mere: [200, 64, 0.72], lane: [200, 70, 0.66],
-    hospice: [210, 62, 0.7], wood: [196, 74, 0.62], bridge: [150, 56, 0.6] };
+    hospice: [210, 62, 0.7], wood: [196, 74, 0.62], bridge: [150, 56, 0.6],
+    chapter: [196, 64, 0.66], barrow: [150, 62, 0.64], pit: [140, 82, 0.6], inn: [200, 52, 0.66], field: [196, 66, 0.66] };
   var DARK = { crypt: [120, 140], undercroft: [110, 140], ossuary: [110, 140] };
 
   /* the dark: an ink wash over everything beyond the light; without a light, the room is nearly lost */

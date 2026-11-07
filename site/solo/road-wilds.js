@@ -5,7 +5,8 @@
 (function (root) {
   'use strict';
   var A = root.SacramentSoloAdventures = root.SacramentSoloAdventures || {};
-  var relic = function (api) { return api.charge() === 'relic'; };
+  /* What the road says about the hero's charge: the stolen relic, the missing sister, or the runaway deacon (road-far.js). */
+  var told = function (api, t) { return t[api.charge()] || t.missing; };
 
   /* ---------- the hospice: a vigil with the sick, and the sister who sings them to sleep ---------- */
   A.hospice = {
@@ -26,7 +27,7 @@
         },
         secret: function (api) {
           return 'The sheeted dead answer together, in one thin voice: "Sister Perpetua kept this house before Gisela. She died of the fever she nursed, and she still keeps it. She sings the sick to sleep, and they do not wake."'
-            + (relic(api) ? ' "She sang to a man carrying a box of saint\'s bone. He got up and walked away from it, toward the boundary stones. She could not hold him."' : ' "A sister in grey stopped here. Perpetua sang to her and she would not sleep. She said her mother sang it better."');
+            + ' ' + told(api, { relic: '"She sang to a man carrying a box of saint\'s bone. He got up and walked away from it, toward the boundary stones. She could not hold him."', missing: '"A sister in grey stopped here. Perpetua sang to her and she would not sleep. She said her mother sang it better."', warrant: '"A deacon in black slept here a night. Perpetua sang to him, and he sang back, out of a book. She has not sung so well since."' });
         },
         enter: function (api, first) { if (first) api.timer('vigil', 'start'); },
         actions: [
@@ -98,7 +99,7 @@
         },
         secret: function (api) {
           return 'You learn it from the ash: the burners left yesterday, in a hurry, after the boar came out of a clamp they had just opened. It had been in there all through the burning.'
-            + (relic(api) ? ' Before they ran they saw a man go by on the road with a box under his arm, walking as if somebody was calling him.' : ' Before they ran they saw a girl in grey go by on the road, walking in her sleep.');
+            + ' ' + told(api, { relic: 'Before they ran they saw a man go by on the road with a box under his arm, walking as if somebody was calling him.', missing: 'Before they ran they saw a girl in grey go by on the road, walking in her sleep.', warrant: 'Before they ran they saw a deacon go by on a lathered horse, reading as he rode.' });
         },
         actions: [
           { id: 'cut', label: 'Cut a way through the briars', words: ['cut', 'briars', 'hack', 'through'], when: function (api) { return !api.flag('through'); },
@@ -154,7 +155,7 @@
         },
         secret: function (api) {
           return 'The tollhouse stones remember him: Valentin Crane, toll-keeper, forty years at the bridge. He fell from it the winter it was last mended, and nobody paid him for the work.'
-            + (relic(api) ? ' "A man paid me with a saint\'s bone," the stones say in his voice. "I gave it back. It was not his to pay with."' : ' "A girl in grey paid me in her sleep," the stones say in his voice. "With her mother\'s name. I let her by."');
+            + ' ' + told(api, { relic: '"A man paid me with a saint\'s bone," the stones say in his voice. "I gave it back. It was not his to pay with."', missing: '"A girl in grey paid me in her sleep," the stones say in his voice. "With her mother\'s name. I let her by."', warrant: '"A deacon paid me with a page torn from his book," the stones say in his voice. "I have not been able to put it down."' });
         },
         actions: [
           { id: 'answer', label: 'Speak to the toll-keeper', words: ['speak', 'talk', 'toll', 'keeper', 'pay'], when: function (api) { return !api.flag('passed') && !api.flag('beat_tollman') && !api.s.fight; },
