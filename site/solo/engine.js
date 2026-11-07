@@ -14,7 +14,10 @@
   /* What gives light in a dark place just by being carried (the solo game's GM call: an ordinary flame is lit as you go). Decided by id, from the gear list.
      The Black Candle and the Drowned Saint's Lantern are not here: their own words say they must be lit, and lighting them costs Horror. The Drowned Lantern
      lights through its "light" tag; the Black Candle ("Light it for the rest of the scene. You see in the dark") is LIT_BY_USE. */
-  var LIGHTS = ['lantern', 'candles', 'stubs', 'lastrites'], LIT_BY_USE = ['candle'];
+  var LIGHTS = ['lantern', 'stubs', 'lastrites'], LIT_BY_USE = ['candle'];
+  /* Tallow Candles: "Light a candle (3 uses): it gives light to Near for the rest of the scene." In a dark place with no other light one is lit, and a use spent,
+     once per scene (the owner's call, 2026-11-07). */
+  var CANDLES = 'candles';
 
   /* ---------- a new game ---------- */
   /* hero: a hero from My heroes (or the generator). The game plays a copy: the saved hero is never changed. */
@@ -44,10 +47,11 @@
       lit: function () { return lit(s); },
       has: function (test) { return carried(s, test); },
       go: function (to) { enter(api, to); },
-      /* A check: d20 + the stat against the scene's Target, made Hard in the dark. A plain check's natural 1 costs nothing (the owner's rule, 2026-11-01). */
+      /* A check: d20 + the stat against the scene's Target. In the dark, without a light, a WIS check to search or notice is Hard (the Hooded Lantern's words,
+         and the Rules page; the owner's call, 2026-11-07): that is a WIS check the scene asks for, not a spell, an item or an obstacle. A plain check's natural 1 costs nothing (2026-11-01). */
       check: function (stat, o) {
         o = o || {}; var adj = o.adj || 'normal';
-        if (api.dark() && !o.ignoreDark) adj = adj === 'easy' ? 'normal' : 'hard';
+        if (api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item) adj = adj === 'easy' ? 'normal' : 'hard';
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: o.bonus || 0, target: api.target(), adj: adj });
         api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o) });
@@ -91,8 +95,15 @@
   }
   function itemsCarried(s) { return (s.hero.gear || []).map(function (g) { return C.itemOf(g); }).filter(Boolean); }
   function carried(s, test) { return itemsCarried(s).filter(function (it) { return typeof test === 'function' ? test(it) : (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); })[0] || null; }
-  function lit(s) { return !!s.flags.lit || !!carried(s, LIGHTS); }
-  /* Dark: a dark place with no light. A place whose shape the hero has learned (Echo Bell) no longer makes checks Hard, though it stays dark. */
+  function lit(s) { return !!s.flags.lit || !!s.flags.candle || !!carried(s, LIGHTS); }
+  function candleGear(s) { return (s.hero.gear || []).filter(function (g) { var it = C.itemOf(g); return it && it.id === CANDLES && (g.uses == null ? it.uses : g.uses) > 0; })[0] || null; }
+  function lightCandle(api) {
+    var s = api.s, g = candleGear(s); if (!g || lit(s)) return false;
+    var it = C.itemOf(g); g.uses = Math.max(0, (g.uses == null ? it.uses : g.uses) - 1); s.flags.candle = true;
+    api.say('You light a candle from your ' + it.name.toLowerCase() + ' (' + g.uses + ' left). It will burn for the rest of the scene.', 'note'); return true;
+  }
+  var DARK_LINE = 'It is dark here. Without a light, a WIS check to search or notice is Hard.';
+  /* Dark: a dark place with no light. A place whose shape the hero has learned (Echo Bell) no longer makes those checks Hard, though it stays dark. */
   function isDark(s, adv) { var r = adv.rooms[s.room]; return !!(r && r.dark) && !lit(s) && !s.flags['mapped_' + s.room]; }
 
   /* ---------- obstacles and timers ---------- */
@@ -101,7 +112,7 @@
   function work(api, id, o) {
     var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {};
     var adj = o.adj || 'normal'; if (ob.hard && ob.hard(api)) adj = adj === 'easy' ? 'normal' : 'hard';
-    var c = api.check(o.stat || ob.stat, { adj: adj, what: o.what || ob.name });
+    var c = api.check(o.stat || ob.stat, { adj: adj, what: o.what || ob.name, ignoreDark: true });   /* an obstacle's own hard() says what the dark does to it */
     if (!c.success) { if (ob.clock) clockTick(api, ob.clock); return c; }
     var have = int(s.bars[id], 0), add, dice = null, words;
     if (o.half) { add = Math.ceil((ob.max - have) / 2); words = 'you find the way of it: half of what is left, ' + add + '.'; }
@@ -177,12 +188,13 @@
       if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
       if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
-      if (k === 'learn' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: it no longer makes your checks Hard here.', 'note'); } };
+      if (k === 'learn' && room.dark && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
     if (src.needs === 'undead' && !foe.undead) return null;
     var checked = !!src.roll;
     if ((k === 'daze' || k === 'hide' || (k === 'beast' && foe.beast)) && !f.dim) return { run: function () { f.dim = 3; api.say(k === 'hide' ? f.name + ' cannot see you well: its next attack rolls 3 less.' : k === 'beast' ? f.name + ' shies from you: its next attack rolls 3 less.' : f.name + ' is Dazed: its next attack rolls 3 less.', 'win'); } };
+    if (k === 'guard' && /\ban ally\b|\bone ally\b/i.test(src.does || '')) return null;   /* Ward and the Ward Medal protect an ally: alone there is none (their own words; owner, 2026-11-07) */
     if (k === 'guard' && !f.guard) return { run: function () { f.guard = 2; api.say('You have +2 Defence until your next turn.', 'win'); } };
     if (!f.skip && ((k === 'snuff' && foe.flame) || (k === 'silence' && foe.caster) || (k === 'bind' && checked))) return { run: function () { f.skip = 1; api.say(k === 'snuff' ? foe.snuffed || f.name + '\'s flame goes out. It does not attack this turn.' : k === 'silence' ? f.name + ' cannot get the words out. It does not attack this turn.' : f.name + ' is held fast. It does not attack this turn.', 'win'); } };
     if (k === 'learn' && foe.weakness && !f.learned) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
@@ -209,12 +221,12 @@
     api.say(r.name, 'room');
     var first = !s.seen[to]; s.seen[to] = true;
     api.say(typeof r.text === 'function' ? r.text(api, first) : r.text);
-    if (r.dark) api.say(lit(s) ? lightLine(s) : 'It is dark here. Without a light, every check and attack is Hard.', 'note');
+    if (r.dark) { lightCandle(api); api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); }
     Object.keys(api._adv.obstacles || {}).forEach(function (id) { var ob = api._adv.obstacles[id]; if (ob.room === to && ob.clock && obstacleOpen(api, id)) timer(api, ob.clock, 'start'); });
     if (r.enter) r.enter(api, first);
     var who = first && !s.fight && cameoNow(s); if (who) api.say(who.meet, 'npc');
   }
-  function lightLine(s) { var it = carried(s, LIGHTS); return s.flags.lit && !it ? 'Your small flame holds the dark back.' : 'You raise ' + yours(it.name) + '. The dark steps back, a little.'; }
+  function lightLine(s) { var it = carried(s, LIGHTS); if (!it && s.flags.candle && !s.flags.lit) return 'Your candle holds the dark back, a little.'; return s.flags.lit && !it ? 'Your small flame holds the dark back.' : 'You raise ' + yours(it.name) + '. The dark steps back, a little.'; }
   function yours(t) { return /^The /.test(t) ? 'the ' + t.slice(4) : 'your ' + t; }
   function roomOf(api, id) { return api._adv.rooms[id] || null; }
 
@@ -558,7 +570,7 @@
     var p = c.split(' '), wasFight = !!s.fight;
     var label = (choices(s, adv).filter(function (x) { return x.cmd === c; })[0] || {}).label;
     api.say('> ' + (label || c), 'cmd');
-    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (r0.dark) api.say(lit(s) ? lightLine(s) : 'It is dark here. Without a light, every check and attack is Hard.', 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
+    if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (r0.dark) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
     else if (c === 'help') api.say(HELP, 'note');
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
     else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {

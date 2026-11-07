@@ -1,6 +1,6 @@
 /* Sacrament RPG solo: the first test scene, "The Silent Bell". Four places, one foe, one find from the real loot table.
    Words only: every number a check, an attack or a find uses comes from the rules (rules.js) and the gear list (gear.js) through engine.js.
-   The game is the GM here: it sets the Target, says when a room is dark (Hard without a light), and what a failed check costs.
+   The game is the GM here: it sets the Target, says when a room is dark (searching is Hard without a light), and what a failed check costs.
    Names follow docs/lore/sacrament-lore.md (Part 1 only). */
 (function (root) {
   'use strict';

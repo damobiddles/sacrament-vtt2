@@ -124,3 +124,42 @@ test('the solo engine keeps no rules of its own: every number and roll comes fro
   for (const use of ['R.check(', 'R.effort(', 'R.criticalEffort(', 'R.attack(', 'C.defence(', 'R.horrorMove(', 'R.nat1Tempts(', 'R.rollHorror(', 'R.HORROR.push', 'R.HORROR.nat1', 'R.HORROR.bloodDie', 'R.dyingFall(', 'R.dyingTick(', 'R.REST.heal', 'R.restDice(', 'C.useOf(', 'C.actions(', 'C.pickSpell(', 'C.rollLoot(']) assert.ok(ENGINE.includes(use), 'the engine uses ' + use);
   assert.doesNotMatch(ENGINE, /% *u\.spells\.length|Math\.floor\(\(n - 1\)/, 'a grimoire read by the die uses the shared C.pickSpell');
 });
+
+/* ---------- the owner's calls of 2026-11-07: solo's own rules are written in the shared rules, and solo follows them ---------- */
+const G = globalThis.SACRAMENT_GEAR, RULES = fs.readFileSync(new URL('../content/landing/rules.md', import.meta.url), 'utf8');
+
+test('darkness: one rule in the lantern, the Light tag, the Rules page and the solo game (WIS checks to search or notice are Hard)', () => {
+  assert.match(C.item('lantern').does, /every WIS check to search or notice is Hard/);
+  assert.match(G.tags.find((t) => t.id === 'light').out, /WIS check to search or notice/);
+  assert.match(RULES, /Without a light, a WIS check to search or notice in a dark place is Hard/);
+  const adv = scene({ dark: true });
+  adv.rooms.room.actions.push({ id: 'search', label: 'Search', run: (api) => api.check('WIS', { what: 'Searching' }) }, { id: 'lift', label: 'Lift', run: (api) => api.check('STR', { what: 'Lifting' }) });
+  const s = S.start(soloHero([]), adv, fixed([10]));
+  S.act(s, adv, 'do search', fixed([10])); assert.match(s.log.at(-1).t, /HARD/, 'a WIS search in the dark is Hard');
+  S.act(s, adv, 'do lift', fixed([10])); assert.doesNotMatch(s.log.at(-1).t, /HARD/, 'other checks are not');
+  const from = s.log.length; S.act(s, adv, 'do fight', fixed([10])); S.act(s, adv, choice(s, adv, /bare hands/).cmd, fixed([10]));
+  assert.ok(!s.log.slice(from).some((l) => l.outcome && l.outcome.note === 'Hard'), 'an attack in the dark is not Hard');
+});
+
+test('tallow candles: lighting one in a dark scene spends one of its three uses, as its words say', () => {
+  assert.match(C.item('candles').does, /Light a candle \(3 uses\)/);
+  const { s, adv } = soloGame(['candles'], { dark: true });
+  assert.equal(S.sceneInfo(s, adv).dark, false); assert.equal(s.hero.gear[0].uses, 2);
+});
+
+test('Ward protects an ally: alone it has no use, in its own words and on the Rules page', () => {
+  for (const id of ['ward']) assert.match(G.spells.find((x) => x.id === id).does, /One ally/);
+  assert.match(C.item('wardmedal').does, /An ally/);
+  assert.match(RULES, /protect \*\*an ally\*\*, such as Ward, have no use alone/);
+  const { s, adv } = soloGame(['seventhpenance']); S.act(s, adv, 'do fight', fixed([10]));
+  const ward = choice(s, adv, /^Cast Ward/); assert.ok(ward && ward.idle, 'Ward shows "No use here"');
+});
+
+test('falling alone is written on the Rules page, and the solo game does exactly that', () => {
+  assert.match(RULES, /## Playing alone/);
+  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*d4 rounds[^\n]*use healing on themselves[^\n]*bandages cannot tend yourself[^\n]*crawl away with a CON check[^\n]*1 HP/);
+  const { s, adv } = dyingGame(['seventhpenance']);
+  const labels = S.choices(s, adv).map((c) => c.label);
+  assert.ok(labels.includes('Crawl away') && labels.some((l) => /Mend/.test(l)));
+  S.act(s, adv, 'crawl', fixed([20])); assert.equal(s.hp.cur, 1); assert.equal(s.dying, null);
+});

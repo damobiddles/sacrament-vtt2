@@ -16,6 +16,8 @@ Roll d20 and add the relevant score. Meet or beat the Target to succeed. Easy an
 
 A hero's natural 1 adds 1 Horror on an attack roll, a spell roll or a pushed second action of any kind. A natural 1 on any other check adds no Horror: ordinary checks, items that do not deal damage (such as bandages) and a weapon used on an obstacle's progress are plain checks. Every spell counts, healing spells included. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal damage or Effort roll when enabled. Add the normal Effort bonus and the Ultimate bonus once each. If the normal ability already uses Ultimate, count that bonus only once. Heavy ordinary melee weapons add their +2 damage only once. Older pending rolls keep the rule they began with.
 
+**Darkness.** Without a light, a WIS check to search or notice in a dark place is Hard (+3), as the Hooded Lantern says. Anything else the dark does is the GM's call.
+
 Monster attacks are different: natural 1 always misses and natural 20 always hits. Otherwise the monster's d20 plus Attack bonus must meet the hero's Defence.
 
 ## A turn and an attack
@@ -61,5 +63,12 @@ The GM decides whether a place and time allow Party rest. It heals living heroes
 Non-healing spells cost 1 Horror even if the check fails. A natural 1 and a Push add separate costs. Reaching a threshold alerts the GM; the GM chooses the consequence. At 21 the meter stays capped, and the hero pays in blood instead: each point of their Horror cost that cannot go on the meter (a Push, a natural 1 that counts, a spell or an item) costs them d4 HP. That HP loss can drop a hero to 0 and start their dying countdown. The GM's own manual raises cost no blood. The current VTT does not automatically impose aftershocks, magic bans or rest bans.
 
 Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, conditional bonuses, esoteric magic (see "when in doubt" above) require GM adjudication unless the controls explicitly say they are automated. Rend the Veil lets you choose several foes before the check, roll damage once; it applies to the selected foes together automatically. One Undo restores all that damage. The GM still confirms eligible targets and range. Once-per-scene abilities spend their use on the attempt, including a miss; copies share the same caster/source allowance. Rest, refreshing the page or leaving and returning to a scene do not refill it. In Play, the GM can confirm **Refresh scene abilities** for a new encounter in the named live scene; unfinished limited rolls from the previous encounter cannot then be applied. To restore a mistaken use, the GM undoes its damage first and then its attempt in Activity. Horror has its own Undo. The Executioner's Blade has a separate **final blow** action: Ultimate damage, 3 Horror and one attempt per scene, all tracked by the VTT.
+
+## Playing alone
+
+The [solo game](/solo/) uses every rule on this page. There the game is the GM, and it makes the GM's calls itself: each scene's Target, its foes and obstacles, when a place is dark, what Horror 7, 14 and 21 bring, and a rest after each scene. One rule is different, because no one else is there to help:
+
+- **Falling alone.** At 0 HP a hero alone is dying as usual (d4 rounds), but may still act on their turn in two ways: use healing on themselves (a spell or relic; bandages cannot tend yourself), or crawl away with a CON check, leaving the scene at 1 HP and leaving behind what they found in it. A failed crawl costs a round.
+- Spells and items that protect **an ally**, such as Ward, have no use alone.
 
 The [Current Loot Tables](/loot/) page uses the same catalogue as the VTT. GMs can create custom loot in their own tables. Custom descriptions do not automatically implement new effects. Private GM notes and custom table loot are not published in that catalogue.

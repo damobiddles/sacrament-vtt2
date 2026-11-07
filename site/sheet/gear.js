@@ -295,7 +295,7 @@
     {"id":"shroud","tags":["hide"],"name":"The Borrowed Shroud","roll":"","effort":0,"horror":1,"band":"close","use":"Action","does":"You draw the shroud’s psalm over a willing creature you touch, and the life goes out of its face. It seems dead, with no breath, no warmth and no pulse, until it moves or the scene ends. It can still hear. No check. The GM decides who is fooled. Adds 1 Horror.","temptsHorror":true,"effect":"esoteric","horrorReason":"Casting forbidden magic tempts the Horror, whether the spell succeeds or fails.","from":"sextonlitany","manualSteps":"GM decides who is fooled; no HP or condition changes."}
   ],
   "tags": [
-    {"id":"light","name":"Light","fight":"","out":"Lights a dark place: the dark stops making checks Hard."},
+    {"id":"light","name":"Light","fight":"","out":"Lights a dark place: a WIS check to search or notice there is no longer Hard."},
     {"id":"snuff","name":"Snuff","fight":"A foe made of fire, or carrying it, loses its next attack.","out":"Puts out ordinary flames."},
     {"id":"open","name":"Open","fight":"","out":"Opens or brings down a lock, door, seal, chain, cage or wall."},
     {"id":"learn","name":"Learn","fight":"You learn how to meet the foe: your next attack against it is Easy.","out":"Learns one true thing: a place's secret, a clue or the way on."},

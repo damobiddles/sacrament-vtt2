@@ -25,6 +25,12 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 7 November 2026: one set of rules for the table and the solo game
+
+**Playing alone.** The [Rules](/rules/) page now has a section for the solo game. A hero alone who falls to 0 HP is dying as usual, but may still heal themselves (not with bandages) or crawl away with a CON check. At the table nothing changes: a fallen hero cannot act. Ward and other help for an ally has no use alone. *Prompted by:* an audit of the solo game against the table; the designer chose to write solo's own rules down, so learning alone teaches the real game.
+
+**Darkness, clarified.** Without a light, a WIS check to search or notice in a dark place is Hard, as the Hooded Lantern has always said. The Light tag now says the same. The solo game had made every check and attack Hard in the dark; it now follows this rule, lights a tallow candle (one use) in a dark scene, and lights the Black Candle and the Drowned Saint's Lantern only when they are used.
+
 ## 6 November 2026: story spells and items
 
 **Every story spell and item says what it is good for.** 50 of the 52 spells with no damage die, and 18 relics and supplies whose effect was left to the GM, now carry one or two tags: Light, Snuff, Open, Learn, Hide, Silence, Bind, Daze, Guard, Beast, Move or Shelter. Each tag has a default effect in a fight and out of one, listed on the [Rules](/rules/) page. The spell's own words still come first; the tag is the quick answer when they leave it open. Four defaults are new: *Hide* (the foe's next attack rolls 3 less), *Silence* (a foe that casts or calls out loses its next attack), *Bind* (the foe loses its next attack, only after a successful check) and *Beast* (an animal's next attack rolls 3 less). No Horror cost, check, die or range changed. *Prompted by:* the solo game, where a spell like Pillar of Ash had nothing to do because no GM was there to decide; the designer chose to put the answer in the shared rules so the table, play in person and the solo game agree.
