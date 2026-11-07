@@ -518,3 +518,26 @@ test('three more middle scenes: the plague pit, the players at the inn, and the 
   s = S.start(hero, F, fixed([2])); S.act(s, F, 'do rites', fixed([2])); assert.equal(s.fight.foe, 'knight');
   s = S.start(hero, F, fixed([2])); for (let i = 0; i < 3; i++) S.act(s, F, 'do cross', fixed([2])); assert.equal(s.fight && s.fight.foe, 'knight', 'three failed tries and he sees you');
 });
+
+test('iPhone: turning the sound on asks to play as media, so the silent switch does not mute it; turning it off lets go', () => {
+  require('../site/solo/music.js');
+  const M = globalThis.SacramentSoloMusic, played = [], node = () => ({ connect() {}, gain: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, frequency: { value: 0 } });
+  const saved = { AudioContext: globalThis.AudioContext, Audio: globalThis.Audio, nav: Object.getOwnPropertyDescriptor(globalThis, 'navigator'), ls: globalThis.localStorage };
+  globalThis.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
+  globalThis.AudioContext = class { constructor() { this.state = 'suspended'; this.sampleRate = 8000; this.currentTime = 0; this.destination = {}; }
+    createGain() { return node(); } createPeriodicWave() { return {}; } createBuffer(c, n) { return { getChannelData: () => new Float32Array(n) }; }
+    resume() { this.state = 'running'; } suspend() { this.state = 'suspended'; } };
+  globalThis.Audio = class { constructor(src) { this.src = src; this.attrs = {}; } setAttribute(k, v) { this.attrs[k] = v; } play() { played.push(this); this.paused = false; return Promise.resolve(); } pause() { this.paused = true; } };
+  const session = {}; Object.defineProperty(globalThis, 'navigator', { value: { audioSession: session }, configurable: true });
+  try {
+    assert.equal(M.setOn(true), true);
+    assert.equal(session.type, 'playback', 'newer Safari: the page plays as media');
+    assert.equal(played.length, 1, 'older Safari: a silent sound plays alongside');
+    assert.match(played[0].src, /^data:audio\/wav;base64,UklGR/); assert.equal(played[0].loop, true); assert.ok('playsinline' in played[0].attrs);
+    M.setOn(false); assert.equal(played[0].paused, true, 'off means nothing keeps playing');
+  } finally {
+    M.setOn(false);
+    globalThis.AudioContext = saved.AudioContext; globalThis.Audio = saved.Audio; globalThis.localStorage = saved.ls;
+    if (saved.nav) Object.defineProperty(globalThis, 'navigator', saved.nav); else delete globalThis.navigator;
+  }
+});

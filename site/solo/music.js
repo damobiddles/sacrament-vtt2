@@ -53,6 +53,26 @@
 
   var ctx = null, master = null, waves = {}, noiseBuf = null, timer = null, current = '', playing = null, on = false;
   function readOn() { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } }
+  /* iPhone: the side switch (ring/silent) mutes web sound unless the page says it is playing media, as a music player is. iPads have no such
+     switch, which is why the same page sounded on an iPad and not on an iPhone. Newer Safari reads navigator.audioSession; older Safari
+     treats the page as playing media once a (silent) audio element is playing, so one loops quietly while the sound is on. */
+  var keeper = null;
+  function silentWav() {
+    var n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer), w = function (o, t) { for (var i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+    for (var i = 0; i < n; i++) b[44 + i] = 128;
+    var str = ''; for (var j = 0; j < b.length; j++) str += String.fromCharCode(b[j]);
+    return 'data:audio/wav;base64,' + root.btoa(str);
+  }
+  function mediaMode(play) {
+    try { if (root.navigator && root.navigator.audioSession) root.navigator.audioSession.type = 'playback'; } catch { /* not this browser */ }
+    if (typeof root.Audio !== 'function' || !root.btoa) return;
+    try {
+      if (!keeper) { keeper = new root.Audio(silentWav()); keeper.loop = true; keeper.setAttribute('playsinline', ''); keeper.volume = 0.01; }
+      if (play) { var pr = keeper.play(); if (pr && pr.catch) pr.catch(function () { /* the browser wants a tap first: the next one will do */ }); } else keeper.pause();
+    } catch { /* sound still plays where there is no switch */ }
+  }
   function setup() {
     if (ctx) return true;
     var AC = root.AudioContext || root.webkitAudioContext; if (!AC) return false;
@@ -107,12 +127,12 @@
   }
   function setOn(v) {
     on = !!v; try { if (on) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch { /* the choice is just not kept */ }
-    if (on) { if (!setup()) { on = false; return false; } if (ctx.state === 'suspended') ctx.resume(); stop(); if (current) start(current); }
-    else { stop(); if (ctx && ctx.state === 'running') ctx.suspend(); }
+    if (on) { mediaMode(true); if (!setup()) { on = false; return false; } if (ctx.state !== 'running') ctx.resume(); stop(); if (current) start(current); }
+    else { stop(); mediaMode(false); if (ctx && ctx.state === 'running') ctx.suspend(); }
     return on;
   }
   /* Browsers start sound only after a tap: the first tap on the page brings back music the player left on last time. */
-  function wake() { if (readOn() && !on) setOn(true); }
+  function wake() { if (readOn() && !on) setOn(true); else if (on && ctx && ctx.state !== 'running') { mediaMode(true); ctx.resume(); } }
   /* Sound effects: short and made the same way as the music. They play only while the sound is on.
      Each is a list of notes [voice, note, start in 16ths, length in 16ths] and noise hits [kind, start]. */
   var SFX = {
