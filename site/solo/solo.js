@@ -317,7 +317,9 @@
   function musicLabel() { var b = $('musicBtn'), on = !!(M && M.isOn()); b.textContent = '♪ ' + (on ? 'On' : 'Off'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   if (M) {
     $('musicBtn').addEventListener('click', function () { M.setOn(!M.isOn()); musicLabel(); });
-    document.addEventListener('pointerdown', function first(e) { document.removeEventListener('pointerdown', first, true); if (e.target && e.target.id === 'musicBtn') return; M.wake(); musicLabel(); }, true);
+    /* Safari starts sound only from a finished tap (a click), not from the moment the finger goes down. Every tap also wakes sound that an
+       iPhone paused, after a call or a locked screen. */
+    document.addEventListener('click', function (e) { if (e.target && e.target.id === 'musicBtn') return; M.wake(); musicLabel(); }, true);
   } else $('musicBtn').hidden = true;
 
   /* ---------- the menu ---------- */
