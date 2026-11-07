@@ -355,8 +355,12 @@
 .caption>span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .caption.k-npc{border-left-color:#8fd18a}
 .caption.k-horror{border-left-color:#d0574a;color:#f0b3a8}
+.caption.k-use{border-left-color:#b8955a}
+.caption .dread{display:block;margin-top:6px;padding-top:6px;border-top:1px solid #d0574a55;font:600 .95rem var(--display);color:#f0b3a8}
 .caption.k-end{border-left-color:var(--candle);font-family:var(--display);font-size:1.05rem}
 .caption.gone{opacity:0;transition:opacity .4s}
+.caption .found{display:block;margin-top:6px;padding-top:6px;border-top:1px solid #b8955a55;font:600 .72rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:var(--candle);animation:solo-cap .35s ease-out both}
+.caption .found b{font:600 1.05rem var(--display);letter-spacing:0;text-transform:none;color:#f1e3c2}
 @keyframes solo-cap{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.caption{animation:none}}
 .log .k-npc.friend{border-left-color:#8fd18a}
@@ -381,3 +385,10 @@
 .deeds li.got{border-color:var(--candle);background:#2a2214}
 .deeds li.got b{color:var(--candle)}
 .deeds li.not b{color:var(--dim)}
+
+/* the result card fades by itself in solo (solo.js settle) */
+#dice .reveal-result{transition:opacity .4s ease}
+#dice .reveal-result.fading{opacity:0}
+@media (prefers-reduced-motion:reduce){#dice .reveal-result{transition:none}}
+/* words on the picture and a dice card at once: the card drops to the foot of the picture so both can be read */
+.frame:has(.caption:not(.gone)) #dice{align-items:flex-end}

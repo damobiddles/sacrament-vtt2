@@ -226,7 +226,7 @@ test('between scenes the hero may rest once, then goes on; the next scene starts
 
 test("the owner's people of the road: a run meets up to three, never in the last scene, and their names are the owner's", () => {
   const names = globalThis.SacramentSoloCameos.map((c) => c.name);
-  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar']);
+  assert.deepEqual(names, ['Xian of Wycbold', 'Ser Dom of Cookham', 'Rupert the Druid', 'Matthew of the Brown Order of Farts', 'Lord Biddles of Wooburn', 'Rachel, Witch-finder General', 'Simon the Scholar', 'Gussetweasel, the Necromancer']);
   for (let seed = 1; seed <= 50; seed++) {
     const rnd = seeded(seed), s = S.startRun(T.generate('scout', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n)), c = s.run.cameos;
     assert.equal(c.length, 5); assert.equal(c[4], ''); const met = c.filter(Boolean); assert.ok(met.length <= 3 && met.length >= 1); assert.equal(new Set(met).size, met.length);
@@ -749,4 +749,57 @@ test('a road remembers the places, the friends met, and each getaway, for the de
   s.run.met.push('simon'); s.run.escapes = 2;
   const sum = S.summary(s);
   assert.deepEqual(sum.placeIds, [s.run.order[0]]); assert.deepEqual(sum.met, ['simon']); assert.equal(sum.escapes, 2);
+});
+
+test('two of the same item in the pack make one button, not two the same', () => {
+  const C = globalThis.SacramentSheetCore, hero = T.generate('healer', seeded(5)), s = S.start(hero, A, fixed([10]));
+  s.hp.cur = 1;
+  for (let i = 0; i < 2; i++) C.edit(s.hero, { op: 'add', id: 'bandages' }, { gm: true }, s.hp);
+  const labels = S.choices(s, A).map((c) => c.kind + '|' + c.label);
+  assert.ok(labels.some((l) => /Bandages/.test(l)), 'the bandages are offered');
+  assert.equal(new Set(labels).size, labels.length, 'no two buttons say the same thing: ' + labels.join(', '));
+});
+
+test('Gussetweasel, the Necromancer gives a light to a hero with none; a hero with a light hears what his bats have seen', () => {
+  const C = globalThis.SacramentSheetCore, LIGHTS = ['lantern', 'candles', 'stubs', 'candle', 'lastrites', 'drownedlantern'];
+  for (const withLight of [false, true]) {
+    const rnd = seeded(3), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', (n) => 1 + Math.floor(rnd() * n));
+    s.hero.gear = (s.hero.gear || []).filter((g) => !LIGHTS.includes((C.itemOf(g) || {}).id));
+    if (withLight) C.edit(s.hero, { op: 'add', id: 'lantern' }, { gm: true }, s.hp);
+    s.run.cameos[s.run.at] = 'gussetweasel';
+    S.act(s, null, 'meet gussetweasel', fixed([10]));
+    const words = s.log.map((l) => l.t).join(' ');
+    assert.match(words, /My amazing invisible bats/);
+    if (withLight) { assert.match(words, /next foe's ways/); assert.doesNotMatch(words, /gives you: Hooded Lantern/); }
+    else assert.match(words, /Gussetweasel, the Necromancer gives you: Hooded Lantern/);
+  }
+});
+
+test('a lasting effect (the Cord of Quiet Hours: silenced until the end of the scene) works once on a foe; again it shows "Already done" and costs nothing', () => {
+  const C = globalThis.SacramentSheetCore;
+  let checked = 0;
+  for (let seed = 1; seed <= 120 && checked < 2; seed++) {
+    const rnd = seeded(seed), die = (n) => 1 + Math.floor(rnd() * n), s = S.startRun(T.generate('fighter', rnd), 'pilgrim-road', die);
+    for (let i = 0; i < 300 && !s.over; i++) {
+      const f = s.fight, foe = f && S.sceneOf(s).foes[f.foe];
+      if (f && foe.caster && f.phase === 'hero' && !f.skip) {
+        C.edit(s.hero, { op: 'add', id: 'quietcord' }, { gm: true }, s.hp);
+        const cord = () => S.choices(s).find((c) => /Cord of Quiet Hours/.test(c.label));
+        if (!cord() || cord().idle) break;
+        S.act(s, null, cord().cmd, () => 10);
+        assert.match(s.log.map((l) => l.t).join(' '), /cannot get the words out/);
+        while (s.fight && s.fight.phase !== 'hero' && !s.over) S.act(s, null, S.choices(s).find((c) => c.cmd === 'foe' || c.cmd === 'damage').cmd, () => 10);
+        if (!s.fight || s.over) break;
+        const again = cord(), h = s.horror;
+        assert.ok(again && again.idle, 'the second time it is not offered as useful');
+        assert.match(again.why, /Already done/);
+        S.act(s, null, again.cmd, () => 10);
+        assert.equal(s.horror, h, 'using it again costs no Horror');
+        checked++; break;
+      }
+      const ch = S.choices(s), pick = ch.find((c) => c.kind === 'attack') || ch.find((c) => c.cmd === 'damage') || ch.find((c) => c.cmd === 'foe') || ch.find((c) => c.kind === 'do') || ch[Math.floor(rnd() * ch.length)];
+      if (!pick) break; S.act(s, null, pick.cmd, die);
+    }
+  }
+  assert.ok(checked > 0, 'a fight with a foe that casts was found');
 });

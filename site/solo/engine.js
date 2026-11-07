@@ -187,9 +187,12 @@
     var own = adv.spells && adv.spells[src.id], mine = own && own(api); if (mine) return mine;
     var tags = (src.tags || []).slice(); if (!tags.length) return null;
     if (f) tags.sort(function (a, b) { return (FIGHT_TAGS.indexOf(a) < 0) - (FIGHT_TAGS.indexOf(b) < 0); });
-    for (var i = 0; i < tags.length; i++) { var u = ruling(api, tags[i], src, f, room, foe); if (u) return u; }
+    if (f && lasting(src) && f.lasting && f.lasting[src.id]) return null;   /* already done to this foe, and by its own words it lasts the scene: again changes nothing */
+    for (var i = 0; i < tags.length; i++) { var u = ruling(api, tags[i], src, f, room, foe); if (u) return f && lasting(src) ? once(f, src, u) : u; }
     return null;
   }
+  function lasting(src) { return /until the end of the scene|until dawn|until the wax is cut away|until it settles|the GM decides when it settles/i.test(src.does || ''); }
+  function once(f, src, u) { return { run: function (api) { (f.lasting = f.lasting || {})[src.id] = true; u.run(api); } }; }
   var FIGHT_TAGS = ['daze', 'guard', 'hide', 'snuff', 'learn', 'silence', 'bind', 'beast'];
   function ruling(api, k, src, f, room, foe) {
     var s = api.s, dark = isDark(s, api._adv), dead = typeof room.dead === 'function' ? room.dead(api) : room.dead;
@@ -481,7 +484,9 @@
   }
 
   /* ---------- what can be done now: the buttons ---------- */
-  function choices(s, adv) { adv = sceneOf(s) || adv;
+  /* two of the same thing in the pack (two rolls of bandages) make one button, not two the same */
+  function choices(s, adv) { var seen = {}; return choicesAll(s, adv).filter(function (c) { var k = c.kind + '|' + c.label; if (seen[k]) return false; seen[k] = true; return true; }); }
+  function choicesAll(s, adv) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];
@@ -556,7 +561,7 @@
   /* Mark a story spell that nothing in this scene answers: it shows as "No use here" and costs nothing. */
   function markIdle(api, a, c) {
     var h = a.u && a.u.healing;
-    if (isStorySpell(a.u)) { if (!spellUse(api, a.u.source || a.u.item)) { c.idle = true; c.why = 'No use here'; } else c.useful = true; }
+    if (isStorySpell(a.u)) { var src = a.u.source || a.u.item, f = api.s.fight; if (!spellUse(api, src)) { c.idle = true; c.why = f && f.lasting && f.lasting[src.id] ? 'Already done: it lasts the scene' : 'No use here'; } else c.useful = true; }
     else if (h && h.kind && !h.force && api.s.healed[h.kind]) { c.idle = true; c.why = 'Used since your last rest'; }
     return c;
   }
