@@ -272,3 +272,64 @@
 .chronicle li span{color:var(--dim);font-size:.9rem;white-space:nowrap}
 .chronicle li b{font-weight:600}
 .chronicle .won b{color:var(--candle)}
+
+/* ---------- phone, held upright (owner, 2026-11-07: "reimagine how this is laid out on a phone") ----------
+   The story gets the room: HP, Target and Horror ride along the foot of the picture, the turn order along its top, each card is a slim strip,
+   spells and items fold behind one button, and the buttons keep clear of the browser's own bar at the bottom of the screen. */
+.choices .more{grid-column:1/-1;justify-self:start;font:600 .95rem var(--px);color:var(--dim);margin:4px 2px 0;padding:6px 2px;background:none;border:0;cursor:default;text-align:left;pointer-events:none}
+@media (max-width:699px) and (max-aspect-ratio:1/1){
+  .solo .bar{min-height:0;padding-top:max(4px,env(safe-area-inset-top,0px));padding-bottom:4px;gap:6px}
+  .solo .home{font-size:1rem;white-space:nowrap}
+  .solo .where{display:none}
+  .solo .tb{min-height:34px;padding:2px 9px;font-size:.7rem;letter-spacing:.1em}
+  .stage{padding:0;display:flex;flex-direction:column}
+  .frame{border-radius:0;border:0;box-shadow:none;width:100%;height:31dvh;max-height:none;aspect-ratio:auto}
+  .turns{position:absolute;top:6px;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));padding:0;gap:6px;z-index:3;pointer-events:none}
+  .turns .round{background:#000c;padding:3px 7px;font-size:.72rem}
+  .turns .chip{font-size:.78rem;padding:2px 8px;background:#000c}
+  .turns .chip.now{background:var(--candle)}
+  .turns .chip.foe.now{background:#e39a8c}
+  .turns .whose{flex-basis:auto;margin-left:auto;background:#000c;padding:2px 8px;font-size:.8rem;border-radius:999px}
+  .hud{position:absolute;left:0;right:0;top:31dvh;transform:translateY(-100%);z-index:3;padding:16px max(10px,env(safe-area-inset-right,0px)) 5px max(10px,env(safe-area-inset-left,0px));gap:2px 12px;background:linear-gradient(transparent,#000d 45%)}
+  .meter{min-height:0}
+  .meter .lbl{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#d8ccb2}
+  .meter .num{color:#f3ead6}
+  .meter.horror{flex-basis:100%;order:3}
+  .meter.horror .lbl{font-size:.62rem}
+  .pips{flex:1;display:grid;grid-template-columns:repeat(21,1fr);gap:1px}
+  .pip{width:auto;height:6px;background:#2a2420;box-shadow:inset 0 0 0 1px #8a7a62}
+  .pip.on{background:#d0574a;box-shadow:none}
+  .pip.mark{margin-right:0;box-shadow:inset 0 0 0 1px #8a7a62,2px 0 0 #e0c27a}
+  .pip.mark.on{box-shadow:2px 0 0 #e0c27a}
+  #horrorText{font-size:.78rem}
+  .tag{font-size:.68rem;padding:2px 5px}
+  .cards{padding:6px max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px));gap:6px}
+  .card{min-width:0;max-width:none;flex:1 1 0;padding:5px 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;align-content:start}
+  .card b{margin:0;font-size:.85rem}
+  .card .hearts,.card .fill{margin:0}
+  .card small{grid-column:1/-1;font-size:.75rem}
+  .card.foe>small:not(.next){display:none}
+  .cards{flex-wrap:wrap}
+  .card.foe{flex-basis:100%}
+  .card .next{margin:0}
+  .log{font-size:1rem;line-height:1.45;padding-top:8px}
+  .log .k-title{font-size:1.35rem}
+  .log .k-room{font-size:1.2rem}
+  .log .k-room + p::first-letter{font-size:2.3rem}
+  /* the browser's own floating bar (Safari on a recent iPhone) sits over the bottom of the page: keep the buttons above it */
+  .controls{padding:6px max(8px,env(safe-area-inset-right,0px)) calc(max(8px,env(safe-area-inset-bottom,0px)) + 56px) max(8px,env(safe-area-inset-left,0px))}
+  .choices{max-height:42dvh;gap:6px}
+  .choices .more{pointer-events:auto;cursor:pointer;min-height:40px;color:var(--fg);border:1px solid var(--edge);padding:6px 12px;justify-self:stretch}
+  .choices .more:hover,.choices .more:focus-visible{color:var(--candle);border-color:var(--candle)}
+  .choices .more::after{content:" ▾"}
+  .choices.open .more::after{content:" ▴"}
+  .choices .extra{display:none}
+  .choices.open .extra{display:flex}
+  .choices.open .ch.extra{display:block}
+  .choices .chw.extra,.choices .ch.extra{grid-column:1/-1}
+  .ch{min-height:48px;font-size:.95rem}
+  .ch small{font-size:.74rem}
+  .toast{top:44px}
+}
+/* opened from the Home Screen there is no browser bar */
+@media (display-mode:standalone) and (max-width:699px) and (max-aspect-ratio:1/1){.controls{padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}}

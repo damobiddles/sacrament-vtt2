@@ -10,7 +10,7 @@
   var NPC_NAMES = (window.SacramentSoloCameos || []).map(function (c) { return c.name; });
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
-  var state = null, shown = 0, lastArt = '', dying = false;
+  var state = null, shown = 0, lastArt = '', dying = false, moreOpen = false;
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
@@ -163,13 +163,18 @@
       box.append(again, other); return;
     }
     var list = S.choices(state, ADV()), main = [], extra = [];
-    list.forEach(function (c) { (!state.fight && (c.kind === 'spell' || c.kind === 'use') ? extra : main).push(c); });
+    list.forEach(function (c) { ((c.kind === 'use' || (c.kind === 'spell' && !c.strike)) ? extra : main).push(c); });
     main.forEach(function (c) { box.appendChild(choiceButton(c)); });
+    if (main.length % 2) box.lastChild.classList.add('wide');
+    /* Spells and items sit under their own heading; on a phone the heading is a button that folds them away, so the main choices stay big. */
+    box.classList.toggle('open', moreOpen);
     if (extra.length) {
-      var h = document.createElement('p'); h.className = 'more'; h.textContent = 'Spells and items'; box.appendChild(h);
-      extra.forEach(function (c) { box.appendChild(choiceButton(c)); });
+      var h = document.createElement('button'); h.type = 'button'; h.className = 'more'; h.setAttribute('aria-expanded', moreOpen ? 'true' : 'false');
+      h.textContent = 'Spells and items (' + extra.length + ')';
+      h.addEventListener('click', function () { moreOpen = !moreOpen; renderChoices(); });
+      box.appendChild(h);
+      extra.forEach(function (c) { var el = choiceButton(c); el.classList.add('extra'); box.appendChild(el); });
     }
-    if (main.length % 2 && !extra.length) box.lastChild.classList.add('wide');
   }
   /* A hero from My heroes who finishes the road alive may bring their finds home (the owner's call, 2026-11-06): each find goes into the saved hero if
      there is room for it, through the sheet's own rules; what does not fit stays behind. It can be done once. */

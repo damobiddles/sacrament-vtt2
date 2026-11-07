@@ -507,7 +507,7 @@
   /* Everything the hero can do on their turn in a fight: attack (a weapon, a damage spell, a grimoire read by the die), bare hands if they carry no weapon, brace, heal, or a story spell. */
   function fightOptions(api, s, f) {
     var out = [], attacks = heroActions(s).filter(function (a) { return a.ok && (a.pick || (a.cat && !a.healing && !isStorySpell(a.u))); });
-    attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', horror: a.horror || 0, about: aboutOf(a) }); });
+    attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', strike: true, horror: a.horror || 0, about: aboutOf(a) }); });
     if (!attacks.some(function (a) { return !a.spellId && !a.pick; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
     if (!f.guard) out.push({ label: 'Brace: +2 Defence until your next turn', cmd: 'brace', kind: 'plain' });
     var oil = f.undead && !s.flags.anointed && anointer(s);
