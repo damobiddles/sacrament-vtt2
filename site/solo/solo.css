@@ -381,3 +381,8 @@
 .deeds li.got{border-color:var(--candle);background:#2a2214}
 .deeds li.got b{color:var(--candle)}
 .deeds li.not b{color:var(--dim)}
+
+/* the result card fades by itself in solo (solo.js settle) */
+#dice .reveal-result{transition:opacity .4s ease}
+#dice .reveal-result.fading{opacity:0}
+@media (prefers-reduced-motion:reduce){#dice .reveal-result{transition:none}}

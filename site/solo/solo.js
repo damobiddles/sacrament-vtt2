@@ -10,7 +10,7 @@
   var NPC_NAMES = (window.SacramentSoloCameos || []).map(function (c) { return c.name; });
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
-  var state = null, shown = 0, lastArt = '', dying = false, moreOpen = false, cardDamage = false, foeTimer = 0, whole = false;
+  var state = null, shown = 0, lastArt = '', dying = false, moreOpen = false, cardDamage = false, foeTimer = 0, cardTimer = 0, whole = false;
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
   function die(sides) { var a = new Uint32Array(1); window.crypto.getRandomValues(a); return 1 + (a[0] % sides); }
@@ -292,7 +292,7 @@
 
   function run(cmd) {
     if (!state || state.over || !cmd) return;
-    clearTimeout(foeTimer); foeTimer = 0; cardDamage = false;
+    clearTimeout(foeTimer); foeTimer = 0; cardDamage = false; clearTimeout(cardTimer); cardTimer = 0;
     var cap = document.querySelector('.frame .caption'); if (cap) cap.remove();
     var overBefore = state.over, before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
     S.act(state, ADV(), cmd, die);
@@ -417,10 +417,24 @@
       var last = checks[checks.length - 1], o = last.outcome;
       D.show(last.dice || [], o.who, !last.foeAttack, o);
       if (o.pendingDamage && state.fight && state.fight.phase === 'damage' && !D.off() && !reduceMotion()) { cardDamage = true; D.action({ label: 'Roll damage', run: function () { run('damage'); } }); }
+      else settle();
       return;
     }
     var plain = fresh.filter(function (l) { return l.dice; });
     if (plain.length) { var p = plain[plain.length - 1]; D.show(p.dice, p.by === 'hero' ? state.hero.name : '', true); }
+  }
+
+  /* In solo the result card blocks nothing (the buttons below still work and the foe moves by itself), so its button only closes it, and it fades
+     by itself once it has been read. It waits while the pointer is on it or its button has focus. */
+  var CARD_READ = 4200;
+  function settle() {
+    var b = document.querySelector('#dice .reveal-action'); if (b) b.textContent = 'Close';
+    clearTimeout(cardTimer);
+    cardTimer = setTimeout(function fade() {
+      var card = document.querySelector('#dice .reveal-result'); if (!card) { cardTimer = 0; return; }
+      if (card.matches(':hover') || card.contains(document.activeElement)) { cardTimer = setTimeout(fade, 1000); return; }
+      card.classList.add('fading'); cardTimer = setTimeout(function () { cardTimer = 0; if (document.querySelector('#dice .reveal-result.fading')) D.clear(); }, 400);
+    }, CARD_READ);
   }
 
   /* ---------- pictures ---------- */
