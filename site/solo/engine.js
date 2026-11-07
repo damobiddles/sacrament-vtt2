@@ -373,7 +373,8 @@
   /* Roll damage for a hit: the Effort die for its kind plus the hero's bonus, a heavy weapon's +2, and on a natural 20 one Ultimate die. */
   function rollDamage(api) {
     var s = api.s, f = s.fight, p = f && f.pending; if (!p) return;
-    var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(R.DEFAULT_DICE[p.cat]) }), dice = [{ die: e.die, n: e.rolled }];
+    var size = stepped(s, f, p.cat), dice0 = {}; dice0[p.cat] = size;
+    var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(size), settings: { dice: dice0 } }), dice = [{ die: e.die, n: e.rolled }];
     if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
     if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
     f.pending = null;
@@ -479,12 +480,38 @@
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
     return out;
   }
+  /* Anointing (Flask of Holy Oil, from its fx in the gear list): "Until the end of the scene its Effort steps up one size against the unquiet dead and
+     anything marked Unholy." An item whose fx is a buff to Effort against the unholy is offered in a fight with an undead foe while it has uses left; it takes
+     the hero's action, and from then the hero's weapon Effort die is one size bigger against the undead until the scene ends. */
+  var DIE_SIZES = [4, 6, 8, 10, 12];
+  function anointer(s) {
+    var out = null;
+    (s.hero.gear || []).forEach(function (g, i) {
+      var it = C.itemOf(g), fx = it && (it.fx || []).filter(function (x) { return x.do === 'buff' && x.to === 'effort' && x.vs === 'unholy'; })[0];
+      if (fx && !out && (g.uses == null ? it.uses : g.uses) > 0) out = { index: i, gear: g, item: it, fx: fx };
+    });
+    return out;
+  }
+  function anoint(api) {
+    var s = api.s, f = s.fight, o = anointer(s); if (!f || !o || s.flags.anointed) return false;
+    o.gear.uses = Math.max(0, (o.gear.uses == null ? o.item.uses : o.gear.uses) - 1);
+    s.flags.anointed = o.fx.step || 1;
+    api.say('You use ' + yours(o.item.name) + ' and anoint your weapon (' + o.gear.uses + ' left). Until the end of the scene its Effort is one size bigger against the unquiet dead.', 'act');
+    f.phase = 'foe'; return true;
+  }
+  function stepped(s, f, cat) {
+    var base = R.DEFAULT_DICE[cat], k = DIE_SIZES.indexOf(base);
+    if (!s.flags.anointed || !f || !f.undead || cat !== 'weapons' || k < 0) return base;
+    return DIE_SIZES[Math.min(DIE_SIZES.length - 1, k + s.flags.anointed)];
+  }
   /* Everything the hero can do on their turn in a fight: attack (a weapon, a damage spell, a grimoire read by the die), bare hands if they carry no weapon, brace, heal, or a story spell. */
   function fightOptions(api, s, f) {
     var out = [], attacks = heroActions(s).filter(function (a) { return a.ok && (a.pick || (a.cat && !a.healing && !isStorySpell(a.u))); });
     attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', horror: a.horror || 0, about: aboutOf(a) }); });
     if (!attacks.some(function (a) { return !a.spellId && !a.pick; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
     if (!f.guard) out.push({ label: 'Brace: +2 Defence until your next turn', cmd: 'brace', kind: 'plain' });
+    var oil = f.undead && !s.flags.anointed && anointer(s);
+    if (oil) out.push({ label: 'Use ' + oil.item.name, cmd: 'anoint', kind: 'use', hint: 'Your weapon\'s Effort steps up against the dead', about: { name: oil.item.name, roll: '', does: oil.item.does || '' } });
     heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: !!a.healing })); });
     return out;
   }
@@ -596,15 +623,17 @@
       else if (f.phase === 'push') {
         if (c === 'foe' || c === 'wait') f.phase = 'foe', foeTurn(api);
         else if (p[0] === 'push') {
-          var pa = p[1] === 'punch' ? bareHands() : p[1] === 'brace' ? 'brace' : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
+          var pa = p[1] === 'punch' ? bareHands() : p[1] === 'brace' ? 'brace' : p[1] === 'anoint' ? 'anoint' : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
           f.phase = 'hero'; raiseHorror(api, R.HORROR.push, 'You push for a second action.');
           if (!s.over && pa === 'brace') { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
+          else if (!s.over && pa === 'anoint') { if (!anoint(api)) f.phase = 'foe'; }
           else if (!s.over) { useAction(api, pa, true); if (s.fight && f.phase === 'hero') f.phase = 'foe'; }   /* the second action cannot itself be pushed */
         } else api.say('You missed: push, or end your turn.', 'note');
       }
       else if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); else api.say('You cannot use that now.', 'note'); }
       else if (c === 'punch') useAction(api, bareHands(), false);
       else if (c === 'brace' && !f.guard) { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
+      else if (c === 'anoint') { if (!anoint(api)) api.say('You cannot use that now.', 'note'); }
       else if (p[0] === 'go') api.say('It is between you and the way out. Fight.', 'note');
       else api.say('Not now: it is coming for you.', 'note');
     }

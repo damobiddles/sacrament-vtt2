@@ -612,3 +612,27 @@ test('the new people of the road: Rachel, Witch-finder General gives Holy Oil; S
     S.act(s, null, 'go down', die);
     assert.ok(s.fight, 'the rats in the undercroft'); assert.equal(s.fight.easy, 1, 'the first attack is Easy'); assert.ok(!s.run.story.forewarned, 'used up on that foe'); }
 });
+
+test('Flask of Holy Oil works as the gear list says: against the unquiet dead the anointed weapon rolls one Effort die bigger, until the scene ends', () => {
+  assert.match(globalThis.SacramentSheetCore.item('oil').does, /Effort steps up one size against the unquiet dead/);
+  const hero = T.generate('fighter', seeded(4)); hero.gear.push({ id: 'oil' });
+  const sceneId = Object.keys(SCENES).find((id) => Object.values(SCENES[id].foes || {}).some((f) => f.undead));
+  const adv = SCENES[sceneId], [foeId, def] = Object.entries(adv.foes).find(([, f]) => f.undead);
+  const s = S.start(hero, adv, fixed([1]));
+  const fight = (undead) => ({ foe: foeId, art: def.art, undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(false);
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'anoint'), 'no use against the living');
+  s.fight = fight(true);
+  assert.ok(S.choices(s, adv).some((c) => c.cmd === 'anoint' && c.label === 'Use Flask of Holy Oil'), 'offered against the dead');
+  S.act(s, adv, 'anoint', fixed([1]));
+  assert.equal(s.fight.phase, 'foe', 'it takes your action'); assert.equal(s.hero.gear.find((g) => g.id === 'oil').uses, 1, 'one of 2 uses spent');
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'anoint'), 'once is enough for the scene');
+  S.act(s, adv, 'foe', fixed([1]));   // a natural 1: the foe misses
+  const attack = S.choices(s, adv).find((c) => c.kind === 'attack' && c.cmd.startsWith('use '));
+  S.act(s, adv, attack.cmd, fixed([18])); assert.equal(s.fight.phase, 'damage');
+  S.act(s, adv, 'damage', fixed([8]));
+  assert.ok(s.log.some((l) => /\bd8 8\b/.test(l.t)), 'the weapon Effort die is a d8, not a d6: ' + s.log.at(-3).t);
+  s.fight.undead = false; s.fight.phase = 'hero';
+  S.act(s, adv, attack.cmd, fixed([18])); S.act(s, adv, 'damage', fixed([8]));
+  assert.ok(/\bd6 6\b/.test(s.log.filter((l) => l.k === 'win').at(-1).t), 'against the living it stays a d6');
+});
