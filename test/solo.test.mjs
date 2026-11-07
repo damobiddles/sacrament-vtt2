@@ -571,3 +571,24 @@ test('forks in the road: after a scene the hero chooses between two next places,
   }
   assert.ok(forks > 100, 'most steps of the road fork: ' + forks); assert.ok(swaps > 20, 'and the other road is taken sometimes: ' + swaps);
 });
+
+test('the end of a run: the end card says where the hero went, what they beat, what they carried, the highest Horror and a closing line', () => {
+  require('../site/solo/art.js');
+  const ART = globalThis.SacramentSoloArt, ends = new Set();
+  for (const focus of ['fighter', 'scout', 'scholar', 'healer']) for (const seed of [1, 2, 3, 4, 5, 6]) {
+    const { s } = playRun(focus, seed);
+    if (!s.over) continue;
+    const sum = S.summary(s); ends.add(sum.end);
+    assert.equal(sum.hero, s.hero.name); assert.equal(sum.end, s.over); assert.equal(sum.total, 5);
+    assert.deepEqual(sum.places, s.run.order.slice(0, s.run.at + 1).map((id) => SCENES[id].title), 'the places walked, in order');
+    if (s.over === 'won') { assert.equal(sum.places.length, 5); assert.ok(sum.beaten.length >= 1, 'a won road beat at least one foe'); }
+    assert.ok(sum.peak >= s.horror && sum.peak <= R.HORROR.max, 'the highest Horror is at least where it ended');
+    assert.ok(ROAD.endings[s.over].includes(sum.line), 'the closing line fits how the road ended');
+    assert.deepEqual(S.summary(s).line, sum.line, 'the same run always shows the same line');
+    const svg = ART.endCard(sum, s, '7 Nov 2026');
+    assert.ok(svg.startsWith('<svg') && svg.includes(sum.places[0]) && svg.includes('7 Nov 2026') && !/<script|<image/.test(svg));
+  }
+  assert.ok(ends.size >= 2, 'runs end in more than one way: ' + [...ends].join(', '));
+  const odd = ART.endCard({ hero: 'A <b>&"', places: ['X'], beaten: [], finds: [], peak: 0, horrorMax: 21, end: 'dead', total: 5, line: '' }, null, '');
+  assert.ok(odd.includes('A &lt;b&gt;&amp;&quot;') && !odd.includes('<b>'), 'names are written safely into the picture');
+});

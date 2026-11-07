@@ -234,7 +234,7 @@
   /* Raise the meter. A cost that cannot go on a full meter is paid in blood: one d4 of HP for each point (the owner's rule, 2026-11-01). */
   function raiseHorror(api, n, why) {
     var s = api.s; n = int(n, 0); if (n <= 0) return;
-    var mv = R.horrorMove(s.horror, n); s.horror = mv.to;
+    var mv = R.horrorMove(s.horror, n); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
     if (mv.applied) api.say((why ? why + ' ' : '') + 'The Horror rises ' + mv.applied + ' (now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror');
     mv.crossed.forEach(function (t) { api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
     var left = n - mv.applied;
@@ -402,7 +402,7 @@
   function damageFoe(api, n) {
     var s = api.s, f = s.fight, ch = R.change(f.hp.cur, f.hp.max, -n); f.hp.cur = ch.cur;
     var def = api._adv.foes[f.foe];
-    if (f.hp.cur === 0) { s.fight = null; s.flags['beat_' + f.foe] = true; api.say(typeof def.defeated === 'function' ? def.defeated(api) : def.defeated, 'end'); if (def.after) def.after(api); }
+    if (f.hp.cur === 0) { s.fight = null; s.flags['beat_' + f.foe] = true; if (s.run) (s.run.beaten = s.run.beaten || []).push(f.name); api.say(typeof def.defeated === 'function' ? def.defeated(api) : def.defeated, 'end'); if (def.after) def.after(api); }
     else api.say(f.name + ' is hurt (' + hurtWord(f.hp) + ').', 'foe');
   }
   function hurtWord(hp) { var r = hp.cur / hp.max; return r > 0.66 ? 'barely' : r > 0.33 ? 'badly' : 'nearly finished'; }
@@ -712,5 +712,20 @@
     enter(a2, adv.start);
   }
 
-  root.SacramentSolo = { DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
+  /* The end of a run, for the end card and the Chronicle: the places walked, the foes beaten, what came home, the highest Horror, and a closing line
+     from the campaign's endings (chosen by the run itself, so the same run always shows the same line). */
+  function summary(s) {
+    var run = s.run || { order: [s.adventure], at: 0 }, camp = (root.SacramentSoloCampaigns || {})[run.campaign] || {};
+    var walked = run.order.slice(0, run.at + 1), end = s.over || '';
+    var lines = (camp.endings || {})[end] || [], pick = 0; walked.concat(s.hero.name).join('|').split('').forEach(function (ch) { pick = (pick * 31 + ch.charCodeAt(0)) >>> 0; });
+    var last = scenes()[run.order[run.order.length - 1]];
+    return {
+      hero: s.hero.name, calling: s.hero.calling || '', road: run.title || '', to: last ? last.title : '', end: end, total: run.order.length,
+      places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }),
+      beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }),
+      peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
+    };
+  }
+
+  root.SacramentSolo = { summary: summary, DREAD: DREAD, foeIntent: foeIntent, runFinds: runFinds, VERSION: VERSION, start: start, act: act, choices: choices, parse: parse, valid: valid, inventoryText: inventoryText, HELP: HELP, LIGHTS: LIGHTS, heroActions: heroActions, sceneInfo: sceneInfo, odds: odds, cards: cards, startRun: startRun, forkAt: forkAt, cameoNow: cameoNow, sceneOf: sceneOf, sceneAt: sceneAt, pickOrder: pickOrder };
 })(typeof window !== 'undefined' ? window : globalThis);
