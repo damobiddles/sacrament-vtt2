@@ -27,6 +27,8 @@ Questions the current text left open. The rules have not changed; these say how 
 
 ## 7 November 2026: one set of rules for the table and the solo game
 
+**Break away, a new rule.** A hero can now break off a fight. On your turn, instead of acting, make a DEX check against the Target. On a success you get clear and the foe does not attack you as you go; on a failure you stay put and the foe attacks as usual. Where you can run to is the GM's call. The table does not count it for you: make the DEX check, and the GM decides where you end up. In the solo game a hero who gets away goes on to the next scene, leaves that scene's find behind, and the Horror rises 1; there is no running from the last scene of the road. *Prompted by:* the solo game, where a hero had no way out of a fight going badly; the designer chose to add the rule for everyone, so the table and the solo game agree.
+
 **Playing alone.** The [Rules](/rules/) page now has a section for the solo game. A hero alone who falls to 0 HP is dying as usual, but may still heal themselves (not with bandages) or crawl away with a CON check. At the table nothing changes: a fallen hero cannot act. Ward and other help for an ally has no use alone. *Prompted by:* an audit of the solo game against the table; the designer chose to write solo's own rules down, so learning alone teaches the real game.
 
 **Darkness, clarified.** Without a light, a WIS check to search or notice in a dark place is Hard, as the Hooded Lantern has always said. The Light tag now says the same. The solo game had made every check and attack Hard in the dark; it now follows this rule, lights a tallow candle (one use) in a dark scene, and lights the Black Candle and the Drowned Saint's Lantern only when they are used.

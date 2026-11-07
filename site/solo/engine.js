@@ -240,13 +240,13 @@
 
   /* ---------- Horror ---------- */
   /* Raise the meter. A cost that cannot go on a full meter is paid in blood: one d4 of HP for each point (the owner's rule, 2026-11-01). */
-  function raiseHorror(api, n, why) {
+  function raiseHorror(api, n, why, o) {
     var s = api.s; n = int(n, 0); if (n <= 0) return;
     var mv = R.horrorMove(s.horror, n); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
     if (mv.applied) api.say((why ? why + ' ' : '') + 'The Horror rises ' + mv.applied + ' (now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror');
     mv.crossed.forEach(function (t) { api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
     var left = n - mv.applied;
-    if (left > 0 && s.hp.cur > 0) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood */
+    if (left > 0 && s.hp.cur > 0 && !(o && o.gm)) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood, nor does the GM's own raise */
       var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
       var total = rolls.reduce(function (a, b) { return a + b; }, 0);
       if (!mv.applied && why) api.say(why, 'horror');
@@ -296,12 +296,34 @@
     if (s.over) return;
     if (!c.success) { if (s.fight) s.fight.phase = 'foe'; else dyingTick(api, 'You do not get far.'); return; }
     s.dying = null; s.hp.cur = 1; s.fight = null;
-    var lost = (s.found || []).map(function (id) { var at = -1; (s.hero.gear || []).forEach(function (g, k) { if (g.id === id) at = k; }); if (at < 0) return ''; var g = s.hero.gear.splice(at, 1)[0], it = C.itemOf(g); return it ? it.name : ''; }).filter(Boolean);
-    (s.found || []).forEach(function (id) { var rf = (s.run && s.run.found) || [], k = rf.lastIndexOf(id); if (k >= 0) rf.splice(k, 1); });
-    s.found = []; s.escaped = true;
+    var lost = leaveFinds(s);
     api.say('You drag yourself out and away, and live. ' + (lost.length ? 'You leave behind what you found here: ' + lost.join(', ') + '.' : 'You leave nothing behind but blood.') + ' (1 HP)', 'hurt');
     if (s.run && s.run.at < s.run.order.length - 1) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is over. You got away.', 'note'); }
     else s.over = 'fled';
+  }
+  /* Getting out of a scene early (crawling away, breaking away) leaves behind what was found in it. Returns the names left behind. */
+  function leaveFinds(s) {
+    var lost = (s.found || []).map(function (id) { var at = -1; (s.hero.gear || []).forEach(function (g, k) { if (g.id === id) at = k; }); if (at < 0) return ''; var g = s.hero.gear.splice(at, 1)[0], it = C.itemOf(g); return it ? it.name : ''; }).filter(Boolean);
+    (s.found || []).forEach(function (id) { var rf = (s.run && s.run.found) || [], k = rf.lastIndexOf(id); if (k >= 0) rf.splice(k, 1); });
+    s.found = []; s.escaped = true;
+    return lost;
+  }
+  /* Break away (the Rules page): on your turn, instead of acting, a DEX check against the Target. Success: you get clear and the foe does not attack you as you
+     go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call, and in the solo game (the owner's calls, 2026-11-07) there is
+     somewhere to run only before the finale; getting away ends the scene, leaves its find behind, and the Horror rises 1 (a GM's raise: no blood). */
+  var FLEE = { horror: 1 };
+  function canFlee(s) { return !!(s.run && s.run.at < s.run.order.length - 1 && s.fight && !s.dying); }
+  function breakAway(api) {
+    var s = api.s, f = s.fight; if (!canFlee(s)) return false;
+    var c = api.check(R.BREAK_AWAY.stat, { what: 'You break away', nonDamage: true });
+    if (s.over) return true;
+    if (!c.success) { api.say(f.name + ' is on you before you can get clear.', 'miss'); f.phase = 'foe'; return true; }
+    s.fight = null;
+    var lost = leaveFinds(s);
+    api.say('You turn and run, and ' + f.name.replace(/^The /, 'the ') + ' does not catch you. ' + (lost.length ? 'You leave behind what you found here: ' + lost.join(', ') + '.' : ''), 'act');
+    raiseHorror(api, FLEE.horror, 'Running stays with you.', { gm: true });
+    if (!s.over) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is over. You got away.', 'note'); }
+    return true;
   }
 
   /* ---------- finds ---------- */
@@ -476,7 +498,7 @@
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
       if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
       /* A push gives a second action of any kind, as at the table (the Rules page: "Push ... makes the next action the second action"): the same list, each one pushed. */
-      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
+      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       out = fightOptions(api, s, f);
       return out;
     }
@@ -518,6 +540,7 @@
     attacks.forEach(function (a) { out.push({ label: a.pick ? a.name : (a.spellId ? 'Cast ' : 'Attack: ') + shortName(a), cmd: actionKey(a), kind: a.spellId || a.pick ? 'spell' : 'attack', strike: true, horror: a.horror || 0, about: aboutOf(a) }); });
     if (!attacks.some(function (a) { return !a.spellId && !a.pick; })) out.push({ label: 'Attack: bare hands', cmd: 'punch', kind: 'attack' });
     if (!f.guard) out.push({ label: 'Brace: +2 Defence until your next turn', cmd: 'brace', kind: 'plain' });
+    if (canFlee(s)) out.push({ label: 'Break away: run (DEX)', cmd: 'flee', kind: 'do', flee: true, hint: 'Get away: lose this scene\'s find, Horror +1' });
     var oil = f.undead && !s.flags.anointed && anointer(s);
     if (oil) out.push({ label: 'Use ' + oil.item.name, cmd: 'anoint', kind: 'use', hint: 'Your weapon\'s Effort steps up against the dead', about: { name: oil.item.name, roll: '', does: oil.item.does || '' } });
     heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: !!a.healing })); });
@@ -567,7 +590,7 @@
   function exitOf(api, r, d) { var e = r.exits[d]; if (!e) return null; if (typeof e === 'string') e = { to: e }; if (e.when && !e.when(api)) return e.closed ? { to: e.to, closed: e.closed, hidden: true } : null; return e; }
 
   /* ---------- typed words become commands ---------- */
-  var HELP = 'Tap a choice, or type a command: LOOK, GO NORTH (or N, S, E, W, UP, DOWN), INVENTORY, a thing to do ("read ledger", "talk"), ATTACK, CAST and a spell, USE and an item, PUSH, HELP.';
+  var HELP = 'Tap a choice, or type a command: LOOK, GO NORTH (or N, S, E, W, UP, DOWN), INVENTORY, a thing to do ("read ledger", "talk"), ATTACK, CAST and a spell, USE and an item, PUSH, RUN, HELP.';
   function parse(s, adv, text) { adv = sceneOf(s) || adv;
     var t = String(text || '').toLowerCase().replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!t) return '';
@@ -581,6 +604,7 @@
     if (/^(h|help|\?)$/.test(t)) return 'help';
     if (/^(wait|end turn|end my turn|end your turn|let it come)$/.test(t)) return 'foe';
     if (/^(damage|roll damage)$/.test(t)) return 'damage';
+    if (s.fight && /^(run|run away|flee|break away|escape|retreat)$/.test(t)) return 'flee';
     var list = choices(s, adv), api = apiFor(s, adv, function () { return 1; });
     /* the room's own things to do, by their words */
     var r = adv.rooms[s.room];
@@ -642,6 +666,7 @@
       else if (c === 'punch') useAction(api, bareHands(), false);
       else if (c === 'brace' && !f.guard) { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
       else if (c === 'anoint') { if (!anoint(api)) api.say('You cannot use that now.', 'note'); }
+      else if (c === 'flee') { if (!breakAway(api)) api.say('There is nowhere to run to. This ends here.', 'note'); }
       else if (p[0] === 'go') api.say('It is between you and the way out. Fight.', 'note');
       else api.say('Not now: it is coming for you.', 'note');
     }

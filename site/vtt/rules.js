@@ -68,6 +68,9 @@
      at 0 the hero is dead. A blow that gets through on a dying hero takes a round off instead of damage. A stable hero's countdown stops; hurt again, they are dying again
      with a new d4. Any healing stands a dying or stable hero up. The state is { left, stable, dead }, or null for a hero who is not down. */
   var DYING = { die: 4, maxLeft: 9 };
+  /* Break away (the Rules page, 2026-11-07): on your turn, instead of acting, a check with this stat against the Target. Success: clear, the foe does not attack
+     you as you go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call. */
+  var BREAK_AWAY = { stat: 'DEX' };
   function dyingFall(rolled) { return { left: clamp(int(rolled, 1), 1, DYING.die), stable: false, dead: false }; }
   /* A round (or a blow) takes one off a dying hero's countdown. A stable or dead hero does not move. Returns the new state (a copy). */
   function dyingTick(st) {
@@ -179,6 +182,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+    HORROR: HORROR, DYING: DYING, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

@@ -76,6 +76,7 @@ The rules leave a threshold's consequence to the GM; in the solo game the game i
 * **Horror 14, hunted:** every foe met from then on has 2 more HP.
 * **Horror 21, arrived:** the rules' pay-in-blood, and no more rest between scenes.
 * **Falling:** the rules' dying roll (d4 rounds; each new round and each blow that gets through takes one off). The dying hero may heal (any healing stands them up) or crawl away with a CON check: out of the scene with 1 HP, leaving behind what they found in it. In the last scene, crawling away ends the road alive but unfinished.
+* **Break away (shared rule, Rules page, 2026-11-07):** in a fight, instead of acting, a DEX check against the Target (`R.BREAK_AWAY`). Success: clear, no attack; failure: the foe attacks as usual. Solo's GM calls (owner, 2026-11-07): only before the finale; getting away ends the scene, leaves its find behind and raises the Horror 1 (a GM's raise, so no blood at 21). Night falls: scenes 1-2 evening, 3-4 dusk, the finale at night with every place dark.
 * **Finds:** a hero from My heroes who finishes the road may press "Bring your finds home" once; each find still carried goes into the saved hero if there is room.
 * **The foe's next move** shows on its card with the real numbers (the roll it needs to hit you, the chance, its damage die). **Brace** spends the turn for +2 Defence until the hero's next turn, like the Guard ruling.
 

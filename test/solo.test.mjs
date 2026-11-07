@@ -660,3 +660,45 @@ test('night falls along the road: evening, then dusk from scene 3, and the final
   }
   assert.equal(new Set(skies).size, 3, 'the sky darkens in three steps: ' + skies.join(' '));
 });
+
+test('break away, as the Rules page has it: a DEX check against the Target; a success gets clear with no attack, a failure lets the foe attack as usual', () => {
+  assert.equal(R.BREAK_AWAY.stat, 'DEX');
+  let s, adv;
+  for (let seed = 1; seed < 200 && !adv; seed++) { s = S.startRun(T.generate('fighter', seeded(seed)), 'pilgrim-road', fixed([1])); if (Object.keys(SCENES[s.adventure].foes || {}).length) adv = SCENES[s.adventure]; }
+  const [foeId, def] = Object.entries(adv.foes)[0];
+  const fight = () => ({ foe: foeId, art: def.art, undead: !!def.undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(); s.horror = 0; s.shaken = false;
+  const run = S.choices(s, adv).find((c) => c.cmd === 'flee');
+  assert.ok(run && /Break away/.test(run.label), 'a Break away choice in a fight before the finale');
+  assert.equal(S.parse(s, adv, 'run away'), 'flee', 'typing "run away" means the same');
+  // a failure: you stay put and the foe attacks as usual
+  S.act(s, adv, 'flee', fixed([1]));
+  assert.ok(s.fight, 'still in the fight'); assert.equal(s.fight.phase, 'foe');
+  assert.equal(s.horror, 0, 'a failed break away is a plain check: its natural 1 costs nothing');
+  const hp = s.hp.cur; S.act(s, adv, 'foe', fixed([20, 3]));
+  assert.equal(s.hp.cur, hp - 3, 'the foe attacks as usual');
+  assert.ok(!S.choices(s, adv).filter((c) => c.kind === 'push').length, 'breaking away is not an attack, so it cannot be pushed');
+  // a success: clear, no attack, the find left behind, the Horror +1, and on to the next scene
+  s.hero.gear.push({ id: 'candle', eq: false }); s.found = ['candle']; s.run.found = ['candle'];
+  const gear = s.hero.gear.length, hp2 = s.hp.cur;
+  S.act(s, adv, 'flee', fixed([20]));
+  assert.equal(s.fight, null); assert.equal(s.hp.cur, hp2, 'the foe does not attack as you go');
+  assert.equal(s.hero.gear.length, gear - 1, 'the scene\'s find is left behind'); assert.deepEqual(s.run.found, []);
+  assert.equal(s.horror, 1, 'the Horror rises 1 for running');
+  assert.ok(s.done && !s.over, 'the scene is over and the road goes on');
+  assert.ok(S.choices(s, adv).some((c) => c.kind === 'go'));
+});
+
+test('break away: no running from a finale, and running at a full Horror meter costs no blood (it is the GM\'s raise)', () => {
+  let s, adv;
+  for (let seed = 1; seed < 200 && !adv; seed++) { s = S.startRun(T.generate('fighter', seeded(seed)), 'pilgrim-road', fixed([1])); if (Object.keys(SCENES[s.adventure].foes || {}).length) adv = SCENES[s.adventure]; }
+  const [foeId, def] = Object.entries(adv.foes)[0];
+  const fight = () => ({ foe: foeId, art: def.art, undead: !!def.undead, name: def.name, hp: { cur: 40, max: 40 }, attack: 0, damage: 4, round: 1, phase: 'hero', pending: null, easy: 0, dim: 0, guard: 0, skip: 0, learned: false });
+  s.fight = fight(); s.horror = R.HORROR.max; s.shaken = false;
+  const hp = s.hp.cur; S.act(s, adv, 'flee', fixed([20]));
+  assert.equal(s.hp.cur, hp, 'no blood paid for running'); assert.equal(s.horror, R.HORROR.max);
+  s.done = false; s.fight = fight(); s.run.at = s.run.order.length - 1;
+  assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'flee'), 'no Break away in the finale');
+  S.act(s, adv, 'flee', fixed([20]));
+  assert.ok(s.fight, 'there is nowhere to run at the end of the road');
+});
