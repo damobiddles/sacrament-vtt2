@@ -310,7 +310,7 @@
   function leaveFinds(s) {
     var lost = (s.found || []).map(function (id) { var at = -1; (s.hero.gear || []).forEach(function (g, k) { if (g.id === id) at = k; }); if (at < 0) return ''; var g = s.hero.gear.splice(at, 1)[0], it = C.itemOf(g); return it ? it.name : ''; }).filter(Boolean);
     (s.found || []).forEach(function (id) { var rf = (s.run && s.run.found) || [], k = rf.lastIndexOf(id); if (k >= 0) rf.splice(k, 1); });
-    s.found = []; s.escaped = true;
+    s.found = []; s.escaped = true; if (s.run) s.run.escapes = int(s.run.escapes, 0) + 1;
     return lost;
   }
   /* Break away (the Rules page): on your turn, instead of acting, a DEX check against the Target. Success: you get clear and the foe does not attack you as you
@@ -805,7 +805,7 @@
     var last = scenes()[run.order[run.order.length - 1]];
     return {
       hero: s.hero.name, calling: s.hero.calling || '', road: run.title || '', to: last ? last.title : '', end: end, total: run.order.length,
-      places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }),
+      places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }), placeIds: walked.slice(), met: (run.met || []).slice(), escapes: int(run.escapes, 0),
       beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }), used: (run.used || []).slice(),
       peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
     };

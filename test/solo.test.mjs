@@ -726,3 +726,27 @@ test('spells and items that matter: a useful one is marked, the foe card says wh
   r.run.used = ['Mouth of Wax']; assert.deepEqual(S.summary(r).used, ['Mouth of Wax']);
   require('../site/solo/art.js'); assert.match(globalThis.SacramentSoloArt.endCard(S.summary(r), r, ''), /PUT TO USE/);
 });
+
+test('deeds and the hero record come from the Chronicle, and a road earns only what is new', () => {
+  require('../site/solo/deeds.js');
+  const DD = globalThis.SacramentSoloDeeds, w = { friends: ['a', 'b'], finales: ['shrine', 'mere', 'barrow'], places: ['priory', 'shrine', 'mere', 'barrow'] };
+  const e = (o) => Object.assign({ hero: 'Ada', end: 'won', peak: 3, places: [], beaten: [], met: [], used: [], escapes: 0 }, o);
+  assert.deepEqual(DD.earned([], w), []);
+  let l = [e({ end: 'dead', peak: 9, places: ['priory'] })];
+  assert.deepEqual(DD.earned(l, w), ['fell']);
+  l = [e({ places: ['priory', 'shrine'], met: ['a'], beaten: ['x', 'y', 'z', 'p', 'q'], used: ['A', 'B', 'C'] })].concat(l);
+  assert.deepEqual(DD.fresh(l, w).sort(), ['home', 'slayer', 'steady', 'tools'].sort(), 'the new road brings what it earned, not the old deed');
+  l = [e({ places: ['mere'], met: ['b'], peak: 21, escapes: 1 }), e({ places: ['barrow'] })].concat(l);
+  const got = DD.earned(l, w);
+  for (const id of ['friends', 'ends', 'walked', 'arrived', 'runner']) assert.ok(got.includes(id), id);
+  assert.ok(!got.includes('ten'));
+  const r = DD.record(l); assert.equal(r[0].hero, 'Ada'); assert.equal(r[0].roads, 4); assert.equal(r[0].home, 3); assert.equal(r[0].peak, 21); assert.equal(r[0].beaten, 5);
+  for (const d of DD.DEEDS) assert.ok(d.name && d.hint && /\.$/.test(d.hint), d.id + ' has a name and a hint');
+});
+
+test('a road remembers the places, the friends met, and each getaway, for the deeds', () => {
+  const s = S.startRun(T.generate('fighter', seeded(3)), 'pilgrim-road', fixed([1]));
+  s.run.met.push('simon'); s.run.escapes = 2;
+  const sum = S.summary(s);
+  assert.deepEqual(sum.placeIds, [s.run.order[0]]); assert.deepEqual(sum.met, ['simon']); assert.equal(sum.escapes, 2);
+});
