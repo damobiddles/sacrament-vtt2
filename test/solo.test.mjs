@@ -28,6 +28,19 @@ test('every ready-made hero can play the scene to an end, and the hero given to 
   }
 });
 
+test('a ready-made hero can start from every path (as on My heroes), keeps that path, and can play the scene to an end', () => {
+  const C = globalThis.SacramentSheetCore;
+  assert.ok(C.PATHS.length >= 20);
+  for (const path of C.PATHS) {
+    const hero = T.generate(path, seeded(7));
+    assert.equal(hero.path, path, path + ' did not keep its path');
+    assert.ok(T.KIT_HELP[T.KIT[path]] && C.PATH_ABOUT[path], path + ' has no words to explain it on the solo start screen');
+    const { s } = playThrough(path, 3);
+    assert.ok(['won', 'dead', 'fled'].includes(s.over), path + ' did not finish');
+  }
+  assert.ok(C.PATHS.includes(T.generate('random', seeded(4)).path), 'Surprise me gives a real path');
+});
+
 test('a missed attack offers a push, which costs 1 Horror; a natural 1 on the pushed attack costs 1 more', () => {
   const hero = T.generate('fighter', seeded(3));
   const s = S.start(hero, A, fixed([1]));

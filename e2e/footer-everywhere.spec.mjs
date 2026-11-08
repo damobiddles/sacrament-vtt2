@@ -12,7 +12,7 @@ test('My heroes and the solo start screen end with the site footer; the solo foo
   await expect(page.locator('.ic-nav')).toHaveCount(0);   // the solo game keeps its own top bar
   await expect(page.locator('footer.ic-foot')).toBeVisible();
   await expect(page.locator('footer.ic-foot .site-footer-grid')).toHaveCSS('display', 'grid');
-  await page.getByRole('button', { name: /Fighter/ }).click();
+  await page.getByRole('button', { name: /Take this hero/ }).click();
   await expect(page.locator('#game')).toBeVisible();
   await expect(page.locator('footer.ic-foot')).toBeHidden();
   await page.goto('/vtt/');
