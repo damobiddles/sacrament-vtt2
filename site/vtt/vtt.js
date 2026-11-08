@@ -917,7 +917,7 @@
   }
   function playerHealth(ch) {
     var card = S.cards[ch.cardId], hp = card && card.hp; if (!hp) return '';
-    return '<div class="hp row"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md', true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + downMark(card) + '<span>Defence ' + ch.defence + '</span></div>';
+    return '<div class="hp row"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md', true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + downMark(card) + '<span>Defence ' + ch.defence + '</span>' + (ch.checkBonus ? '<span title="' + esc('From ' + (ch.checkBonusFrom || 'an item') + ': goes into the next check') + '">Next roll +' + ch.checkBonus + '</span>' : '') + '</div>';
   }
   function playerActions(ch) {
     var foe = aimFoe(), ready = UI.readyAction;
