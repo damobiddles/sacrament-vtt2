@@ -28,6 +28,21 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Seven relics now name their check (8 November 2026).** The Bone Bell (CHA), Censer of Ash (WIS), Widow's Listening Veil (WIS), Ward Medal of Saint Ursel (WIS), Vigil Coal (INT), Rod of the Ash Procession (INT) and Mourning Nail (WIS) always rolled that check at the table and in the solo game, but their words did not say which. They now read "make a … check. On a success…", like every other relic. Nothing about how they play has changed.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 8 November 2026, last: plain finds work like their twins
+
+**What changed.** Eleven ordinary finds looked like items in the starting gear but had no rules of their own, so the loot page said "the GM decides". They now work exactly like their twins:
+
+- **Tallow candle stubs** work like Tallow Candles: light one (3 uses) for light to Near for the rest of the scene.
+- **Coil of hemp rope** works like Rope and Grapnel: as a Move, cross a gap or climb a wall without a check, and an ally can follow.
+- **Flint and steel** lights candles, lanterns and fires, like the Tinderbox.
+- **Iron spikes and a mallet** work like Iron Spikes and Hammer: a foe forcing a door you have spiked rolls Hard.
+- **Hard bread and salt pork** and **Chalk and charcoal sticks** are story items, like Hardtack and Waterskin and Chalk and Charcoal.
+- **Gravedigger's spade** is now a weapon, like the Sexton's Spade: Strike a Close foe with Weapons Effort d6. Before, it rolled like a weapon but sat in the pack as a supply.
+- **Iron-shod pilgrim's staff** works like the Pilgrim's Staff (a hit may Daze a living foe instead), and the **Silvered dagger** like the Confessor's Knife.
+- **Dented sallet helm** and **Boiled leather jerkin** now say what they already did: Defence +1 while equipped.
+
+**Why.** Found in a consistency audit: the solo game already treated the candle stubs as a light and the hemp rope as rope, while the table's loot page said they did nothing. The designer chose to make each find match its twin. Heroes who already carry one keep it, and it now works.
+
 ## 8 November 2026, later: twenty paths, and every relic has a path
 
 **Ten more paths,** for the ordinary trades of the age as well as the magical ones: Scholar, Diplomat, Knight, Merchant, Pilgrim, Cutpurse, Minstrel, Gravedigger, Alchemist and Sailor. There are now 20. The rule is unchanged: a relic of your own path costs 1 less Horror. The new [Paths](/rules/paths/) page explains them and lists every path relic.

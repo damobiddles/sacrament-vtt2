@@ -5,7 +5,7 @@
 (function (root) {
   'use strict';
   var A = root.SacramentSoloAdventures = root.SacramentSoloAdventures || {};
-  var LIGHTS = ['lantern', 'candles', 'stubs', 'candle', 'lastrites', 'drownedlantern'], FIRE = LIGHTS.concat(['tinder']), ROPES = ['rope', 'hemprope'];
+  var LIGHTS = ['lantern', 'candles', 'stubs', 'candle', 'lastrites', 'drownedlantern'], FIRE = LIGHTS.concat(['tinder', 'flintsteel']), ROPES = ['rope', 'hemprope'];
   var relic = function (api) { return api.charge() === 'relic'; };
   /* What the road says about the hero's charge: the stolen relic, the missing sister, or the runaway deacon (road-far.js). */
   var told = function (api, t) { return t[api.charge()] || t.missing; };

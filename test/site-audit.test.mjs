@@ -39,3 +39,17 @@ test('the solo hero sheet explains paths in the same words as the sheet at the t
 test('one name per page: the first rules tab is called Rules, like the menu and its heading', () => {
   assert.match(read('scripts/build-landing.mjs'), /\['\/rules\/', 'Rules'\]/);
 });
+
+test('plain look-alike finds work like their twins (owner decision 2026-11-08, decision card)', () => {
+  const all = [...G.items, ...G.relics, ...G.found], it = (id) => all.find((i) => i.id === id);
+  const twins = { stubs: 'candles', hemprope: 'rope', spikesmallet: 'spikes', gravespade: 'spade', ironstaff: 'cudgel', silverdagger: 'knife' };
+  const play = (i) => JSON.stringify(['kind', 'use', 'uses', 'roll', 'cat', 'effort', 'band', 'weaponStyle', 'defence'].map((k) => i[k] ?? null));
+  for (const [find, twin] of Object.entries(twins)) assert.equal(play(it(find)), play(it(twin)), find + ' plays like ' + twin);
+  assert.equal(it('gravespade').kind, 'weapon', 'it rolls like a weapon, so it is one');
+  for (const [find, twin] of Object.entries({ hardbread: 'rations', chalksticks: 'chalk', flintsteel: 'tinder', sallet: 'helm' })) { assert.ok(it(find).does, find + ' has words'); assert.equal(it(find).use, it(twin).use, find); }
+  for (const id of ['jerkin', 'sallet']) assert.match(it(id).does, /^Defence \+1 while equipped\./);
+  // In the solo game the stubs are lit like candles (a use spent), not a lantern carried, and flint and steel lights a fire.
+  const engine = read('site/solo/engine.js'), road = read('site/solo/road.js');
+  assert.match(engine, /var CANDLES = \['candles', 'stubs'\]/); assert.doesNotMatch(engine, /var LIGHTS = \[[^\]]*'stubs'/);
+  assert.match(road, /FIRE = LIGHTS\.concat\(\['tinder', 'flintsteel'\]\)/);
+});

@@ -22,18 +22,21 @@ test('the expansion doubles each item category with stable catalogue definitions
   assert.equal(C.items.length, 184 + pathRelics.length);
   assert.equal(pathRelics.length, 100);
   assert.equal(added.length, 95);
-  for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28 })) {
+  // Owner decision 2026-11-08 (decision card): look-alike finds match their twins, so the found Gravedigger's spade is a weapon like the Sexton's Spade
+  // (one original supply became a weapon; the expansion's own counts are unchanged).
+  for (const [kind, [total, fromExpansion]] of Object.entries({ weapon: [29, 14], armour: [14, 7], supply: [91, 46], relic: [28, 14] })) {
     assert.equal(C.items.filter(i => i.kind === kind && i.table !== 'pathrelics').length, total, kind);
-    assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
+    assert.equal(added.filter(i => i.kind === kind).length, fromExpansion, kind);
   }
   assert.equal(C.items.filter(i => i.kind === 'grimoire').length, 22);
   // The reviewed power definitions, area/scene limits and crossbow accuracy are included.
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // Owner decision 2026-11-08: every relic belongs to a path; the older relics cost 1 more Horror, 1 less on their own path.
+  // Owner decision 2026-11-08 (decision card): the original plain finds that look like starting gear now work like their twins.
   // Audit 2026-11-08: flavour lines added to the six older relics that had none, and the Bone Bell's words name its CHA check (words only).
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), 'c47639b026d40904c53235244da7fdaf5ebce8e221c521ee7314f1b5bed851c5');
+  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '188ce5f66407ec840ff634c1adde4636a19d4041a00fa10992f582be88457ef3');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
   assert.equal(hash(G.spells.slice(0,23).map(untag).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
