@@ -72,7 +72,7 @@ test('the loot tables: every number on the d100 and on each sub-table gives exac
     hits.forEach((h, k) => { assert.equal(h.length, 1, 'on the ' + t.id + ' table the roll ' + (k + 1) + ' gives ' + (h.length ? h.join(' and ') : 'nothing')); });
   }
   for (const i of all()) if (i.table) assert.ok((G.tables || []).some((t) => t.id === i.table), i.name + ' is on a table that does not exist: ' + i.table);
-  assert.equal(listed, 151);
+  assert.equal(listed, 171); // Owner request 2026-11-08: 20 path relics on their own table, reached from the Relics table.
   const depth = (t, k = 1) => (!t.on || t.on === 'd100' ? k : depth(G.tables.find((x) => x.id === t.on), k + 1));
   for (const t of G.tables || []) assert.ok(depth(t) <= 3, 'the ' + t.name + ' table is more than three tables deep');
 });
@@ -87,7 +87,8 @@ test('the items the loot table marks as tempting the Horror are exactly the ones
   assert.deepEqual(flagged('d100'), [100]);
   assert.deepEqual(flagged('valuables'), [13], 'the saint\'s finger bone, on the Valuables and curios table');
   for (const t of ['supplies', 'arms']) assert.deepEqual(flagged(t), [], 'nothing on the ' + t + ' table tempts the Horror');
-  assert.deepEqual(flagged('relics'), [1, 5, 10, 14, 19, 23, 28, 32, 37, 41, 46, 51, 55, 60, 64, 69, 73, 78, 82, 87, 91, 96], 'everything on the Relics table tempts the Horror');
+  assert.deepEqual(flagged('relics'), Array.from({ length: 22 }, (_, k) => k * 3 + 1), 'everything on the Relics table tempts the Horror (since 2026-11-08 each of the 22 relics has three numbers; 67 to 100 lead into Path relics)');
+  assert.deepEqual(flagged('pathrelics'), Array.from({ length: 20 }, (_, k) => k * 5 + 1), 'everything on the Path relics table tempts the Horror');
 });
 
 test('a note only the GM may read is never in this file (it is sent to every browser)', async () => {

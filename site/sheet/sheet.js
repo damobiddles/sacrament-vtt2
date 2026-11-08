@@ -28,7 +28,7 @@
 
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
-    if (it.theme) b.push(it.theme); if (it.legacyEdition) b.push('Original spells');
+    if (it.theme) b.push(it.theme); if (it.path) b.push(it.path + ' path'); if (it.legacyEdition) b.push('Original spells');
     if (it.once === 'scene') b.push('Once per scene');
     if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
@@ -65,7 +65,7 @@
     var waiting = live && !g.key ? ' disabled title="Saving. This works as soon as the table has confirmed it."' : '';
     var spells = it.kind === 'grimoire' ? C.spellsOf(it) : [];
     var act = function (spellId) { return acts.filter(function (a) { return a.index === i && (a.spellId || '') === (spellId || ''); })[0]; };
-    return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + (it.cat || C.healingOf(it) ? ' left' : ' supplied · track manually') + '</span>' : '') +
+    return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + (C.usesCounted(it) ? ' left' : ' supplied · track manually') + '</span>' : '') +
       (it.rangeNote ? '<p class="sh-note">' + esc(it.rangeNote) + '</p>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + '<p class="sh-note">' + esc(C.automationText(it)) + '</p>' + tagLine(it) + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + (it.pickDie || it.pick) + ': the die chooses one of its ' + it.pick + ' spells.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
       (it.kind === 'grimoire' && !spells.length ? '<p class="sh-note">No spells are written in it yet.</p>' : '') +
       (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span> <span class="sh-pill">' + esc(C.rangeText(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">' + esc(C.horrorText(s)) + '</span>' + '<p class="sh-note">' + esc(C.automationText(s)) + '</p>' + tagLine(s) + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +

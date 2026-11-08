@@ -8,18 +8,22 @@ import { table, charNamed } from './vtt-helpers.mjs';
 import { lootCatalogue } from '../scripts/lib/loot-catalogue.mjs';
 const G = globalThis.SACRAMENT_GEAR, C = globalThis.SacramentSheetCore;
 const original = [...G.items, ...G.relics, ...G.grimoires, ...G.found.slice(0, 47)];
-const added = G.found.slice(47);
+const added = G.found.slice(47, 142);  // the 2026-11-01 expansion and grimoires; the path relics (2026-11-08) come after and are tested in path-relics.test
+const pathRelics = G.found.filter(i => i.table === 'pathrelics');
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 // Owner decision 2026-11-06: story spells and items gained "tags" and "needs" (what each is good for). They are locked by the catalogue fingerprint in
 // current-rules-audit.test; here they are set aside so these fingerprints still prove that nothing else about an item or spell moved.
 const untag = ({ tags, needs, ...rest }) => rest;
+// The numbers that lead to a sub-table, from the main d100 down (a table reached from another table needs its parent's number first).
+const route = (tab) => tab.on ? [...route(G.tables.find(t => t.id === tab.on)), tab.loot[0]] : [tab.loot[0]];
 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
   // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
-  assert.equal(C.items.length, 184);
+  assert.equal(C.items.length, 184 + pathRelics.length);
+  assert.equal(pathRelics.length, 20);
   assert.equal(added.length, 95);
   for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28 })) {
-    assert.equal(C.items.filter(i => i.kind === kind).length, total, kind);
+    assert.equal(C.items.filter(i => i.kind === kind && i.table !== 'pathrelics').length, total, kind);
     assert.equal(added.filter(i => i.kind === kind).length, total / 2, kind);
   }
   assert.equal(C.items.filter(i => i.kind === 'grimoire').length, 22);
@@ -39,16 +43,17 @@ test('every new find is reachable at both range boundaries, visible in the publi
   const seen = new Set();
   for (const tab of G.tables) {
     for (let n = 1; n <= tab.die; n++) {
-      const result = C.rollLoot(() => { throw Error('all dice were supplied'); }, [tab.loot[0], n]);
+      if (C.lootEntry(n, tab.id).table) continue;   // leads on into another sub-table, which this loop rolls in its turn
+      const result = C.rollLoot(() => { throw Error('all dice were supplied'); }, [...route(tab), n]);
       assert.equal(result.ok, true, tab.id + ':' + n);
       seen.add(result.item.id);
     }
   }
-  assert.equal(seen.size, 150); // The binding seal is the 151st find, awarded directly on 100.
+  assert.equal(seen.size, 170); // The binding seal is the 171st find, awarded directly on 100.
   for (const item of added) {
     assert.ok(seen.has(item.id), item.id);
     assert.ok(html.includes('id="item-' + item.id + '"'), item.id);
-    for (const n of item.loot) assert.equal(C.rollLoot(() => 1, [G.tables.find(t => t.id === item.table).loot[0], n]).item.id, item.id);
+    for (const n of item.loot) assert.equal(C.rollLoot(() => 1, [...route(G.tables.find(t => t.id === item.table)), n]).item.id, item.id);
     const hero = C.blankHero('Expansion test');
     assert.equal(C.edit(hero, { op: 'add', id: item.id }, { gm: false }).ok, false, item.id);
     assert.equal(C.edit(hero, { op: 'add', id: item.id }, { gm: true }).ok, true, item.id);
@@ -62,8 +67,9 @@ test('every new find is reachable at both range boundaries, visible in the publi
 
 test('the main loot categories retain their original odds and all larger sub-tables use physical percentile dice', () => {
   assert.deepEqual(G.tables.map(t => [t.id, t.loot, t.die]), [
-    ['grimoires', [96, 99], 100], ['supplies', [1, 35], 100], ['arms', [36, 58], 100], ['valuables', [59, 80], 100], ['relics', [81, 95], 100]
+    ['grimoires', [96, 99], 100], ['supplies', [1, 35], 100], ['arms', [36, 58], 100], ['valuables', [59, 80], 100], ['relics', [81, 95], 100], ['pathrelics', [67, 100], 100]
   ]);
+  assert.equal(G.tables.find(t => t.id === 'pathrelics').on, 'relics', 'the path relics are a share of the Relics table, so the main d100 odds do not move');
   assert.equal(C.rollLoot(() => 1, [100]).item.id, 'sealshard');
 });
 

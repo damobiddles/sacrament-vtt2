@@ -183,6 +183,9 @@
     return { die: fx ? +fx.dice.replace('1d', '') : src.effort || 8, kind: fx ? fx.kind || '' : src.id,
       self: !!(fx && fx.target === 'self'), force: !!(fx && fx.force), tend: (src.fx || []).some(function (f) { return f.do === 'tend'; }) };
   }
+  /* Whether the table spends this item's uses itself: anything used through the table (an Effort die, healing, or a Horror cost) loses one use per use.
+     Other limited items (candles, oil) are used up by hand, and the sheet says so. */
+  function usesCounted(it) { return !!(it && it.uses && (it.cat || healingOf(it) || it.temptsHorror)); }
   function powerKey(src) { return src.onceKey || src.abilitySource || src.id; }
   function mechanicsOf(it) { return BY[it.abilitySource || it.id] || null; }
   function useOf(h, index, spellId, mode) {
@@ -417,5 +420,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });
