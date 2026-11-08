@@ -147,8 +147,9 @@ blockquote.todo::first-line{font-weight:700}
 .site-start,.site-next{grid-column:1/-1;padding:24px;border:1px solid var(--line);background:var(--bg2)}
 .site-next{margin-top:28px}
 .site-start h2,.site-next h2{margin-top:0;margin-bottom:20px}
-.site-paths{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
-@media(max-width:1050px){.site-paths{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Four ways in, laid out two by two (owner's request, 8 November 2026): four narrow columns looked cramped. One column on phones (below). */
+.site-paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 40px}
+.site-paths>div{padding-left:16px;border-left:2px solid var(--line)}
 .site-paths h3{font-size:1.3rem;margin:0 0 8px}
 .site-paths p{margin:0 0 12px;color:var(--dim)}
 .site-resources{max-width:1080px}
