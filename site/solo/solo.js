@@ -117,9 +117,18 @@
     var b = document.createElement('button'); b.type = 'button'; b.className = 'pick' + (cls ? ' ' + cls : '');
     var t = document.createElement('b'); t.textContent = title; var s = document.createElement('span'); s.textContent = sub || ''; b.append(t, s); return b;
   }
-  document.querySelectorAll('[data-focus]').forEach(function (b) {
-    b.addEventListener('click', function () { begin(window.SacramentHeroTools.generate(b.getAttribute('data-focus'))); });
-  });
+  /* A ready-made hero starts from a path, as the generator on My heroes does: Surprise me, then the paths from the one gear list, each with its own words.
+     Paths are explained wherever they come up (owner, 2026-11-08). */
+  var T = window.SacramentHeroTools, KIT_WORD = { fighter: 'a fighter', scout: 'a scout', scholar: 'a scholar with a grimoire', healer: 'a healer', speaker: 'a talker' };
+  C.PATHS.forEach(function (p) { var o = document.createElement('option'); o.value = p; o.textContent = p; $('pathPick').appendChild(o); });
+  function showPathHelp() {
+    var p = $('pathPick').value, kit = T.KIT[p];
+    $('takeSub').textContent = kit ? p + ', starting as ' + KIT_WORD[kit] : 'A random path and its kit';
+    $('pathHelp').textContent = kit ? (C.PATH_ABOUT[p] ? C.PATH_ABOUT[p] + ' ' : '') + T.KIT_HELP[kit] + ' A relic of the ' + p + ' path costs 1 less Horror.'
+      : 'Not sure? Surprise me picks a path and a complete, playable starting kit for you. You see your path on the Hero sheet.';
+  }
+  $('pathPick').addEventListener('change', showPathHelp); showPathHelp();
+  $('takeHero').addEventListener('click', function () { begin(T.generate($('pathPick').value)); });
 
   function begin(hero) {
     D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);

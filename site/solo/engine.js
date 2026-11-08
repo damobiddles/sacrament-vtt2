@@ -53,8 +53,10 @@
         o = o || {}; var adj = o.adj || 'normal';
         if (api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item) adj = adj === 'easy' ? 'normal' : 'hard';
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
-        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: o.bonus || 0, target: api.target(), adj: adj });
+        var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
+        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj });
         api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o) });
+        if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
         if (shaken) api.say('You were shaken: that roll was Hard.', 'note');
         return c;
       },
@@ -383,8 +385,13 @@
     var story = isStorySpell(u) ? spellUse(api, src) : null;
     if (isStorySpell(u) && !story) { api.say('Nothing here answers ' + (u.spell ? u.spell.name + '. You do not cast it' : yours(u.item.name) + '. You do not use it') + ', and it costs you nothing.', 'note'); return; }
     if (isDamage && !fight) { api.say('There is nothing here to strike.', 'note'); return; }
+    /* an item's listed effects (sheet-core effectsOf, the same for the table): the Penitent's Chain, the Bone Bell, the Censer of Ash */
+    var fx = C.effectsOf(src), busy = fx.any ? fxBusy(s, src, fx) : '';
+    if (busy) { api.say(busy + '.', 'note'); return; }
     if (src.once === 'scene') { if (s.used[C.powerKey(src)]) { api.say('You have already used that in this scene.', 'note'); return; } s.used[C.powerKey(src)] = true; }
     api.say((pushed ? 'You push, and ' : 'You ') + (u.spell ? 'cast ' + u.spell.name + '.' : isDamage ? 'attack with ' + yours(u.item.name) + '.' : 'use ' + yours(u.item.name) + '.'), 'act');
+    if (fx.any && fx.oncePerTurn && fight) (fight.once = fight.once || {})[src.id] = fight.round;
+    if (fx.selfHarm) { var bite = api.die(fx.selfHarm); hurt(api, bite, yours(u.item.name).replace(/^./, function (x) { return x.toUpperCase(); }) + ' bites (d' + fx.selfHarm + ' ' + bite + ', nothing reduces it)'); if (s.over) return; }
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
@@ -396,9 +403,9 @@
     if (s.over) return;
     var ok = !chk || chk.success;
     if (!isDamage) {
-      if (ok) { if (story) { story.run(api); putToUse(s, u.spell ? u.spell.name : u.item.name); } else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
-      else if (story) api.say('It does not take.', 'miss');
-      if (fight) fight.phase = 'foe';
+      if (ok) { if (story) { story.run(api); putToUse(s, u.spell ? u.spell.name : u.item.name); } else if (fx.any) applyFx(api, fx, u.item.name); else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
+      else if (story || fx.foe) api.say('It does not take.', 'miss');
+      if (fight && !(fx.any && fx.free)) fight.phase = 'foe';   /* a Free use does not take the turn */
       return;
     }
     if (!ok) {
@@ -420,6 +427,24 @@
     api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero' });
     damageFoe(api, e.total);
     if (s.fight) s.fight.phase = 'foe';
+  }
+  /* Why an item with listed effects cannot be used just now, or '' when it can: once per turn means once per round in a fight, and a bonus waiting for the next roll is not doubled. */
+  function fxBusy(s, src, fx) {
+    var f = s.fight;
+    if (fx.foe && !f) return 'There is no foe here';
+    if (fx.oncePerTurn && f && f.once && f.once[src.id] === f.round) return 'Once per turn: you have used it this round';
+    if (fx.nextCheck && int(s.boost, 0)) return 'Your +' + s.boost + ' is still waiting for your next roll';
+    return '';
+  }
+  function applyFx(api, fx, name) {
+    var s = api.s, f = s.fight;
+    if (fx.nextCheck) { s.boost = int(s.boost, 0) + fx.nextCheck; s.boostFrom = name; api.say('Your next roll gets +' + fx.nextCheck + '.', 'win'); }
+    if (fx.foe && f) {
+      var st = C.FOE_STATUS[fx.foe];
+      if (st.attack) f.dim = -st.attack;
+      if (st.effortStep) f.ash = 2;   /* until the end of the next round: its attack this round and the next */
+      api.say(f.name + ': ' + st.name + ', ' + st.text + '.', 'win');
+    }
   }
   function firstSentence(t) { var m = /^[^.!?]*[.!?]/.exec(t); return m ? m[0] : t; }
   function useHealing(api, a, u, pushed) {
@@ -452,22 +477,25 @@
   function foeTurn(api) {
     var s = api.s, f = s.fight; if (!f || s.over) return;
     var def = api._adv.foes[f.foe];
-    if (f.skip) { f.skip = 0; f.guard = 0; api.say(f.name + ' does not attack this turn.', 'win'); f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); return; }
+    if (f.skip) { f.skip = 0; f.guard = 0; if (f.ash) f.ash--; api.say(f.name + ' does not attack this turn.', 'win'); f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); return; }
     var dim = int(f.dim, 0), guard = int(f.guard, 0); f.dim = 0; f.guard = 0;
     var a = R.attack({ d20: api.die(20), bonus: f.attack - dim, defence: C.defence(s.hero) + guard });
-    var n = a.hit ? api.die(f.damage) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: f.damage, n: n });
+    var size = foeDie(f); if (f.ash) f.ash--;
+    var n = a.hit ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: size, n: n });
     var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
-      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls 3 less. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
+      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
     api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true });
-    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (d' + f.damage + ' ' + n + ')');
+    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (d' + size + ' ' + n + ')');
     if (s.fight && !s.over) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); }
   }
 
+  /* The foe's Effort die: one size smaller while the Censer's ash hangs on it. */
+  function foeDie(f) { return f.ash ? C.stepDie(f.damage, C.FOE_STATUS.censer.effortStep) : f.damage; }
   /* What the foe will do on its turn, from the real numbers: the d20 roll it needs to hit you, its chance, and its damage die. */
   function foeIntent(s) {
     var f = s.fight; if (!f || f.skip) return f ? { text: 'Loses its next attack' } : null;
     var need = C.defence(s.hero) + int(f.guard, 0) - (f.attack - int(f.dim, 0)), roll = Math.max(2, Math.min(20, need));
-    return { need: roll, chance: (21 - roll) * 5, damage: f.damage, text: 'Next: attacks. Hits you on ' + roll + '+ (' + (21 - roll) * 5 + '%), d' + f.damage + ' damage' };
+    return { need: roll, chance: (21 - roll) * 5, damage: foeDie(f), text: 'Next: attacks. Hits you on ' + roll + '+ (' + (21 - roll) * 5 + '%), d' + foeDie(f) + ' damage' };
   }
   /* Everything found on the road and still carried: what can come home. */
   function runFinds(s) {
@@ -509,7 +537,7 @@
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
       if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
       /* A push gives a second action of any kind, as at the table (the Rules page: "Push ... makes the next action the second action"): the same list, each one pushed. */
-      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
+      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { if (c.free) { out.push(c); return; } var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       out = fightOptions(api, s, f);
       return out;
     }
@@ -520,7 +548,7 @@
     (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
-    heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
+    heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
     return out;
   }
   /* Anointing (Flask of Holy Oil, from its fx in the gear list): "Until the end of the scene its Effort steps up one size against the unquiet dead and
@@ -556,9 +584,12 @@
     if (canFlee(s)) out.push({ label: 'Break away: run (DEX)', cmd: 'flee', kind: 'do', flee: true, hint: 'Get away: lose this scene\'s find, Horror +1' });
     var oil = f.undead && !s.flags.anointed && anointer(s);
     if (oil) out.push({ label: 'Use ' + oil.item.name, cmd: 'anoint', kind: 'use', hint: 'Your weapon\'s Effort steps up against the dead', about: { name: oil.item.name, roll: '', does: oil.item.does || '' } });
-    heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u) || litByUse(a)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: !!a.healing })); });
+    heroActions(s).filter(function (a) { return a.ok && (a.healing || isStorySpell(a.u) || litByUse(a) || hasFx(a, true)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: !!a.healing })); });
     return out;
   }
+  /* An item with listed effects is offered where they can work: one that acts on foes only in a fight. */
+  function hasFx(a, inFight) { var src = a.u && (a.u.source || a.u.item), fx = src && C.effectsOf(src); return !!(fx && fx.any && (inFight || !fx.foe)); }
+  function freeFx(a) { var src = a.u && (a.u.source || a.u.item), fx = src && C.effectsOf(src); return !!(fx && fx.any && fx.free); }
   function litByUse(a) { var src = a.u && (a.u.source || a.u.item); return !!src && LIT_BY_USE.indexOf(src.id) >= 0; }
   function shortName(a) { return a.name.replace(/ \([^)]*\)$/, ''); }
   /* Mark a story spell that nothing in this scene answers: it shows as "No use here" and costs nothing. */
@@ -566,6 +597,7 @@
     var h = a.u && a.u.healing;
     if (isStorySpell(a.u)) { var src = a.u.source || a.u.item, f = api.s.fight; if (!spellUse(api, src)) { c.idle = true; c.why = f && f.lasting && f.lasting[src.id] ? 'Already done: it lasts the scene' : 'No use here'; } else c.useful = true; }
     else if (h && h.kind && !h.force && api.s.healed[h.kind]) { c.idle = true; c.why = 'Used since your last rest'; }
+    else if (hasFx(a, true)) { var src2 = a.u.source || a.u.item, fx = C.effectsOf(src2), busy = fxBusy(api.s, src2, fx); if (busy) { c.idle = true; c.why = busy; } else if (fx.free) { c.hint = 'Free: it does not take your turn'; c.free = true; } }
     return c;
   }
   /* What a spell or item does, in the gear list's own words: for the "What it does" card. */
@@ -599,7 +631,7 @@
   /* The cards on the table for this place, as at the table: the foe with its HP, an obstacle with its Effort bar, a timer with its countdown. */
   function cards(s, adv) { adv = sceneOf(s) || adv;
     var out = [], api = apiFor(s, adv, function () { return 1; });
-    if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', next: foeIntent(s).text, text: fd.card || '', traits: foeTraits(fd, f), stats: 'Attack +' + f.attack + ' · d' + f.damage + ' damage' + (f.dim ? ' · next attack rolls 3 less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
+    if (s.fight) { var f = s.fight, fd = adv.foes[f.foe]; out.push({ kind: 'foe', id: f.foe, name: f.name, cur: f.hp.cur, max: f.hp.max, unit: 'HP', next: foeIntent(s).text, text: fd.card || '', traits: foeTraits(fd, f), stats: 'Attack +' + f.attack + ' · d' + foeDie(f) + ' damage' + (f.ash ? ' (choked by ash)' : '') + (f.dim ? ' · next attack rolls ' + f.dim + ' less' : '') + (f.skip ? ' · loses its next attack' : '') }); }
     Object.keys(adv.obstacles || {}).forEach(function (id) { var o = adv.obstacles[id]; if (o.room === s.room && obstacleOpen(api, id)) out.push({ kind: 'obstacle', id: id, name: o.name, cur: int((s.bars || {})[id], 0), max: o.max, unit: 'Effort', text: o.text || '', stats: o.stat + ' check, then ' + (R.CAT_NAMES ? R.CAT_NAMES[o.cat || 'basic'] : 'Basic') + ' Effort' }); });
     Object.keys(s.timers || {}).forEach(function (id) { var t = s.timers[id], d = adv.timers[id]; if (d && (t.on || t.cur === 0) && (!d.room || d.room === s.room)) out.push({ kind: 'timer', id: id, name: d.name, cur: t.cur, max: t.max, unit: t.on ? 'left' : 'ended', text: d.text || '', stats: t.on ? (d.tick === 'fail' ? 'Loses 1 each failed try' : d.tick === 'action' ? 'Loses 1 each thing you do here' : 'Loses 1 each round') : 'Time ran out' }); });
     return out;
@@ -687,7 +719,8 @@
           if (!s.over && pa === 'brace') { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
           else if (!s.over && pa === 'anoint') { if (!anoint(api)) f.phase = 'foe'; }
           else if (!s.over) { useAction(api, pa, true); if (s.fight && f.phase === 'hero') f.phase = 'foe'; }   /* the second action cannot itself be pushed */
-        } else api.say('You missed: push, or end your turn.', 'note');
+        } else if (p[0] === 'use' && findAction(s, p) && freeFx(findAction(s, p))) useAction(api, findAction(s, p), false);   /* a Free use (the Chain) before the pushed roll costs no push */
+        else api.say('You missed: push, or end your turn.', 'note');
       }
       else if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); else api.say('You cannot use that now.', 'note'); }
       else if (c === 'punch') useAction(api, bareHands(), false);

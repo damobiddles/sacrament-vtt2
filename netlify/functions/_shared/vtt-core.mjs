@@ -104,7 +104,7 @@ function charView(c, whole, uses) {
   gearKeys(c);
   const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '' };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
-  if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
+  if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), checkBonus: int(c.checkBonus, 0), checkBonusFrom: c.checkBonusFrom || '', gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
   return o;
 }
 
@@ -467,6 +467,25 @@ function bleed(s, ctx, ch, lost, privateUse = false) {
   return { lost, rolls, hp: -applied, log: e.id };
 }
 
+/* An item's listed effects that fall on its user (sheet-core effectsOf, read the same way by the solo game): the Penitent's Chain takes a die of HP that nothing reduces
+   and adds to the user's next check, once per turn. One line, which its user may take back while the bonus is unspent. Effects on foes stay with the GM's cards. */
+function selfEffects(s, a, ctx, ch, u, fx, priv) {
+  const card = s.cards[ch.cardId], effects = [], parts = [], dice = []; let was = null;
+  if (fx.oncePerTurn) { ch.oncePer = ch.oncePer || {}; effects.push({ t: 'oncePer', char: ch.id, key: u.item.id, before: ch.oncePer[u.item.id] || null }); ch.oncePer[u.item.id] = turnKey(s); }
+  if (fx.selfHarm && card && card.hp) {
+    const n = d(ctx, fx.selfHarm); was = card.hp.cur; const applied = adjustField(s, card, 'hp', -n);
+    effects.push(delta(card.id, 'hp', applied)); dice.push({ die: fx.selfHarm, n }); parts.push('d' + fx.selfHarm + ' shows ' + n + ', ' + (-applied) + ' HP that nothing reduces (now ' + card.hp.cur + '/' + card.hp.max + ')');
+  }
+  if (fx.nextCheck) {
+    const before = int(ch.checkBonus, 0), beforeFrom = ch.checkBonusFrom || ''; ch.checkBonus = before + fx.nextCheck; ch.checkBonusFrom = u.item.name;
+    effects.push({ t: 'checkBonus', char: ch.id, before, beforeFrom, after: ch.checkBonus }); parts.push('+' + fx.nextCheck + ' on ' + ch.name + '\'s next roll');
+  }
+  const e = L(s, a, ctx, ch.name + '\'s ' + u.item.name + ': ' + parts.join('; ') + '.', { kind: 'apply', effects, private: !!(priv || (card && (!isPublic(s, card) || numbersHidden(card)))), dice: dice.length ? dice : undefined });
+  if (was != null) settleHero(s, card, was, e, ctx);
+}
+/* The bonus waiting for a hero's next check (the Penitent's Chain), taken by that check. */
+function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0, text: '' }; const from = ch.checkBonusFrom || ''; ch.checkBonus = 0; ch.checkBonusFrom = ''; return { n, text: ' (+' + n + (from ? ' from ' + from : '') + ')' }; }
+
 /* A hero's d20 showing a natural 1 raises the Horror by itself on an attack, a spell, or a pushed second action of any kind; not on a plain check (the owner's rule, 2026-11-01). */
 function natOne(s, a, ctx, ch, chk, roll, spell) {
   if (!chk.nat1 || !R.nat1Tempts({ attack: !!(roll && roll.isAttack), spell: !!spell, pushed: !!(roll && roll.fromPush) })) return null;
@@ -551,13 +570,13 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
   let chk = null, roll = null;
   if (u.stat) {
     const manual = c.d20 != null && c.d20 !== '', n = manual ? int(c.d20, 0) : d(ctx, 20);
-    chk = R.check({ d20: n, stat: ch.stats[u.stat], target: s.table.target, adj: tending ? 'easy' : c.adj, settings: s.settings });
+    const tb = takeBonus(ch); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: tending ? 'easy' : c.adj, settings: s.settings });
     roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual,
       targetCardId: target.id, effort: null, applied: null, void: false, at: ctx.now, item: u.name, nonDamage: true, isAttack: false,
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
-    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat), { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
+    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text, { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
     natOne(s, a, ctx, ch, chk, roll, u.spell);
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
@@ -826,12 +845,12 @@ const HANDLERS = {
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
-    const chk = R.check({ d20, stat: ch.stats[c.stat], target: s.table.target, adj, settings: s.settings });
+    const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj, settings: s.settings });
     const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
-    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20) });
+    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20) });
     const out = { rollId: roll.id }, hr = natOne(s, a, ctx, ch, chk, roll, false); if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
@@ -849,6 +868,9 @@ const HANDLERS = {
       L(s, a, ctx, ch.name + ' reads ' + u.item.name + ': d' + sides + ' shows ' + n + ', ' + sp.name + '.', { kind: 'roll', dice: diceOf(false, sides, n) });
     }
     powerBlock(s, ch, u);
+    const fx = SC.effectsOf(powerSource(u)), selfFx = !u.stat && (fx.selfHarm || fx.nextCheck);
+    if (selfFx && fx.oncePerTurn && (ch.oncePer || {})[u.item.id] === turnKey(s)) fail('invalid', 'Once per turn: ' + u.name + ' has been used this turn. A new turn allows it again.');
+    if (selfFx && fx.nextCheck && int(ch.checkBonus, 0)) fail('invalid', 'The +' + ch.checkBonus + ' from ' + (ch.checkBonusFrom || 'it') + ' is still waiting for ' + ch.name + '\'s next roll.');
     const area = u.area ? areaTargets(s, c.targetCardIds || (target ? [target] : []), a) : null;
     if (area) target = area[0].id;
     const sceneFx = powerSpend(s, ch, u);
@@ -857,18 +879,19 @@ const HANDLERS = {
     if (!u.stat) ch.pushPending = false;   /* a pushed second action with no roll is still the second action */
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
-      const chk = R.check({ d20, stat: ch.stats[u.stat], bonus: u.attackBonus || 0, target: s.table.target, adj, settings: s.settings });
+      const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj, settings: s.settings });
       const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
       if (sceneFx) sceneFx.roll = roll.id;
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
-      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
+      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
       nat = natOne(s, a, ctx, ch, chk, roll, u.spell);
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [] });
+    if (selfFx) selfEffects(s, a, ctx, ch, u, fx, priv);
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
     const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
@@ -1106,6 +1129,7 @@ const HANDLERS = {
         const gear = ((s.chars[fx.char] || {}).gear || []).find(g => g.key === fx.key);
         if (!gear || gear.uses !== fx.after) fail('conflict', 'Undo later uses of this item first.');
       }
+      if (fx.t === 'checkBonus' && int((s.chars[fx.char] || {}).checkBonus, 0) !== fx.after) fail('conflict', 'That bonus has already gone into a roll, so it cannot be taken back.');
       if (fx.t === 'turn' && ((fx.scene && fx.scene !== s.table.scene) || s.table.idx !== fx.to.idx || s.table.round !== fx.to.round)) fail('conflict', 'The turn has moved on since then, so it cannot be taken back.');
       if ((fx.t === 'delta' || fx.t === 'dying') && !s.cards[fx.card]) fail('conflict', 'That card is gone, so there is nothing to put back.');
     }
@@ -1115,6 +1139,8 @@ const HANDLERS = {
       if (fx.t === 'delta') { const card = s.cards[fx.card]; if (numbersHidden(card)) concealed = true; if (card[fx.field]) { const got = adjustField(s, card, fx.field, -fx.d); if (got !== -fx.d) short = true; } }
       else if (fx.t === 'sceneUse') { delete s.scenes[fx.scene].powers[fx.char][fx.key]; const r = s.rolls[fx.roll]; if (r) r.void = true; }
       else if (fx.t === 'turn') { s.table.idx = fx.from.idx; s.table.round = fx.from.round; }
+      else if (fx.t === 'checkBonus') { const c2 = s.chars[fx.char]; if (c2) { c2.checkBonus = fx.before; c2.checkBonusFrom = fx.beforeFrom; } }
+      else if (fx.t === 'oncePer') { const c2 = s.chars[fx.char]; if (c2 && c2.oncePer) { if (fx.before) c2.oncePer[fx.key] = fx.before; else delete c2.oncePer[fx.key]; } }
       else if (fx.t === 'roll') { const r = s.rolls[fx.roll]; if (r) { r.applied = null; r.blow = false; } }
       else if (fx.t === 'dying') s.cards[fx.card].dying = fx.before ? clone(fx.before) : null;
       else if (fx.t === 'healingUse') { const card = s.cards[fx.card]; if (fx.before) card.healingUses[fx.kind] = fx.before; else delete card.healingUses[fx.kind]; }

@@ -28,6 +28,19 @@ test('every ready-made hero can play the scene to an end, and the hero given to 
   }
 });
 
+test('a ready-made hero can start from every path (as on My heroes), keeps that path, and can play the scene to an end', () => {
+  const C = globalThis.SacramentSheetCore;
+  assert.ok(C.PATHS.length >= 20);
+  for (const path of C.PATHS) {
+    const hero = T.generate(path, seeded(7));
+    assert.equal(hero.path, path, path + ' did not keep its path');
+    assert.ok(T.KIT_HELP[T.KIT[path]] && C.PATH_ABOUT[path], path + ' has no words to explain it on the solo start screen');
+    const { s } = playThrough(path, 3);
+    assert.ok(['won', 'dead', 'fled'].includes(s.over), path + ' did not finish');
+  }
+  assert.ok(C.PATHS.includes(T.generate('random', seeded(4)).path), 'Surprise me gives a real path');
+});
+
 test('a missed attack offers a push, which costs 1 Horror; a natural 1 on the pushed attack costs 1 more', () => {
   const hero = T.generate('fighter', seeded(3));
   const s = S.start(hero, A, fixed([1]));
@@ -835,4 +848,54 @@ test('the Hard Road: one more scene, every Target 1 higher, every foe 2 more HP;
   assert.equal(hard.fight.hp.max, def.hp + S.HARD.hp + (hard.hunted ? 2 : 0));
   assert.match(S.summary(hard).road, /Hard Road/);
   assert.ok(D.earned([{ end: 'won', hard: true }]).includes('hard')); assert.ok(!D.earned([{ end: 'won' }]).includes('hard'));
+});
+
+/* ---------- path relics with listed effects (owner, 2026-11-08): the gear list's own "fx", read by sheet-core for the table and the solo game alike ---------- */
+function withRelic(id, rolls) {
+  const hero = T.generate('fighter', seeded(3)); hero.gear = [{ id: 'sword', eq: true }, { id, eq: true }]; hero.path = 'Penitent';
+  const die = fixed(rolls), s = S.start(hero, A, die); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die); return { s, die };
+}
+test("the Penitent's Chain: Free, once per turn; 1d4 that nothing reduces, its Horror, and +3 on the next roll", () => {
+  const { s } = withRelic('chain', [3]); assert.ok(s.fight);
+  const hp = s.hp.cur, horror = s.horror, use = S.choices(s, A).find((c) => /Penitent's Chain/.test(c.label));
+  assert.ok(use && !use.idle, 'the chain is offered in a fight');
+  S.act(s, A, use.cmd, fixed([3, 1]));                     // d4 shows 3; Horror (1 for a Penitent)
+  assert.equal(s.hp.cur, hp - 3); assert.ok(s.horror > horror, 'it tempts the Horror'); assert.equal(s.boost, 3);
+  assert.equal(s.fight.phase, 'hero', 'a Free use does not take the turn');
+  const again = S.choices(s, A).find((c) => /Penitent's Chain/.test(c.label)); assert.ok(again.idle, 'once per turn');
+  const before = s.hp.cur; S.act(s, A, again.cmd, fixed([3])); assert.equal(s.hp.cur, before, 'a second use this round does nothing');
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack'); S.act(s, A, attack.cmd, fixed([5, 5]));
+  const roll = s.log.filter((l) => l.outcome && l.outcome.versus === 'Target').at(-1).outcome;
+  assert.equal(roll.total, 5 + s.hero.stats.STR + 3, 'the +3 is in the attack roll'); assert.equal(s.boost, 0, 'used once');
+  assert.match(s.log.map((l) => l.t).join('\n'), /\+3 from your Penitent's Chain is in that roll/);
+  // after a miss, the Chain is still Free before the pushed roll: offered as itself, not as a push
+  const m = withRelic('chain', [3]).s; S.act(m, A, S.choices(m, A).find((c) => c.kind === 'attack').cmd, fixed([2]));
+  assert.equal(m.fight.phase, 'push'); const pc = S.choices(m, A);
+  assert.ok(!pc.some((c) => c.kind === 'push' && /Chain/.test(c.label)), 'no push for a Free use');
+  const free = pc.find((c) => /Penitent's Chain/.test(c.label)); assert.ok(free && free.cmd.startsWith('use '));
+  S.act(m, A, free.cmd, fixed([1, 1])); assert.equal(m.fight.phase, 'push', 'still free to push after it'); assert.equal(m.boost, 3);
+  // outside a fight it waits for the next check, and is not doubled
+  const hero = T.generate('fighter', seeded(3)); hero.gear = [{ id: 'chain', eq: true }];
+  const q = S.start(hero, A, fixed([2])), c = S.choices(q, A).find((x) => /Penitent's Chain/.test(x.label)); assert.ok(c && !c.idle);
+  S.act(q, A, c.cmd, fixed([2, 1])); assert.equal(q.boost, 3); assert.ok(S.choices(q, A).find((x) => /Penitent's Chain/.test(x.label)).idle);
+});
+test('the Bone Bell dazes the foe on a CHA success; the Censer of Ash makes its Effort die one size smaller for two attacks', () => {
+  let { s } = withRelic('bell', [10]); const bell = S.choices(s, A).find((c) => /Bone Bell/.test(c.label)); assert.ok(bell && !bell.idle);
+  S.act(s, A, bell.cmd, fixed([20, 1])); assert.equal(s.fight.dim, 3); assert.equal(s.fight.phase, 'foe', 'an Action takes the turn');
+  ({ s } = withRelic('bell', [10])); S.act(s, A, S.choices(s, A).find((c) => /Bone Bell/.test(c.label)).cmd, fixed([2, 1])); assert.equal(s.fight.dim, 0, 'a failed check: no daze');
+  ({ s } = withRelic('censer', [10])); const d = s.fight.damage, smaller = CORE.stepDie(d, -1); assert.ok(smaller < d);
+  S.act(s, A, S.choices(s, A).find((c) => /Censer of Ash/.test(c.label)).cmd, fixed([20, 1]));
+  assert.equal(s.fight.ash, 2); assert.match(S.cards(s, A).find((c) => c.kind === 'foe').next, new RegExp('d' + smaller + ' damage'));
+  S.act(s, A, 'foe', fixed([20, 1])); assert.match(s.log.find((l) => l.foeAttack).t + s.log.map((l) => l.t).join(' '), new RegExp('\\(d' + smaller + ' '));
+  assert.equal(s.fight.ash, 1);
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([2, 2])); S.act(s, A, 'foe', fixed([1]));
+  S.act(s, A, 'foe', fixed([1])); assert.equal(s.fight.ash || 0, 0, 'gone after the next round');
+  assert.equal(CORE.stepDie(4, -1), 4, 'never below d4');
+});
+test('every relic does something in solo: damage, healing, a tag, or effects from the gear list', () => {
+  const relics = [...G.relics, ...G.items, ...G.found].filter((x) => x.kind === 'relic');
+  for (const r of relics) {
+    const fx = CORE.effectsOf(r);
+    assert.ok(r.cat || CORE.healingOf(r) || (r.tags && r.tags.length) || fx.any || ['candle'].includes(r.id), r.name + ' has nothing the solo game can do with it');
+  }
 });

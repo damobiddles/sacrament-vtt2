@@ -2,6 +2,10 @@
 
 Moved here from `CLAUDE.md` (word for word) to keep that file short. These are the owner's dated decisions and the reasons behind how the table behaves. **Read the relevant entry before changing anything it mentions.** The hard rules that must never be broken are repeated in `CLAUDE.md` under "Standing rules from owner decisions".
 
+## Path relics with listed effects (owner, 2026-11-08)
+
+The owner asked for the Penitent's Chain, Bone Bell and Censer of Ash to work rather than only print their words. No item text or rule changed: `sheet-core.js` `effectsOf` reads each item's listed effects (`fx` in `gear.js`), with `FOE_STATUS` and `stepDie`, for the table and the solo game alike. At the table the Chain is automatic: once per turn (the turn order), its user takes 1d4 HP that nothing reduces and their next check gets +3 (shown as "Next roll +3" on their card); its line can be undone while the +3 is unspent. The Bell and Censer act on foes, which stay on the GM's cards at the table. In solo the Chain is Free (it does not take the turn), the Bell dazes the foe on a CHA success, and the Censer makes the foe's Effort die one size smaller (never below d4) for its attack this round and the next.
+
 ## Current loot reference
 
 The owner requested three spells per grimoire and preservation of all spells across additional books. `/loot/` (Current Loot Tables) is generated from `site/sheet/gear.js`, with no private GM loot notes. The 96–99 d100 range uses the Grimoires d100 sub-table. The catalogue has 178 items (145 rollable finds); all five sub-tables now use d100, while main-table category odds remain unchanged. Catalogue spells have an explicit damage/healing/esoteric effect label. Read-by-die books use `pick` for the number of spells and `pickDie` for the die; the untitled book maps a d6 evenly onto three spells. Existing item and spell IDs must stay stable. GM-designed grimoires preserve exactly three known spell IDs through their saved definitions.

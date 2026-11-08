@@ -53,8 +53,16 @@
 .start .how{margin:0;color:var(--dim);font-size:1rem;line-height:1.5}
 .start .fine,.sheet .fine{color:var(--dim);font-size:.9rem;line-height:1.45;margin-top:18px}
 .heroes{display:grid;gap:10px;grid-template-columns:1fr}
-.heroes.four{grid-template-columns:1fr 1fr}
-@media (min-width:600px){.heroes{grid-template-columns:1fr 1fr}.heroes.four{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:600px){.heroes{grid-template-columns:1fr 1fr}}
+/* the ready-made hero: a path (the phone's own picker) and one big button; side by side once there is room */
+.start .paths-how{margin-bottom:10px}
+.readymade{display:grid;gap:8px 10px;grid-template-columns:1fr;align-items:stretch}
+.readymade label{font:600 .85rem var(--label);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.readymade select{font:inherit;font-size:1.05rem;min-height:48px;padding:8px 12px;background:var(--bg2);color:var(--fg);border:1px solid var(--edge);border-radius:0}
+.readymade select:focus-visible{outline:2px solid var(--candle);outline-offset:1px}
+.pick.take{border-color:var(--candle)}
+@media (min-width:600px){.readymade{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.readymade label{grid-column:1/-1}.readymade select{min-height:64px}}
+.start .path-help{margin-top:10px}
 .pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:64px;padding:10px 14px;background:var(--bg2);color:var(--fg);border:1px solid var(--edge);cursor:pointer;font:inherit}
 .pick b{font:600 1.15rem var(--px)}
 .pick span{font-size:.92rem;color:var(--dim);line-height:1.3}
