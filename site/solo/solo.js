@@ -28,7 +28,7 @@
     if (!state || !state.over || !state.run || state.run.logged) return;
     var sum = S.summary(state); state.run.logged = today() || true;
     var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
-      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes });
+      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
   }
@@ -61,7 +61,7 @@
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
-      w.textContent = (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
+      w.textContent = (e.hard ? ' · the Hard Road' : '') + (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
       w.style.whiteSpace = 'normal'; d.textContent = e.date || '';
       var left = document.createElement('div'); left.append(b, w); li.append(left, d); box.appendChild(li);
     });
@@ -78,7 +78,7 @@
       b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; showGame(false); });
       resume.appendChild(b);
     }
-    showChronicle();
+    showChronicle(); showHard();
     var mine = $('mine'); mine.textContent = '';
     var list; try { list = window.SacramentHeroes.read().heroes || []; } catch { list = []; }
     if (!list.length) { var p = document.createElement('p'); p.className = 'empty'; p.innerHTML = 'You have no heroes saved in this browser yet. Make one in <a href="/character/">My heroes</a>, or take a ready-made hero below.'; mine.appendChild(p); }
@@ -89,6 +89,20 @@
     $('titleArt').innerHTML = ART.scene('title', null, 't');
     tune('title');
   }
+  /* The Hard Road opens after S.HARD.wins roads come home; until then the start screen says how far off it is. The choice is remembered in this browser. */
+  var HARD_KEY = 'sacrament-solo-hard';
+  function wins() { return chronicle().filter(function (e) { return e.end === 'won'; }).length; }
+  function hardOn() { if (wins() < S.HARD.wins) return false; try { return localStorage.getItem(HARD_KEY) === '1'; } catch { return false; } }
+  function showHard() {
+    var box = $('hard'), n = wins(), open = n >= S.HARD.wins; box.textContent = '';
+    if (!open) { var p = document.createElement('p'); p.className = 'fine'; p.textContent = n ? 'Come home ' + S.HARD.wins + ' times to open the Hard Road (' + n + ' of ' + S.HARD.wins + ').' : ''; if (n) box.appendChild(p); return; }
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'pick hardroad'; b.setAttribute('aria-pressed', hardOn() ? 'true' : 'false');
+    var t = document.createElement('b'), sub = document.createElement('span');
+    var draw = function () { var on = hardOn(); b.setAttribute('aria-pressed', on ? 'true' : 'false'); t.textContent = on ? 'The Hard Road: on' : 'The Hard Road: off'; sub.textContent = 'Every Target ' + S.HARD.target + ' higher, every foe ' + S.HARD.hp + ' more HP, one more scene. Tap to turn ' + (on ? 'off' : 'on') + '.'; };
+    b.append(t, sub); draw();
+    b.addEventListener('click', function () { try { localStorage.setItem(HARD_KEY, hardOn() ? '0' : '1'); } catch { /* not kept in a private window */ } draw(); });
+    box.appendChild(b);
+  }
   function pickButton(title, sub, cls) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'pick' + (cls ? ' ' + cls : '');
     var t = document.createElement('b'); t.textContent = title; var s = document.createElement('span'); s.textContent = sub || ''; b.append(t, s); return b;
@@ -98,7 +112,7 @@
   });
 
   function begin(hero) {
-    D.clear(); state = S.startRun(hero, CAMP.id, die); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
+    D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
   }
 
   /* ---------- the game screen ---------- */
@@ -212,6 +226,8 @@
     /* the foe's turn plays out by itself, a moment after yours */
     if (f && f.phase === 'foe') { box.appendChild(waiting(f.name + ' moves…')); foeSoon(); return; }
     var list = S.choices(state, ADV()), main = [], extra = [];
+    var rid = list.filter(function (c) { return c.riddle; })[0];   /* a friend's riddle: the question stays above the three answers while you think */
+    if (rid) { var q = document.createElement('p'); q.className = 'riddle'; var who = document.createElement('b'); who.textContent = rid.by + ' asks'; q.append(who, document.createTextNode(rid.riddle)); box.appendChild(q); }
     list.forEach(function (c) { ((c.kind === 'use' || (c.kind === 'spell' && !c.strike)) ? extra : main).push(c); });
     main.forEach(function (c) { box.appendChild(choiceButton(c)); });
     if (main.length % 2) box.lastChild.classList.add('wide');
@@ -487,7 +503,7 @@
     var h = state.hero;
     $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, h.vow].filter(Boolean).join(' · ');
     var nums = $('sheetNums'); nums.textContent = '';
-    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', ADV().target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
+    [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', S.sceneInfo(state, ADV()).target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });
     var ef = $('sheetEffort'); ef.textContent = ''; R.CATS.forEach(function (k) { ef.appendChild(stat(R.CAT_NAMES[k], 'd' + R.DEFAULT_DICE[k] + ' +' + (h.effort[k] || 0))); });
     gearList($('sheetEq'), true); gearList($('sheetPack'), false);
@@ -496,8 +512,8 @@
   function stat(k, v) { var s = document.createElement('span'), b = document.createElement('b'); b.textContent = k; s.append(b, String(v)); return s; }
   function gearList(ul, eq) {
     ul.textContent = '';
-    var any = false;
-    (state.hero.gear || []).forEach(function (g) {
+    var any = false, now = state.over ? [] : S.choices(state, ADV()).filter(function (c) { return !c.idle && /^(use|push) \d+/.test(c.cmd || ''); });
+    (state.hero.gear || []).forEach(function (g, i) {
       var it = C.itemOf(g); if (!it || !!g.eq !== eq) return; any = true;
       var li = document.createElement('li'), img = document.createElement('img'), div = document.createElement('div'), sm = document.createElement('small');
       img.src = ART.icon(it.kind); img.alt = '';
@@ -505,10 +521,21 @@
       sm.textContent = it.does || it.flavour || ''; div.appendChild(sm);
       if (it.kind === 'grimoire') C.spellsOf(it).forEach(function (sp) {
         var p = document.createElement('p'), b = document.createElement('b'); p.className = 'spell'; b.textContent = sp.name + (sp.roll ? ' (' + sp.roll + ')' : '') + ': ';
-        p.append(b, document.createTextNode(sp.does || '')); div.appendChild(p);
+        p.append(b, document.createTextNode(sp.does || '')); useNow(p, i, sp.id); div.appendChild(p);
       });
+      else useNow(div, i, '');
       li.append(img, div); ul.appendChild(li);
     });
+    /* the sheet is for looking, and when something on it can be used this moment, it says so with a button that does it (the owner's tick, 2026-11-07) */
+    function useNow(el, i, spell) {
+      now.filter(function (c) { var p = c.cmd.split(' '); return +p[1] === i && (p[2] && p[2] !== 'ultimate' ? p[2] : '') === spell; }).forEach(function (c) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn usenow' + (c.useful ? ' useful' : '');
+        b.textContent = c.kind === 'push' ? 'Push now' : c.kind === 'attack' ? 'Attack now' : c.kind === 'spell' ? 'Cast now' : 'Use now';
+        if (c.horror) b.textContent += ' (+' + c.horror + ' Horror)';
+        b.addEventListener('click', function () { $('sheet').close(); run(c.cmd); });
+        el.appendChild(b);
+      });
+    }
     if (!any) { var li = document.createElement('li'); li.className = 'none'; li.textContent = 'Nothing.'; ul.appendChild(li); }
   }
 

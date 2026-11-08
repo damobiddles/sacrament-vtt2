@@ -349,6 +349,8 @@
 
 /* ---------- playing from the picture (2026-11-07) ---------- */
 .log .whole{display:none}
+.choices .riddle{grid-column:1/-1;margin:0;padding:8px 12px;font:1.05rem/1.4 var(--tty);color:#f3ead6;border-left:3px solid #8fd18a;background:#0b0a08}
+.choices .riddle b{display:block;font:600 .72rem var(--label);letter-spacing:.14em;text-transform:uppercase;color:#8fd18a}
 .choices .waiting{grid-column:1/-1;margin:0;min-height:44px;display:flex;align-items:center;padding:6px 12px;font:600 1rem var(--px);color:var(--dim);border:1px dashed var(--edge)}
 .caption{position:absolute;z-index:4;left:8px;right:8px;top:10px;margin:0 auto;max-width:46ch;display:block;padding:8px 12px;text-align:left;font:1rem/1.35 var(--tty);color:#f3ead6;background:#0b0a08e8;border:0;border-left:3px solid var(--candle);box-shadow:0 4px 18px #000a;cursor:pointer;animation:solo-cap .35s ease-out both}
 .caption b{display:block;font:600 1.15rem/1.2 var(--display);color:var(--candle)}
@@ -392,3 +394,12 @@
 @media (prefers-reduced-motion:reduce){#dice .reveal-result{transition:none}}
 /* words on the picture and a dice card at once: the card drops to the foot of the picture so both can be read */
 .frame:has(.caption:not(.gone)) #dice{align-items:flex-end}
+
+/* Use now on the hero sheet: a small button under the thing it uses */
+.sheet .usenow{display:flex;width:max-content;max-width:100%;margin:8px 0 2px;min-height:36px;padding:4px 12px;font-size:.85rem}
+.sheet .usenow.useful{box-shadow:0 0 0 1px #e0c27a,0 0 10px #e0c27a66}
+
+/* the Hard Road switch on the start screen */
+.hard{margin:8px 0}.hard:empty{display:none}
+.pick.hardroad{width:100%;border-color:#c4786a}
+.pick.hardroad[aria-pressed="true"]{background:#3a1712;box-shadow:inset 0 0 0 1px #eca99a}

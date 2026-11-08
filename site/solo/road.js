@@ -49,8 +49,21 @@
       meet: 'Three riders block the road, and the one in front wears a black hat and a silver pin: Rachel, Witch-finder General. She looks at you for a long time before she speaks.',
       run: function (api) { api.say('"You are not what I am hunting," says Rachel, Witch-finder General, at last. "But you will meet it before I do." She presses a stoppered flask into your hand. "Oil from the chrism at Saint Aubrel\'s. On the blade, not on yourself."', 'npc'); api.give('oil', 'Rachel, Witch-finder General gives you'); } },
     { id: 'simon', name: 'Simon the Scholar', label: 'Hear what Simon the Scholar has read',
+      /* his help is earned with a riddle: the first answer is the right one (the game shuffles them), and a wrong one costs nothing but his help */
+      riddles: [
+        { q: 'The more of me you take, the more you leave behind. What am I?', a: ['Footsteps', 'Coins', 'Candles'] },
+        { q: 'I am lit to keep the dark away, and the dark eats me all the same. What am I?', a: ['A candle', 'A prayer', 'A lantern\'s glass'] },
+        { q: 'I am rung for every dead man and I never hear a word of it. What am I?', a: ['A bell', 'A priest', 'A raven'] },
+        { q: 'The poor have it, the rich want for it, and if you eat it you die. What is it?', a: ['Nothing', 'Salt', 'Bread'] },
+        { q: 'I have a spine and no bones, and they lock me away for what I know. What am I?', a: ['A book', 'A heretic', 'A key'] },
+        { q: 'I stand at the head of every sleeper and I never wake one. What am I?', a: ['A gravestone', 'A candle', 'A confessor'] },
+        { q: 'The man who makes me sells me, the man who buys me never uses me, and the man who uses me never knows. What am I?', a: ['A coffin', 'A shroud', 'An indulgence'] },
+        { q: 'I walk the whole road beside you and leave you the moment the light does. What am I?', a: ['Your shadow', 'Your sin', 'Your name'] }
+      ],
+      ask: function (q) { return '"Everything on this road is written down somewhere," says Simon the Scholar, a finger in his book. "First, a riddle: ' + q + '"'; },
+      wrong: function (right) { return 'Simon the Scholar laughs, not unkindly. "' + right + '. Never mind. Some of us read, and some of us walk." He goes back to his book and does not look up again.'; },
       meet: 'Under a hawthorn sits Simon the Scholar, a thin man with ink to the elbows and a satchel of borrowed books, reading by what is left of the light.',
-      run: function (api) { api.story('forewarned', true); api.say('"Everything on this road has been written down by someone," says Simon the Scholar, turning pages. "Here. This is what you will meet next, and here is where it is weak."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); } },
+      run: function (api) { api.story('forewarned', true); api.say('"Just so," says Simon the Scholar, turning pages. "Here. This is what you will meet next, and here is where it is weak."', 'npc'); api.say('You know the next foe\'s ways: your first attack against it will be Easy.', 'note'); } },
     { id: 'gussetweasel', name: 'Gussetweasel, the Necromancer', label: 'Admire the invisible bats of Gussetweasel, the Necromancer',
       meet: 'A man in a moth-eaten cloak is bowing to an empty sky: Gussetweasel, the Necromancer, with his amazing invisible bats. He swears there are a great many of them.',
       run: function (api) {
