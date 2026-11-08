@@ -8,6 +8,7 @@ Everything on the home page and its pages (https://playsacrament.com/, /the-game
 | About the game | `the-game.md` |
 | The setting (your text goes in the marked boxes) | `setting.md` |
 | The how-to-play guide | `how-to-play.md` |
+| Play online (/play-online/): the way into the table | `play-online.md`; the four cards (Join, Run, My heroes, Your tables) are in `scripts/build-landing.mjs` (`playOnline`) |
 | Play in person (/play-in-person/): what to bring, printables, the adventure | `play-in-person.md`; the download cards and the "who keeps track" table are in `scripts/build-landing.mjs` (`playInPerson`), the files in `site/downloads/` |
 | The feedback page | `feedback.md` |
 | The support page | `support.md` |
@@ -36,4 +37,4 @@ The Feedback page uses Netlify Forms (`vtt-feedback`). The owner reads messages 
 
 Current VTT rules are in `player-guide.md` and `gm-guide.md`, published at `/player-guide/` and `/gm-guide/`. The first-game checklist links both. Update these alongside rules or control changes; distinguish automatic mechanics from GM rulings. They are public pages and must never include private setting material.
 
-The website navigation and footer have one definition in `site/nav.js`, shared by the landing builder and older public pages. `resources.md` and the resource cards in `build-landing.mjs` produce `/resources/`. The builder also writes `sitemap.xml` from its pages and posts; never add retired redirects or private tools to it. Current news stays at `/news/`; `/blog/` remains a legacy redirect.
+The website navigation and footer have one definition in `site/nav.js`, shared by the landing builder and older public pages. The menu (owner's decision, 8 November 2026) is: The game, The setting, Start here, Rules, Play online, Play solo, Play in person, Resources. The logo goes home; News and Feedback are in the footer and on the home page. The four rules pages (Rules, Player guide, GM guide, Rules updates) share one row of tabs, set by `RULES_TABS` in `build-landing.mjs`. `resources.md` and the resource cards in `build-landing.mjs` produce `/resources/`. The builder also writes `sitemap.xml` from its pages and posts; never add retired redirects or private tools to it. Current news stays at `/news/`; `/blog/` remains a legacy redirect.

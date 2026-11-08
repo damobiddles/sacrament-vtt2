@@ -22,7 +22,7 @@ test('feedback is a private native form with spam protection and a confirmation 
     assert.equal(b.r.status, 0, b.r.stderr);
     assert.equal(existsSync(join(b.out, 'newsletter/index.html')), false);
     const home = readFileSync(join(b.out, 'index.html'), 'utf8');
-    assert.match(home, /href="\/feedback\/">Feedback/);
+    assert.match(home, /href="\/feedback\/">Share feedback/);   // feedback left the menu (owner, 8 Nov 2026) but stays on the home page and in the footer
     assert.doesNotMatch(home, /href="\/newsletter\//);
     const feedback = readFileSync(join(b.out, 'feedback/index.html'), 'utf8');
     assert.match(feedback, /<form[^>]*name="vtt-feedback"[^>]*method="POST"[^>]*action="\/feedback\/thanks\/"/);

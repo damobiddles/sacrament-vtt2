@@ -1,5 +1,5 @@
 ---
-title: Your first game
+title: Start here
 summary: A short route from your first hero to your first turn, with separate rules guides for players and GMs.
 ---
 Sacrament is a conversation: the GM describes a situation, the players say what their heroes do, and dice settle uncertain outcomes. You can learn as you play. No account or installation is needed.

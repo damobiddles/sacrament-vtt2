@@ -48,16 +48,18 @@ test('the navigation bar is the same on every page and marks where you are', asy
     const links = await page.$$eval('.ic-nav a', (as) => as.map((a) => a.textContent.trim() + '>' + a.getAttribute('href')));
     first = first || links;
     expect(links, path).toEqual(first);
-    if (!path.startsWith('/privacy') && !path.startsWith('/terms')) await expect(page.locator('.ic-nav a[aria-current=page]'), path).toHaveCount(1);
+    /* Home, news, feedback and the legal pages are not in the menu, so they mark nothing; the logo goes home. */
+    const inMenu = !['/', '/news/', '/feedback/', '/privacy/', '/terms/'].includes(path);
+    await expect(page.locator('.ic-nav a[aria-current=page]'), path).toHaveCount(inMenu ? 1 : 0);
   }
-  expect(first.join(' ')).toContain('Home>/');
+  expect(first[0]).toBe('Sacrament RPG>/');
 });
 
 test('"Join a game" opens the join form first, ready for the table code, and a player can really join', async ({ browser }) => {
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm);
   await ann.goto('/');
-  await ann.getByRole('link', { name: 'Join a game' }).click();
+  await ann.locator('.ic-cta').getByRole('link', { name: 'Join a game' }).click();
   await expect(ann).toHaveURL(/\/vtt\/\?join$/);
   await expect(ann.locator('#joinForm')).toBeVisible();
   const joinBox = await ann.locator('#joinForm').boundingBox(), makeBox = await ann.locator('#makeForm').boundingBox();
@@ -73,7 +75,7 @@ test('"Join a game" opens the join form first, ready for the table code, and a p
 test('"Run a game" opens the make-a-table form first, and a GM can really make a table', async ({ browser }) => {
   const gm = await newPage(browser);
   await gm.goto('/');
-  await gm.getByRole('link', { name: 'Run a game' }).click();
+  await gm.locator('.ic-cta').getByRole('link', { name: 'Run a game' }).click();
   await expect(gm).toHaveURL(/\/vtt\/\?run$/);
   await expect(gm.locator('#joinForm')).toBeVisible(); await expect(gm.locator('#makeForm')).toBeVisible();   // measure only once both forms are drawn
   const joinBox = await gm.locator('#joinForm').boundingBox(), makeBox = await gm.locator('#makeForm').boundingBox();
@@ -166,7 +168,7 @@ for (const [w, h] of [[360, 640], [390, 780]]) {
       expect(box.x + box.width, name).toBeLessThanOrEqual(w);
     }
     // both buttons are visible without scrolling on the smallest phone
-    const lowest = await page.getByRole('link', { name: 'Run a game' }).boundingBox();
+    const lowest = await page.locator('.ic-cta').getByRole('link', { name: 'Run a game' }).boundingBox();
     expect(lowest.y + lowest.height).toBeLessThanOrEqual(h);
   });
 }
@@ -179,16 +181,16 @@ test('the home page has no sign-up form and no link to one, and still has its bu
   await expect(page.locator('#join')).toHaveCount(0);
   await expect(page.getByText('Sign up for playtests')).toHaveCount(0);
   await expect(page.locator('a[href*="#join"], a[href*="thanks"]')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Join a game' })).toHaveAttribute('href', '/vtt/?join');
-  await expect(page.getByRole('link', { name: 'Run a game' })).toHaveAttribute('href', '/vtt/?run');
-  await expect(page.getByRole('link', { name: 'Build and manage characters' })).toHaveAttribute('href', '/character/');
+  await expect(page.locator('.ic-cta').getByRole('link', { name: 'Join a game' })).toHaveAttribute('href', '/vtt/?join');
+  await expect(page.locator('.ic-cta').getByRole('link', { name: 'Run a game' })).toHaveAttribute('href', '/vtt/?run');
+  await expect(page.locator('.ic-cta').getByRole('link', { name: 'My heroes', exact: true })).toHaveAttribute('href', '/character/');
 });
 
-test('the "Build and manage characters" button opens the character sheet page, and fits a phone @phone', async ({ browser }) => {
+test('the "My heroes" button opens the character sheet page, and fits a phone @phone', async ({ browser }) => {
   const page = await newPage(browser, { width: 390, height: 844 });
   await page.goto('/');
   const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); expect(wide).toBeLessThanOrEqual(1);
-  await page.getByRole('link', { name: 'Build and manage characters' }).click();
+  await page.locator('.ic-cta').getByRole('link', { name: 'My heroes', exact: true }).click();
   await expect(page).toHaveURL(/\/character\/$/);
   await expect(page.locator('h1')).toHaveText('My heroes');
   await expect(page.locator('#sheetHere')).toContainText('no heroes saved');   // the page's own script has started

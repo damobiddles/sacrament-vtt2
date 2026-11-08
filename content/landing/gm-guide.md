@@ -4,7 +4,7 @@ summary: Prepare a first session, run encounters and understand what the Sacrame
 ---
 This is a public guide to the **current VTT**, checked against the application on 1 November 2026. It contains controls and rules guidance, not private setting material. Read the [player guide](/player-guide/) for character creation, checks, Effort and player actions.
 
-[First game checklist](/how-to-play/) · [Run a table](/vtt/?run) · [Player guide](/player-guide/) · [Current Loot Tables](/loot/) · [Rules updates](/rules/updates/)
+[Start here](/how-to-play/) · [Run a table](/vtt/?run) · [Player guide](/player-guide/) · [Current Loot Tables](/loot/) · [Rules updates](/rules/updates/)
 
 ## Prepare your first table
 

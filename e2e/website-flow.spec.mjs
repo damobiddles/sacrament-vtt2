@@ -4,12 +4,15 @@ test.setTimeout(60000);
 
 test('public pages share one navigation and identify their section', async ({ browser }) => {
   const page = await newPage(browser); let expected;
-  for (const path of ['/', '/how-to-play/', '/player-guide/', '/gm-guide/', '/the-game/', '/setting/', '/resources/', '/loot/', '/rules/', '/brand/', '/adventure/', '/play-in-person/', '/adventures/the-guest-at-greave/', '/news/', '/feedback/']) {
+  /* Pages outside the menu (home, news, feedback) mark no menu item; every other page marks its own section. */
+  const sections = { '/': null, '/how-to-play/': 'Start here', '/player-guide/': 'Rules', '/gm-guide/': 'Rules', '/rules/updates/': 'Rules', '/the-game/': 'The game', '/setting/': 'The setting', '/resources/': 'Resources', '/loot/': 'Resources', '/scenes/': 'Resources', '/rules/': 'Rules', '/brand/': 'Resources', '/adventure/': 'Resources', '/play-online/': 'Play online', '/play-in-person/': 'Play in person', '/adventures/the-guest-at-greave/': 'Play in person', '/news/': null, '/feedback/': null };
+  for (const [path, section] of Object.entries(sections)) {
     await page.goto(path);
     await expect(page.locator('.ic-nav')).toHaveCount(1);
     const links = await bounded(page.locator('.ic-nav ul a').evaluateAll(as => as.map(a => [a.textContent.trim(), a.getAttribute('href')])), 10000, 'reading main navigation');
     expected ||= links; expect(links, path).toEqual(expected);
-    await expect(page.locator('.ic-nav ul [aria-current=page]')).toHaveCount(1);
+    if (section) await expect(page.locator('.ic-nav ul [aria-current=page]'), path).toHaveText(section);
+    else await expect(page.locator('.ic-nav ul [aria-current=page]'), path).toHaveCount(0);
     await expect(page.locator('.ic-foot')).toHaveCount(1);
   }
   expect(page.errors).toEqual([]);
@@ -75,7 +78,7 @@ test('new visitors can follow the game, first-session and resource journeys', as
   }
   await bounded(page.evaluate(() => window.scrollTo(0, 0)), 5000, 'returning to resources heading');
   await page.screenshot({ path: info.outputPath('resources.png'), fullPage: true });
-  await page.locator('.ic-nav').getByRole('link', { name: 'Feedback', exact: true }).click();
+  await page.locator('.ic-foot').getByRole('link', { name: 'Send feedback', exact: true }).click();
   await expect(page.locator('form[name=vtt-feedback]')).toHaveAttribute('action', '/feedback/thanks/');
   await expect(page.locator('main')).toContainText('does not ask for contact details');
   await page.screenshot({ path: info.outputPath('feedback.png'), fullPage: true });
