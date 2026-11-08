@@ -220,6 +220,27 @@
     var own = !sp && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
     return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? (own && Number.isInteger(src.horror) ? Math.max(1, src.horror - 1) : src.horror) : 0, onPath: own };
   }
+  /* What an item's listed effects ("fx" in the gear list) do when it is used, in plain pieces that the table and the solo game both read, so neither has its own copy:
+     selfHarm: the die of damage the user takes, which nothing reduces (the Penitent's Chain); nextCheck: added to the user's next check;
+     foe: a status put on foes on a success (FOE_STATUS says what each means), until: how long it lasts; free: a Free use, which does not take the action;
+     oncePerTurn: its own words limit it to once per turn. */
+  var FOE_STATUS = {
+    dazed: { name: 'Dazed', attack: -3, text: 'its next attack rolls 3 less' },
+    censer: { name: 'Choked by ash', effortStep: -1, text: 'its Effort die is one size smaller (never below d4) until the end of the next round' }
+  };
+  function effectsOf(src) {
+    var out = { selfHarm: 0, nextCheck: 0, foe: '', until: '', free: !!(src && src.use === 'Free'), oncePerTurn: /once per turn/i.test((src && src.does) || ''), any: false };
+    ((src && src.fx) || []).forEach(function (f) {
+      if (f.on !== 'use') return;
+      if (f.do === 'harm' && /^1d\d+$/.test(f.dice || '')) out.selfHarm = int(f.dice.slice(2), 0);
+      else if (f.do === 'buff' && f.to === 'check' && f.target === 'self') out.nextCheck += int(f.n, 0);
+      else if (f.do === 'status' && f.target === 'foes' && FOE_STATUS[f.tag]) { out.foe = f.tag; out.until = f.until || 'turn'; }
+    });
+    out.any = !!(out.selfHarm || out.nextCheck || out.foe);
+    return out;
+  }
+  /* An Effort die stepped down by n sizes, never below d4 (the Censer of Ash). */
+  function stepDie(size, n) { var sizes = [4, 6, 8, 10, 12], k = sizes.indexOf(int(size, 0)); return k < 0 ? int(size, 0) : sizes[Math.max(0, Math.min(sizes.length - 1, k + int(n, 0)))]; }
   /* Which spell a grimoire read by the die casts when the die shows n: the faces are shared out in the order the spells are listed (a d6 over three spells:
      1-2 the first, 3-4 the second, 5-6 the third, as the book's own words say). One rule for the table, the solo game and the printed sheet. */
   function pickSpell(u, n) { var sides = int(u.pickDie || u.pick, 1), k = clamp(int(n, 1), 1, sides); return u.spells[Math.floor((k - 1) * int(u.pick, 1) / sides)]; }
@@ -430,5 +451,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, PATH_ABOUT: PATH_ABOUT, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, PATH_ABOUT: PATH_ABOUT, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, effectsOf: effectsOf, FOE_STATUS: FOE_STATUS, stepDie: stepDie, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });
