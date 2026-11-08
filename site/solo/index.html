@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/solo/solo.css">
 </head>
-<body class="solo">
+<body class="solo" data-no-nav>
 <header class="bar">
   <a class="home" href="/"><img src="/favicon.svg" alt="" width="24" height="24">Sacrament RPG</a>
   <span class="where">Solo</span>
@@ -80,6 +80,7 @@
   <div class="sheet-in">
     <h2 id="sheetName"></h2>
     <p id="sheetCalling" class="calling"></p>
+    <p id="sheetPath" class="fine" hidden></p>
     <div id="sheetNums" class="nums"></div>
     <h3>Scores</h3><div id="sheetStats" class="stats"></div>
     <h3>Effort</h3><div id="sheetEffort" class="stats"></div>
@@ -134,6 +135,7 @@
   </div>
 </dialog>
 
+<script src="/nav.js"></script>
 <script src="/vtt/rules.js"></script>
 <script src="/sheet/gear.js"></script>
 <script src="/sheet/sheet-core.js"></script>

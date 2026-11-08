@@ -14,10 +14,10 @@
   /* What gives light in a dark place just by being carried (the solo game's GM call: an ordinary flame is lit as you go). Decided by id, from the gear list.
      The Black Candle and the Drowned Saint's Lantern are not here: their own words say they must be lit, and lighting them costs Horror. The Drowned Lantern
      lights through its "light" tag; the Black Candle ("Light it for the rest of the scene. You see in the dark") is LIT_BY_USE. */
-  var LIGHTS = ['lantern', 'stubs', 'lastrites'], LIT_BY_USE = ['candle'];
+  var LIGHTS = ['lantern', 'lastrites'], LIT_BY_USE = ['candle'];
   /* Tallow Candles: "Light a candle (3 uses): it gives light to Near for the rest of the scene." In a dark place with no other light one is lit, and a use spent,
-     once per scene (the owner's call, 2026-11-07). */
-  var CANDLES = 'candles';
+     once per scene (the owner's call, 2026-11-07). Candle stubs have the same words (owner decision 2026-11-08: look-alike finds match their twins). */
+  var CANDLES = ['candles', 'stubs'];
 
   /* ---------- a new game ---------- */
   /* hero: a hero from My heroes (or the generator). The game plays a copy: the saved hero is never changed. */
@@ -101,11 +101,11 @@
   function itemsCarried(s) { return (s.hero.gear || []).map(function (g) { return C.itemOf(g); }).filter(Boolean); }
   function carried(s, test) { return itemsCarried(s).filter(function (it) { return typeof test === 'function' ? test(it) : (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); })[0] || null; }
   function lit(s) { return !!s.flags.lit || !!s.flags.candle || !!carried(s, LIGHTS); }
-  function candleGear(s) { return (s.hero.gear || []).filter(function (g) { var it = C.itemOf(g); return it && it.id === CANDLES && (g.uses == null ? it.uses : g.uses) > 0; })[0] || null; }
+  function candleGear(s) { return (s.hero.gear || []).filter(function (g) { var it = C.itemOf(g); return it && CANDLES.indexOf(it.id) >= 0 && (g.uses == null ? it.uses : g.uses) > 0; })[0] || null; }
   function lightCandle(api) {
     var s = api.s, g = candleGear(s); if (!g || lit(s)) return false;
     var it = C.itemOf(g); g.uses = Math.max(0, (g.uses == null ? it.uses : g.uses) - 1); s.flags.candle = true;
-    api.say('You light a candle from your ' + it.name.toLowerCase() + ' (' + g.uses + ' left). It will burn for the rest of the scene.', 'note'); return true;
+    api.say('You light ' + (it.id === 'stubs' ? 'a candle stub' : 'a candle from your ' + it.name.toLowerCase()) + ' (' + g.uses + ' left). It will burn for the rest of the scene.', 'note'); return true;
   }
   var DARK_LINE = 'It is dark here. Without a light, a WIS check to search or notice is Hard.';
   /* Dark: a dark place with no light. A place whose shape the hero has learned (Echo Bell) no longer makes those checks Hard, though it stays dark. */
@@ -391,7 +391,7 @@
       chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
       if (chk.nat1 && R.nat1Tempts({ attack: isDamage, spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
-    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror.'); }
+    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     var ok = !chk || chk.success;
@@ -429,7 +429,7 @@
     if (h.tend && s.dying) { api.say('A dying hero cannot tend themselves.', 'note'); return; }
     api.say('You use ' + (u.spell ? u.spell.name : yours(u.item.name)) + '.', 'act');
     var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed }); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
-    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror.'); }
+    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     if (!chk || chk.success) {

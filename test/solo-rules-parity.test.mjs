@@ -149,7 +149,7 @@ test('tallow candles: lighting one in a dark scene spends one of its three uses,
 
 test('Ward protects an ally: alone it has no use, in its own words and on the Rules page', () => {
   for (const id of ['ward']) assert.match(G.spells.find((x) => x.id === id).does, /One ally/);
-  assert.match(C.item('wardmedal').does, /An ally/);
+  assert.match(C.item('wardmedal').does, /\ban ally\b/i);
   assert.match(RULES, /protect \*\*an ally\*\*, such as Ward, have no use alone/);
   const { s, adv } = soloGame(['seventhpenance']); S.act(s, adv, 'do fight', fixed([10]));
   const ward = choice(s, adv, /^Cast Ward/); assert.ok(ward && ward.idle, 'Ward shows "No use here"');
@@ -176,5 +176,9 @@ test('a relic of the hero\'s own path costs 1 less Horror (never below 1), the s
     const c = choice(s, adv, /^Attack: /); assert.ok(c, k.gear + ' is offered');
     S.act(s, adv, c.cmd, fixed([10, 10, 10]));
     assert.equal(atTable, k.expect, 'table, ' + k.gear + ' / ' + (k.path || 'no path')); assert.equal(s.horror, atTable, 'solo, ' + k.gear + ' / ' + (k.path || 'no path'));
+    // Audit 2026-11-08: the table's Activity says "(own path: 1 less Horror)"; the solo story says so too, so the player sees why it cost less.
+    const onPath = !!k.path && C.item(k.gear).path === k.path, told = s.log.map((e) => e.t).join(' | ');
+    assert.equal(/your own path: 1 less/.test(told), onPath, 'solo says the path discount only when it applies: ' + k.gear + ' / ' + (k.path || 'no path'));
+    assert.equal(/own path: 1 less Horror/.test(r.body.state.log.map((e) => e.text).join(' | ')), onPath, 'the table says it only when it applies');
   }
 });

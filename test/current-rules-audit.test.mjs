@@ -40,8 +40,11 @@ test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // Owner decision 2026-11-08 (decision card): every relic belongs to a path; the 28 older relics cost 1 more Horror, 1 less on their own path.
  // Owner request 2026-11-08 (later): ten more paths (twenty in all) and 100 path relics, five per path, on the Path relics table.
  // Owner-approved 2026-11-06: story spells and items carry tags (what each is good for, with a default effect), plus the tag list.
+ // Owner decision 2026-11-08 (decision card): eleven plain look-alike finds work like their twins (candle stubs, hemp rope, flint and steel, spikes and mallet,
+ // hard bread, chalk sticks, Gravedigger's spade as a weapon, iron-shod staff, silvered dagger, sallet, jerkin).
+ // Audit 2026-11-08: flavour lines added to the six older relics that had none (words only; every mechanic is unchanged).
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'fbf553f322526c36ab0502019559611243e53dd923aa87e64e04d89f4cafa0d9');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'9ce7c15fc27196c793ce268865b6f441a63d3a02bdff2f874d556032caaa5502');
 });

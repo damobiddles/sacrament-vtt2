@@ -10,6 +10,8 @@
   var NPC_NAMES = (window.SacramentSoloCameos || []).map(function (c) { return c.name; });
   var SAVE = 'sacrament-solo-v1';
   var $ = function (id) { return document.getElementById(id); };
+  /* The site footer (nav.js), as on every public page: it ends the choose-a-hero screen and is out of the way while a road is played. */
+  if (window.SacramentSite && !document.querySelector('body > footer')) $('game').insertAdjacentHTML('afterend', window.SacramentSite.footer());
   var state = null, shown = 0, lastArt = '', dying = false, moreOpen = false, cardDamage = false, foeTimer = 0, cardTimer = 0, whole = false;
 
   /* Dice: the browser's own random source. (At the table the server rolls; alone, this page is the table.) */
@@ -511,6 +513,8 @@
   $('heroBtn').addEventListener('click', function () {
     var h = state.hero;
     $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, C.pathOf(h) ? 'Path: ' + C.pathOf(h) : '', h.vow].filter(Boolean).join(' · ');
+    /* Paths are explained wherever they come up (owner, 2026-11-08): the same words as the sheet at the table and on My heroes. */
+    var path = C.pathOf(h); $('sheetPath').hidden = !path; $('sheetPath').textContent = path ? (C.PATH_ABOUT[path] ? C.PATH_ABOUT[path] + ' ' : '') + 'A relic of your own path costs 1 less Horror to use.' : '';
     var nums = $('sheetNums'); nums.textContent = '';
     [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', S.sceneInfo(state, ADV()).target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });

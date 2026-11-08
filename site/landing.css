@@ -25,9 +25,6 @@ blockquote.todo::first-line{font-weight:700}
 .ic-form .btn{justify-self:start;cursor:pointer;border:0}
 .ic-form .msg{margin:0;min-height:1.4em}
 .ic-form .msg.bad{color:var(--blood-hi)}
-.ic-foot{margin-top:40px;padding:30px 0 40px;border-top:3px double var(--line);background:var(--bg2);color:var(--dim);font-size:.96rem}
-.ic-foot p{margin:6px 0;max-width:none}
-.ic-foot b{font-family:var(--display);color:var(--fg);font-size:1.1rem}
 @media (max-width:600px){
   .ic-hero{padding-top:26px;padding-bottom:26px}
   .ic-hero h1{font-size:clamp(2.6rem,13vw,4rem);margin:6px 0 10px}
@@ -139,11 +136,6 @@ blockquote.todo::first-line{font-weight:700}
 .ic-kofi{display:flex;justify-content:flex-end;white-space:nowrap}
 .site-skip{position:fixed;left:16px;top:8px;z-index:10000;transform:translateY(-180%);padding:12px 18px;background:var(--bg2);color:var(--fg);border:2px solid var(--candle)}
 .site-skip:focus{transform:none}
-.site-footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px;padding-bottom:24px}
-.site-footer-grid nav{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.site-footer-grid nav a{padding-block:3px;line-height:1.5}
-.site-footer-grid p{max-width:30ch}
-.site-legal{padding-top:18px;border-top:1px solid var(--line)}
 .site-start,.site-next{grid-column:1/-1;padding:24px;border:1px solid var(--line);background:var(--bg2)}
 .site-next{margin-top:28px}
 .site-start h2,.site-next h2{margin-top:0;margin-bottom:20px}
@@ -163,7 +155,7 @@ blockquote.todo::first-line{font-weight:700}
 .role-paths a{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border:1px solid var(--edge);background:var(--bg2)}
 .rules-tabs a[aria-current=page]{color:var(--candle);border-color:var(--candle);text-decoration:none}
 @media(max-width:1050px){.ic-nav-inner{grid-template-columns:1fr auto}.ic-nav ul{grid-column:1/-1;grid-row:2;justify-content:flex-start}.ic-kofi{grid-column:2;grid-row:1}}
-@media(max-width:650px){.site-footer-grid,.site-paths{grid-template-columns:minmax(0,1fr)}.site-start,.site-next{padding:18px}.ic-nav-inner{gap:6px}.ic-nav ul{gap:2px}.ic-nav a{font-size:.72rem;padding:9px 8px}.ic-nav .ic-brand{font-size:1rem}.ic-kofi .kofi-button{font-size:.72rem;padding:8px}.ic-brand img{width:24px;height:24px}}
+@media(max-width:650px){.site-paths{grid-template-columns:minmax(0,1fr)}.site-start,.site-next{padding:18px}.ic-nav-inner{gap:6px}.ic-nav ul{gap:2px}.ic-nav a{font-size:.72rem;padding:9px 8px}.ic-nav .ic-brand{font-size:1rem}.ic-kofi .kofi-button{font-size:.72rem;padding:8px}.ic-brand img{width:24px;height:24px}}
 
 .ic-kofi .kofi-button{gap:8px}.kofi-cup{display:block;flex:none;filter:invert(1)}
 
@@ -185,3 +177,5 @@ blockquote.todo::first-line{font-weight:700}
 .jobs{width:100%;border-collapse:collapse}
 .jobs th,.jobs td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
 .jobs th{color:var(--candle);font:600 .8rem/1.35 var(--label);letter-spacing:.07em;text-transform:uppercase}
+/* The tag table on /rules/ has four columns: on a phone each tag becomes a small block with its labels, so it fits the screen instead of scrolling sideways. */
+@media(max-width:600px){.tag-reference thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.tag-reference,.tag-reference tbody,.tag-reference tr,.tag-reference th,.tag-reference td{display:block}.tag-reference tr{padding:12px 0;border-bottom:1px solid var(--line)}.tag-reference th,.tag-reference td{border:0;padding:2px 0}.tag-reference th[scope=row]{font-size:1.1rem}.tag-reference td::before{content:attr(data-label) ": ";font-weight:600;color:var(--fg)}}

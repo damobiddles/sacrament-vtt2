@@ -1,5 +1,6 @@
 /* Sacrament RPG solo: the screen. Phone first (one column), two columns from tablet width. Colours come from theme.css. */
 .solo.playing{height:100dvh;overflow:hidden}
+.solo.playing .ic-foot{display:none}
 .solo{--px:var(--label);--tty:var(--body);min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
 .solo .bar{display:flex;align-items:center;gap:10px;padding:max(6px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--bg2);min-height:48px}
 .solo .home{font:600 1rem var(--px);color:var(--candle);text-decoration:none;letter-spacing:.02em}
