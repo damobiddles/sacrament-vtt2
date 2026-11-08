@@ -99,7 +99,7 @@
   });
 
   function renderPick() {
-    $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + (h.restoredFrom ? ' · restored copy' : '') + '</option>'; }).join('') || '<option value="">(none yet)</option>';
+    $('heroSel').innerHTML = S.heroes.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === S.current ? ' selected' : '') + '>' + esc(h.name) + (h.restoredFrom ? ' · restored copy' : '') + (C.marksOf(h) >= window.SacramentRules.ADVANCE.marks ? ' · ready to advance' : '') + '</option>'; }).join('') || '<option value="">(none yet)</option>';
     $('delHero').disabled = !cur();
     $('newHero').disabled = !H.canAdd(S);
     renderStorage();

@@ -66,11 +66,16 @@ Non-healing spells cost 1 Horror even if the check fails. A natural 1 and a Push
 
 Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, conditional bonuses, esoteric magic (see "when in doubt" above) require GM adjudication unless the controls explicitly say they are automated. Rend the Veil lets you choose several foes before the check, roll damage once; it applies to the selected foes together automatically. One Undo restores all that damage. The GM still confirms eligible targets and range. Once-per-scene abilities spend their use on the attempt, including a miss; copies share the same caster/source allowance. Rest, refreshing the page or leaving and returning to a scene do not refill it. In Play, the GM can confirm **Refresh scene abilities** for a new encounter in the named live scene; unfinished limited rolls from the previous encounter cannot then be applied. To restore a mistaken use, the GM undoes its damage first and then its attempt in Activity. Horror has its own Undo. The Executioner's Blade has a separate **final blow** action: Ultimate damage, 3 Horror and one attempt per scene, all tracked by the VTT.
 
+## Growing stronger
+
+Each adventure a hero lives through to its end earns **1 mark**. The hero's player ticks it in the **Marks** box on the character sheet, at the table or on My heroes. At **3 marks** the hero takes one advance: **+1 to one score**, up to the usual 6, or **+1 to one Effort bonus**, up to +10. The marks then start again. Each advance adds one point to share, so the build limits on the sheet grow with the hero. A mark ticked by mistake can be taken back until the advance is taken.
+
 ## Playing alone
 
 The [solo game](/solo/) uses every rule on this page. There the game is the GM, and it makes the GM's calls itself: each scene's Target, its foes and obstacles, when a place is dark, what Horror 7, 14 and 21 bring, a rest after each scene, and where a hero who breaks away can run to: on to the next scene, leaving behind what they found in this one, with the Horror rising 1 for running (no blood is paid for it, as for any GM's raise). There is nowhere to run in the last scene of a road. One rule is different, because no one else is there to help:
 
 - **Falling alone.** At 0 HP a hero alone is dying as usual (d4 rounds), but may still act on their turn in two ways: use healing on themselves (a spell or relic; bandages cannot tend yourself), or crawl away with a CON check, leaving the scene at 1 HP and leaving behind what they found in it. A failed crawl costs a round.
+- **Marks.** A road won is an adventure lived through: a hero from My heroes who comes home gets its mark ticked for them.
 - Spells and items that protect **an ally**, such as Ward, have no use alone.
 
 The [Current Loot Tables](/loot/) page uses the same catalogue as the VTT. GMs can create custom loot in their own tables. Custom descriptions do not automatically implement new effects. Private GM notes and custom table loot are not published in that catalogue.

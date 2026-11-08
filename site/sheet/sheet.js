@@ -72,6 +72,23 @@
       '<div class="sh-btns">' + (it.kind === 'grimoire' && !it.pick ? '' : useBtn(act(''), '', it.pick ? 'Read' : '')) + (edit ? (C.canEquip(it) ? '<button type="button" class="sh-b" data-sh="move" data-i="' + i + '" data-gear="' + esc(g.key || '') + '" data-eq="' + (g.eq ? '0' : '1') + '"' + waiting + '>' + (g.eq ? 'To the pack' : 'Equip') + '</button>' : '<span class="sh-supply" title="' + (it.kind === 'supply' ? 'A supply works from the pack, so it is never equipped.' : 'This works from the pack, so it is never equipped.') + '">' + (it.kind === 'supply' ? 'Supply' : 'Pack only') + '</span>') + '<button type="button" class="sh-b" data-sh="remove" data-i="' + i + '" data-gear="' + esc(g.key || '') + '"' + waiting + '>Drop</button>' : '') + '</div></div>';
   }
 
+  /* Advancement (rules.js ADVANCE): a mark for each adventure the hero lives through to its end; at 3, one advance. */
+  function marksSection(h, edit, d) {
+    var A = R.ADVANCE, m = C.marksOf(h), adv = C.advancesOf(h), taken = adv.stats + adv.effort;
+    var boxes = '<span class="sh-marks" role="img" aria-label="' + m + ' of ' + A.marks + ' marks">' + Array.apply(null, Array(A.marks)).map(function (_, i) { return '<span class="sh-mark' + (i < m ? ' on' : '') + '"></span>'; }).join('') + '</span>';
+    var out = '<section class="sh-sec sh-adv"><h3>Marks <span class="sh-note">(' + m + ' of ' + A.marks + (taken ? ' · ' + plural(taken, 'advance', 'advances') + ' taken' : '') + ')</span></h3><div class="sh-row">' + boxes;
+    if (edit && m < A.marks) out += '<button type="button" class="sh-b" data-sh="mark" data-d="1">Tick a mark</button>';
+    if (edit && m > 0) out += '<button type="button" class="sh-b" data-sh="mark" data-d="-1">Take one back</button>';
+    out += '</div>';
+    if (edit && m >= A.marks) {
+      var opts = R.STATS.filter(function (k) { return (h.stats[k] || 0) < A.scoreMax; }).map(function (k) { return '<option value="stat:' + k + '">' + k + ' +1 (now ' + sgn(h.stats[k]) + ')</option>'; }).join('') +
+        R.CATS.filter(function (k) { return (h.effort[k] || 0) < A.effortMax; }).map(function (k) { return '<option value="cat:' + k + '">' + esc(R.CAT_NAMES[k]) + ' Effort +1 (now ' + sgn(h.effort[k]) + ')</option>'; }).join('');
+      out += opts ? '<div class="sh-row sh-add"><label class="sh-f">Take the advance<select id="shAdv">' + opts + '</select></label><button type="button" class="sh-b go" data-sh="advance">Advance</button></div>' : '<p class="sh-note">Every score and Effort bonus is already as high as it goes.</p>';
+    }
+    if (edit) out += '<p class="sh-note">Tick a mark each time ' + esc(h.name) + ' lives through an adventure to its end' + (d.live ? '' : ' (a won solo road ticks one for you)') + '. At ' + A.marks + ' marks, take one advance: +1 to a score (up to ' + A.scoreMax + ') or to an Effort bonus (up to +' + A.effortMax + '). The marks then start again.</p>';
+    return out + '</section>';
+  }
+
   function render(d, msg, host, pick) {
     var h = d.hero, edit = !!d.canEdit, gm = !!d.gm, B = R.BUILD, hp = d.hp, left = C.pointsLeft(h), eleft = C.effortLeft(h), acts = host.use && edit && d.canUse !== false ? C.actions(h) : [];
     var out = '<div class="sh-head"><h2>' + esc(h.name) + ' <span class="sh-sub">' + (d.title || '') + '</span></h2>' + (d.live ? '<span class="sh-live" role="status">At the table · changes show for everyone</span>' : '') + (host.close ? '<button type="button" class="sh-b close" data-sh="close">Close sheet</button>' : '') + '</div>';
@@ -87,9 +104,10 @@
     var left1 = '<section class="sh-sec"><h3>Who</h3><div class="sh-row">' + field('Name', 'name', h.name, edit, false, C.TEXT_LIMITS.name) + field('Calling', 'calling', h.calling, edit, false, C.TEXT_LIMITS.calling) + '</div>' + field('Vow', 'vow', h.vow, edit, false, C.TEXT_LIMITS.vow) + '</section>';
     left1 += '<section class="sh-sec"><h3>Health and Defence</h3><div class="sh-row sh-hpline">' + (hp ? hearts(hp.cur, hp.max) + '<b class="sh-hpn">' + hp.cur + ' / ' + hp.max + '</b>' + (d.canHp ? '<span class="sh-step"><button type="button" data-sh="hp" data-d="-1" aria-label="Lose 1 hit point">−</button><button type="button" data-sh="hp" data-d="1" aria-label="Gain 1 hit point">+</button></span>' : '') + (hp.cur === 0 ? '<b class="sh-zero">AT 0</b>' : '') : '<span class="sh-note">No hit points yet.</span>') +
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
-    left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + B.points + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
-      (edit ? '<p class="sh-note">' + B.points + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
-    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + B.effortPoints + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
+    left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + C.scorePoints(h) + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
+      (edit ? '<p class="sh-note">' + C.scorePoints(h) + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
+    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + C.effortPoints(h) + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
+    left1 += marksSection(h, edit, d);
     if (C.weaponEffortNote(h)) left1 += '<p class="sh-note" role="note">' + esc(C.weaponEffortNote(h)) + '</p>';
     var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, d.live ? [] : acts, d.dice, d.live)); });
     var option = function (it) { return '<option value="' + it.id + '"' + (pick === it.id ? ' selected' : '') + '>' + esc(optionText(it)) + '</option>'; };
@@ -144,6 +162,8 @@
       if (k === 'gmRoll' && d.live && d.gm && host.roll && R.STATS.indexOf(b.dataset.stat) >= 0) { host.roll(b.dataset.stat, el.querySelector('#shGmAdj').value, el.querySelector('#shGmD20').value); }
       else if (k === 'score') attempt({ op: 'score', stat: b.dataset.k, delta: +b.dataset.d });
       else if (k === 'effort') attempt({ op: 'effort', cat: b.dataset.k, delta: +b.dataset.d });
+      else if (k === 'mark') attempt({ op: 'mark', delta: +b.dataset.d });
+      else if (k === 'advance') { var av = el.querySelector('#shAdv'), pv = av ? av.value.split(':') : []; if (pv[0] === 'stat') attempt({ op: 'advance', stat: pv[1] }); else if (pv[0] === 'cat') attempt({ op: 'advance', cat: pv[1] }); }
       else if (k === 'add') { var sel = el.querySelector('#shAdd'); if (sel) attempt({ op: 'add', id: sel.value }); }
       else if (k === 'remove') attempt({ op: 'remove', index: +b.dataset.i, gearKey: b.dataset.gear || undefined });
       else if (k === 'move') attempt({ op: 'move', index: +b.dataset.i, gearKey: b.dataset.gear || undefined, eq: b.dataset.eq === '1' });

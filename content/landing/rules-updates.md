@@ -25,6 +25,10 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 8 November 2026: heroes grow stronger
+
+**Advancement, a new rule.** Each adventure a hero lives through to its end earns 1 mark, ticked by the player in the new Marks box on the character sheet. At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10), and the marks start again. Each advance adds one point to the hero's share, so a grown hero can be brought to any table. In the solo game a road won ticks the mark itself. *Prompted by:* the solo game, where a hero who kept coming home had nothing to show for it; the designer chose to add the rule for everyone, so the table, play on paper and the solo game agree.
+
 ## 7 November 2026: one set of rules for the table and the solo game
 
 **Break away, a new rule.** A hero can now break off a fight. On your turn, instead of acting, make a DEX check against the Target. On a success you get clear and the foe does not attack you as you go; on a failure you stay put and the foe attacks as usual. Where you can run to is the GM's call. The table does not count it for you: make the DEX check, and the GM decides where you end up. In the solo game a hero who gets away goes on to the next scene, leaves that scene's find behind, and the Horror rises 1; there is no running from the last scene of the road. *Prompted by:* the solo game, where a hero had no way out of a fight going badly; the designer chose to add the rule for everyone, so the table and the solo game agree.
