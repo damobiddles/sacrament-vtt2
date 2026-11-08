@@ -249,7 +249,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
       `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
 <nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
-  const urls = [...new Set([...PAGES.map(p => p.path), '/character/', '/vtt/', '/solo/', '/brand/', '/adventure/', '/adventures/the-guest-at-greave/', ...posts.map(p => '/news/' + p.slug + '/')])];
+  const urls = [...new Set([...PAGES.map(p => p.path), '/character/', '/vtt/', '/solo/', '/brand/', '/adventure/', '/adventures/the-guest-at-greave/', '/adventures/the-rib-of-saint-hussey/', ...posts.map(p => '/news/' + p.slug + '/')])];
   writeFileSync(new URL('sitemap.xml', OUT), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls.map(path => '<url><loc>' + SITE + esc(path) + '</loc></url>').join('\n') + '\n</urlset>\n');
   console.log('Built the Sacrament RPG pages: ' + PAGES.length + ' pages and ' + posts.length + ' post(s).');
 }
