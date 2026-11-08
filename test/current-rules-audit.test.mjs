@@ -37,10 +37,11 @@ test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // Owner request 2026-11-08: twenty path relics (each with its hero path) and the Relics table re-divided to make room for them. Owner decision the same day:
  // heroes may choose a path (the list is under "paths"); every path relic costs 1 more Horror, and 1 less for a hero of its path.
  // Owner-approved 2026-11-07: the Light tag's words follow the Hooded Lantern (a WIS check to search or notice in the dark is Hard).
+ // Owner decision 2026-11-08 (decision card): every relic belongs to a path; the 28 older relics cost 1 more Horror, 1 less on their own path.
  // Owner request 2026-11-08 (later): ten more paths (twenty in all) and 100 path relics, five per path, on the Path relics table.
  // Owner-approved 2026-11-06: story spells and items carry tags (what each is good for, with a default effect), plus the tag list.
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'685b7162e25284f5658401ecd0c93ab5c838f77b01026c8ad0545ae5a19a41d4');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'fbf553f322526c36ab0502019559611243e53dd923aa87e64e04d89f4cafa0d9');
 });

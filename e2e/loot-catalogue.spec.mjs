@@ -110,12 +110,13 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   await expect(page.locator('#table-grimoires tbody tr:visible')).toHaveCount(1);
   await expect(page.locator('#table-arms')).toBeHidden();
   await expect(page.locator('#loot-weapon')).toBeHidden();
-  // A path finds the five path relics made for it (2026-11-08), grouped under that path, and their rows on the Path relics table.
+  // A path finds every relic of that path (2026-11-08: every relic has a path), grouped under it in Relics, and their rows on the loot tables.
   await search.fill('witch-finder');
-  await expect(visible).toHaveCount(5);
+  await expect(visible).toHaveCount(7);
   await expect(page.locator('#loot-path-witch-finder #item-silverpricker')).toBeVisible(); await expect(page.locator('#loot-path-witch-finder #item-scoldsbridle')).toBeVisible();
+  await expect(page.locator('#loot-path-witch-finder #item-blade')).toBeVisible(); await expect(page.locator('#loot-path-witch-finder #item-ashenrosary')).toBeVisible();
   await expect(page.locator('#loot-path-druid')).toBeHidden();
-  await expect(page.locator('#loot-relic')).toBeHidden();
+  await expect(page.locator('#loot-weapon')).toBeHidden();
   await expect(page.locator('#table-pathrelics tbody tr:visible')).toHaveCount(5);
   // A spell name finds the books that hold it, ignoring capitals.
   await search.fill('EMBER');

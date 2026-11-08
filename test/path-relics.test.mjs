@@ -55,20 +55,22 @@ test('the loot page lists every path relic with its path and its uses, so the se
   }
 });
 
-test('the loot page groups path relics under their own path, and keeps them out of the general Relics list', () => {
+test('every relic belongs to a path (owner decision 2026-11-08), costs at least 2, and the loot page lists the relics grouped by path', () => {
+  const all = [...G.items, ...G.relics, ...G.found].filter((i) => i.kind === 'relic');
+  assert.equal(all.length, 128);
+  for (const i of all) { assert.ok(C.PATHS.includes(i.path), i.id + ' has a path'); assert.ok(i.horror >= 2, i.id + ' costs at least 2'); assert.match(i.does, new RegExp('\\((\\d) for an? ' + i.path + '\\)'), i.id + ' says its own-path cost'); }
   const html = lootCatalogue(G);
   const part = id => { const at = html.indexOf('<section id="' + id + '">'); assert.ok(at >= 0, id); return html.slice(at); };
-  const general = part('loot-relic').split('<section id="loot-path">')[0];
-  for (const i of relics) assert.ok(!general.includes('id="item-' + i.id + '"'), i.id + ' left out of the general list');
-  assert.ok(html.includes('href="#loot-path">Path relics</a>'));
+  assert.ok(!html.includes('id="loot-path-none"'), 'no relic is left without a path');
   for (const p of G.paths) {
     const slug = p.name.toLowerCase().replace(/[^a-z]+/g, '-');
     const group = part('loot-path-' + slug).split('</section>')[0];
     assert.ok(group.includes('<h3>' + p.name + '</h3>'), p.name);
-    const mine = relics.filter(i => i.path === p.name);
-    assert.equal(mine.length, 5, p.name);
+    const mine = all.filter(i => i.path === p.name);
+    assert.ok(mine.length >= 5, p.name);
     for (const i of mine) assert.ok(group.includes('id="item-' + i.id + '"><h4>'), i.id + ' under ' + p.name);
   }
+  assert.ok(part('loot-relic').startsWith('<section id="loot-relic"><h2>Relics, by path</h2>'));
 });
 
 const setup = async (dice, id) => {
@@ -134,7 +136,11 @@ test('PATHS: only a relic of the hero\'s own path is cheaper, by 1 and never bel
   assert.equal(cost(hero('Assassin', 'deadmanskey'), 0), 1, '2 becomes 1');
   assert.equal(cost(hero('Witch', 'gibbethand'), 0), 3, 'another path pays in full');
   assert.equal(cost(hero('', 'gibbethand'), 0), 3, 'no path pays in full');
-  assert.equal(cost(hero('Necromancer', 'mourningnail'), 0), 2, 'an older relic has no path');
+  assert.equal(cost(hero('Necromancer', 'mourningnail'), 0), 3, 'an older relic of another path pays in full');
+  assert.equal(cost(hero('Witch', 'mourningnail'), 0), 2, 'an older relic is cheaper on its own path too');
+  assert.equal(cost(hero('Penitent', 'chain'), 0), 1, 'the Penitent\'s Chain costs a Penitent what it always did');
+  const blade = (path) => { const h = hero(path, 'blade'); const u = C.useOf(h, 0, '', 'ultimate'); assert.equal(u.ok, true, u.why); return u.horror; };
+  assert.equal(blade('Witch-finder'), 3, 'the final blow is cheaper on its own path'); assert.equal(blade(''), 4);
   assert.equal(cost(hero('Druid', 'thornantler'), 0, 'windcanticle'), 1, 'a Druidic grimoire\'s spell is not a path relic');
   for (const i of relics) assert.ok(i.horror >= 2, i.id + ': every path relic costs at least 2, so its own path always pays less');
   const acts = C.actions(hero('Witch', 'waxpoppet')); assert.equal(acts[0].horror, 2, 'the sheet\'s Ready to use shows the lower cost');

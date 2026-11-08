@@ -168,9 +168,10 @@ test('Mend heals once per person per rest with no Horror; a dying ally can alway
   const again = E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }); assert.equal(again.healed, 0); assert.equal(h.pos, 0, 'neither healing casting costs Horror');
   E.hurt(a, 99); assert.ok(E.use({ horror: h, scene: 12 }, m, 'litany', 'mend', { target: a, d20: 18 }).healed > 0);
 });
-test('the Penitent’s chain: 1 Horror, 1d4 that nothing reduces, +3 to the roll', () => {
+// Owner decision 2026-11-08: every relic belongs to a path and the older relics cost 1 more Horror (1 less on their own path).
+test('the Penitent’s chain: 2 Horror, 1d4 that nothing reduces, +3 to the roll', () => {
   const env = mk(), { E } = env, h = E.horror(), c = hero(env, 'ottoline'); const r = E.chain(c, h);
-  assert.equal(r.bonus, 3); assert.equal(h.pos, 1); assert.equal(c.hp, c.max - r.damage); assert.ok(r.damage >= 1 && r.damage <= 4);
+  assert.equal(r.bonus, 3); assert.equal(h.pos, 2); assert.equal(c.hp, c.max - r.damage); assert.ok(r.damage >= 1 && r.damage <= 4);
 });
 test('bandages: a dying ally is tended on an Easy check; a hurt one heals once per rest; three uses', () => {
   const env = mk(), { E } = env, h = E.horror(), w = hero(env, 'wren'), a = hero(env, 'aldric'); E.hurt(a, 99);

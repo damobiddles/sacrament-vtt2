@@ -57,7 +57,7 @@ test('HORROR: even an Ultimate spell costs only one Horror', async () => {
 test('HORROR: an item from the loot table raises it by its own amount', async () => {
   const { ann, thorne } = await setup([d20(20), die(4, 12)], ['sealshard']);
   const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0 }); assert.equal(r.status, 200);
-  assert.equal(r.body.state.horror.cur, 3); assert.match(feed(r.body.state), /Thorne used Shard of a binding seal\. The Horror rises 3 \(now 3\)\./);
+  assert.equal(r.body.state.horror.cur, 4, 'Owner decision 2026-11-08: every relic belongs to a path and the older relics cost 1 more Horror (1 less on their own path).'); assert.match(feed(r.body.state), /Thorne used Shard of a binding seal\. The Horror rises 4 \(now 4\)\./);
 });
 
 test('HORROR: something that tempts nothing leaves the meter alone, and so does an amount the table cannot read', async () => {

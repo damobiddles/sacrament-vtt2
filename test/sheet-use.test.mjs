@@ -63,7 +63,7 @@ test('a grimoire read by the die: one action, no spell chosen, and the die choos
 
 test('a relic with no Effort die but a stat is used with a check; a designed find keeps a rolled Horror amount', () => {
   const h = hero(); C.edit(h, { op: 'add', id: 'bell' }, gm, null);
-  const bell = C.useOf(h, 0); assert.equal(bell.ok, true); assert.deepEqual([bell.stat, bell.cat, bell.horror], ['CHA', '', 2]);
+  const bell = C.useOf(h, 0); assert.equal(bell.ok, true); assert.deepEqual([bell.stat, bell.cat, bell.horror], ['CHA', '', 3], 'Owner decision 2026-11-08: every relic belongs to a path and the older relics cost 1 more Horror (1 less on their own path).');
   assert.equal(C.makeCustom({ name: 'Vial', temptsHorror: true, horror: 'd4+2' }).horror, 'd4+2');
   assert.equal(C.makeCustom({ name: 'Vial', temptsHorror: true, horror: '3' }).horror, 3);
   assert.equal(C.makeCustom({ name: 'Vial', temptsHorror: true, horror: 'lots' }).horror, 0);

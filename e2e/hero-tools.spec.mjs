@@ -7,14 +7,14 @@ const upload=(page,text)=>page.locator('#restoreHeroesFile').setInputFiles({name
 
 test('generated heroes are previews until kept, can be edited and brought to a table',async({browser},testInfo)=>{
   const page=await newPage(browser);await page.goto('/character/');
-  await page.locator('#generatorFocus').selectOption('scholar');await page.locator('#generateHero').click();
+  await page.locator('#generatorFocus').selectOption('Scholar');await page.locator('#generateHero').click();
   await expect(page.locator('#generatorPreview')).toContainText(/The Ashen Psalter|The Book of Quiet Mouths/);
   const silenceBook=(await page.locator('#generatorPreview').innerText()).includes('The Book of Quiet Mouths');
   await expect(page.locator('#generatorPreview')).toContainText(silenceBook ? 'Weapons +3' : 'Magic +3');await expect(page.locator('#generatorPreview')).toContainText('3 slots');
   expect(await stored(page)).toBe(null);await expect(page.locator('#sheetHere')).toContainText('no heroes saved');
   await page.screenshot({path:testInfo.outputPath('hero-generator.png'),fullPage:true});
-  await page.locator('#generatorFocus').selectOption('fighter');
-  await expect(page.locator('#focusHelp')).toContainText('straightforward first hero');
+  await page.locator('#generatorFocus').selectOption('Mercenary');
+  await expect(page.locator('#focusHelp')).toContainText('Starts as a fighter'); await expect(page.locator('#focusHelp')).toContainText('A sword sold to whoever pays'); await expect(page.locator('#generatorFocus option')).toHaveCount(21);
   await page.locator('#generateHero').click();
   await page.locator('#proposalName').fill('Agathe Vey');
   await page.locator('#proposalVow').fill('I will bring the missing home.');
@@ -39,7 +39,7 @@ test('generated heroes are previews until kept, can be edited and brought to a t
 });
 
 test('downloaded backups restore in another browser only after confirmation and survive reload',async({browser},testInfo)=>{
-  const source=await newPage(browser);await source.goto('/character/');await source.locator('#generatorFocus').selectOption('scout');await source.locator('#generateHero').click();await source.locator('#keepGenerated').click();
+  const source=await newPage(browser);await source.goto('/character/');await source.locator('#generatorFocus').selectOption('Hunter');await source.locator('#generateHero').click();await source.locator('#keepGenerated').click();
   await source.locator('#sheetHere [data-text=notes]').fill('Keep these private notes.');await source.locator('#sheetHere [data-text=notes]').blur();
   const event=source.waitForEvent('download');await source.locator('#downloadHeroes').click();const file=await (await event).path();
   const page=await newPage(browser);await page.goto('/character/');await page.locator('#newHero').click();
@@ -69,7 +69,7 @@ test('restore cancellation, invalid files and changed versions preserve existing
 test('a generated or saved hero opens as a printable sheet in a new tab',async({browser})=>{
   const page=await newPage(browser);await page.goto('/character/');
   await expect(page.locator('#printGenerated')).toBeHidden();
-  await page.locator('#generatorFocus').selectOption('healer');await page.locator('#generateHero').click();
+  await page.locator('#generatorFocus').selectOption('Priest');await page.locator('#generateHero').click();
   await page.locator('#proposalName').fill('Ursel <b>Tarn</b>');
   const [sheet]=await Promise.all([page.context().waitForEvent('page'),page.locator('#printGenerated').click()]);
   await expect(sheet.locator('.ps-page').first()).toContainText('Ursel <b>Tarn</b>');

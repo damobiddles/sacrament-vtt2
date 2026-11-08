@@ -217,7 +217,7 @@
     if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
-    var own = !sp && !mode && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
+    var own = !sp && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
     return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? (own && Number.isInteger(src.horror) ? Math.max(1, src.horror - 1) : src.horror) : 0, onPath: own };
   }
   /* Which spell a grimoire read by the die casts when the die shows n: the faces are shared out in the order the spells are listed (a d6 over three spells:

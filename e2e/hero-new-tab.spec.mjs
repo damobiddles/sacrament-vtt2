@@ -8,7 +8,7 @@ test('a hero created in a second tab becomes available at the open table without
   const popup = player.waitForEvent('popup');
   await player.locator('#panel a[href="/character/"]').click();
   const creator = await popup;
-  await creator.locator('#generatorFocus').selectOption('fighter');
+  await creator.locator('#generatorFocus').selectOption('Mercenary');
   await creator.locator('#generateHero').click();
   await creator.locator('#proposalName').fill('Agathe Vey');
   await creator.locator('#keepGenerated').click();

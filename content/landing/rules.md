@@ -40,7 +40,7 @@ Each item lists its slots. Only equipped weapons, armour, relics and grimoires w
 
 Grimoires take **three slots** and each contains **three spells**. Read the spell's own range, effect and Horror cost. A book has no single range shared by all its spells. A hero may choose one starting grimoire; found books and relics are awarded by the GM. The current VTT limits carried Horror-tempting items to three, including relics, grimoires and supernatural curios. Packed items count too. This is broader than the older wording “three relics and grimoires”.
 
-**Paths.** A hero may follow one of 20 **paths**, such as Knight, Scholar, Cutpurse or Witch, or none. Choose it on the character sheet. A path does one thing: each path has five **path relics** on the loot tables, and a relic of **your own path costs 1 less Horror** each time you use it. Any hero can use any path relic. See [Paths](/rules/paths/) for the full list.
+**Paths.** A hero may follow one of 20 **paths**, such as Knight, Scholar, Cutpurse or Witch, or none. Choose it on the character sheet. A path does one thing: **every relic belongs to a path**, and a relic of **your own path costs 1 less Horror** each time you use it. Any hero can use any relic. See [Paths](/rules/paths/) for the full list.
 
 ## Story spells and items: when in doubt
 

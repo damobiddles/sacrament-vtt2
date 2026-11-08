@@ -87,10 +87,36 @@
   ];
   function heroName(pick, random) { var given = pick(names); return random() < 0.2 ? given + ' of ' + pick(places) : given + ' ' + pick(surnames); }
   var vows = ['I will bring the missing home.', 'I will keep the road open until the last pilgrim passes.', 'I will pay the debt my family left behind.', 'I will see my companion buried on consecrated ground.', 'I will carry the truth back to Hollowmere.', 'I will not leave another soul at the gate.'];
-  function generate(focus, random) {
+  /* Each path starts from one of five kits, with callings and (for the casters) a book to suit. A starting suggestion only: no rule. */
+  var KIT = {
+    Mercenary: 'fighter', Knight: 'fighter', 'Witch-finder': 'fighter', Sailor: 'fighter', Penitent: 'fighter', Gravedigger: 'fighter',
+    Hunter: 'scout', Cutpurse: 'scout', Pilgrim: 'scout', Assassin: 'scout',
+    Scholar: 'scholar', Alchemist: 'scholar', Necromancer: 'scholar', Witch: 'scholar',
+    Priest: 'healer', 'Barber-surgeon': 'healer', Druid: 'healer',
+    Diplomat: 'speaker', Merchant: 'speaker', Minstrel: 'speaker'
+  };
+  var CALLINGS = {
+    Druid: ['Grove keeper', 'Hedge herbalist'], Necromancer: ['Bone reader', 'Grave-watcher'], Hunter: ['Hunter', 'Boundary scout'], Assassin: ['Hired knife', 'Night stalker'],
+    Mercenary: ['Mercenary', 'Sellsword'], Priest: ['Hospice keeper', 'Hedge priest'], Witch: ['Herb-wife', 'Cunning healer'], Penitent: ['Wandering penitent', 'Flagellant'],
+    'Barber-surgeon': ['Pilgrim physician', 'Bonesetter'], 'Witch-finder': ['Witch-finder\'s hand', 'Road warden'], Scholar: ['Forbidden scholar', 'Exiled scribe'],
+    Diplomat: ['Envoy', 'Herald'], Knight: ['Landless knight', 'Pilgrim guard'], Merchant: ['Pedlar', 'Wool merchant'], Pilgrim: ['Pilgrim', 'Road guide'],
+    Cutpurse: ['Cutpurse', 'Lockbreaker'], Minstrel: ['Minstrel', 'Ballad-singer'], Gravedigger: ['Sexton', 'Gravedigger'], Alchemist: ['Apothecary', 'Relic researcher'],
+    Sailor: ['Deckhand', 'Ferryman']
+  };
+  var BOOKS = { Alchemist: ['embers'], Necromancer: ['quietmouths'], Witch: ['quietmouths'] };   /* only the three starting books can be chosen */
+  var KIT_HELP = {
+    fighter: 'Starts as a fighter: strength, ordinary weapons and armour.',
+    scout: 'Starts as a scout: dexterity, a bow or crossbow, and useful supplies. Bows use Weapons d6.',
+    scholar: 'Starts with magic: intelligence and a three-spell grimoire. Non-healing spells add 1 Horror when used.',
+    healer: 'Starts as a healer: wisdom, healing prayers and a weapon. Healing spells have no casting Horror cost.',
+    speaker: 'Starts as a talker: charisma, a blade at the belt and the means to write and travel.'
+  };
+  function generate(choice, random) {
     random = random || Math.random;
     var pick = function (a) { return a[Math.min(a.length - 1, Math.floor(random() * a.length))]; };
-    if (!['fighter', 'scout', 'scholar', 'healer'].includes(focus)) focus = pick(['fighter', 'scout', 'scholar', 'healer']);
+    /* a path name picks that path's kit; the four old focus words still work; anything else is Surprise me: a random path */
+    var path = KIT[choice] ? choice : '', focus = path ? KIT[path] : choice;
+    if (!path && !['fighter', 'scout', 'scholar', 'healer'].includes(focus)) { path = pick(Object.keys(KIT)); focus = KIT[path]; }
     var h = H.blank(heroName(pick, random)), weapon, book, primary, secondary, third, effort, kit;
     h.vow = pick(vows);
     if (focus === 'fighter') {
@@ -101,8 +127,11 @@
     } else if (focus === 'scout') {
       h.calling = pick(['Boundary scout', 'Road guide', 'Hunter']); primary = 'DEX'; secondary = 'WIS'; third = pick(['CON', 'INT', 'STR']); effort = 'weapons';
       kit = [pick(['bow', 'crossbow']), 'gambeson', 'knife', 'rope', 'lantern', 'picks', 'rations', 'tinder'];
+    } else if (focus === 'speaker') {
+      h.calling = ''; primary = 'CHA'; secondary = 'WIS'; third = pick(['DEX', 'INT', 'CON']); effort = 'weapons';
+      kit = [pick(['sword', 'knife']), pick(['cloak', 'gambeson']), 'scrivener', 'lantern', 'bandages', 'rations', 'tinder'];
     } else {
-      book = focus === 'healer' ? 'seventhpenance' : pick(['embers', 'quietmouths']);
+      book = path && BOOKS[path] ? pick(BOOKS[path]) : focus === 'healer' ? 'seventhpenance' : pick(['embers', 'quietmouths']);
       h.calling = focus === 'healer' ? pick(['Hospice keeper', 'Pilgrim physician']) : pick(['Forbidden scholar', 'Relic researcher', 'Exiled scribe']);
       primary = focus === 'healer' ? 'WIS' : 'INT'; secondary = 'CON'; third = pick(['DEX', 'CHA', focus === 'healer' ? 'INT' : 'WIS']);
       effort = C.spellsOf(C.item(book)).some(function (sp) { return sp.effect === 'damage'; }) ? 'magic' : 'weapons';
@@ -113,9 +142,10 @@
     var pathFor = { fighter: ['Mercenary', 'Knight'], scout: ['Hunter', 'Cutpurse', 'Pilgrim'], scholar: ['Scholar', 'Alchemist'], healer: ['Barber-surgeon', 'Priest'] };
     h.effort[effort] = 3; h.effort.basic = 1;
     kit.forEach(function (id) { var result = C.edit(h, { op: 'add', id: id }, { gm: false }, h.hp); if (!result.ok) throw new Error('Generated kit does not fit: ' + result.why); });
-    h.path = pick(pathFor[focus]);
+    h.path = path || pick(pathFor[focus]);
+    if (path) h.calling = pick(CALLINGS[path]);
     var problems = C.problems(h, { gm: false }); if (problems.length) throw new Error('Generated hero is not valid: ' + problems.join(' '));
     return h;
   }
-  root.SacramentHeroTools = { MAX_BACKUP: MAX_BACKUP, planRestore: planRestore, restore: restore, generate: generate, NAMES: { given: names, surnames: surnames, places: places } };
+  root.SacramentHeroTools = { MAX_BACKUP: MAX_BACKUP, planRestore: planRestore, restore: restore, generate: generate, KIT: KIT, KIT_HELP: KIT_HELP, NAMES: { given: names, surnames: surnames, places: places } };
 })(typeof window !== 'undefined' ? window : globalThis);

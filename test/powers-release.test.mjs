@@ -51,7 +51,7 @@ test('crossbow accuracy is automatic, stays d6, and does not apply to a bow',asy
 });
 test('alternate relic modes and copied scene powers share their canonical limits',async()=>{
  const {t,p,h}=await setup();await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:'blade'}});
- const r=await p.cmd({type:'useItem',charId:h.id,index:0,mode:'ultimate',d20:15});assert.equal(r.status,200);assert.equal(r.body.state.horror.cur,3);assert.equal(r.body.state.rolls.at(-1).cat,'ultimate');assert.equal((await p.cmd({type:'useItem',charId:h.id,index:0,mode:'ultimate',d20:15})).status,400);
+ const r=await p.cmd({type:'useItem',charId:h.id,index:0,mode:'ultimate',d20:15});assert.equal(r.status,200);assert.equal(r.body.state.horror.cur,4,'Owner decision 2026-11-08: every relic belongs to a path and the older relics cost 1 more Horror (1 less on their own path).');assert.equal(r.body.state.rolls.at(-1).cat,'ultimate');assert.equal((await p.cmd({type:'useItem',charId:h.id,index:0,mode:'ultimate',d20:15})).status,400);
  const copy=C.designOf(C.item('blade'));await t.gm.cmd({type:'lootGive',item:copy,charId:h.id});assert.equal((await p.cmd({type:'useItem',charId:h.id,index:1,mode:'ultimate',d20:15})).status,400);
  assert.equal((await p.cmd({type:'useItem',charId:h.id,index:0,d20:15})).status,200,'normal mode remains available');
 });
