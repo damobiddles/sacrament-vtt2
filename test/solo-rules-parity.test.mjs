@@ -163,3 +163,18 @@ test('falling alone is written on the Rules page, and the solo game does exactly
   assert.ok(labels.includes('Crawl away') && labels.some((l) => /Mend/.test(l)));
   S.act(s, adv, 'crawl', fixed([20])); assert.equal(s.hp.cur, 1); assert.equal(s.dying, null);
 });
+
+test('a relic of the hero\'s own path costs 1 less Horror (never below 1), the same at the table and in the solo game', async () => {
+  const cases = [{ gear: 'waxpoppet', path: 'Witch', expect: 2 }, { gear: 'waxpoppet', path: '', expect: 3 }, { gear: 'waxpoppet', path: 'Druid', expect: 3 }, { gear: 'sallowneedle', path: 'Assassin', expect: 2 }, { gear: 'crowarrows', path: 'Hunter', expect: 1 }, { gear: 'crowarrows', path: '', expect: 2 }];
+  for (const k of cases) {
+    const { h, foe, p } = await tableHero([k.gear]);
+    if (k.path) assert.equal((await p.cmd({ type: 'sheet', charId: h.id, op: { op: 'path', value: k.path } })).status, 200);
+    const r = await p.cmd({ type: 'useItem', charId: h.id, index: 0, d20: 10, targetCardId: foe.id }); assert.equal(r.status, 200, JSON.stringify(r.body.error || ''));
+    const atTable = r.body.state.horror.cur;
+    const hero = soloHero([k.gear]); hero.path = k.path; const adv = scene(), s = S.start(C.cleanHero(hero), adv, fixed([10]));
+    S.act(s, adv, 'do fight', fixed([10]));
+    const c = choice(s, adv, /^Attack: /); assert.ok(c, k.gear + ' is offered');
+    S.act(s, adv, c.cmd, fixed([10, 10, 10]));
+    assert.equal(atTable, k.expect, 'table, ' + k.gear + ' / ' + (k.path || 'no path')); assert.equal(s.horror, atTable, 'solo, ' + k.gear + ' / ' + (k.path || 'no path'));
+  }
+});

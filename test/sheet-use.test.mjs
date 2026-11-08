@@ -72,11 +72,11 @@ test('a relic with no Effort die but a stat is used with a check; a designed fin
 
 test('the loot sub-tables: 81 to 95 on the d100 lead into the Relics table, rolled on a d100, and typed numbers are used in order', () => {
   assert.equal(C.lootItem(81), null, 'a number that leads into a sub-table gives no item by itself');
-  assert.equal(C.lootEntry(87, 'd100').table.id, 'relics'); assert.equal(C.lootEntry(14, 'relics').item.name, 'Ashen Rosary');
-  const dice = [87, 14], rolled = [];
+  assert.equal(C.lootEntry(87, 'd100').table.id, 'relics'); assert.equal(C.lootEntry(10, 'relics').item.name, 'Ashen Rosary');
+  const dice = [87, 10], rolled = [];
   const r = C.rollLoot((sides) => { rolled.push(sides); return dice.shift(); }); assert.equal(r.ok, true); assert.deepEqual(rolled, [100, 100], 'a d100, then another d100');
-  assert.equal(r.item.name, 'Ashen Rosary'); assert.equal(C.sayLoot(r.steps), '87 → Relics d100: 14');
-  const typed = C.rollLoot(() => { throw new Error('nothing should be rolled'); }, [90, 32]); assert.equal(typed.item.name, 'Fragment of stained glass'); assert.deepEqual(typed.steps.map((x) => x.typed), [true, true]);
+  assert.equal(r.item.name, 'Ashen Rosary'); assert.equal(C.sayLoot(r.steps), '87 → Relics d100: 10');
+  const typed = C.rollLoot(() => { throw new Error('nothing should be rolled'); }, [90, 22]); assert.equal(typed.item.name, 'Fragment of stained glass'); assert.deepEqual(typed.steps.map((x) => x.typed), [true, true]);
   const half = C.rollLoot((sides) => { assert.equal(sides, 100); return 1; }, [95]); assert.equal(half.item.name, "The Warden's Bell", 'a typed d100 with the sub-table left to the table');
   assert.equal(C.rollLoot(() => 1, [98]).item.name, 'The Ashen Psalter', 'a grimoire range rolls on the expanded d100 sub-table');
   assert.equal(C.rollLoot(() => 1, [42, 7]).item.name, 'Boiled leather jerkin', '42 leads into Arms and tools, a d100');

@@ -28,7 +28,7 @@
 
   function pills(it) {
     var b = [plural(it.slots, 'slot', 'slots')];
-    if (it.theme) b.push(it.theme); if (it.legacyEdition) b.push('Original spells');
+    if (it.theme) b.push(it.theme); if (it.path) b.push(it.path + ' path'); if (it.legacyEdition) b.push('Original spells');
     if (it.once === 'scene') b.push('Once per scene');
     if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
@@ -46,6 +46,12 @@
   function stepper(kind, key, v, label) {
     return '<span class="sh-cell"><span class="sh-stat"><b>' + sgn(v) + '</b><small>' + esc(label) + '</small></span>' +
       '<span class="sh-step"><button type="button" data-sh="' + kind + '" data-k="' + key + '" data-d="-1" aria-label="Less ' + esc(label) + '">−</button><button type="button" data-sh="' + kind + '" data-k="' + key + '" data-d="1" aria-label="More ' + esc(label) + '">+</button></span></span>';
+  }
+  /* The hero's path: a choice from the gear list's paths, or none. A relic of the hero's own path costs 1 less Horror (never below 1). */
+  function pathField(h, edit) {
+    var cur = C.pathOf(h), note = '<p class="sh-note">A relic of your own path costs 1 less Horror to use.</p>';
+    if (!edit) return cur ? '<div class="sh-ro"><span class="sh-lab">Path</span><p>' + esc(cur) + '</p></div>' + note : '';
+    return '<label class="sh-f">Path<select data-path="1"><option value=""' + (cur ? '' : ' selected') + '>No path</option>' + C.PATHS.map(function (p) { return '<option value="' + esc(p) + '"' + (p === cur ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></label>' + note;
   }
   function field(label, name, v, edit, big, max) {
     if (!edit) return v ? '<div class="sh-ro"><span class="sh-lab">' + esc(label) + '</span><p>' + esc(v) + '</p></div>' : '';
@@ -65,7 +71,7 @@
     var waiting = live && !g.key ? ' disabled title="Saving. This works as soon as the table has confirmed it."' : '';
     var spells = it.kind === 'grimoire' ? C.spellsOf(it) : [];
     var act = function (spellId) { return acts.filter(function (a) { return a.index === i && (a.spellId || '') === (spellId || ''); })[0]; };
-    return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + (it.cat || C.healingOf(it) ? ' left' : ' supplied · track manually') + '</span>' : '') +
+    return '<div class="sh-item"><div><b>' + esc(it.name) + '</b> ' + (it.category ? '<span class="sh-pill cat">' + esc(it.category) + '</span> ' : '') + pills(it) + (g.uses != null ? ' <span class="sh-pill">' + plural(g.uses, 'use', 'uses') + (C.usesCounted(it) ? ' left' : ' supplied · track manually') + '</span>' : '') +
       (it.rangeNote ? '<p class="sh-note">' + esc(it.rangeNote) + '</p>' : '') + (it.flavour ? '<p class="sh-flav">' + esc(it.flavour) + '</p>' : '') + (it.does ? '<p class="sh-does">' + esc(it.does) + '</p>' : '') + '<p class="sh-note">' + esc(C.automationText(it)) + '</p>' + tagLine(it) + (it.kind === 'grimoire' ? (it.pick ? '<p class="sh-eff">Read, it rolls d' + (it.pickDie || it.pick) + ': the die chooses one of its ' + it.pick + ' spells.</p>' : '') : effortLine(it, dice) + plainLine(it)) +
       (it.kind === 'grimoire' && !spells.length ? '<p class="sh-note">No spells are written in it yet.</p>' : '') +
       (spells.length ? '<ul class="sh-spells">' + spells.map(function (s) { return '<li><b>' + esc(s.name) + '</b> <span class="sh-pill">' + esc(C.effectLabel(s)) + '</span> <span class="sh-pill">' + esc(C.rangeText(s)) + '</span>: ' + esc(s.does) + ' <span class="sh-pill tempt">' + esc(C.horrorText(s)) + '</span>' + '<p class="sh-note">' + esc(C.automationText(s)) + '</p>' + tagLine(s) + effortLine(s, dice) + (it.pick ? '' : plainLine(s)) + useBtn(act(s.id), s.id) + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
@@ -101,7 +107,7 @@
     if (d.live && gm && host.roll) {
       out += '<section class="sh-sec sh-gm-rolls" aria-label="GM hero checks"><h3>Roll for ' + esc(h.name) + '</h3><p class="sh-note">Use these checks when helping a player. Use Ready to use for weapons, spells and items.</p><div class="sh-row">' + R.STATS.map(function (k) { return '<button type="button" class="sh-b" data-sh="gmRoll" data-stat="' + k + '">Roll ' + k + ' ' + sgn(h.stats[k]) + '</button>'; }).join('') + '</div><div class="sh-row"><label class="sh-f">Difficulty<select id="shGmAdj"><option value="normal">Normal</option><option value="easy">Easy −3</option><option value="hard">Hard +3</option></select></label><label class="sh-f">Own d20 (optional)<input id="shGmD20" type="number" min="1" max="20" inputmode="numeric" placeholder="Roll digitally"></label></div></section>';
     }
-    var left1 = '<section class="sh-sec"><h3>Who</h3><div class="sh-row">' + field('Name', 'name', h.name, edit, false, C.TEXT_LIMITS.name) + field('Calling', 'calling', h.calling, edit, false, C.TEXT_LIMITS.calling) + '</div>' + field('Vow', 'vow', h.vow, edit, false, C.TEXT_LIMITS.vow) + '</section>';
+    var left1 = '<section class="sh-sec"><h3>Who</h3><div class="sh-row">' + field('Name', 'name', h.name, edit, false, C.TEXT_LIMITS.name) + field('Calling', 'calling', h.calling, edit, false, C.TEXT_LIMITS.calling) + '</div>' + pathField(h, edit) + field('Vow', 'vow', h.vow, edit, false, C.TEXT_LIMITS.vow) + '</section>';
     left1 += '<section class="sh-sec"><h3>Health and Defence</h3><div class="sh-row sh-hpline">' + (hp ? hearts(hp.cur, hp.max) + '<b class="sh-hpn">' + hp.cur + ' / ' + hp.max + '</b>' + (d.canHp ? '<span class="sh-step"><button type="button" data-sh="hp" data-d="-1" aria-label="Lose 1 hit point">−</button><button type="button" data-sh="hp" data-d="1" aria-label="Gain 1 hit point">+</button></span>' : '') + (hp.cur === 0 ? '<b class="sh-zero">AT 0</b>' : '') : '<span class="sh-note">No hit points yet.</span>') +
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
     left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + C.scorePoints(h) + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
@@ -177,6 +183,7 @@
     });
     el.addEventListener('change', function (e) {
       if (e.target.id === 'shAdd') { pick = e.target.value; return; }
+      if (e.target.dataset && e.target.dataset.path) { var dp = host.get(); if (!dp) return; dp = effective(dp); if (C.pathOf(dp.hero) !== e.target.value) attempt({ op: 'path', value: e.target.value }); return; }
       var t = e.target.closest && e.target.closest('[data-text]'); if (!t) return;
       var d = host.get(); if (!d) return; d = effective(d);
       if (d.hero[t.dataset.text] === t.value) return;

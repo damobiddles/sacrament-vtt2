@@ -99,10 +99,10 @@ function pendingWeaponCat(s, roll) {
   const it = SC.itemOf(g);
   return it && it.kind === 'weapon' && it.cat === 'weapons' ? 'weapons' : roll.cat;
 }
-/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
+/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, path, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
 function charView(c, whole, uses) {
   gearKeys(c);
-  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', appearance: c.appearance || '' };
+  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '' };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
   if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
   return o;
@@ -235,7 +235,7 @@ export function addCharacter(s, p) {
   const card = newCard(s, { kind: 'pc', name: p.name || 'Unnamed Pilgrim', img: p.img, desc: p.desc, hp: { cur: R.HEART, max: R.HEART }, charId: id, x: p.x, y: p.y }, { role: 'gm' });
   s.chars[id] = { id, name: str(p.name, LIMITS.name, 'Unnamed Pilgrim') || 'Unnamed Pilgrim', owner: null, cardId: card.id, stats, effort, armour: clamp(int(p.armour, 0), 0, R.MAX_BONUS),
     calling: '', vow: '', appearance: '', background: '', notes: '', gear: [] };
-  if (p.sheet) Object.assign(s.chars[id], { calling: p.sheet.calling, vow: p.sheet.vow, appearance: p.sheet.appearance, background: p.sheet.background, notes: p.sheet.notes, gear: p.sheet.gear, marks: SC.marksOf(p.sheet), advances: SC.advancesOf(p.sheet) });
+  if (p.sheet) Object.assign(s.chars[id], { calling: p.sheet.calling, path: SC.pathOf(p.sheet), vow: p.sheet.vow, appearance: p.sheet.appearance, background: p.sheet.background, notes: p.sheet.notes, gear: p.sheet.gear, marks: SC.marksOf(p.sheet), advances: SC.advancesOf(p.sheet) });
   s.table.order.push(card.id);
   Object.values(s.scenes).forEach(scene => { if (scene.turns && !scene.turns.order.includes(card.id)) scene.turns.order.push(card.id); });
   return s.chars[id];
@@ -864,7 +864,7 @@ const HANDLERS = {
       if (sceneFx) sceneFx.roll = roll.id;
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
-      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
+      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
       nat = natOne(s, a, ctx, ch, chk, roll, u.spell);

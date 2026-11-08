@@ -27,6 +27,18 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 8 November 2026: paths and path relics
+
+**Paths, a new rule.** A hero may now follow one path: Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon or Witch-finder. Choose it on the character sheet, at the table or on My heroes, or leave it empty. Heroes made before today have no path until their player picks one. A path does one thing: **a relic of your own path costs 1 less Horror** each time you use it. It gives no scores, Effort or gear.
+
+**Twenty path relics on the loot tables,** two for each path. Any hero may carry and use them.
+
+- **Horror.** Each use costs 2 or 3 Horror, whether it works or not, and 1 less for a hero of its path (its entry gives both costs). A natural 1 adds Horror only when the relic is used to attack, as for any other item. Past 21, each point of Horror that cannot go on the meter still costs the hero d4 HP.
+- **Many wear out.** Most have 2 to 6 uses, counted on the sheet like bandages. A use is spent whether it works or not. When the last is gone the relic is broken, dry or burned out and does nothing more.
+- **Where they are found.** On the Relics table, 67 to 100 now lead to a new Path relics d100 table. The 22 older relics share 1 to 66, three numbers each. The chance of finding a relic at all has not changed.
+- **Printed sheets.** The print-and-play kit, the rules cheat sheet and the printed hero sheet do not have paths yet.
+- *Prompted by:* the designer's decision.
+
 ## 8 November 2026: heroes grow stronger
 
 **Advancement, a new rule.** Each adventure a hero lives through to its end earns 1 mark, ticked by the player in the new Marks box on the character sheet. At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10), and the marks start again. Each advance adds one point to the hero's share, so a grown hero can be brought to any table. In the solo game a road won ticks the mark itself. The printed hero sheet (blank, or filled in from My heroes) now has the Marks box. *Prompted by:* the solo game, where a hero who kept coming home had nothing to show for it; the designer chose to add the rule for everyone, so the table, play on paper and the solo game agree.

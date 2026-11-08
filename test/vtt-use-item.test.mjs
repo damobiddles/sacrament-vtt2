@@ -89,11 +89,11 @@ test('LOOT: the GM rolls the d100 table; only the GM is told; a GM-only note rea
 });
 
 test('LOOT: a d100 number that leads into a sub-table rolls it too, and the feed and the answer name both rolls', async () => {
-  const t = await table({ dice: [die(88, 100), die(23, 100)] }), ann = await t.join('Ann');
+  const t = await table({ dice: [die(88, 100), die(16, 100)] }), ann = await t.join('Ann');
   const r = await t.gm.cmd({ type: 'lootRoll' }); assert.equal(r.status, 200);
-  assert.equal(r.body.result.itemId, 'houndtooth'); assert.equal(r.body.result.n, 88); assert.equal(r.body.result.said, '88 → Relics d100: 23');
-  assert.deepEqual(r.body.result.steps.map((x) => [x.table, x.die, x.n]), [['d100', 100, 88], ['relics', 100, 23]]);
-  assert.match(feed(await t.state()), /Loot roll 88 → Relics d100: 23: Hound-tooth charm\./);
+  assert.equal(r.body.result.itemId, 'houndtooth'); assert.equal(r.body.result.n, 88); assert.equal(r.body.result.said, '88 → Relics d100: 16');
+  assert.deepEqual(r.body.result.steps.map((x) => [x.table, x.die, x.n]), [['d100', 100, 88], ['relics', 100, 16]]);
+  assert.match(feed(await t.state()), /Loot roll 88 → Relics d100: 16: Hound-tooth charm\./);
   assert.doesNotMatch(feed((await ann.get()).body.state), /Loot roll/, 'only the GM is told');
   const typed = await t.gm.cmd({ type: 'lootRoll', ns: [81, 5] }); assert.equal(typed.body.result.name, 'The Thorned Reliquary');
   assert.equal((await t.gm.cmd({ type: 'lootRoll', ns: [81, 101] })).status, 400, 'a d100 shows 1 to 100');

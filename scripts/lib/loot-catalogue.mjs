@@ -23,6 +23,7 @@ export function lootCatalogue(g) {
   const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${items.filter(i => i.kind === kind).map(i => {
     const details = [`${i.slots} ${i.slots === 1 ? 'slot' : 'slots'}`, i.use || 'GM resolves use'];
     if (i.theme) details.push('Theme: ' + i.theme);
+    if (i.path) details.push('Path: ' + i.path);
     if (globalThis.SacramentRules.rangeText(i)) details.push(globalThis.SacramentRules.rangeText(i));
     if (i.once === 'scene') details.push('Once per scene');
     if (i.rangeNote) details.push(i.rangeNote);
