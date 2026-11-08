@@ -316,7 +316,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const site = await mk('site'); await site.goto(base + '/');
   const joinRun = await site.$$eval('a', (e) => e.map((x) => ({ t: x.innerText.trim(), h: x.getAttribute('href') })));
   check('the home page is the Sacrament RPG Table page: it has “Join a game” and “Run a game” going to the table', joinRun.some((l) => /^Join a game$/i.test(l.t) && l.h === '/vtt/?join') && joinRun.some((l) => /^Run a game$/i.test(l.t) && l.h === '/vtt/?run'), JSON.stringify(joinRun.slice(0, 6)));
-  await site.goto(base + '/resources/'); check('Resources opens the Sacrament RPG Table directly', (await site.$$eval('a', (e) => e.some((x) => x.getAttribute('href') === '/vtt/' && /Sacrament RPG Table/i.test(x.innerText)))));
+  await site.goto(base + '/play-online/'); check('Play online (in the menu) opens the Sacrament RPG Table directly', (await site.$$eval('a', (e) => e.some((x) => x.getAttribute('href') === '/vtt/' && /open the table/i.test(x.innerText)) && e.some((x) => x.closest('.ic-nav') && x.getAttribute('href') === '/play-online/'))));
   const inv = await mk('inv'); await inv.goto(base + '/vtt/?room=ZZZZZZ'); await inv.waitForSelector('#entry:not([hidden])');
   await inv.waitForFunction(() => document.activeElement && document.activeElement.id === 'joinName', null, { timeout: 5000 }).catch(() => {});   // the page puts focus there 50 ms after showing the form; the check below still decides
   const jb = await (await inv.$('#joinForm')).boundingBox(), mb = await (await inv.$('#makeForm')).boundingBox();

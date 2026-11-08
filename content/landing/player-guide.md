@@ -4,7 +4,7 @@ summary: Create your first hero, join a table and understand the rules used by t
 ---
 These are the **current VTT rules**, checked against the application on 1 November 2026. Sacrament is still being playtested. Your GM decides what happens in the fiction and explains any house rules before play. You do not need to memorise this page.
 
-[First game checklist](/how-to-play/) · [Create a hero](/character/) · [Join a game](/vtt/?join) · [GM guide](/gm-guide/) · [Rules updates](/rules/updates/)
+[Start here](/how-to-play/) · [Create a hero](/character/) · [Join a game](/vtt/?join) · [GM guide](/gm-guide/) · [Rules updates](/rules/updates/)
 
 ## Start here
 

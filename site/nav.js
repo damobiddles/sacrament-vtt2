@@ -2,15 +2,14 @@
 (function (root) {
   'use strict';
   var PAGES = [
-    ['Home', '/'], ['Start here', '/how-to-play/'], ['Play solo', '/solo/'], ['The game', '/the-game/'], ['The setting', '/setting/'],
-    ['Rules', '/rules/'], ['Play in person', '/play-in-person/'], ['Resources', '/resources/'], ['News', '/news/'], ['Feedback', '/feedback/']
+    ['The game', '/the-game/'], ['The setting', '/setting/'], ['Start here', '/how-to-play/'], ['Rules', '/rules/'],
+    ['Play online', '/play-online/'], ['Play solo', '/solo/'], ['Play in person', '/play-in-person/'], ['Resources', '/resources/']
   ];
   function section(path) {
     path = path.replace(/index\.html$/, '');
     if (/^\/(player-guide|gm-guide|rules)(\/|$)/.test(path)) return '/rules/';
     if (/^\/adventures(\/|$)/.test(path)) return '/play-in-person/';
     if (/^\/(loot|brand|adventure|scenes)(\/|$)/.test(path)) return '/resources/';
-    if (/^\/(blog|news)(\/|$)/.test(path)) return '/news/';
     var match = PAGES.filter(function (p) { return p[1] === '/' ? path === '/' : path.indexOf(p[1]) === 0; })[0];
     return match ? match[1] : '';
   }
@@ -19,7 +18,7 @@
     return '<nav class="ic-nav" aria-label="Sacrament RPG"><div class="ic-nav-inner"><a class="ic-brand" href="/" aria-label="Sacrament RPG home"><img src="/favicon.svg" alt="" width="28" height="28">Sacrament RPG</a><ul>' + PAGES.map(function (p) { return '<li><a href="' + p[1] + '"' + (p[1] === current ? ' aria-current="page"' : '') + '>' + p[0] + '</a></li>'; }).join('') + '</ul></div></nav>';
   }
   function footer() {
-    return '<footer class="ic-foot"><div class="wrap"><div class="site-footer-grid"><div><b>Sacrament RPG</b><p>A dark fantasy roleplaying game, played in your browser or around a real table.</p></div><nav aria-label="Play and learn"><b>Play and learn</b><a href="/how-to-play/">First game checklist</a><a href="/vtt/?join">Join a table</a><a href="/vtt/?run">Create a table</a><a href="/character/">My heroes</a><a href="/solo/">Play solo</a><a href="/play-in-person/">Play in person</a><a href="/player-guide/">Player rules</a><a href="/gm-guide/">GM rules</a><a href="/rules/updates/">Rules updates</a></nav><nav aria-label="Explore and get help"><b>Explore and get help</b><a href="/resources/">Downloads and reference</a><a href="/loot/">Current Loot Tables</a><a href="/news/">Latest news</a><a href="/feedback/">Send feedback</a><a href="https://www.youtube.com/@DungeonJukebox" target="_blank" rel="noopener noreferrer">Dungeon Jukebox on YouTube</a></nav></div><p class="site-legal"><a href="https://ko-fi.com/sacramentrpg" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a> · <a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a></p><p>© ' + new Date().getFullYear() + ' Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>';
+    return '<footer class="ic-foot"><div class="wrap"><div class="site-footer-grid"><div><b>Sacrament RPG</b><p>A dark fantasy roleplaying game, played in your browser or around a real table.</p></div><nav aria-label="Play and learn"><b>Play and learn</b><a href="/how-to-play/">Start here</a><a href="/play-online/">Play online</a><a href="/vtt/?join">Join a game</a><a href="/vtt/?run">Run a game</a><a href="/character/">My heroes</a><a href="/solo/">Play solo</a><a href="/play-in-person/">Play in person</a><a href="/rules/">Rules</a><a href="/player-guide/">Player guide</a><a href="/gm-guide/">GM guide</a><a href="/rules/updates/">Rules updates</a></nav><nav aria-label="Explore and get help"><b>Explore and get help</b><a href="/resources/">Resources</a><a href="/loot/">Current Loot Tables</a><a href="/news/">News</a><a href="/feedback/">Send feedback</a><a href="https://www.youtube.com/@DungeonJukebox" target="_blank" rel="noopener noreferrer">Dungeon Jukebox on YouTube</a></nav></div><p class="site-legal"><a href="https://ko-fi.com/sacramentrpg" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a> · <a href="/privacy/">Privacy Policy</a> · <a href="/terms/">Terms of Use</a></p><p>© ' + new Date().getFullYear() + ' Dungeon Jukebox, also known as Damien Bidmead. All rights reserved.</p></div></footer>';
   }
   root.SacramentSite = { navigation: navigation, footer: footer, section: section };
   if (typeof document === 'undefined') return;
