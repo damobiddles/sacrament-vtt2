@@ -6,7 +6,7 @@ test.setTimeout(60000);
 test('current role guides have working contents and public rules omit the obsolete draft', async ({ browser }, testInfo) => {
   const page = await newPage(browser);
   await page.goto('/rules/');
-  await expect(page.getByRole('link', { name: 'Player guide', exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Rules pages' }).getByRole('link', { name: 'Player guide', exact: true })).toBeVisible();
   await expect(page.locator('.earlier-draft')).toHaveCount(0);
   await expect(page.locator('.range-reference tbody tr')).toHaveCount(4);
   await expect(page.locator('#current-rule-values')).toContainText('d10 per 2 living heroes');
