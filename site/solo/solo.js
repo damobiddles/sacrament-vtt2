@@ -31,6 +31,14 @@
       places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
+    if (state.over === 'won') markHome();
+  }
+  /* Advancement (rules.js ADVANCE): a road won is an adventure lived through, so a hero from My heroes gets its mark, through the sheet's own rules, once. */
+  function markHome() {
+    var saved = savedHero(); if (!saved || state.run.marked) return;
+    var h = saved.h, r = C.edit(h, { op: 'mark', delta: 1 }, { gm: false }, h.hp), ok = r.ok && window.SacramentHeroes.save(saved.st), m = C.marksOf(h);
+    state.run.marked = !r.ok ? h.name + ' already has ' + R.ADVANCE.marks + ' marks: take the advance on My heroes.' : !ok ? 'The mark could not be saved in this browser.'
+      : 'A mark for ' + h.name + ' (' + m + ' of ' + R.ADVANCE.marks + ').' + (m >= R.ADVANCE.marks ? ' Take the advance on My heroes.' : '');
   }
   /* Deeds (deeds.js): measured against every friend, every last place and every place on this road. */
   var DEEDS = window.SacramentSoloDeeds;
@@ -83,7 +91,7 @@
     var list; try { list = window.SacramentHeroes.read().heroes || []; } catch { list = []; }
     if (!list.length) { var p = document.createElement('p'); p.className = 'empty'; p.innerHTML = 'You have no heroes saved in this browser yet. Make one in <a href="/character/">My heroes</a>, or take a ready-made hero below.'; mine.appendChild(p); }
     list.forEach(function (h) {
-      var b = pickButton(h.name, [h.calling, 'Defence ' + C.defence(h)].filter(Boolean).join(' · '));
+      var b = pickButton(h.name, [h.calling, 'Defence ' + C.defence(h), C.marksOf(h) >= R.ADVANCE.marks ? 'Ready to advance on My heroes' : C.marksOf(h) ? 'Marks ' + C.marksOf(h) + ' of ' + R.ADVANCE.marks : ''].filter(Boolean).join(' · '));
       b.addEventListener('click', function () { begin(h); }); mine.appendChild(b);
     });
     $('titleArt').innerHTML = ART.scene('title', null, 't');
@@ -216,6 +224,7 @@
       var again = choiceButton({ label: state.over === 'won' ? 'Play it again' : 'Try again', cmd: '' }, 'ch');
       again.addEventListener('click', function () { begin(state.origin); });
       var other = choiceButton({ label: 'Choose another hero', cmd: '' }, 'ch go'); other.addEventListener('click', function () { forget(); showStart(); });
+      if (state.run && state.run.marked) { var mk = document.createElement('p'); mk.className = 'more marked'; mk.textContent = state.run.marked; box.appendChild(mk); }
       var home = homeButton(); if (home) box.appendChild(home);
       var card = choiceButton({ label: 'See the end card', cmd: '' }, 'ch go wide'); card.addEventListener('click', showEnd); box.appendChild(card);
       box.append(again, other); return;

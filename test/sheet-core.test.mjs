@@ -140,3 +140,40 @@ test('a whole hero can be checked: what is over a limit is listed in words, and 
   assert.equal(c.name, 'Wren'); assert.equal(c.stats.STR, 10); assert.equal(c.stats.DEX, 0); assert.equal(c.effort.basic, 2); assert.equal(c.armour, 10);
   assert.deepEqual(c.gear.map((g) => g.id), ['sword']); assert.equal(c.extra, undefined); assert.equal(c.notes, '5');
 });
+
+/* Advancement (owner's rule, 2026-11-07): a mark for each adventure lived through; at 3 marks one advance, +1 to a score (up to 6) or an Effort bonus (up to +10); the marks start again. */
+test('advancement: three marks buy one advance, which adds a point to share and starts the marks again', () => {
+  assert.deepEqual(R.ADVANCE, { marks: 3, scoreMax: 6, effortMax: 10 });
+  const h = hero(); h.stats.STR = 6;
+  assert.equal(C.marksOf(h), 0);
+  assert.match(C.edit(h, { op: 'advance', stat: 'DEX' }, player, hp()).why, /needs 3 marks/);
+  for (let i = 0; i < 3; i++) assert.equal(C.edit(h, { op: 'mark', delta: 1 }, player, hp()).ok, true);
+  assert.match(C.edit(h, { op: 'mark', delta: 1 }, player, hp()).why, /take the advance first/);
+  assert.match(C.edit(h, { op: 'advance', stat: 'STR' }, player, hp()).why, /already 6/);
+  assert.equal(C.edit(h, { op: 'advance', stat: 'DEX' }, player, hp()).ok, true);
+  assert.equal(h.stats.DEX, 1); assert.equal(h.marks, 0); assert.deepEqual(h.advances, { stats: 1, effort: 0 });
+  assert.equal(C.scorePoints(h), 7); assert.equal(C.pointsLeft(h), 0);
+  assert.deepEqual(C.problems(h, player), []);
+  // the point can be moved like any other, but there is still no eighth point
+  assert.equal(C.edit(h, { op: 'score', stat: 'DEX', delta: -1 }, player, hp()).ok, true);
+  assert.equal(C.edit(h, { op: 'score', stat: 'CON', delta: 1 }, player, hp()).ok, true);
+  assert.equal(C.edit(h, { op: 'score', stat: 'WIS', delta: 1 }, player, hp()).ok, false);
+});
+
+test('advancement: an Effort advance, taking a mark back, the +10 cap, and a saved hero keeps its marks', () => {
+  const h = hero();
+  assert.match(C.edit(h, { op: 'mark', delta: -1 }, player, hp()).why, /no mark/);
+  C.edit(h, { op: 'mark', delta: 1 }, player, hp()); C.edit(h, { op: 'mark', delta: -1 }, player, hp()); assert.equal(h.marks, 0);
+  h.marks = 3; assert.equal(C.edit(h, { op: 'advance', cat: 'weapons' }, player, hp()).ok, true);
+  assert.equal(C.effortPoints(h), 5); assert.equal(C.edit(h, { op: 'effort', cat: 'weapons', delta: 1 }, player, hp()).ok, true);
+  assert.equal(h.effort.weapons, 2); assert.equal(C.effortLeft(h), 3);
+  h.effort.weapons = 10; h.marks = 3; assert.match(C.edit(h, { op: 'advance', cat: 'weapons' }, player, hp()).why, /already \+10/);
+  h.advances.effort = 20; h.effort.weapons = 9; assert.equal(C.edit(h, { op: 'effort', cat: 'weapons', delta: 2 }, player, hp()).ok, false);
+  const back = C.cleanHero(JSON.parse(JSON.stringify(h)));
+  assert.equal(back.marks, 3); assert.deepEqual(back.advances, { stats: 0, effort: 20 });
+  assert.deepEqual(C.cleanHero({ name: 'Old', marks: 9, advances: { stats: -2 } }).advances, { stats: 0, effort: 0 });
+  assert.equal(C.cleanHero({ name: 'Old', marks: 9 }).marks, 3);
+  // without its advances the same scores break the build rules
+  const cheat = hero({ stats: { STR: 6, DEX: 1, CON: 0, INT: 0, WIS: 0, CHA: 0 } });
+  assert.match(C.problems(cheat, player).join(' '), /add up to 7/);
+});

@@ -23,6 +23,9 @@
   /* Building a hero: what the character sheet enforces. Six points among the six scores (none above 6), four Effort points, ten slots for what is equipped and ten for the pack,
      no more than three relics and grimoires in all, and a player may pick one grimoire themselves (relics and further books are finds the GM gives). */
   var BUILD = { points: 6, scoreMax: 6, effortPoints: 4, slots: 10, magicItems: 3, playerGrimoires: 1 };
+  /* Advancement (the owner's rule, 2026-11-07): each adventure a hero lives through to its end earns 1 mark (the player ticks it on the sheet; a won solo road ticks it itself).
+     At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10). The marks then start again. */
+  var ADVANCE = { marks: 3, scoreMax: BUILD.scoreMax, effortMax: MAX_BONUS };
 
   /* Monster attacks (the GM's): a monster rolls d20 + its attack bonus and hits a hero when the total reaches the hero's Defence. These follow the Rules page. */
   var DEFENCE_BASE = 10; /* a foe must roll 10 + the hero's Defence bonus */
@@ -181,7 +184,7 @@
     return out;
   }
 
-  return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+  return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
     HORROR: HORROR, DYING: DYING, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

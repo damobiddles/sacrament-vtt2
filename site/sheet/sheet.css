@@ -25,6 +25,9 @@
 .sh-step button{min-width:var(--ui-control-height);min-height:var(--ui-control-height);background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:700 1.1rem var(--label);cursor:pointer}
 .sh-step button:hover,.sh-b:hover{border-color:var(--candle)}
 .sh-b{min-height:var(--ui-control-height);padding:6px 12px;background:var(--bg);color:var(--fg);border:1px solid var(--edge);font:600 var(--ui-text)/1.35 var(--label);letter-spacing:.04em;text-transform:none;cursor:pointer}
+.sh-marks{display:inline-flex;gap:6px;align-items:center;margin-right:6px}
+.sh-mark{width:22px;height:22px;border:2px solid var(--edge);background:var(--bg)}
+.sh-mark.on{background:var(--candle);border-color:var(--candle)}
 .sh-b.go{background:var(--blood);color:var(--on-blood);border-color:var(--blood-hi)}
 .sh-hpline{align-items:center}.sh-hpn{font:700 1.15rem var(--display)}
 .sh-def{margin-left:auto;font:700 var(--ui-text-small) var(--label);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}.sh-def b{font-size:1.4rem;color:var(--candle)}

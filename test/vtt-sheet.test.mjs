@@ -111,3 +111,20 @@ test('a hero from a table saved before the sheet existed still works: no gear, n
   const old = (await me(ann, 'Thorne')); assert.deepEqual(old.gear, []); assert.equal(old.notes, '');
   assert.equal(typeof old.defence, 'number');
 });
+
+test('ADVANCEMENT at the table: the player ticks marks and takes the advance; a hero brought with advances keeps them; other players never see the marks', async () => {
+  const { t, ann, bob, thorne } = await setup();
+  for (let i = 0; i < 3; i++) assert.equal((await sheet(ann, thorne.id, { op: 'mark', delta: 1 })).status, 200);
+  assert.equal((await sheet(ann, thorne.id, { op: 'mark', delta: 1 })).status, 400, 'a fourth mark waits for the advance');
+  assert.equal((await me(ann, 'Thorne')).marks, 3);
+  assert.equal((await me(bob, 'Thorne')).marks, undefined, 'another player is not sent the marks');
+  const before = (await me(ann, 'Thorne')).stats.WIS;
+  assert.equal((await sheet(ann, thorne.id, { op: 'advance', stat: 'WIS' })).status, 200);
+  const after = await me(ann, 'Thorne'); assert.equal(after.stats.WIS, before + 1); assert.equal(after.marks, 0); assert.deepEqual(after.advances, { stats: 1, effort: 0 });
+  const vet = await t.join('Cai');
+  const hero = { name: 'Veteran', stats: { STR: 6, DEX: 2 }, effort: { weapons: 4 }, gear: [], marks: 2, advances: { stats: 2, effort: 0 } };
+  const r = await vet.cmd({ type: 'bringHero', hero }); assert.equal(r.status, 200, JSON.stringify(r.body.error || ''));
+  const v = await me(vet, 'Veteran'); assert.equal(v.marks, 2); assert.deepEqual(v.advances, { stats: 2, effort: 0 });
+  const cheat = await (await t.join('Dee')).cmd({ type: 'bringHero', hero: Object.assign({}, hero, { name: 'Cheat', advances: undefined }) });
+  assert.equal(cheat.status, 400, 'the same scores without the advances break the build rules');
+});

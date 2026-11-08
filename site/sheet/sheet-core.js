@@ -103,14 +103,22 @@
     return 'Tempts the Horror · +' + R.sayHorrorAmount(src.horror) + '. ' + (src.horrorReason || "Using this item's supernatural power tempts the Horror.");
   }
   function blankHero(name) {
-    var h = { name: name || 'New hero', calling: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [] };
+    var h = { name: name || 'New hero', calling: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [], marks: 0, advances: { stats: 0, effort: 0 } };
     STATS.forEach(function (k) { h.stats[k] = 0; }); CATS.forEach(function (k) { h.effort[k] = 0; });
     return h;
   }
 
   /* ---------- numbers ---------- */
-  function pointsLeft(h) { return B.points - sum(h.stats, STATS); }
-  function effortLeft(h) { return B.effortPoints - sum(h.effort, CATS); }
+  /* Advancement (rules.js ADVANCE): each advance a hero has taken adds one point to share among the scores, or among the Effort kinds. */
+  var AD = R.ADVANCE;
+  /* the most advances a hero can ever have taken: every score at its top and every Effort bonus at its top (more is a hand-edited save) */
+  var MAX_ADVANCES = STATS.length * AD.scoreMax - B.points + CATS.length * AD.effortMax - B.effortPoints;
+  function advancesOf(h) { var a = (h && h.advances) || {}; return { stats: Math.max(0, int(a.stats, 0)), effort: Math.max(0, int(a.effort, 0)) }; }
+  function marksOf(h) { return clamp(int(h && h.marks, 0), 0, AD.marks); }
+  function scorePoints(h) { return B.points + advancesOf(h).stats; }
+  function effortPoints(h) { return B.effortPoints + advancesOf(h).effort; }
+  function pointsLeft(h) { return scorePoints(h) - sum(h.stats, STATS); }
+  function effortLeft(h) { return effortPoints(h) - sum(h.effort, CATS); }
 
   /* ---------- gear ---------- */
   /* Whether an item can be equipped at all: its own "equippable" flag in gear.js if it has one, otherwise by its type (everything but a supply). Decided from the data, never from a name. */
@@ -303,7 +311,7 @@
       if (val < 0 && !(val > old)) return no('A score cannot go below 0.');
       if (val > B.scoreMax && !lowering) return no('A score can be at most ' + B.scoreMax + '.');
       var after = sum(h.stats, STATS) - old + val;
-      if (after > B.points && !lowering) { var left = pointsLeft(h); return no(left <= 0 ? 'You have no points left: all ' + B.points + ' are spent. Take a point off another score first.' : 'You have only ' + plural(left, 'point', 'points') + ' left for this score.'); }
+      if (after > scorePoints(h) && !lowering) { var left = pointsLeft(h); return no(left <= 0 ? 'You have no points left: all ' + scorePoints(h) + ' are spent. Take a point off another score first.' : 'You have only ' + plural(left, 'point', 'points') + ' left for this score.'); }
       h.stats[op.stat] = val; return { ok: true };
     }
     if (op.op === 'effort') {
@@ -311,8 +319,31 @@
       var eo = h.effort[op.cat] || 0, ev = op.delta != null ? eo + int(op.delta, NaN) : int(op.value, NaN); if (!isFinite(ev)) return no('Effort is a whole number.');
       if (ev < 0) return no('Effort cannot go below 0.');
       var eafter = sum(h.effort, CATS) - eo + ev;
-      if (eafter > B.effortPoints && ev > eo) { var el = effortLeft(h); return no(el <= 0 ? 'You have no Effort points left: all ' + B.effortPoints + ' are spent. Take a point off another kind first.' : 'You have only ' + plural(el, 'Effort point', 'Effort points') + ' left for this.'); }
+      if (ev > AD.effortMax && ev > eo) return no('An Effort bonus can be at most +' + AD.effortMax + '.');
+      if (eafter > effortPoints(h) && ev > eo) { var el = effortLeft(h); return no(el <= 0 ? 'You have no Effort points left: all ' + effortPoints(h) + ' are spent. Take a point off another kind first.' : 'You have only ' + plural(el, 'Effort point', 'Effort points') + ' left for this.'); }
       h.effort[op.cat] = ev; return { ok: true };
+    }
+    /* Advancement: the hero's player (or the GM) ticks a mark after an adventure the hero lived through, or takes one back if it was ticked by mistake. */
+    if (op.op === 'mark') {
+      var m = marksOf(h), d = int(op.delta, 1) < 0 ? -1 : 1;
+      if (d > 0 && m >= AD.marks) return no('The hero has ' + AD.marks + ' marks: take the advance first.');
+      if (d < 0 && m <= 0) return no('There is no mark to take back.');
+      h.marks = m + d; return { ok: true };
+    }
+    /* At 3 marks: +1 to one score (up to 6) or to one Effort bonus (up to +10), and the marks start again. */
+    if (op.op === 'advance') {
+      if (marksOf(h) < AD.marks) return no('An advance needs ' + AD.marks + ' marks; the hero has ' + marksOf(h) + '.');
+      var a = advancesOf(h);
+      if (op.stat != null) {
+        if (STATS.indexOf(op.stat) < 0) return no('That is not one of the six scores.');
+        if ((h.stats[op.stat] || 0) >= AD.scoreMax) return no(op.stat + ' is already ' + AD.scoreMax + ', as high as a score goes.');
+        h.stats[op.stat] = (h.stats[op.stat] || 0) + 1; a.stats += 1;
+      } else {
+        if (CATS.indexOf(op.cat) < 0) return no('Choose a score or a kind of Effort.');
+        if ((h.effort[op.cat] || 0) >= AD.effortMax) return no(R.CAT_NAMES[op.cat] + ' Effort is already +' + AD.effortMax + ', as high as it goes.');
+        h.effort[op.cat] = (h.effort[op.cat] || 0) + 1; a.effort += 1;
+      }
+      h.advances = a; h.marks = 0; return { ok: true };
     }
     h.gear = Array.isArray(h.gear) ? h.gear : [];
     if (op.op === 'add') {
@@ -355,11 +386,12 @@
   /* ---------- checking a whole hero (bringing one to a table) ----------
      who.arriving: a hero brought from My heroes may arrive with the relics and grimoires of a ready-made kit (up to three in all); the sheet still will not let a player add them. */
   function problems(h, who) {
-    var gm = !!(who && who.gm), keep = gm || !!(who && who.arriving), out = [], spent = sum(h.stats, STATS), espent = sum(h.effort, CATS);
-    if (spent > B.points) out.push('The scores add up to ' + spent + ' points; a hero has ' + B.points + '.');
+    var gm = !!(who && who.gm), keep = gm || !!(who && who.arriving), out = [], spent = sum(h.stats, STATS), espent = sum(h.effort, CATS), sp = scorePoints(h), ep = effortPoints(h);
+    if (spent > sp) out.push('The scores add up to ' + spent + ' points; this hero has ' + sp + '.');
     STATS.forEach(function (k) { var v = h.stats[k] || 0; if (v > B.scoreMax) out.push(k + ' is ' + v + '; a score can be at most ' + B.scoreMax + '.'); if (v < 0) out.push(k + ' is below 0.'); });
-    if (espent > B.effortPoints) out.push('The Effort adds up to ' + espent + ' points; a hero has ' + B.effortPoints + '.');
+    if (espent > ep) out.push('The Effort adds up to ' + espent + ' points; this hero has ' + ep + '.');
     CATS.forEach(function (k) { if ((h.effort[k] || 0) < 0) out.push(R.CAT_NAMES[k] + ' Effort is below 0.'); });
+    var adv = advancesOf(h); if (adv.stats + adv.effort > MAX_ADVANCES) out.push('The hero has taken more advances than a hero can.');
     var gear = h.gear || [];
     gear.forEach(function (g) {
       var it = itemOf(g); if (!it) { out.push('"' + g.id + '" is not on the gear list.'); return; }
@@ -379,10 +411,11 @@
     STATS.forEach(function (k) { h.stats[k] = clamp(int(raw.stats && raw.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
     CATS.forEach(function (k) { h.effort[k] = clamp(int(raw.effort && raw.effort[k], 0), 0, R.MAX_BONUS); });
     h.armour = clamp(int(raw.armour, 0), 0, R.MAX_BONUS);
+    h.marks = marksOf(raw); var ra = advancesOf(raw); h.advances = { stats: clamp(ra.stats, 0, MAX_ADVANCES), effort: clamp(ra.effort, 0, MAX_ADVANCES) };
     h.gear = (Array.isArray(raw.gear) ? raw.gear : []).filter(function (g) { return g && item(g.id); }).slice(0, 60).map(function (g) { var it = item(g.id), o = { id: it.id, eq: g.eq === true && canEquip(it) }; if (it.uses) o.uses = clamp(int(g.uses, it.uses), 0, it.uses); return o; });
     return h;
   }
 
-  return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
+  return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
     edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

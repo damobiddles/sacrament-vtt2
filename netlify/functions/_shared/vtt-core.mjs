@@ -104,7 +104,7 @@ function charView(c, whole, uses) {
   gearKeys(c);
   const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', appearance: c.appearance || '' };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
-  if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
+  if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
   return o;
 }
 
@@ -235,7 +235,7 @@ export function addCharacter(s, p) {
   const card = newCard(s, { kind: 'pc', name: p.name || 'Unnamed Pilgrim', img: p.img, desc: p.desc, hp: { cur: R.HEART, max: R.HEART }, charId: id, x: p.x, y: p.y }, { role: 'gm' });
   s.chars[id] = { id, name: str(p.name, LIMITS.name, 'Unnamed Pilgrim') || 'Unnamed Pilgrim', owner: null, cardId: card.id, stats, effort, armour: clamp(int(p.armour, 0), 0, R.MAX_BONUS),
     calling: '', vow: '', appearance: '', background: '', notes: '', gear: [] };
-  if (p.sheet) Object.assign(s.chars[id], { calling: p.sheet.calling, vow: p.sheet.vow, appearance: p.sheet.appearance, background: p.sheet.background, notes: p.sheet.notes, gear: p.sheet.gear });
+  if (p.sheet) Object.assign(s.chars[id], { calling: p.sheet.calling, vow: p.sheet.vow, appearance: p.sheet.appearance, background: p.sheet.background, notes: p.sheet.notes, gear: p.sheet.gear, marks: SC.marksOf(p.sheet), advances: SC.advancesOf(p.sheet) });
   s.table.order.push(card.id);
   Object.values(s.scenes).forEach(scene => { if (scene.turns && !scene.turns.order.includes(card.id)) scene.turns.order.push(card.id); });
   return s.chars[id];
