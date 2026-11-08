@@ -11,7 +11,7 @@ test('saved bow bonuses remain editable, generator uses Weapons, and public loot
  await expect(page.locator('#sheetHere [data-text=notes]')).toHaveValue('Saved private notes');await expect(page.locator('.sh-hpn')).toHaveText('7 / 10');
  for(let n=0;n<3;n++){await page.locator('[data-sh=effort][data-k=guns][data-d="-1"]').click();await page.locator('[data-sh=effort][data-k=weapons][data-d="1"]').click();}
  await expect(page.locator('#sheetHere')).not.toContainText('Your Guns bonus does not apply');
- await page.locator('#generatorFocus').selectOption('scout');await page.locator('#generateHero').click();await expect(page.locator('#generatorPreview')).toContainText('Weapons +3');
+ await page.locator('#generatorFocus').selectOption('Hunter');await page.locator('#generateHero').click();await expect(page.locator('#generatorPreview')).toContainText('Weapons +3');
  await page.screenshot({path:info.outputPath('weapon-effort-sheet.png'),fullPage:true});
  await page.goto('/loot/');await expect(page.locator('#item-bow')).toContainText('Weapons Effort d6');await expect(page.locator('#item-crossbow')).toContainText('Weapons Effort d6');
  expect(page.errors).toEqual([]);
@@ -25,7 +25,7 @@ test('GM designer separates bows and firearms and multiplayer bows use d6',async
  await gm.locator('[data-lf=weaponStyle]').selectOption('firearm');await expect(gm.locator('[data-lf=cat]')).toHaveValue('guns');await expect(gm.locator('#ltPrev')).toContainText('d8');
  const player=await newPage(browser);await joinTable(player,code,'Archer');
  // Generate locally, then bring the saved scout into the disposable table.
- await player.goto('/character/');await player.locator('#generatorFocus').selectOption('scout');await player.locator('#generateHero').click();await player.locator('#keepGenerated').click();
+ await player.goto('/character/');await player.locator('#generatorFocus').selectOption('Hunter');await player.locator('#generateHero').click();await player.locator('#keepGenerated').click();
  await player.goto('/vtt/?room='+code);await expect(player.locator('#app')).toBeVisible();
  // a slow table: it applies each change at once but its answer reaches the player 3 s late, so the player's screen trails the GM's
  await player.route('**/.netlify/functions/vtt',async r=>{const a=await r.fetch();await new Promise(ok=>setTimeout(ok,3000));await r.fulfill({response:a});});

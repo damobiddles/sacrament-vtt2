@@ -49,7 +49,7 @@
   }
   /* The hero's path: a choice from the gear list's paths, or none. A relic of the hero's own path costs 1 less Horror (never below 1). */
   function pathField(h, edit) {
-    var cur = C.pathOf(h), note = '<p class="sh-note">A relic of your own path costs 1 less Horror to use.</p>';
+    var cur = C.pathOf(h), note = '<p class="sh-note">' + (cur ? esc(C.PATH_ABOUT[cur]) + ' ' : '') + 'A relic of your own path costs 1 less Horror to use. <a href="/rules/paths/" target="_blank" rel="noopener">About paths</a></p>';
     if (!edit) return cur ? '<div class="sh-ro"><span class="sh-lab">Path</span><p>' + esc(cur) + '</p></div>' + note : '';
     return '<label class="sh-f">Path<select data-path="1"><option value=""' + (cur ? '' : ' selected') + '>No path</option>' + C.PATHS.map(function (p) { return '<option value="' + esc(p) + '"' + (p === cur ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></label>' + note;
   }

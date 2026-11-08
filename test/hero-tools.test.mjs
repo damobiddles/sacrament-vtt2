@@ -118,3 +118,14 @@ test('generated hero names come from a large setting name pool and vary', () => 
   assert.ok(seen.size>=280,'300 heroes give at least 280 different names, got '+seen.size);
   assert.ok(ofPlace>0 && ofPlace<150);
 });
+
+test('the generator starts from a path (owner request 2026-11-08): each of the 20 paths gives a valid hero of that path, and Surprise me picks one', () => {
+  const { T, C } = setup();
+  let seed = 7; const rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  assert.deepEqual(plain(C.PATHS.filter(p => !T.KIT[p])), [], 'every path has a starting kit');
+  for (const p of C.PATHS) for (let i = 0; i < 25; i++) { const h = T.generate(p, rng); assert.equal(h.path, p); assert.ok(h.calling); assert.deepEqual(plain(C.problems(h, { gm: false })), []); }
+  const talker = T.generate('Diplomat', rng); assert.equal(talker.stats.CHA, 3);
+  const seen = new Set(); for (let i = 0; i < 200; i++) seen.add(T.generate('random', rng).path);
+  assert.ok(seen.size >= 15, 'Surprise me reaches many paths');
+  assert.ok(C.PATHS.includes(T.generate('fighter', rng).path), 'the old focus words still work');
+});

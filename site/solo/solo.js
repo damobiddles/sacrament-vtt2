@@ -91,7 +91,7 @@
     var list; try { list = window.SacramentHeroes.read().heroes || []; } catch { list = []; }
     if (!list.length) { var p = document.createElement('p'); p.className = 'empty'; p.innerHTML = 'You have no heroes saved in this browser yet. Make one in <a href="/character/">My heroes</a>, or take a ready-made hero below.'; mine.appendChild(p); }
     list.forEach(function (h) {
-      var b = pickButton(h.name, [h.calling, 'Defence ' + C.defence(h), C.marksOf(h) >= R.ADVANCE.marks ? 'Ready to advance on My heroes' : C.marksOf(h) ? 'Marks ' + C.marksOf(h) + ' of ' + R.ADVANCE.marks : ''].filter(Boolean).join(' · '));
+      var b = pickButton(h.name, [h.calling, C.pathOf(h) ? 'Path: ' + C.pathOf(h) : '', 'Defence ' + C.defence(h), C.marksOf(h) >= R.ADVANCE.marks ? 'Ready to advance on My heroes' : C.marksOf(h) ? 'Marks ' + C.marksOf(h) + ' of ' + R.ADVANCE.marks : ''].filter(Boolean).join(' · '));
       b.addEventListener('click', function () { begin(h); }); mine.appendChild(b);
     });
     $('titleArt').innerHTML = ART.scene('title', null, 't');
@@ -510,7 +510,7 @@
   /* ---------- the hero sheet ---------- */
   $('heroBtn').addEventListener('click', function () {
     var h = state.hero;
-    $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, h.vow].filter(Boolean).join(' · ');
+    $('sheetName').textContent = h.name; $('sheetCalling').textContent = [h.calling, C.pathOf(h) ? 'Path: ' + C.pathOf(h) : '', h.vow].filter(Boolean).join(' · ');
     var nums = $('sheetNums'); nums.textContent = '';
     [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', S.sceneInfo(state, ADV()).target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });

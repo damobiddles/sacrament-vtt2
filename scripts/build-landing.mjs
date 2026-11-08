@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { esc, parse, fmt } from './lib/markdown.mjs';
-import { rangeTable, ruleValues, tagTable } from './lib/current-rules.mjs';
+import { rangeTable, ruleValues, tagTable, pathTable } from './lib/current-rules.mjs';
 import '../site/vtt/rules.js';
 import { lootCatalogue } from './lib/loot-catalogue.mjs';
 import '../site/sheet/gear.js';
@@ -26,6 +26,7 @@ const PAGES = [
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'Start here' },
   { slug: 'rules', path: '/rules/', label: 'Rules', guide: true },
+  { slug: 'paths', path: '/rules/paths/', label: 'Paths', guide: true },
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'rules-updates', path: '/rules/updates/', label: 'Rules updates', guide: true },
@@ -88,7 +89,7 @@ ${footer()}
 `;
 
 const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div class="label">${esc(label)}</div><h1>${esc(h1)}</h1>${lede ? '<p class="lede">' + esc(lede) + '</p>' : ''}</div></header>`;
-const RULES_TABS = [['/rules/', 'The rules'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
+const RULES_TABS = [['/rules/', 'The rules'], ['/rules/paths/', 'Paths'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 
@@ -201,7 +202,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
     let html = todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>');
     if (slug === 'play-in-person') html = playInPerson(html);
     if (slug === 'play-online') html = playOnline(html);
-    html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules)).replace('<p>{{TAGS}}</p>', tagTable(globalThis.SACRAMENT_GEAR));
+    html = html.replace('<p>{{RANGES}}</p>', rangeTable(globalThis.SacramentRules)).replace('<p>{{RULE_VALUES}}</p>', ruleValues(globalThis.SacramentRules)).replace('<p>{{TAGS}}</p>', tagTable(globalThis.SACRAMENT_GEAR)).replace('<p>{{PATHS}}</p>', pathTable(globalThis.SACRAMENT_GEAR));
     if (meta.guide) {
       const sections = [];
       html = html.replace(/<h2>(.*?)<\/h2>/g, (_, title) => {
@@ -226,6 +227,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   text('setting', NAME, '<aside class="site-next"><h2>Take a hero into this world</h2><p><a class="btn" href="/character/">Create a hero</a> <a href="/how-to-play/">Learn how to play</a></p></aside>');
   text('how-to-play', NAME);
   text('rules', NAME);
+  text('paths', NAME);
   text('player-guide', NAME);
   text('gm-guide', NAME);
   text('rules-updates', NAME);

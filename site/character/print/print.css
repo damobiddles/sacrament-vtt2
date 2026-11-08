@@ -20,10 +20,10 @@
 .ps-page h2{font-size:11.5pt;margin-top:.6mm}
 .ps-fields{display:grid;grid-template-columns:1.6fr 1.4fr 1fr;gap:5mm}
 .ps-field{display:flex;align-items:baseline;gap:3mm;border-bottom:1px solid var(--rule);min-height:6.5mm;padding-bottom:.4mm}
-.ps-w2{grid-column:span 1}.ps-w4{grid-column:1 / -1}
+.ps-w2{grid-column:span 1}.ps-w3{grid-column:span 2}.ps-w4{grid-column:1 / -1}
 .ps-cap{font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0;white-space:nowrap}
 .ps-val{font-family:var(--display);font-size:12.5pt;font-weight:600;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ps-w4 .ps-val{white-space:normal}
+.ps-w3 .ps-val,.ps-w4 .ps-val{white-space:normal}
 .ps-boxes{display:grid;gap:3mm}
 .ps-six{grid-template-columns:repeat(6,1fr)}
 .ps-five{grid-template-columns:repeat(5,1fr)}

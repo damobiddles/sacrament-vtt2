@@ -31,10 +31,10 @@ test('generated heroes can be changed, switched and deleted without a ready-made
   const page = await newPage(browser); await page.goto('/character/');
   await expect(page.locator('#ready, [data-ready]')).toHaveCount(0);
   await expect(page.getByText('Or choose a ready-made hero', {exact:true})).toHaveCount(0);
-  await page.locator('#generatorFocus').selectOption('fighter'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
+  await page.locator('#generatorFocus').selectOption('Mercenary'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
   await page.locator('#sheetHere [data-text=name]').fill('Wren Ashdown'); await page.locator('#sheetHere [data-text=name]').blur();
   const calling = await page.locator('#sheetHere [data-text=calling]').inputValue();
-  await page.locator('#generatorFocus').selectOption('healer'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
+  await page.locator('#generatorFocus').selectOption('Priest'); await page.locator('#generateHero').click(); await page.locator('#keepGenerated').click();
   await page.locator('#sheetHere [data-text=name]').fill('Brother Aldric'); await page.locator('#sheetHere [data-text=name]').blur();
   await expect(page.locator('#heroSel option')).toHaveCount(2);
   await page.locator('#heroSel').selectOption({ label: 'Wren Ashdown' }); await expect(page.locator('#sheetHere [data-text=calling]')).toHaveValue(calling);

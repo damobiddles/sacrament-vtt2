@@ -3,7 +3,7 @@ import '../../site/sheet/gear.js';
 import '../../site/sheet/sheet-core.js';
 import { esc } from './markdown.mjs';
 
-const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies, tools and curios', relic: 'Relics', grimoire: 'Grimoires' };
+const kinds = { weapon: 'Weapons', armour: 'Armour and shields', supply: 'Supplies, tools and curios', relic: 'Relics, by path', grimoire: 'Grimoires' };
 const effortName = k => ({ basic: 'Basic', weapons: 'Weapons', guns: 'Guns and gunpowder', magic: 'Magic', ultimate: 'Ultimate' })[k] || k;
 const range = r => r[0] === r[1] ? String(r[0]) : r.join('–');
 const effect = s => s.effect === 'healing' || s.heal ? 'Healing' : s.effect === 'esoteric' || !s.cat ? 'Esoteric effect' : 'Damage';
@@ -20,7 +20,7 @@ export function lootCatalogue(g) {
     rows.sort((a, b) => a.n[0] - b.n[0]);
     return `<section id="table-${esc(t.id)}"><h2>${esc(t.name)} · d${t.die}</h2><table class="loot-rolls"><thead><tr><th scope="col">Roll</th><th scope="col">Result</th></tr></thead><tbody>${rows.map(r => `<tr><th scope="row">${range(r.n)}</th><td>${r.html}</td></tr>`).join('')}</tbody></table></section>`;
   }).join('');
-  const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${items.filter(i => i.kind === kind).map(i => {
+  const entry = (i, kind, h = 3) => {
     const details = [`${i.slots} ${i.slots === 1 ? 'slot' : 'slots'}`, i.use || 'GM resolves use'];
     if (i.theme) details.push('Theme: ' + i.theme);
     if (i.path) details.push('Path: ' + i.path);
@@ -41,9 +41,15 @@ export function lootCatalogue(g) {
     }
     const spellList = kind === 'grimoire' ? `<ul class="loot-spells">${i.spells.map(id => {
       const s = spells.get(id);
-      return `<li><h4>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h4><p>${esc(s.does)}</p><p class="small">${esc(globalThis.SacramentSheetCore.automationText(s))}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(globalThis.SacramentRules.rangeText(s) || 'Range: GM ruling')} · ${cost(s)}</p></li>`;
+      return `<li><h${h + 1}>${esc(s.name)} <span class="loot-effect">${effect(s)}</span></h${h + 1}><p>${esc(s.does)}</p><p class="small">${esc(globalThis.SacramentSheetCore.automationText(s))}</p><p class="small">${s.roll ? esc(s.roll) + ' check' : 'No check'}${s.cat ? ' · ' + esc(effortName(s.cat)) + ' Effort d' + s.effort : s.heal ? ' · Healing d' + s.effort + ' (table applies)' : ''} · ${esc(globalThis.SacramentRules.rangeText(s) || 'Range: GM ruling')} · ${cost(s)}</p></li>`;
     }).join('')}</ul>` : '';
-    return `${[].concat(i.replaces || []).map(id => `<span id="item-${esc(id)}" aria-hidden="true"></span>`).join('')}<article class="loot-entry" id="item-${esc(i.id)}"><h3>${esc(i.name)}</h3><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}<p class="small">${esc(globalThis.SacramentSheetCore.automationText(i))}</p>${spellList}</article>`;
-  }).join('')}</section>`).join('');
+    return `${[].concat(i.replaces || []).map(id => `<span id="item-${esc(id)}" aria-hidden="true"></span>`).join('')}<article class="loot-entry" id="item-${esc(i.id)}"><h${h}>${esc(i.name)}</h${h}><p class="small">${esc(details.join(' · '))}</p>${i.flavour ? '<p><i>' + esc(i.flavour) + '</i></p>' : ''}${i.does ? '<p>' + esc(i.does) + '</p>' : '<p class="small">No additional mechanical effect is defined. The GM decides how this find is used.</p>'}<p class="small">${esc(globalThis.SacramentSheetCore.automationText(i))}</p>${spellList}</article>`;
+  };
+  // Every relic belongs to a path (owner decision 2026-11-08), so the Relics section is grouped by path; a relic without one (none today) is listed after.
+  const paths = g.paths || [];
+  const slug = name => name.toLowerCase().replace(/[^a-z]+/g, '-');
+  const known = new Set(paths.map(p => p.name));
+  const relicSection = items => `<p>Every relic belongs to one of the ${paths.length} <a href="/rules/paths/">paths</a>. Anyone may use any relic; in the hands of a hero of its path it costs 1 less Horror. Roll for one on the <a href="#table-relics">Relics table</a>.</p>${paths.map(p => `<section id="loot-path-${slug(p.name)}"><h3>${esc(p.name)}</h3><p class="small">${esc(p.about || '')}</p>${items.filter(i => i.path === p.name).map(i => entry(i, 'relic', 4)).join('')}</section>`).join('')}${items.some(i => !known.has(i.path)) ? `<section id="loot-path-none"><h3>Other relics</h3>${items.filter(i => !known.has(i.path)).map(i => entry(i, 'relic', 4)).join('')}</section>` : ''}`;
+  const list = Object.entries(kinds).map(([kind, title]) => `<section id="loot-${kind}"><h2>${title}</h2>${kind === 'relic' && paths.length ? relicSection(items.filter(i => i.kind === 'relic')) : items.filter(i => i.kind === kind).map(i => entry(i, kind)).join('')}</section>`).join('');
   return `<div id="loot-search" class="loot-search" role="search" hidden><h2 id="loot-search-title">Find loot</h2><p>Looking for something particular? Type a name, theme, spell or effect, and the roll tables and catalogue below show only what matches. Press Escape to see everything again.</p><label for="loot-search-box">Search the loot</label><input id="loot-search-box" type="search" autocomplete="off" spellcheck="false" placeholder="Name, theme, spell or effect"><p id="loot-search-count" class="small" aria-live="polite"></p></div><section id="loot-roller" class="loot-roller" aria-labelledby="loot-roller-title" hidden><h2 id="loot-roller-title">What did you find?</h2><p>Try a random find from the current loot tables.</p><button class="btn" type="button">Roll loot</button><div id="loot-result" role="status" aria-live="polite" aria-atomic="true"></div></section><noscript><p>Enable JavaScript to try the loot roller, or use the roll tables below.</p></noscript><script defer src="/vtt/rules.js"></script><script defer src="/sheet/gear.js"></script><script defer src="/sheet/sheet-core.js"></script><script defer src="/loot-roller.js"></script><script defer src="/loot-search.js"></script><nav class="loot-jumps" aria-label="Loot sections"><p><b>Roll tables</b><br>${tables.map(t => `<a href="#table-${esc(t.id)}">${esc(t.name)} (d${t.die})</a>`).join(' · ')}</p><p><b>Item catalogue</b><br>${Object.entries(kinds).map(([k, v]) => `<a href="#loot-${k}">${k === 'grimoire' ? 'Grimoires and spells' : v}</a>`).join(' · ')}</p></nav><p>${items.length} catalogue items · ${items.filter(i => i.kind === 'grimoire').length} grimoires · ${g.spells.length} different spells.</p>${rolls}${list}`;
 }

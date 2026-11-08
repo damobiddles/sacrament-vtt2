@@ -20,7 +20,7 @@ const route = (tab) => tab.on ? [...route(G.tables.find(t => t.id === tab.on)), 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
   // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
   assert.equal(C.items.length, 184 + pathRelics.length);
-  assert.equal(pathRelics.length, 20);
+  assert.equal(pathRelics.length, 100);
   assert.equal(added.length, 95);
   for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28 })) {
     assert.equal(C.items.filter(i => i.kind === kind && i.table !== 'pathrelics').length, total, kind);
@@ -30,8 +30,9 @@ test('the expansion doubles each item category with stable catalogue definitions
   // The reviewed power definitions, area/scene limits and crossbow accuracy are included.
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
+  // Owner decision 2026-11-08: every relic belongs to a path; the older relics cost 1 more Horror, 1 less on their own path.
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '8bab618847fd8b1dd98e5686ee0b1514c8df3b23624980441625293b1dc439cb');
+  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '46f1d5c933af237374dfb55269d4e873bfd657133496b41787be633524581475');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
   assert.equal(hash(G.spells.slice(0,23).map(untag).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
@@ -49,7 +50,7 @@ test('every new find is reachable at both range boundaries, visible in the publi
       seen.add(result.item.id);
     }
   }
-  assert.equal(seen.size, 170); // The binding seal is the 171st find, awarded directly on 100.
+  assert.equal(seen.size, 250); // The binding seal is the 251st find, awarded directly on 100.
   for (const item of added) {
     assert.ok(seen.has(item.id), item.id);
     assert.ok(html.includes('id="item-' + item.id + '"'), item.id);

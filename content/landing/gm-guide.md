@@ -85,7 +85,7 @@ A hidden card is not sent to players. **Hide the numbers from players** shows th
 
 ## Loot and custom effects
 
-Roll loot in Loot or enter your own d100 result. Sub-tables use d100 too. Only you see the find and any private GM notes until you reveal or award it. Put a find on the table hidden, or give it straight to a hero. [Current Loot Tables](/loot/) is generated from the same catalogue as the VTT.
+Roll loot in Loot or enter your own d100 result. Sub-tables use d100 too. Relics 67 to 100 lead to the Path relics table. Every relic belongs to one of the [paths](/rules/paths/): a fitting one makes a good reward, because a hero of that path pays 1 less Horror to use it. Only you see the find and any private GM notes until you reveal or award it. Put a find on the table hidden, or give it straight to a hero. [Current Loot Tables](/loot/) is generated from the same catalogue as the VTT.
 
 The designer supports your own loot. Keep three known spells in each grimoire and read the displayed size, Effort and Horror cost before awarding it. Supported healing mechanics can survive newly designed copies; older custom items written only as free text remain manual. Do not assume a familiar item name makes its effects automatic. The Grimoire with no title uses a d6, split evenly across its three spells.
 

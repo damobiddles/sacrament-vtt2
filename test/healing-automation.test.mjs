@@ -40,7 +40,7 @@ test('Undo cannot overwrite healing performed after a rest; undoing in order res
 test('a healing relic awarded through the loot designer retains its automated mechanics and listed Horror',async()=>{
  const {t,p,ch}=await setup();const C=globalThis.SacramentSheetCore,item=C.designOf(C.item('hospicerib'));
  const given=await t.gm.cmd({type:'lootGive',charId:ch.id,item});assert.equal(given.status,200);const g=given.body.state.chars[ch.id].gear.at(-1);
- assert.ok(C.healingOf(C.itemOf(g)));const heal=await p.cmd({type:'useItem',charId:ch.id,index:1,targetCardId:ch.cardId});assert.equal(heal.status,200);assert.ok(heal.body.state.cards[ch.cardId].hp.cur>1);assert.equal(heal.body.state.horror.cur,1);
+ assert.ok(C.healingOf(C.itemOf(g)));const heal=await p.cmd({type:'useItem',charId:ch.id,index:1,targetCardId:ch.cardId});assert.equal(heal.status,200);assert.ok(heal.body.state.cards[ch.cardId].hp.cur>1);assert.equal(heal.body.state.horror.cur,2,'Owner decision 2026-11-08: every relic belongs to a path and the older relics cost 1 more Horror (1 less on their own path).');
 });
 
 test('healing a hidden patient does not reveal a private relic name through the shared Horror feed',async()=>{

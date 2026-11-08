@@ -14,7 +14,7 @@
   var SPELL = {}; G.spells.forEach(function (s) { SPELL[s.id] = s; });
   var TAG = {}; (G.tags || []).forEach(function (t) { TAG[t.id] = t; });
   /* A hero's path (Druid, Necromancer, Hunter and so on: the list is in the gear list), or '' for none. A hero using a relic of their own path pays 1 less Horror for it, never below 1. */
-  var PATHS = (G.paths || []).slice();
+  var PATHS = (G.paths || []).map(function (p) { return p.name; }), PATH_ABOUT = {}; (G.paths || []).forEach(function (p) { PATH_ABOUT[p.name] = p.about || ''; });
   function pathOf(h) { return h && PATHS.indexOf(h.path) >= 0 ? h.path : ''; }
   function onPath(h, it) { return !!(it && it.path && pathOf(h) === it.path); }
   /* What a story spell or item is good for when its words leave it to the GM: its tags from the gear list, each with its default in a fight and out of one. */
@@ -217,7 +217,7 @@
     if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
-    var own = !sp && !mode && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
+    var own = !sp && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
     return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? (own && Number.isInteger(src.horror) ? Math.max(1, src.horror - 1) : src.horror) : 0, onPath: own };
   }
   /* Which spell a grimoire read by the die casts when the die shows n: the faces are shared out in the order the spells are listed (a d6 over three spells:
@@ -430,5 +430,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, PATH_ABOUT: PATH_ABOUT, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

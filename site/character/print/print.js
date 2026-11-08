@@ -66,7 +66,7 @@
     var s = '<article class="ps-page" aria-label="Character sheet for ' + esc(h.name || 'a new hero') + '">';
     s += '<header class="ps-head"><h1 class="ps-black">Hero</h1><p class="ps-mark ps-black">Sacrament</p></header>';
     s += '<div class="ps-fields">' + line('Name', h.name, 'ps-w2') + line('Calling', h.calling) + line('Player', '') + '</div>';
-    s += '<div class="ps-fields">' + line('Vow', h.vow, 'ps-w4') + '</div>';
+    s += '<div class="ps-fields">' + line('Path', C.pathOf(h) || (blank ? '' : 'none'), 'ps-w2') + line('Vow', h.vow, 'ps-w3') + '</div>';
 
     var adv = C.advancesOf(h), marks = blank ? 0 : C.marksOf(h), share = function (base, extra) { return base + (blank || !extra ? '' : ' (+' + extra + ' from advances)'); };
     s += '<h2 class="ps-black">Scores · ' + share(B.points, adv.stats) + ' points to share, none above ' + B.scoreMax + '</h2><div class="ps-boxes ps-six">' + R.STATS.map(function (k) {
@@ -108,7 +108,7 @@
       if (!x) return '<div class="ps-col">' + line('Item', '') + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><div class="ps-blank"></div><div class="ps-blank"></div></div>';
       var list = x.it.kind === 'grimoire' ? C.spellsOf(x.it) : [x.it];
       return '<div class="ps-col">' + line('Item', x.it.name) + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><ul>' + list.map(power).join('') + '</ul></div>';
-    }).join('') + '</div><p class="ps-small">A grimoire takes 3 slots and holds 3 spells. You may choose one starting grimoire; the GM gives the rest.</p></section>';
+    }).join('') + '</div><p class="ps-small">A grimoire takes 3 slots and holds 3 spells. You may choose one starting grimoire; the GM gives the rest. Path (optional): a relic of your own path costs 1 less Horror to use.</p></section>';
     s += '<footer class="ps-foot"><span class="ps-tick-line">Once per scene used: <i></i><i></i><i></i> · Notes on the back</span><span>Sacrament RPG</span></footer></article>';
 
     /* the back: what the hero's sheet holds in words, with room to write */
