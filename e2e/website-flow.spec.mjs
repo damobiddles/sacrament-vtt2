@@ -15,6 +15,19 @@ test('public pages share one navigation and identify their section', async ({ br
   expect(page.errors).toEqual([]);
 });
 
+test('the four rules pages share one row of tabs, each marking itself', async ({ browser }) => {
+  const page = await newPage(browser);
+  const tabs = [['/rules/', 'The rules'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
+  for (const [path, name] of tabs) {
+    await page.goto(path);
+    const row = page.getByRole('navigation', { name: 'Rules pages' });
+    const links = await bounded(row.locator('a').evaluateAll(as => as.map(a => [a.getAttribute('href'), a.textContent.trim()])), 10000, 'reading rules tabs');
+    expect(links, path).toEqual(tabs);
+    await expect(row.locator('[aria-current=page]'), path).toHaveText(name);
+  }
+  expect(page.errors).toEqual([]);
+});
+
 test('the keyboard skip link takes readers directly to the page content', async ({ browser }) => {
   const page = await newPage(browser); await page.goto('/how-to-play/');
   await page.keyboard.press('Tab');

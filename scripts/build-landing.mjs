@@ -25,7 +25,7 @@ const PAGES = [
   { slug: 'the-game', path: '/the-game/', label: 'The game' },
   { slug: 'setting', path: '/setting/', label: 'The setting' },
   { slug: 'how-to-play', path: '/how-to-play/', label: 'How to play' },
-  { slug: 'rules', path: '/rules/', label: 'Rules' },
+  { slug: 'rules', path: '/rules/', label: 'Rules', guide: true },
   { slug: 'player-guide', path: '/player-guide/', label: 'Player guide', guide: true },
   { slug: 'gm-guide', path: '/gm-guide/', label: 'GM guide', guide: true },
   { slug: 'rules-updates', path: '/rules/updates/', label: 'Rules updates', guide: true },
@@ -87,6 +87,7 @@ ${footer()}
 `;
 
 const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div class="label">${esc(label)}</div><h1>${esc(h1)}</h1>${lede ? '<p class="lede">' + esc(lede) + '</p>' : ''}</div></header>`;
+const RULES_TABS = [['/rules/', 'The rules'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 
@@ -200,6 +201,10 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
         return '<h2 id="' + id + '">' + title + '</h2>';
       });
       html = '<nav class="guide-contents" aria-label="On this page"><h2>On this page</h2><ul>' + sections.map(s => '<li><a href="#' + s.id + '">' + s.title + '</a></li>').join('') + '</ul></nav>' + html;
+    }
+    /* The four rules pages share one row of tabs, so each is one click from the others. */
+    if (RULES_TABS.some(([path]) => path === meta.path)) {
+      html = '<nav class="role-paths rules-tabs" aria-label="Rules pages">' + RULES_TABS.map(([path, name]) => '<a href="' + path + '"' + (path === meta.path ? ' aria-current="page"' : '') + '>' + name + '</a>').join('') + '</nav>' + html;
     }
     if (slug === 'how-to-play') {
       html = html.replace('<h2>I am a player</h2>', '<h2 id="for-players">I am a player</h2>').replace('<h2>I am the GM</h2>', '<h2 id="for-gms">I am the GM</h2>');
