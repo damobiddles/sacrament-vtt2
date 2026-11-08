@@ -24,6 +24,17 @@
   status = 301
   force = true
 
+# The player cheat sheet became the rules cheat sheet (8 November 2026): printed links and the news post keep working.
+[[redirects]]
+  from = "/downloads/players/sacrament-player-cheat-sheet-A4.pdf"
+  to = "/downloads/players/sacrament-rules-cheat-sheet-A4.pdf"
+  status = 301
+
+[[redirects]]
+  from = "/downloads/players/sacrament-player-cheat-sheet-Letter.pdf"
+  to = "/downloads/players/sacrament-rules-cheat-sheet-Letter.pdf"
+  status = 301
+
 # Old addresses. The earlier "Looming Horror" table (/play/) and its older addresses (/table, /tools) were retired: they all go to the home page.
 # The first rule keeps the stone picture that earlier saved tables use as their background working (it moved to /vtt/).
 [[redirects]]

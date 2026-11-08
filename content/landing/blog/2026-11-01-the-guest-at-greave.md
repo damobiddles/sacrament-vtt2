@@ -30,7 +30,7 @@ It uses the current rules: a Target for each scene, Effort against obstacles, co
 Players need a hero and the rules close to hand, not the adventure.
 
 - [Make a hero with the character builder](/character/), then print or save it as a PDF character sheet
-- The player cheat sheet, two pages with checks, Effort, Push, the Horror, healing and dying: [download the PDF (A4)](/downloads/players/sacrament-player-cheat-sheet-A4.pdf) or [US Letter](/downloads/players/sacrament-player-cheat-sheet-Letter.pdf)
+- The rules cheat sheet, with checks, Effort, Push, the Horror, healing and dying (updated since this post with the newer rules): [download the PDF (A4)](/downloads/players/sacrament-rules-cheat-sheet-A4.pdf) or [US Letter](/downloads/players/sacrament-rules-cheat-sheet-Letter.pdf)
 
 ## Everything for the table, in one place
 

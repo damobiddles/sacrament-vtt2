@@ -11,7 +11,7 @@ Sacrament was first played on the Sacrament RPG Table, in a browser. The rules w
 - **One GM and three to five players.** The GM describes the world and plays everyone in it; each player plays one hero.
 - **Dice for each player:** a d20 for checks, plus a d4, d6, d8, d10 and d12 for Effort. The d4 also counts down a dying hero's rounds.
 - **Dice for the GM:** two d10s for d100 loot rolls, and enough d10s for a Party rest (one for every two heroes).
-- **A character sheet for each hero,** and pencils with erasers. HP, charges and Horror go up and down all evening.
+- **A hero sheet for each hero,** and pencils with erasers. HP, charges and Horror go up and down all evening.
 - **The print-and-play kit** (below): the quick reference, the Horror track, the Target sign, foe cards, turn slips, countdowns and a healing log.
 - **A coin** to mark the Horror, and another to mark the round.
 - **A map and pieces.** A printed map or a wipe-clean mat, and miniatures, tokens or coins. No grid is needed: distances are Close, Near, Far and Very Far.
@@ -36,8 +36,8 @@ A ready-to-run adventure in five scenes, written for a real table. The heroes ca
 
 **Players**
 
-1. **Make a hero.** Open [My heroes](/character/), press **Generate a hero**, then **Print or save as PDF** to get a filled-in character sheet. Or copy your numbers onto the blank sheet in the print-and-play kit.
-2. **Print the player cheat sheet**, or read it once on your phone. It covers checks, Effort, Push, the Horror, healing and dying.
+1. **Make a hero.** Open [My heroes](/character/), press **Generate a hero**, then **Print or save as PDF** to get a filled-in character sheet. Or fill in the blank hero sheet below by hand. Both have the Marks box for growing stronger.
+2. **Print the rules cheat sheet**, or read it once on your phone. It covers checks, Effort, Push, the Horror, healing and dying, and what story spells do.
 3. **Do not read the adventure.** If your GM runs The Guest at Greave, the only part meant for players is the opening reading, Before the Snow.
 
 **The GM**
