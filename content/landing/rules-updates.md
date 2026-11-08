@@ -16,6 +16,8 @@ Corrections to text we published. These pages were written before the Horror cha
 - **The Guest at Greave, "Blood on snow".** It said a hero's natural 1 on the blood test adds 1 Horror. The test is a plain WIS check, so a natural 1 still smears the reading but adds no Horror. The online adventure and its PDFs are corrected.
 - **Player guide, "The shared Horror".** It said the table never applies extra damage when the Horror is full. Since 1 November it does: see "pay in blood" below.
 
+- **Player cheat sheet (PDF), replaced 8 November 2026.** It did not have Break away, the story-spell tags, darkness or growing stronger. It is now the three-page rules cheat sheet, and the old download links lead to it. The print-and-play kit's blank character sheet has no Marks box: use the new blank hero sheet instead.
+
 ## Clarifications
 
 Questions the current text left open. The rules have not changed; these say how the table already works.
@@ -27,7 +29,7 @@ Questions the current text left open. The rules have not changed; these say how 
 
 ## 8 November 2026: heroes grow stronger
 
-**Advancement, a new rule.** Each adventure a hero lives through to its end earns 1 mark, ticked by the player in the new Marks box on the character sheet. At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10), and the marks start again. Each advance adds one point to the hero's share, so a grown hero can be brought to any table. In the solo game a road won ticks the mark itself. *Prompted by:* the solo game, where a hero who kept coming home had nothing to show for it; the designer chose to add the rule for everyone, so the table, play on paper and the solo game agree.
+**Advancement, a new rule.** Each adventure a hero lives through to its end earns 1 mark, ticked by the player in the new Marks box on the character sheet. At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10), and the marks start again. Each advance adds one point to the hero's share, so a grown hero can be brought to any table. In the solo game a road won ticks the mark itself. The printed hero sheet (blank, or filled in from My heroes) now has the Marks box. *Prompted by:* the solo game, where a hero who kept coming home had nothing to show for it; the designer chose to add the rule for everyone, so the table, play on paper and the solo game agree.
 
 ## 7 November 2026: one set of rules for the table and the solo game
 
@@ -41,7 +43,7 @@ Questions the current text left open. The rules have not changed; these say how 
 
 **Every story spell and item says what it is good for.** 50 of the 52 spells with no damage die, and 18 relics and supplies whose effect was left to the GM, now carry one or two tags: Light, Snuff, Open, Learn, Hide, Silence, Bind, Daze, Guard, Beast, Move or Shelter. Each tag has a default effect in a fight and out of one, listed on the [Rules](/rules/) page. The spell's own words still come first; the tag is the quick answer when they leave it open. Four defaults are new: *Hide* (the foe's next attack rolls 3 less), *Silence* (a foe that casts or calls out loses its next attack), *Bind* (the foe loses its next attack, only after a successful check) and *Beast* (an animal's next attack rolls 3 less). No Horror cost, check, die or range changed. *Prompted by:* the solo game, where a spell like Pillar of Ash had nothing to do because no GM was there to decide; the designer chose to put the answer in the shared rules so the table, play in person and the solo game agree.
 
-**Print-and-play kit.** The printed cheat sheet does not list the tags yet.
+**Printed sheets.** Since 8 November the rules cheat sheet on [Play in person](/play-in-person/) lists every tag. The print-and-play kit does not list them yet.
 
 ## 1 November 2026: the Horror
 

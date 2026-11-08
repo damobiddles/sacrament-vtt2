@@ -27,7 +27,8 @@ test('every download linked from Play in person and the latest news post exists,
     }
     const html = b.read('play-in-person/index.html');
     for (const href of ['/downloads/print-kit/sacrament-print-kit-A4.pdf', '/downloads/print-kit/sacrament-print-kit-Letter.pdf',
-      '/downloads/players/sacrament-player-cheat-sheet-A4.pdf', '/downloads/adventures/the-guest-at-greave-A4.pdf',
+      '/downloads/players/sacrament-rules-cheat-sheet-A4.pdf', '/downloads/players/sacrament-rules-cheat-sheet-Letter.pdf',
+      '/downloads/players/sacrament-hero-sheet-A4.pdf', '/downloads/players/sacrament-hero-sheet-Letter.pdf', '/downloads/adventures/the-guest-at-greave-A4.pdf',
       '/downloads/adventures/before-the-snow-A4.pdf', '/downloads/adventures/the-guest-at-greave-players-map-A4.pdf',
       '/adventures/the-guest-at-greave/', '/character/', '/loot/']) assert.ok(html.includes('href="' + href + '"'), 'offers ' + href);
     assert.match(html, /for the GM only/i, 'the adventure is marked GM-only');

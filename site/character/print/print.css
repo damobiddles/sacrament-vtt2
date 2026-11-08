@@ -65,6 +65,15 @@
 .ps-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:var(--muted);padding-top:1.5mm}
 .ps-text{font-family:var(--display);font-size:12pt;white-space:pre-wrap;margin:1mm 0 0;overflow-wrap:anywhere}
 .ps-back h2{margin-top:3mm}
+/* Marks and advances: three big boxes for the marks, a tally of advances taken */
+.ps-marks{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4mm;padding:1.6mm 3mm}
+.ps-mark-box{display:flex;align-items:center;gap:3mm}
+.ps-marks .ps-ticks{margin:0}
+.ps-ticks.ps-big i{width:6.5mm;height:6.5mm;border-width:1.5px}
+.ps-ticks i.ps-on{background:linear-gradient(to top right,transparent calc(50% - .8px),var(--ink) 50%,transparent calc(50% + .8px)),linear-gradient(to top left,transparent calc(50% - .8px),var(--ink) 50%,transparent calc(50% + .8px))}
+.ps-mark-rule{margin:0}
+.ps-adv{display:flex;flex-direction:column;gap:.8mm}
+.ps-adv .ps-ticks i{width:3.4mm;height:3.4mm}
 
 @page{margin:0}
 @media print{

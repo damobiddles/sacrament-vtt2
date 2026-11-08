@@ -45,3 +45,18 @@ test('the blackletter face is loaded by the print page only, never by the table'
   assert.ok(hits.every(f => f.startsWith('character/print/')), 'found outside the print page: ' + hits.join(', '));
   assert.ok(hits.includes('character/print/index.html'), 'the print page loads the face');
 });
+
+test('the sheet has the Marks box: a printed hero shows its marks and advances, the blank sheet is empty', () => {
+  const { P, T, C } = setup();
+  const h = T.generate('fighter', seeded(3));
+  h.marks = 2; h.advances = { stats: 1, effort: 0 }; h.stats.STR = (h.stats.STR || 0) + 1;
+  const out = P.html(P.read(hash(h)));
+  assert.match(out, /<h2 class="ps-black">Marks<\/h2>/);
+  assert.equal((out.match(/ps-ticks ps-big">(.*?)<\/p>/)[1].match(/ps-on/g) || []).length, 2, 'two marks ticked');
+  assert.ok(out.includes('Scores 1 · Effort 0'), 'advances taken are printed');
+  assert.ok(out.includes(C.scorePoints(h) - 1 + ' (+1 from advances) points to share'), 'the share grows with the advance');
+  const blank = P.blank();
+  assert.match(blank, /<h2 class="ps-black">Marks<\/h2>/);
+  assert.ok(!/ps-on|ps-x/.test(blank), 'nothing ticked or crossed out on the blank sheet');
+  assert.ok(!/[+−]\d/.test(blank.replace(/\+10|\+5|\+1 to one/g, '')), 'no score or bonus is filled in');
+});
