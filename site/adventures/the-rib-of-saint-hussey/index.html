@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Rib of Saint Hussey | Sacrament RPG</title>
+<meta name="description" content="A short, fast Sacrament RPG adventure for the GM: carry the rib of Saint Hussey out of Aubrecht to his chapel at Wendholt, past thieves, riders and the drowned.">
+<link rel="canonical" href="https://playsacrament.com/adventures/the-rib-of-saint-hussey/">
+<meta property="og:title" content="The Rib of Saint Hussey | Sacrament RPG">
+<meta property="og:description" content="A short Sacrament adventure: one saint's rib, one day's road, a canon who wants it back.">
+<meta property="og:url" content="https://playsacrament.com/adventures/the-rib-of-saint-hussey/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://playsacrament.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#12100d">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/theme.css">
+<script src="/nav.js"></script>
+<style>
+/* The Rib of Saint Hussey: an adventure page for the GM, linked from the site footer. Colours come from theme.css plus a few local road tones. Layout: one reading column like a bound GM's book, as on The Guest at Greave. */
+.rh{--bg3:#221e19;--road:#d2b47e;--road-deep:#2b2318;--road-edge:#5c4a31;--aloud-ink:#eee5cf;--river:#9fb6c4;--rest:#9fc3b2;--wax:var(--blood);--wax-hi:var(--blood-hi);max-width:860px;padding-block:var(--gap-page) 80px;font-size:17px;line-height:1.65}
+.rh h1,.rh h2,.rh h3,.rh h4{font-family:var(--display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
+.rh h1{font-size:clamp(2.6rem,8vw,4.4rem);letter-spacing:-.01em}
+.rh h2{font-size:clamp(1.9rem,5vw,2.5rem);margin:0 0 14px}
+.rh h3{font-size:1.5rem;margin:28px 0 8px}
+.rh h4{font-family:var(--body);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--candle);margin:22px 0 8px;font-weight:700}
+.rh p{margin:0 0 14px}
+.rh a{color:var(--wax-hi)}
+.rh a:focus-visible,.rh button:focus-visible{outline:2px solid var(--candle);outline-offset:3px}
+.rh .label{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:.78rem;color:var(--candle)}
+.rh .dim{color:var(--dim)}
+.rh hr.rule{border:0;border-top:3px double var(--line);margin:44px 0}
+.rh header.title{padding:20px 0 8px;display:grid;gap:12px}
+.rh header.title .lede{font-family:var(--display);font-size:1.45rem;line-height:1.35;font-style:italic;color:var(--road);max-width:38ch}
+.rh .facts{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.9rem;color:var(--dim);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-top:8px}
+.rh .facts b{color:var(--fg);font-weight:600}
+.rh .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 24px;margin:24px 0 0;padding:0;list-style:none;font-size:.95rem}
+.rh .toc a{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
+.rh .toc a:hover{color:var(--candle)}
+.rh blockquote{margin:20px 0;padding:0 0 0 18px;border-left:2px solid var(--road);font-family:var(--display);font-size:1.3rem;line-height:1.4;font-style:italic}
+.rh blockquote cite{display:block;font-family:var(--body);font-style:normal;font-size:.85rem;color:var(--dim);margin-top:6px}
+.rh .aloud{background:var(--road-deep);border:1px solid var(--road-edge);padding:16px 20px;margin:16px 0 20px;font-family:var(--display);font-size:1.22rem;line-height:1.45;color:var(--aloud-ink)}
+.rh .aloud::before{content:"Read aloud";display:block;font-family:var(--body);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--road);margin-bottom:6px;font-weight:700}
+.rh .secret{border:1px dashed var(--wax-hi);padding:14px 18px;margin:16px 0;background:color-mix(in srgb,var(--wax) 18%,var(--bg))}
+.rh .secret::before{content:"GM only";display:block;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--wax-hi);margin-bottom:6px;font-weight:700}
+.rh .secret p:last-child,.rh .aloud p:last-child{margin:0}
+.rh section.scene{margin-top:52px}
+.rh .scene-head{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:end;border-bottom:3px double var(--line);padding-bottom:12px;margin-bottom:18px}
+.rh .scene-no{font-family:var(--display);font-size:4.2rem;line-height:.8;color:var(--candle);grid-row:span 2}
+.rh .scene-head h2{margin:0}
+.rh .scene-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem;color:var(--dim)}
+.rh .pill{display:inline-block;border:1px solid var(--candle);color:var(--candle);padding:1px 9px;border-radius:2px;font-size:.82rem;white-space:nowrap}
+.rh .slips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0 18px}
+.rh .slip{background:var(--bg2);border:1px solid var(--line);padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.rh .slip .kind{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.rh .slip.foe .kind{color:var(--wax-hi)}
+.rh .slip.task .kind{color:var(--candle)}
+.rh .slip.clock .kind{color:var(--river)}
+.rh .slip.loot .kind{color:var(--rest)}
+.rh .slip h5{font-family:var(--display);font-size:1.3rem;margin:0;line-height:1.1}
+.rh .slip dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.9rem;font-variant-numeric:tabular-nums}
+.rh .slip dt{color:var(--dim)}
+.rh .slip dd{margin:0}
+.rh .slip p{font-size:.92rem;margin:0}
+.rh .slip .pub{font-style:italic;color:var(--dim)}
+.rh ul.tight,.rh ol.tight{margin:0 0 14px;padding-left:22px}
+.rh ul.tight li,.rh ol.tight li{margin-bottom:5px}
+.rh .tbl{overflow-x:auto;margin:12px 0 18px}
+.rh table{border-collapse:collapse;width:100%;font-size:.93rem}
+.rh th,.rh td{text-align:left;vertical-align:top;padding:7px 10px;border-bottom:1px solid var(--line)}
+.rh th{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--candle);font-weight:700;border-bottom:1px solid var(--edge)}
+.rh td.n{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--candle);font-weight:700}
+.rh .roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:14px 0}
+.rh .who{background:var(--bg2);border:1px solid var(--line);padding:12px 14px;min-width:0}
+.rh .who h5{font-family:var(--display);font-size:1.22rem;margin:0 0 2px}
+.rh .who p{margin:0;font-size:.92rem}
+.rh .roller{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0 4px}
+.rh button{font:600 .95rem var(--body);background:var(--bg3);color:var(--fg);border:1px solid var(--edge);padding:9px 14px;min-height:44px;cursor:pointer}
+.rh button:hover{border-color:var(--candle);color:var(--candle)}
+.rh .out{font-family:var(--display);font-size:1.25rem;color:var(--wax-hi);min-height:1.5em}
+.rh footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-size:.85rem;color:var(--dim)}
+@media (max-width:520px){.rh .scene-no{font-size:3rem}.rh .aloud{padding:14px 16px}}
+@media (prefers-reduced-motion:reduce){.rh *{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap rh">
+
+<header class="title">
+  <span class="label">A Sacrament RPG adventure · five scenes</span>
+  <h1>The Rib of Saint Hussey</h1>
+  <p class="lede">One small bone, one day's road, a canon who wants it back, and a village that has waited a hundred years for its feast.</p>
+  <div class="facts">
+    <span><b>3 to 5 heroes</b>, any starting heroes</span>
+    <span><b>About 2 hours</b>, one evening</span>
+    <span><b>Horror</b> starts at 0</span>
+    <span><b>Tone</b> a chase with the dead at the end of it</span>
+  </div>
+  <ul class="toc">
+    <li><a href="#premise">The job</a></li>
+    <li><a href="#s1">1 · The Snatch</a></li>
+    <li><a href="#s2">2 · The Gate</a></li>
+    <li><a href="#s3">3 · The Riders</a></li>
+    <li><a href="#s4">4 · Brackford Ferry</a></li>
+    <li><a href="#s5">5 · The Feast at Wendholt</a></li>
+  </ul>
+</header>
+
+<hr class="rule">
+
+<section id="premise">
+  <h2>The job</h2>
+  <p>A hundred years ago, when the sickness came to <b>Aubrecht</b>, a lay brother called <b>Hussey</b> walked in from the village of <b>Wendholt</b> with a handcart and carried the dead out of the city for forty days. Then he caught it, walked home and died. The city made him a saint, dug him up and kept his bones in the cathedral of <b>Saint Aubrel's</b>, where the sick pay good coin to be let near them.</p>
+  <p>Wendholt has finally won him back. The Cardinal has ordered his rib returned to his chapel and laid in his tomb <b>at dusk tomorrow</b>, on his feast day. Wendholt is a hard day's road east, over the River Wend. Wendholt sent <b>Sister Eulalia</b> to fetch him, and Sister Eulalia has hired the heroes: a purse of clipped coin each, a seat at the feast, and the parish's eternal thanks.</p>
+  <blockquote>“Four hundred people are roasting a pig for a man who has been dead a hundred years. I am not going home without him.”<cite>Sister Eulalia of Wendholt</cite></blockquote>
+
+  <div class="secret"><p><b>Canon Rainald Pell</b>, the sacrist of Saint Aubrel's, keeps the treasury and the coin the rib brings in. He has had a copy made (a matching case, a pig's rib on linen) and means to swap it in before the real one reaches Wendholt. He tries in the crowd (scene 1), at the gate (scene 2) and on the road (scene 3). If all of that fails, he takes his coach by the bridge road and gets to Wendholt first (scene 5).</p></div>
+
+  <h3>The rib</h3>
+  <p>It is the catalogue relic <b>Rib of the Hospice Saint</b>, unchanged: yourself or a target in Close or Near heals d8, once per person per rest, for 1 Horror. Give it to whichever hero carries it. It takes one slot, counts towards their three Horror-tempting items and only works while equipped. It is a fine thing to have in a running fight. It has one side effect the heroes find out at the river.</p>
+
+  <h3>The people</h3>
+  <div class="roster">
+    <div class="who"><h5>Sister Eulalia</h5><p>Nineteen, quick, sharp-tongued, rides a mule called Patience that has none. Knows every saint and every short cut. Fights with a stick and her opinions.</p></div>
+    <div class="who"><h5>Canon Rainald Pell</h5><p>Soft hands, gold thread, a voice like a good bell. Never fights. Always has papers. Sincerely believes the rib does more good in a cathedral.</p></div>
+    <div class="who"><h5>Wat Gilder</h5><p>A thief with a satchel and very fast feet. Paid by Pell's steward. Talks the moment he is caught.</p></div>
+    <div class="who"><h5>Konrad Hask</h5><p>Pell's hired rider. Former road warden, polite, tired, deadly with a crossbow. Makes an offer before he shoots.</p></div>
+  </div>
+
+  <h3>The Horror, in this adventure</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Horror</th><th>Suggested consequence</th></tr></thead>
+    <tbody>
+      <tr><td class="n">7</td><td>The dead are restless. At the ferry, add 2 more Penitents.</td></tr>
+      <tr><td class="n">14</td><td>They will not wait for the river. One Penitent comes out of a ditch in scene 3, reaching for the rib in the middle of the fight.</td></tr>
+      <tr><td class="n">21</td><td>Every Penitent left standing at the ferry follows the rib to Wendholt and arrives at the feast in scene 5.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- Scene 1 -->
+<section class="scene" id="s1">
+  <div class="scene-head">
+    <span class="scene-no">1</span>
+    <h2>The Snatch</h2>
+    <div class="scene-meta"><span class="pill">Target 12</span><span>Aubrecht: the cathedral steps, the fish market, the roofs</span></div>
+  </div>
+
+  <div class="aloud"><p>Every bell in Aubrecht is ringing. The cathedral steps are packed with pilgrims, cripples, pickpockets and pie-sellers. Canon Pell reads the Cardinal's order in a voice like honey and puts a small wooden case into your hands. The crowd surges forward to touch it. Something tugs at your arm. A boy has cut the strap, and a thin man is already three steps away with the case under his coat and running.</p></div>
+
+  <p>Start in the action: the case is gone, Wat Gilder is running, and the chase is on. Down the steps, through the fish market, up a cart onto the roofs of the tanners' row.</p>
+
+  <div class="slips">
+    <div class="slip task"><span class="kind">Obstacle</span><h5>Catch Wat</h5>
+      <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>DEX to chase, STR to barge, WIS to cut him off</dd></dl>
+      <p class="pub">A thin man with a satchel, getting smaller.</p>
+      <p>When complete, Wat is cornered. Each round, roll on the chase table below for what gets in the way.</p></div>
+    <div class="slip clock"><span class="kind">Countdown</span><h5>Into the Alleys</h5>
+      <dl><dt>Rounds</dt><dd>4, automatic</dd></dl>
+      <p class="pub">The old quarter is a knot of alleys. Once he is in, he is gone.</p>
+      <p>At 0 Wat reaches the alleys and runs straight into Patience, Eulalia's mule, who came the short way. He is cornered anyway, but his two friends got there first: the heroes have to go through them.</p></div>
+    <div class="slip foe"><span class="kind">Enemy · ×2</span><h5>Hired Knife</h5>
+      <dl><dt>HP</dt><dd>8</dd><dt>Attack</dt><dd>+2</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">Two of Wat's friends, stepping into the alley to block it.</p>
+      <p>Appear in round 2. They run the moment one of them drops.</p></div>
+    <div class="slip foe"><span class="kind">Enemy</span><h5>Wat Gilder</h5>
+      <dl><dt>HP</dt><dd>10</dd><dt>Attack</dt><dd>+2</dd><dt>Damage</dt><dd>d4</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">All elbows and apologies.</p>
+      <p>Cornered, he gives up both cases and the truth: a steward in black gloves paid him at the sacristy door, and gave him the copy to leave behind.</p></div>
+  </div>
+
+  <h4>The chase table</h4>
+  <div class="tbl"><table>
+    <thead><tr><th>d6</th><th>In the way</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>A fish cart. Over it (DEX) or through it (STR, and you smell of eels until the feast).</td></tr>
+      <tr><td class="n">2</td><td>A line of flagellants in procession, who will not break step for anyone.</td></tr>
+      <tr><td class="n">3</td><td>Washing lines between the roofs. Grab one and swing: a DEX check, and success adds d4 to the chase.</td></tr>
+      <tr><td class="n">4</td><td>A pig, loose, with opinions.</td></tr>
+      <tr><td class="n">5</td><td>The city watch, who see armed strangers chasing a poor man and blow their whistles at the wrong people.</td></tr>
+      <tr><td class="n">6</td><td>Wat looks back and slips on a roof tile. The next check is Easy.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="roller"><button type="button" id="chaseRoll">Roll for the chase</button><span class="out" id="chaseOut" aria-live="polite"></span></div>
+
+  <p>End with the heroes holding two identical cases. The real one smells of old wax and is heavier than it should be. An INT or WIS check against the Target tells them apart. Then the gatehouse bell starts ringing, and Eulalia says the gates shut early on the eve of a feast.</p>
+</section>
+
+<!-- Scene 2 -->
+<section class="scene" id="s2">
+  <div class="scene-head">
+    <span class="scene-no">2</span>
+    <h2>The Gate</h2>
+    <div class="scene-meta"><span class="pill">Target 12</span><span>The east gate of Aubrecht</span></div>
+  </div>
+
+  <div class="aloud"><p>The east gate is jammed with carts. The watch are stopping every one of them and climbing in. A sergeant at the arch is reading a paper with a cathedral seal on it, and the description he reads out to his men sounds a great deal like you.</p></div>
+
+  <p>Pell has told the watch that thieves have stolen a relic of Saint Aubrel's and are trying to leave by the east gate. It is not quite a lie: the heroes now carry the cathedral's copy too. Let the players choose how to get out. Every plan is fine. Each one is a different way of filling the same obstacle.</p>
+
+  <div class="slips">
+    <div class="slip task"><span class="kind">Obstacle</span><h5>Out of Aubrecht</h5>
+      <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>The players' plan</dd></dl>
+      <p class="pub">One arch, a lot of carts and a sergeant who wants to be promoted.</p>
+      <p>Bluff with the Cardinal's letter (CHA, Easy with Eulalia at their side). Hide in the ossuary cart, under the bones (CON). Over the wall with a Rope and Grapnel (DEX). Start a fight among the carters to clear the arch (STR). Mix and match.</p></div>
+    <div class="slip clock"><span class="kind">Countdown</span><h5>The Gate Closes</h5>
+      <dl><dt>Rounds</dt><dd>4, automatic</dd></dl>
+      <p class="pub">The bell in the gatehouse is ringing the hour.</p>
+      <p>At 0 the portcullis comes down. Anyone still inside must go over the wall the hard way: a Hard DEX check, and d6 on a fail.</p></div>
+    <div class="slip foe"><span class="kind">Enemy · ×2</span><h5>Watchman</h5>
+      <dl><dt>HP</dt><dd>10</dd><dt>Attack</dt><dd>+3</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">Underpaid, and not keen.</p>
+      <p>Only if a plan goes wrong. They give up when it stops being worth their wages. Killing one turns the whole city against the heroes.</p></div>
+  </div>
+  <p>Once outside, the heroes can do what they like with the copy. Smashing it on the road is satisfying. Keeping it is smarter: it carries the cathedral's sacristy seal, and so will Pell's case in scene 5.</p>
+</section>
+
+<!-- Scene 3 -->
+<section class="scene" id="s3">
+  <div class="scene-head">
+    <span class="scene-no">3</span>
+    <h2>The Riders</h2>
+    <div class="scene-meta"><span class="pill">Target 13</span><span>The east road, a long hill down to the river</span></div>
+  </div>
+
+  <div class="aloud"><p>A carter has given you a lift on a hay wagon in exchange for a blessing from the saint. You are near the top of a long hill when you hear hooves behind you. Three riders. The one in front wears an old road warden's coat, and he has a crossbow across his saddle. He comes alongside, touches his hat, and smiles.</p></div>
+
+  <p>Konrad Hask makes his offer at a canter: hand over the case, take a purse that would buy a house, and the village still gets a rib in a box. Who would know? If the heroes refuse, he shoots the carter's horse in the harness, and the wagon goes down the hill with nobody steering it.</p>
+
+  <div class="slips">
+    <div class="slip foe"><span class="kind">Enemy</span><h5>Konrad Hask</h5>
+      <dl><dt>HP</dt><dd>20</dd><dt>Attack</dt><dd>+4</dd><dt>Damage</dt><dd>d8</dd><dt>Reach</dt><dd>Far, crossbow; Close, sword</dd></dl>
+      <p class="pub">Polite, tired and very good at this.</p>
+      <p>Reloads with a Move, so he shoots every other round. At 10 HP or less he yields, and keeps his word.</p></div>
+    <div class="slip foe"><span class="kind">Enemy · ×2</span><h5>Rider</h5>
+      <dl><dt>HP</dt><dd>10</dd><dt>Attack</dt><dd>+3</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">Hired swords, leaning out of the saddle to grab at the case.</p>
+      <p>A rider who grabs the case on a hit, instead of doing damage, rides off with it. The heroes get one round to stop him.</p></div>
+    <div class="slip task"><span class="kind">Obstacle</span><h5>Stop the Wagon</h5>
+      <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>STR on the brake, DEX for the reins, CHA for the horse</dd></dl>
+      <p class="pub">A hay wagon, a frightened horse and a very steep hill.</p>
+      <p>When complete, the wagon slews to a halt in the ditch, and everyone on it can fight on solid ground.</p></div>
+    <div class="slip clock"><span class="kind">Countdown</span><h5>The Bottom of the Hill</h5>
+      <dl><dt>Rounds</dt><dd>4, start when the horse bolts</dd></dl>
+      <p class="pub">At the bottom, the road turns hard left. The wagon will not.</p>
+      <p>At 0 the wagon goes over. Everyone still aboard takes d6 and is thrown clear into a hedge. The hay goes everywhere. The carter swears for some time.</p></div>
+  </div>
+
+  <div class="secret"><p>Hask carries a letter from Pell: “Bring the bone back by the bridge road. Let the girl take the other to her village.” Sealed with Pell's own ring. If the heroes take it, it wins scene 5 on the spot. If they take Hask's deal instead, run the ending at the bottom of the page.</p></div>
+  <p class="dim">Rest: the heroes can take a Party rest in the hedge, if they want to arrive at the river after dark.</p>
+</section>
+
+<!-- Scene 4 -->
+<section class="scene" id="s4">
+  <div class="scene-head">
+    <span class="scene-no">4</span>
+    <h2>Brackford Ferry</h2>
+    <div class="scene-meta"><span class="pill">Target 13</span><span>The River Wend, at dusk</span></div>
+  </div>
+
+  <div class="aloud"><p>The Wend is high and brown. The ferry is a flat barge on a rope, and the ferrywoman hauls you out into the current, singing. Halfway across she stops singing. Hands are coming up over the side of the barge. White hands, wet hands, dozens of them, reaching, and every one of them is reaching for the case.</p></div>
+
+  <p>For a hundred years the poor who could not pay the cathedral walked to Wendholt to pray at Hussey's empty tomb instead. Many tried to ford the Wend. Now the saint is crossing the river at last, and the drowned have come up to meet him. The common folk call them <b>Gaunt Penitents</b>. They are not angry. They want to touch him, and they will pull anyone into the river to do it.</p>
+
+  <div class="slips">
+    <div class="slip foe"><span class="kind">Enemy · unquiet dead · ×4</span><h5>Gaunt Penitent</h5>
+      <dl><dt>HP</dt><dd>8</dd><dt>Attack</dt><dd>+3</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">A pilgrim's cloak gone to weed, both hands held out.</p>
+      <p>Four, plus 1 for each time the rib was used to heal the living on the way here (the dead felt it), plus 2 at Horror 7. Two climb aboard each round. They attack whoever holds the rib or stands between.</p></div>
+    <div class="slip task"><span class="kind">Obstacle</span><h5>Haul for the Bank</h5>
+      <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>STR on the rope</dd></dl>
+      <p class="pub">Thirty yards of rope, and the river pulling the other way.</p>
+      <p>When complete, the barge grounds on the far bank. The Penitents still aboard sink back into the river, for now.</p></div>
+    <div class="slip clock"><span class="kind">Countdown</span><h5>The Rope Frays</h5>
+      <dl><dt>Rounds</dt><dd>5, automatic</dd></dl>
+      <p class="pub">Something under the water is pulling on the ferry rope.</p>
+      <p>At 0 the rope parts. Everyone makes a DEX check to stay aboard; a hero who fails goes in, takes d6 and crawls out downstream. The barge spins and grounds on a sandbar, close enough to wade.</p></div>
+  </div>
+
+  <h4>The Penitents' rules</h4>
+  <p class="dim">GM rulings for this adventure, not table rules.</p>
+  <ul class="tight">
+    <li><b>Steel drops them,</b> and they slide back into the river. Holy water, the Candle of Last Rites and Holy Oil work on them as their own words say.</li>
+    <li><b>The rib lays them to rest.</b> Use its power on a Penitent and the healing ends it: it touches the case, says a name, and goes still. That costs the rib's 1 Horror as always. The heroes will work this out fast, and it will tempt them.</li>
+  </ul>
+  <div class="secret"><p>If the heroes lay at least one to rest, the rest stop fighting and simply wade after the barge, at a distance, heads bowed. They follow the rib to Wendholt. That is the proof in scene 5.</p></div>
+</section>
+
+<!-- Scene 5 -->
+<section class="scene" id="s5">
+  <div class="scene-head">
+    <span class="scene-no">5</span>
+    <h2>The Feast at Wendholt</h2>
+    <div class="scene-meta"><span class="pill">Target 13</span><span>The village green and Saint Hussey's chapel, the next evening</span></div>
+  </div>
+
+  <div class="aloud"><p>You hear Wendholt before you see it: fiddles, drums, a whole village singing badly. There are bonfires on the green and a pig on a spit. Then the crowd sees Sister Eulalia and goes quiet. Up by the chapel door, beside a cushion with a small wooden case on it, a man in white and gold turns and spreads his arms in welcome. Canon Pell got here first.</p></div>
+
+  <p>Pell came by the bridge road in a closed coach with two cathedral sergeants. He has told Wendholt that the heroes are relic thieves, that poor Sister Eulalia was fooled, and that he has brought the true saint himself out of love for the village. His case has the sacristy seal. Father Rook, the old priest, wants to believe him. Reeve Gisela Moor does not trust anyone from the city, Pell included.</p>
+
+  <div class="slips">
+    <div class="slip task"><span class="kind">Obstacle</span><h5>Win the Village</h5>
+      <dl><dt>Progress</dt><dd>0 / 20 Effort</dd><dt>Check</dt><dd>CHA to sway the crowd, INT to argue the evidence</dd></dl>
+      <p class="pub">Four hundred people with candles, and a canon who talks better than you.</p>
+      <p>Pell's letter from Hask completes it at once. The copy from the gate with its matching seal, or Wat's confession, makes the checks Easy. When complete, the village turns on Pell.</p></div>
+    <div class="slip clock"><span class="kind">Countdown</span><h5>Dusk</h5>
+      <dl><dt>Rounds</dt><dd>5, automatic</dd></dl>
+      <p class="pub">The sun is going down behind the chapel.</p>
+      <p>At 0, if the Penitents followed from the river, they walk up out of the dark, through the feast, straight past Pell's case without a glance, and kneel around the real rib. Win the Village completes at once.</p></div>
+    <div class="slip foe"><span class="kind">Enemy · ×2</span><h5>Cathedral Sergeant</h5>
+      <dl><dt>HP</dt><dd>12</dd><dt>Attack</dt><dd>+3</dd><dt>Damage</dt><dd>d6</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">Halberds, and the cathedral's colours.</p>
+      <p>Pell sets them on the heroes if he is losing. The villagers pile in on whichever side is winning, with sausages and benches.</p></div>
+    <div class="slip foe"><span class="kind">Not a fighter</span><h5>Canon Rainald Pell</h5>
+      <dl><dt>HP</dt><dd>10</dd><dt>Attack</dt><dd>+1</dd><dt>Damage</dt><dd>d4</dd><dt>Reach</dt><dd>Close</dd></dl>
+      <p class="pub">A voice like a good bell.</p>
+      <p>Exposed, he runs for his coach. The village's children have already let its horses out.</p></div>
+  </div>
+
+  <h4>Laying him down</h4>
+  <p>When the village is won, Sister Eulalia carries the rib into the chapel and lays it in the tomb that has stood open for a hundred years. If the Penitents came, they lie down on the green, one by one, and are only bodies. Then the fiddles start again, slower. Wendholt will bury its pilgrims in the morning. Tonight it eats the pig.</p>
+
+  <h4>If the heroes took Hask's deal</h4>
+  <p>Pell's copy goes into the tomb, and the feast is lovely. Nothing comes up from the river. Hask rides back to Aubrecht with the real rib, and the drowned walk after it all the way. A week later, the cathedral of Saint Aubrel's starts closing its doors at dusk, and nobody will say why. That is the next adventure.</p>
+
+  <h4>Rewards</h4>
+  <ul class="tight">
+    <li>A purse of clipped coin each, as promised, and a seat at every feast of Saint Hussey for life.</li>
+    <li>The <b>Saint's Knucklebone</b> (relic, 1 Horror), Wendholt's only other piece of him, from Father Rook, if Pell was exposed.</li>
+    <li>A <b>Reliquary key</b> from Pell's belt, for the treasury of Saint Aubrel's. Keep it for a later adventure.</li>
+    <li>A <b>Blank indulgence</b> from Pell's coach. He had several.</li>
+  </ul>
+</section>
+
+<hr class="rule">
+
+<section id="vtt">
+  <h4>On the Sacrament RPG Table</h4>
+  <ul class="tight">
+    <li>One scene per chapter, built with <b>Prepare</b>. Obstacles and countdowns as cards; enemies as tokens with the italic line as public text. Keep the Penitents hidden until they come over the side.</li>
+    <li>Give the bearer the catalogue relic <b>Rib of the Hospice Saint</b>. A Penitent laid to rest by it is healed by the table: remove its token by hand straight after.</li>
+    <li>Set the Target by hand as each scene goes live.</li>
+  </ul>
+</section>
+
+
+<section id="print">
+  <h4>Printouts</h4>
+  <p>For the table: the whole plot on one A4 page, and A4 sheets with every obstacle, countdown and foe as a card to cut out, with boxes to cross off.</p>
+  <p><a href="/downloads/adventures/the-rib-of-saint-hussey-plot-A4.pdf">The plot on one page (A4 PDF)</a> · <a href="/downloads/adventures/the-rib-of-saint-hussey-gm-cards-A4.pdf">GM cards, five pages (A4 PDF)</a></p>
+</section>
+
+<footer>
+  <p><i>The Rib of Saint Hussey</i>, for the Sacrament RPG. Rules as on the Sacrament RPG Table on 8 November 2026; the rules are still provisional and being playtested. The rib is the catalogue's Rib of the Hospice Saint, unchanged. The Penitents' rules and the Horror consequences are GM choices for this adventure, not table rules.</p>
+</footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var chase = [
+    'A fish cart. Over it (DEX) or through it (STR).',
+    'Flagellants in procession, who will not break step.',
+    'Washing lines: swing for it, DEX, success adds d4.',
+    'A pig, loose, with opinions.',
+    'The watch blow their whistles at the wrong people.',
+    'Wat slips on a roof tile: the next check is Easy.'
+  ];
+  var out = document.getElementById('chaseOut');
+  document.getElementById('chaseRoll').addEventListener('click', function () {
+    var r = 1 + Math.floor(Math.random() * 6);
+    out.textContent = r + ': ' + chase[r - 1];
+  });
+})();
+</script>
+</body>
+</html>
