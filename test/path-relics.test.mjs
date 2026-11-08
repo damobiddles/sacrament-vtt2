@@ -1,4 +1,4 @@
-// Path relics (owner request 2026-11-08): twenty magic relics, two for each of ten hero paths, on their own d100 table reached from the Relics table.
+// Path relics (owner requests 2026-11-08): 100 magic relics, five for each of 20 hero paths, on their own d100 table reached from the Relics table.
 // They use the rules every relic already has (Horror on every use, limited uses like bandages, natural 1s as for any item). Owner decision 2026-11-08:
 // a hero may choose a path, and a relic of their own path costs 1 less Horror to use, never below 1.
 import test from 'node:test';
@@ -9,12 +9,13 @@ import '../site/sheet/sheet-core.js';
 import { table, d20, charNamed } from './vtt-helpers.mjs';
 import { lootCatalogue } from '../scripts/lib/loot-catalogue.mjs';
 const G = globalThis.SACRAMENT_GEAR, C = globalThis.SacramentSheetCore;
-const PATHS = ['Druid', 'Necromancer', 'Hunter', 'Assassin', 'Mercenary', 'Priest', 'Witch', 'Penitent', 'Barber-surgeon', 'Witch-finder'];
+const PATHS = ['Druid', 'Necromancer', 'Hunter', 'Assassin', 'Mercenary', 'Priest', 'Witch', 'Penitent', 'Barber-surgeon', 'Witch-finder', 'Scholar', 'Diplomat', 'Knight', 'Merchant', 'Pilgrim', 'Cutpurse', 'Minstrel', 'Gravedigger', 'Alchemist', 'Sailor'];
 const relics = G.found.filter((i) => i.table === 'pathrelics');
 
-test('twenty path relics, two for each path, all magic relics that tempt the Horror', () => {
-  assert.equal(relics.length, 20);
-  for (const p of PATHS) assert.equal(relics.filter((i) => i.path === p).length, 2, p);
+test('100 path relics, five for each of the 20 paths, all magic relics that tempt the Horror', () => {
+  assert.equal(relics.length, 100);
+  for (const p of PATHS) assert.equal(relics.filter((i) => i.path === p).length, 5, p);
+  for (const p of PATHS) assert.ok(relics.some((i) => i.path === p && i.effect === 'damage') && relics.some((i) => i.path === p && i.effect === 'esoteric'), p + ' has a relic for a fight and one for the story');
   assert.deepEqual([...new Set(relics.map((i) => i.path))], PATHS);
   const tagIds = G.tags.map((t) => t.id);
   for (const i of relics) {
@@ -51,6 +52,22 @@ test('the loot page lists every path relic with its path and its uses, so the se
     const entry = html.slice(at, html.indexOf('</article>', at));
     assert.ok(entry.includes('Path: ' + i.path), i.id);
     if (i.uses) assert.ok(entry.includes(i.uses + ' uses'), i.id);
+  }
+});
+
+test('the loot page groups path relics under their own path, and keeps them out of the general Relics list', () => {
+  const html = lootCatalogue(G);
+  const part = id => { const at = html.indexOf('<section id="' + id + '">'); assert.ok(at >= 0, id); return html.slice(at); };
+  const general = part('loot-relic').split('<section id="loot-path">')[0];
+  for (const i of relics) assert.ok(!general.includes('id="item-' + i.id + '"'), i.id + ' left out of the general list');
+  assert.ok(html.includes('href="#loot-path">Path relics</a>'));
+  for (const p of G.paths) {
+    const slug = p.name.toLowerCase().replace(/[^a-z]+/g, '-');
+    const group = part('loot-path-' + slug).split('</section>')[0];
+    assert.ok(group.includes('<h3>' + p.name + '</h3>'), p.name);
+    const mine = relics.filter(i => i.path === p.name);
+    assert.equal(mine.length, 5, p.name);
+    for (const i of mine) assert.ok(group.includes('id="item-' + i.id + '"><h4>'), i.id + ' under ' + p.name);
   }
 });
 
@@ -98,7 +115,7 @@ test('THE SHEET: uses the table counts say "left"; only uses the table cannot sp
   for (const i of relics) if (i.uses) { const h = C.blankHero('Count'); C.edit(h, { op: 'add', id: i.id }, { gm: true }); h.gear[0].eq = true; assert.equal(C.useOf(h, 0).ok, true, i.id + ' is used through the table, which counts its uses'); }
 });
 
-test('PATHS: a hero chooses one of the ten paths or none; anything else is refused, and old heroes have none', () => {
+test('PATHS: a hero chooses one of the 20 paths or none; anything else is refused, and old heroes have none', () => {
   assert.deepEqual(C.PATHS, PATHS);
   const h = C.blankHero('Path'); assert.equal(h.path, '');
   assert.equal(C.edit(h, { op: 'path', value: 'Druid' }, { gm: false }).ok, true); assert.equal(h.path, 'Druid');

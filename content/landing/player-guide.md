@@ -31,7 +31,7 @@ These are the **current VTT rules**, checked against the application on 1 Novemb
 
 **HP** means hit points, your remaining health. One Heart is 10 HP. A new hero starts with 10 HP, with extra maximum HP from gear that grants Hearts. **Defence** is 10 + CON + equipped armour bonus. Armour contributes at most +5; the combined CON and armour modifier is capped at +10.
 
-Your name, calling and vow help describe who you are. You may also choose a **path**, such as Druid, Hunter or Witch-finder: a relic of your own path costs you 1 less Horror (see [Rules](/rules/)). A vow is a promise your GM can build a story around. You can edit these without changing the game rules.
+Your name, calling and vow help describe who you are. You may also choose a **path**, such as Knight, Scholar, Hunter or Witch: a relic of your own path costs you 1 less Horror. See [Paths](/rules/paths/). A vow is a promise your GM can build a story around. You can edit these without changing the game rules.
 
 ## Checks: do you succeed?
 

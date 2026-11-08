@@ -20,7 +20,7 @@ const route = (tab) => tab.on ? [...route(G.tables.find(t => t.id === tab.on)), 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
   // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
   assert.equal(C.items.length, 184 + pathRelics.length);
-  assert.equal(pathRelics.length, 20);
+  assert.equal(pathRelics.length, 100);
   assert.equal(added.length, 95);
   for (const [kind, total] of Object.entries({ weapon: 28, armour: 14, supply: 92, relic: 28 })) {
     assert.equal(C.items.filter(i => i.kind === kind && i.table !== 'pathrelics').length, total, kind);
@@ -49,7 +49,7 @@ test('every new find is reachable at both range boundaries, visible in the publi
       seen.add(result.item.id);
     }
   }
-  assert.equal(seen.size, 170); // The binding seal is the 171st find, awarded directly on 100.
+  assert.equal(seen.size, 250); // The binding seal is the 251st find, awarded directly on 100.
   for (const item of added) {
     assert.ok(seen.has(item.id), item.id);
     assert.ok(html.includes('id="item-' + item.id + '"'), item.id);

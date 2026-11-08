@@ -27,6 +27,15 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 8 November 2026, later: twenty paths and 100 path relics
+
+**Ten more paths,** for the ordinary trades of the age as well as the magical ones: Scholar, Diplomat, Knight, Merchant, Pilgrim, Cutpurse, Minstrel, Gravedigger, Alchemist and Sailor. There are now 20. The rule is unchanged: a relic of your own path costs 1 less Horror. The new [Paths](/rules/paths/) page explains them and lists every path relic.
+
+- **100 path relics,** five for each path. Each costs 2 or 3 Horror, 1 less for a hero of its path. The Path relics table is still reached from 67 to 100 on the Relics table, and now gives one relic for each number. The chance of finding a relic at all has not changed. Of the first twenty, ten have new numbers on that table, and the Wax Poppet and its kind are otherwise unchanged.
+- **Two of the first twenty were replaced** before anyone could find them in play: the Ribbon of Truce and the Scallop of the Long Road became the Envoy's Letter-Knife and the Stone from the Saint's Road, so every path has at least one relic for a fight.
+- **The hero generator on My heroes** now suggests a path to match your starting focus. The printable hero sheet and the rules cheat sheet now have a Path line.
+- *Prompted by:* the designer's decision.
+
 ## 8 November 2026: paths and path relics
 
 **Paths, a new rule.** A hero may now follow one path: Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon or Witch-finder. Choose it on the character sheet, at the table or on My heroes, or leave it empty. Heroes made before today have no path until their player picks one. A path does one thing: **a relic of your own path costs 1 less Horror** each time you use it. It gives no scores, Effort or gear.

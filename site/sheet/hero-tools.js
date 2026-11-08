@@ -109,8 +109,11 @@
       kit = [book, pick(['cudgel', 'knife']), pick(['cloak', 'gambeson']), 'bandages', 'lantern', 'scrivener', 'rations', 'tinder'];
     }
     h.stats[primary] = 3; h.stats[secondary] = 2; h.stats[third] = 1;
+    /* a path that suits the focus (chosen last, so the rest of the hero comes out as it always did) */
+    var pathFor = { fighter: ['Mercenary', 'Knight'], scout: ['Hunter', 'Cutpurse', 'Pilgrim'], scholar: ['Scholar', 'Alchemist'], healer: ['Barber-surgeon', 'Priest'] };
     h.effort[effort] = 3; h.effort.basic = 1;
     kit.forEach(function (id) { var result = C.edit(h, { op: 'add', id: id }, { gm: false }, h.hp); if (!result.ok) throw new Error('Generated kit does not fit: ' + result.why); });
+    h.path = pick(pathFor[focus]);
     var problems = C.problems(h, { gm: false }); if (problems.length) throw new Error('Generated hero is not valid: ' + problems.join(' '));
     return h;
   }

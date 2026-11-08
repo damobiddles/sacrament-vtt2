@@ -9,7 +9,7 @@ test('public loot tables link to complete three-spell books with clear effect la
   await expect(navigation.getByRole('link', { name: 'Grimoires and spells', exact: true })).toHaveAttribute('href', '#loot-grimoire');
   const books = page.locator('#loot-grimoire .loot-entry');
   await expect(books).toHaveCount(22);
-  await expect(page.locator('.loot-entry')).toHaveCount(204);
+  await expect(page.locator('.loot-entry')).toHaveCount(284);
   await expect(page.locator('#item-lowdoors .loot-effect')).toHaveText(['Esoteric effect', 'Esoteric effect', 'Esoteric effect']);
   await expect(page.locator('#item-hospicevigil .loot-effect')).toHaveText(['Healing', 'Esoteric effect', 'Esoteric effect']);
   await expect(page.locator('#item-hospicerib')).toContainText('The table applies healing');
@@ -101,20 +101,22 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   const order = await page.evaluate(() => ['#loot-search', '#loot-roller', '#table-d100', '#loot-weapon', '#about-loot'].map(sel => document.querySelector(sel).getBoundingClientRect().top + scrollY));
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   await expect(page.locator('main .body > *').first()).toHaveAttribute('id', 'loot-search');
-  await expect(visible).toHaveCount(204);
+  await expect(visible).toHaveCount(284);
   await search.fill('cinder lectionary');
   await expect(visible).toHaveCount(1);
   await expect(page.locator('#item-cinderlectionary')).toBeVisible();
-  await expect(page.locator('#loot-search-count')).toHaveText('1 of 204 items match.');
+  await expect(page.locator('#loot-search-count')).toHaveText('1 of 284 items match.');
   // Roll tables keep only the rows that point at a match; sections with nothing left are hidden.
   await expect(page.locator('#table-grimoires tbody tr:visible')).toHaveCount(1);
   await expect(page.locator('#table-arms')).toBeHidden();
   await expect(page.locator('#loot-weapon')).toBeHidden();
-  // A path finds the path relics made for it (2026-11-08), and their rows on the Path relics table.
+  // A path finds the five path relics made for it (2026-11-08), grouped under that path, and their rows on the Path relics table.
   await search.fill('witch-finder');
-  await expect(visible).toHaveCount(2);
-  await expect(page.locator('#item-silverpricker')).toBeVisible(); await expect(page.locator('#item-scoldsbridle')).toBeVisible();
-  await expect(page.locator('#table-pathrelics tbody tr:visible')).toHaveCount(2);
+  await expect(visible).toHaveCount(5);
+  await expect(page.locator('#loot-path-witch-finder #item-silverpricker')).toBeVisible(); await expect(page.locator('#loot-path-witch-finder #item-scoldsbridle')).toBeVisible();
+  await expect(page.locator('#loot-path-druid')).toBeHidden();
+  await expect(page.locator('#loot-relic')).toBeHidden();
+  await expect(page.locator('#table-pathrelics tbody tr:visible')).toHaveCount(5);
   // A spell name finds the books that hold it, ignoring capitals.
   await search.fill('EMBER');
   await expect(page.locator('#item-embers')).toBeVisible();
@@ -123,7 +125,7 @@ test('the loot search filters items and roll-table rows as you type, and clears 
   await expect(page.locator('#loot-search-count')).toHaveText('No loot matches “zzqx nothing”.');
   await search.press('Escape');
   await expect(search).toHaveValue('');
-  await expect(visible).toHaveCount(204);
+  await expect(visible).toHaveCount(284);
   await expect(page.locator('#loot-search-count')).toHaveText('');
   // A jump link to a section the search hid clears the search so the link still lands.
   await search.fill('cinder lectionary');

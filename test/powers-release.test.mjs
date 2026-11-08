@@ -60,10 +60,11 @@ test('power completion preserves all catalogue IDs, slots, spell assignments and
  // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  // Owner request 2026-11-08: twenty path relics on a new Path relics table (67 to 100 on Relics); the 22 older relics share 1 to 66. A sub-table's "on" is now locked too. The list of hero paths is part of the gear list.
+ // Owner request 2026-11-08 (later): twenty paths and 100 path relics, five per path; the Path relics table numbers them 1 to 100.
  const {createHash}=await import('node:crypto');
  // Owner decision 2026-11-06: the list of spell and item tags is not part of the catalogue's IDs, slots or odds, so it is left out here.
  const stable=Object.fromEntries(Object.entries(globalThis.SACRAMENT_GEAR).filter(([k])=>k!=='tags').map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>['id','kind','slots','table','loot','spells','pick','pickDie','die','on'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'bbac316d5d1502be70039bad7e49e6e2ec0684f32255c35c6dec0bd40a9fe38d');
+ assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'9fd3f8a1d45a105537d67e8541e35b1d536ad6f44d35a2dce52dd48a04cac979');
 });
 
 test('scene uses survive rest, reload and returning to a scene; reset invalidates pending limited damage',async()=>{
