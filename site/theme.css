@@ -34,6 +34,16 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:18px/1.68 var(--body);margin:0}
 .wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* The site footer (nav.js footer()): here, not in landing.css, so pages without the website's styles (My heroes, the solo game) show it the same way. */
+.ic-foot{margin-top:40px;padding:30px 0 40px;border-top:3px double var(--line);background:var(--bg2);color:var(--dim);font-size:.96rem}
+.ic-foot p{margin:6px 0;max-width:none}
+.ic-foot b{font-family:var(--display);color:var(--fg);font-size:1.1rem}
+.site-footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px;padding-bottom:24px}
+.site-footer-grid nav{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.site-footer-grid nav a{padding-block:3px;line-height:1.5}
+.site-footer-grid p{max-width:30ch}
+.site-legal{padding-top:18px;border-top:1px solid var(--line)}
+@media(max-width:650px){.site-footer-grid{grid-template-columns:minmax(0,1fr)}}
 h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.005em}
 .label{font-family:var(--label);font-weight:600;letter-spacing:.2em;text-transform:uppercase;font-size:0.8rem;color:var(--candle)}
 a{color:var(--blood-hi)}

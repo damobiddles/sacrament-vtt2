@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Inventory | Sacrament</title>
+<title>Inventory | Sacrament RPG</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="description" content="A private list of everything on the site, for the owner.">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -51,11 +51,11 @@
 <main class="inv">
 <div class="label">Private. For the owner only.</div>
 <h1>Inventory</h1>
-<p class="lede">Everything a person can reach on playsacrament.com, plus what is left over in the project. Nothing has been deleted: anything archived is moved to the archive folder and its old address redirects. This page is for you to go through and tell me what to keep, merge or archive.</p>
+<p class="lede">Everything a person can reach on playsacrament.com, plus what is left over in the project. Anything archived is removed from the site (git history keeps every version) and its old address redirects. This page is for you to go through and tell me what to keep, merge or archive.</p>
 
 <div class="box"><h2>How to read it</h2>
 <ul>
-<li><b>Archive</b> means moving something out of public reach, with its old address redirecting somewhere sensible. It does not mean deleting.</li>
+<li><b>Archive</b> means moving something out of public reach, with its old address redirecting somewhere sensible. Nothing is lost: git history keeps every version.</li>
 <li><b>Merge</b> means folding it into something else that does the same job.</li>
 <li>Each item has a "Your decision" box, already set to my recommendation. Change the ones you disagree with, then press <b>Copy my decisions</b> at the bottom and paste the result to me.</li>
 <li>Your choices stay in this browser only. Nothing is sent anywhere.</li>
@@ -301,7 +301,7 @@
 <p class="addr"><a class="u" href="/news/example-post-delete-me/">playsacrament.com/news/example-post-delete-me/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>A sample post that explained how to write a post. It said &quot;delete me&quot;.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: moved to archive/old-content/news-example-post.md (nothing deleted). The old address now redirects to the blog list, and it is out of the sitemap.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: removed (git history keeps it). The old address now redirects to the blog list, and it is out of the sitemap.</p></div>
 <div><h4>What links to it</h4><p>Used to be linked from the news list. Nothing links to it now.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Example blog post (delete me)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -322,10 +322,10 @@
 <h3>Support</h3>
 <p class="addr"><a class="u" href="/support/">playsacrament.com/support/</a></p>
 <div class="cols">
-<div><h4>What it is</h4><p>A Donate button that goes to the Ko-fi page (ko-fi.com/sacramentrpg) and a line that running the table costs money.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Works. Donations are handled by Ko-fi; the site only links there.</p></div>
-<div><h4>What links to it</h4><p>The home page navigation bar.</p></div>
-<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Donate link added 2026-10-20.</p>
+<div><h4>What it is</h4><p>Used to be a page with a Donate button for the Ko-fi page (ko-fi.com/sacramentrpg).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> RETIRED: the old address redirects (netlify.toml). Support is now the Ko-fi button on public pages and the &quot;Support on Ko-fi&quot; link in every footer.</p></div>
+<div><h4>What links to it</h4><p>Nothing links to the old address; the footer links straight to Ko-fi.</p></div>
+<div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> Retired in favour of the Ko-fi widget.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Support"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article>
@@ -554,7 +554,7 @@
 <p class="addr"><a class="u" href="/legacy/">playsacrament.com/legacy/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>Used to be its own page for bringing an old-rules Sacrament character over. It is now a section at the bottom of the hero builder (/character/), shown only when this browser holds an old character.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> MERGED 2026-10-20: the old page was moved to archive/old-site/legacy/ (nothing deleted) and /legacy/ now redirects to the hero builder. The old rules' script files stay in /legacy/ because the designer's builder and the library function still use them.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Redirect</span> MERGED 2026-10-20: the old page was removed (git history keeps it) and /legacy/ now redirects to the hero builder. The old rules' script files stay in /legacy/ because the designer's builder and the library function still use them.</p></div>
 <div><h4>What links to it</h4><p>Nothing links to the old address any more; the hero builder and the Basic Rules page link to the new section.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-merge">Merge</span> Done, as you decided.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Characters from the earlier rules"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
@@ -565,7 +565,7 @@
 <p class="addr"><a class="u" href="/legacy/rules/">playsacrament.com/legacy/rules/</a></p>
 <div class="cols">
 <div><h4>What it is</h4><p>A copy of the Basic Rules from before the Hearts rewrite (ability trees and twelve boxes). It was broken: its styling and navigation files used the wrong relative address.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: moved to archive/old-site/legacy-rules/ (nothing deleted). The old address now redirects to /rules/. The two links to it (the Basic Rules footer and the earlier-characters page) were reworded.</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Archived</span> ARCHIVED 2026-10-20: removed (git history keeps it). The old address now redirects to /rules/. The two links to it (the Basic Rules footer and the earlier-characters page) were reworded.</p></div>
 <div><h4>What links to it</h4><p>Used to be linked from the Basic Rules footer and the earlier-characters page. Nothing links to it now.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-archive">Archive</span> Done, as you decided.</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for The earlier Basic Rules"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>

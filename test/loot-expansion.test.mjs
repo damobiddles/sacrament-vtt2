@@ -31,8 +31,9 @@ test('the expansion doubles each item category with stable catalogue definitions
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // Owner decision 2026-11-08: every relic belongs to a path; the older relics cost 1 more Horror, 1 less on their own path.
+  // Audit 2026-11-08: flavour lines added to the six older relics that had none, and the Bone Bell's words name its CHA check (words only).
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '46f1d5c933af237374dfb55269d4e873bfd657133496b41787be633524581475');
+  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), 'c47639b026d40904c53235244da7fdaf5ebce8e221c521ee7314f1b5bed851c5');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
   assert.equal(hash(G.spells.slice(0,23).map(untag).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');

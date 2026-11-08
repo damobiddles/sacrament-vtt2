@@ -47,7 +47,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Inventory | Sacrament</title>
+<title>Inventory | Sacrament RPG</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="description" content="A private list of everything on the site, for the owner.">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -95,11 +95,11 @@ const html = `<!doctype html>
 <main class="inv">
 <div class="label">Private. For the owner only.</div>
 <h1>Inventory</h1>
-<p class="lede">Everything a person can reach on playsacrament.com, plus what is left over in the project. Nothing has been deleted: anything archived is moved to the archive folder and its old address redirects. This page is for you to go through and tell me what to keep, merge or archive.</p>
+<p class="lede">Everything a person can reach on playsacrament.com, plus what is left over in the project. Anything archived is removed from the site (git history keeps every version) and its old address redirects. This page is for you to go through and tell me what to keep, merge or archive.</p>
 
 <div class="box"><h2>How to read it</h2>
 <ul>
-<li><b>Archive</b> means moving something out of public reach, with its old address redirecting somewhere sensible. It does not mean deleting.</li>
+<li><b>Archive</b> means moving something out of public reach, with its old address redirecting somewhere sensible. Nothing is lost: git history keeps every version.</li>
 <li><b>Merge</b> means folding it into something else that does the same job.</li>
 <li>Each item has a "Your decision" box, already set to my recommendation. Change the ones you disagree with, then press <b>Copy my decisions</b> at the bottom and paste the result to me.</li>
 <li>Your choices stay in this browser only. Nothing is sent anywhere.</li>

@@ -20,7 +20,7 @@ test('public pages share one navigation and identify their section', async ({ br
 
 test('the five rules pages (Paths added 2026-11-08) share one row of tabs, each marking itself', async ({ browser }) => {
   const page = await newPage(browser);
-  const tabs = [['/rules/', 'The rules'], ['/rules/paths/', 'Paths'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
+  const tabs = [['/rules/', 'Rules'], ['/rules/paths/', 'Paths'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
   for (const [path, name] of tabs) {
     await page.goto(path);
     const row = page.getByRole('navigation', { name: 'Rules pages' });

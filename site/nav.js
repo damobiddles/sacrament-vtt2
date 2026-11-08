@@ -105,6 +105,8 @@
       bar.innerHTML = '<a class="sac-mark" href="/" title="Back to the Sacrament home page"><img src="/favicon.svg" alt="" width="24" height="24">Sacrament</a>';
       document.body.insertBefore(bar, document.body.firstChild);
       document.documentElement.style.setProperty('--navh', bar.offsetHeight + 'px');
+      /* My heroes is a page you scroll, so it ends with the site footer like every public page; the table and the builder fill the screen and do not. */
+      if (/^\/character\/?$/.test(path) && !document.querySelector('body > footer') && !document.body.hasAttribute('data-no-footer')) document.body.insertAdjacentHTML('beforeend', footer());
     } else {
       if (!document.querySelector('link[href="/landing.css"]')) {
         var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/landing.css'; document.head.appendChild(css);
