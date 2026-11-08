@@ -990,7 +990,7 @@
     send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
-  function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [], marks: ch.marks || 0, advances: ch.advances || { stats: 0, effort: 0 } }; }
+  function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', path: ch.path || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [], marks: ch.marks || 0, advances: ch.advances || { stats: 0, effort: 0 } }; }
   /* Using an item: one click makes the check with the item's stat. On a success the panel offers "Roll damage" with the item's own die; it applies to the recorded target automatically. */
   function focusNextRoll() { setTimeout(function () { var next = document.querySelector('#strip [data-do=commitUse], #strip [data-do=commitCheck], #attackTarget, .area-targets input'); if (next) next.focus({preventScroll:true}); }, 0); }
   function doUseItem(charId, index, spellId, gearKey, chosenTarget, mode, prepareOnly) {

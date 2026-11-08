@@ -34,11 +34,12 @@ test('a fallen hero cannot start attacks, checks, item actions, Effort or Push; 
 // The separate stable-catalogue fingerprint in powers-release protects IDs, odds, slots and spell assignments.
 test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
- // Owner request 2026-11-08: twenty path relics (each labelled with a hero path) and the Relics table re-divided to make room for them.
+ // Owner request 2026-11-08: twenty path relics (each with its hero path) and the Relics table re-divided to make room for them. Owner decision the same day:
+ // heroes may choose a path (the list is under "paths"); every path relic costs 1 more Horror, and 1 less for a hero of its path.
  // Owner-approved 2026-11-07: the Light tag's words follow the Hooded Lantern (a WIS check to search or notice in the dark is Hard).
  // Owner-approved 2026-11-06: story spells and items carry tags (what each is good for, with a default effect), plus the tag list.
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'cf2ed0151608cb74f240d237de682c3555b7960b666f25a3d0fb0ff4cbac12da');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'ce614fcd6665fc79ed11bd9eee79320565333a6e3a9fdae16c74de815573d25f');
 });

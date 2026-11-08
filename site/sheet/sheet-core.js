@@ -1,7 +1,7 @@
 /* Sacrament RPG character sheet: the rules for a hero's numbers and gear, kept apart from the screen and from the server so both play by exactly the same code.
    Loaded as a plain script in the browser and imported (for its effect) in Node: either way it puts SacramentSheetCore on the global object.
    Needs SacramentRules (site/vtt/rules.js) and SACRAMENT_GEAR (site/sheet/gear.js) loaded first.
-   A hero here is { name, calling, vow, appearance, background, notes, stats, effort, armour, gear: [{ id, eq, uses? }] }; its hit points are kept by whoever holds the hero
+   A hero here is { name, calling, path, vow, appearance, background, notes, stats, effort, armour, gear: [{ id, eq, uses? }] }; its hit points are kept by whoever holds the hero
    and are passed in as { cur, max } where a rule moves them. `edit` changes the hero only when the whole change is allowed, and otherwise says why in plain words. */
 (function (root, factory) { root.SacramentSheetCore = factory(root.SacramentRules, root.SACRAMENT_GEAR); })(typeof window !== 'undefined' ? window : globalThis, function (R, G) {
   'use strict';
@@ -13,6 +13,10 @@
   var isFind = function (it) { return !!it && (it.kind === 'relic' || it.found === true); };
   var SPELL = {}; G.spells.forEach(function (s) { SPELL[s.id] = s; });
   var TAG = {}; (G.tags || []).forEach(function (t) { TAG[t.id] = t; });
+  /* A hero's path (Druid, Necromancer, Hunter and so on: the list is in the gear list), or '' for none. A hero using a relic of their own path pays 1 less Horror for it, never below 1. */
+  var PATHS = (G.paths || []).slice();
+  function pathOf(h) { return h && PATHS.indexOf(h.path) >= 0 ? h.path : ''; }
+  function onPath(h, it) { return !!(it && it.path && pathOf(h) === it.path); }
   /* What a story spell or item is good for when its words leave it to the GM: its tags from the gear list, each with its default in a fight and out of one. */
   function tagsOf(src) { return ((src && src.tags) || []).map(function (id) { return TAG[id]; }).filter(Boolean); }
   var NEEDS = { corpse: 'needs a corpse close by', undead: 'only against the undead' };
@@ -103,7 +107,7 @@
     return 'Tempts the Horror · +' + R.sayHorrorAmount(src.horror) + '. ' + (src.horrorReason || "Using this item's supernatural power tempts the Horror.");
   }
   function blankHero(name) {
-    var h = { name: name || 'New hero', calling: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [], marks: 0, advances: { stats: 0, effort: 0 } };
+    var h = { name: name || 'New hero', calling: '', path: '', vow: '', appearance: '', background: '', notes: '', stats: {}, effort: {}, armour: 0, gear: [], marks: 0, advances: { stats: 0, effort: 0 } };
     STATS.forEach(function (k) { h.stats[k] = 0; }); CATS.forEach(function (k) { h.effort[k] = 0; });
     return h;
   }
@@ -213,7 +217,8 @@
     if (pick) { var list = spellsOf(it); if (list.length < pick) return no(it.name + ' has fewer than ' + pick + ' spells written in it.'); return { ok: true, item: it, spell: null, gear: g, name: it.name, stat: '', cat: '', pick: pick, pickDie: it.pickDie || pick, spells: list.slice(0, pick) }; }
     if (src.cat && STATS.indexOf(src.roll) < 0) return no(label + ' has no stat to roll.');
     /* With no Effort die, a stat in "roll" still means a check; with no stat it is used without one. */
-    return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? src.horror : 0 };
+    var own = !sp && !mode && onPath(h, it);   /* a relic of the hero's own path costs 1 less Horror, never below 1 */
+    return { ok: true, item: it, spell: sp, source: src, mode: mode || '', area: src.area === true, gear: g, name: label, stat: STATS.indexOf(src.roll) >= 0 ? src.roll : '', cat: src.cat || '', attackBonus: attackBonus(it), healing: healingOf(src), damageBonus: sp ? 0 : damageBonus(it), horror: src.temptsHorror ? (own && Number.isInteger(src.horror) ? Math.max(1, src.horror - 1) : src.horror) : 0, onPath: own };
   }
   /* Which spell a grimoire read by the die casts when the die shows n: the faces are shared out in the order the spells are listed (a d6 over three spells:
      1-2 the first, 3-4 the second, 5-6 the third, as the book's own words say). One rule for the table, the solo game and the printed sheet. */
@@ -227,7 +232,7 @@
       var it = itemOf(g); if (!it) return;
       if (it.kind === 'grimoire' && it.pick) { var r = useOf(h, i); out.push({ index: i, spellId: '', ok: r.ok, why: r.why || '', name: 'Read ' + it.name, stat: '', cat: '', pick: it.pick, pickDie: it.pickDie || it.pick }); }
       else if (it.kind === 'grimoire') { spellsOf(it).forEach(function (s) { if (s.cat || s.temptsHorror || s.heal) { var u = useOf(h, i, s.id); out.push({ index: i, spellId: s.id, ok: u.ok, why: u.why || '', name: s.name + ' (' + it.name + ')', stat: s.roll || '', cat: s.cat || '', horror: s.horror || 0 }); } }); }
-      else if (it.cat || it.temptsHorror || healingOf(it)) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? it.horror || 0 : 0 }); }
+      else if (it.cat || it.temptsHorror || healingOf(it)) { var u2 = useOf(h, i); out.push({ index: i, spellId: '', ok: u2.ok, why: u2.why || '', name: it.name, stat: it.roll || '', cat: it.cat || '', horror: it.temptsHorror ? (u2.ok ? u2.horror : it.horror || 0) : 0 }); }
     });
     (h.gear || []).forEach(function (g, i) { var it = itemOf(g), origin = it && mechanicsOf(it); if (origin && origin.ultimate) { var u = useOf(h, i, '', 'ultimate'); out.push({ index: i, spellId: '', mode: 'ultimate', ok: u.ok, why: u.why || '', name: it.name + ' — final blow (+3 Horror, once per scene)', stat: it.roll || '', cat: 'ultimate', horror: origin.ultimate.horror }); } });
     out.forEach(function (a) { a.gearKey = h.gear[a.index].key; a.healing = useOf(h, a.index, a.spellId, a.mode).healing || null; });
@@ -296,7 +301,7 @@
 
   /* ---------- the one entry point ---------- */
   var no = function (why) { return { ok: false, why: why }; };
-  /* op: { op: 'text', field, value } | { op: 'score', stat, value } | { op: 'effort', cat, value } | { op: 'add', id } | { op: 'remove', index } | { op: 'move', index, eq }
+  /* op: { op: 'text', field, value } | { op: 'path', value } (one of PATHS, or '' for none) | { op: 'score', stat, value } | { op: 'effort', cat, value } | { op: 'add', id } | { op: 'remove', index } | { op: 'move', index, eq }
      who: { gm: boolean }.  hp: { cur, max } or null. */
   function edit(hero, op, who, hp) {
     if (!op || typeof op !== 'object') return no('That is not something the sheet can do.');
@@ -306,6 +311,10 @@
       var v = text(op.value, TEXT_LIMITS[op.field]);
       if (op.field === 'name' && !v.trim()) return no('A hero needs a name.');
       h[op.field] = v; return { ok: true };
+    }
+    if (op.op === 'path') {
+      var pv = op.value == null ? '' : String(op.value); if (pv && PATHS.indexOf(pv) < 0) return no('That is not one of the paths.');
+      h.path = pv; return { ok: true };
     }
     if (op.op === 'score') {
       if (STATS.indexOf(op.stat) < 0) return no('That is not one of the six scores.');
@@ -411,6 +420,7 @@
     raw = raw && typeof raw === 'object' ? raw : {};
     var h = blankHero(text(raw.name, TEXT_LIMITS.name).trim() || 'New hero');
     ['calling', 'vow', 'appearance', 'background', 'notes'].forEach(function (f) { h[f] = text(raw[f], TEXT_LIMITS[f]); });
+    h.path = pathOf(raw);
     STATS.forEach(function (k) { h.stats[k] = clamp(int(raw.stats && raw.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
     CATS.forEach(function (k) { h.effort[k] = clamp(int(raw.effort && raw.effort[k], 0), 0, R.MAX_BONUS); });
     h.armour = clamp(int(raw.armour, 0), 0, R.MAX_BONUS);
@@ -420,5 +430,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

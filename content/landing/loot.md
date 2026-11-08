@@ -8,7 +8,7 @@ summary: The current Sacrament RPG loot tables, equipment and three-spell grimoi
 
 Roll d100 on the main table, then roll d100 again on the table it points to. On the Relics table, 67 to 100 point on to the Path relics table: roll a third d100 there. Each number has one result. The catalogue above also includes starting equipment and items the GM can award directly.
 
-**Path relics.** Twenty magic relics suited to a kind of hero: the Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon and Witch-finder. The path is a label to help the GM choose a fitting reward; any hero may carry and use any of them. Like every relic, each use adds Horror. Many have only a few uses, shown in their entry: when the last is spent the relic is broken, dry or burned out, and does nothing more.
+**Path relics.** Twenty magic relics suited to a kind of hero: the Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon and Witch-finder. Any hero may carry and use any of them, and each use adds Horror, but a hero who follows that path (chosen on the character sheet) pays 1 less Horror for it. Each entry gives both costs. Many have only a few uses, shown in their entry: when the last is spent the relic is broken, dry or burned out, and does nothing more.
 
 **Themed grimoires.** Choose by name and theme: Fire, Cold, Energy, Necromancy, Nature, Druidic, Demonic, Healing and protection, Silence and deception, or Doors and passage. Each of the 22 books has its own three spells, and no spell appears in two current books. Nature concerns plants and the land; Druidic concerns beasts, trees, weather and the seasons. Energy covers force, storm and iron; Necromancy covers the dead, bones and graves.
 

@@ -27,14 +27,16 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
-## 8 November 2026: path relics
+## 8 November 2026: paths and path relics
 
-**Twenty new relics on the loot tables.** Each suits a kind of hero, its *path*: Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon or Witch-finder. The path is only a label on the [loot page](/loot/) and the character sheet, to help the GM choose a reward. It is not a new rule: any hero may carry and use any relic, and nothing about a hero's calling changes.
+**Paths, a new rule.** A hero may now follow one path: Druid, Necromancer, Hunter, Assassin, Mercenary, Priest, Witch, Penitent, Barber-surgeon or Witch-finder. Choose it on the character sheet, at the table or on My heroes, or leave it empty. Heroes made before today have no path until their player picks one. A path does one thing: **a relic of your own path costs 1 less Horror** each time you use it. It gives no scores, Effort or gear.
 
-- **They use the rules relics already have.** Every use adds Horror (1 or 2, as each entry says), whether it works or not. A natural 1 adds Horror only when the relic is used to attack, as for any other item. Past 21, each point of Horror that cannot go on the meter still costs the hero d4 HP.
-- **Many wear out.** Most have 2 to 6 uses, counted on the sheet like bandages or holy oil. A use is spent whether it works or not. When the last is gone the relic is broken, dry or burned out and does nothing more.
+**Twenty path relics on the loot tables,** two for each path. Any hero may carry and use them.
+
+- **Horror.** Each use costs 2 or 3 Horror, whether it works or not, and 1 less for a hero of its path (its entry gives both costs). A natural 1 adds Horror only when the relic is used to attack, as for any other item. Past 21, each point of Horror that cannot go on the meter still costs the hero d4 HP.
+- **Many wear out.** Most have 2 to 6 uses, counted on the sheet like bandages. A use is spent whether it works or not. When the last is gone the relic is broken, dry or burned out and does nothing more.
 - **Where they are found.** On the Relics table, 67 to 100 now lead to a new Path relics d100 table. The 22 older relics share 1 to 66, three numbers each. The chance of finding a relic at all has not changed.
-- **Printed kit.** The print-and-play kit does not list these relics yet.
+- **Printed sheets.** The print-and-play kit, the rules cheat sheet and the printed hero sheet do not have paths yet.
 - *Prompted by:* the designer's decision.
 
 ## 8 November 2026: heroes grow stronger
