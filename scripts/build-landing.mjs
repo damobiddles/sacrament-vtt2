@@ -112,7 +112,7 @@ const feedbackForm = `<form class="ic-form feedback-form" name="vtt-feedback" me
 const pdfPair = (base, size) => '<a href="' + base + '-A4.pdf" download>A4 PDF</a> · <a href="' + base + '-Letter.pdf" download>US Letter PDF</a>' + (size ? ' <span class="small">(' + size + ' each)</span>' : '');
 const dlCard = (tag, title, desc, links, img) => '<article class="card">' + (img ? '<img class="resource-image" src="' + img[0] + '" alt="' + esc(img[1]) + '" loading="lazy" decoding="async">' : '') + '<span class="tag">' + tag + '</span><h3>' + title + '</h3><p>' + desc + '</p><p class="dl-links">' + links + '</p></article>';
 function playInPerson(html) {
-  const paths = '<nav class="role-paths" aria-label="On this page"><a href="#what-to-bring">What to bring</a><a href="#free-printables">Free printables</a><a href="#the-adventure-the-guest-at-greave">The adventure</a><a href="#the-rules-at-a-glance">The rules at a glance</a></nav>';
+  const paths = '<nav class="role-paths" aria-label="On this page"><a href="#what-to-bring">What to bring</a><a href="#free-printables">Free printables</a><a href="#the-adventure-the-guest-at-greave">The adventure</a><a href="#a-shorter-adventure-the-rib-of-saint-hussey">A shorter adventure</a><a href="#the-rules-at-a-glance">The rules at a glance</a></nav>';
   const downloads = '<div class="resource-grid">' + [
     dlCard('For everyone', 'Print-and-play kit', 'Nine sheets: a quick reference, a blank character sheet with a notes page, the Horror track and a fold-up Target sign, foe and obstacle cards, turn slips and countdowns, a healing log, item and grimoire cards, and a what-to-bring checklist.', pdfPair('/downloads/print-kit/sacrament-print-kit', '0.5 MB')),
     dlCard('For everyone', 'Rules cheat sheet', 'Three pages with the current rules to hand: checks, Effort, Push, Break away, the Horror and paying in blood, gear, healing and dying, what story spells do, darkness, growing stronger, and the GM’s side. Updated 8 November 2026.', pdfPair('/downloads/players/sacrament-rules-cheat-sheet', '0.4 MB')),
@@ -124,6 +124,10 @@ function playInPerson(html) {
     dlCard('For the GM', 'The adventure, narrated', 'The whole adventure read aloud, for preparing on a walk or a commute. It gives away every secret.', '<a href="/downloads/adventures/the-guest-at-greave-audio.mp3" download>MP3, 37 minutes</a> <span class="small">(18 MB)</span>'),
     dlCard('For the players', 'Before the Snow', 'The opening reading: the world as the Church tells it, the village of Tarnwick, and the fire that did not burn. One player reads it aloud before the first scene. No spoilers.', pdfPair('/downloads/adventures/before-the-snow', '0.2 MB') + '</p><p class="dl-links"><a href="/downloads/adventures/before-the-snow.mp3" download>Narrated MP3, 4 minutes</a> <span class="small">(6 MB)</span>'),
     dlCard('For the players', 'The players’ map', 'A charcoal sketch of the priory, the glacier and the gorge, as the heroes first see them. Safe to put on the table.', pdfPair('/downloads/adventures/the-guest-at-greave-players-map', '4 MB'), ['/art/adventures/the-guest-at-greave-map.webp', 'A charcoal sketch map of a walled priory below a glacier, with a gorge and a rope bridge beneath it']),
+  ].join('') + '</div>';
+  const hussey = '<div class="resource-grid">' + [
+    dlCard('For the GM', 'The Rib of Saint Hussey: GM pack', 'One zip with everything to run it offline, in A4 and US Letter: the adventure, the plot on one page, GM cards to cut out and cross off, a blank hero sheet and the rules cheat sheet.', '<a class="btn" href="/downloads/adventures/the-rib-of-saint-hussey-gm-pack.zip" download>Download the GM pack</a> <span class="small">(zip, 2.4 MB)</span></p><p class="dl-links"><a href="/adventures/the-rib-of-saint-hussey/">Or read it online</a>'),
+    dlCard('For the GM', 'The adventure, one file at a time', 'The same printouts as the pack, if you only want one of them.', 'The adventure: ' + pdfPair('/downloads/adventures/the-rib-of-saint-hussey', '0.6 MB') + '</p><p class="dl-links">Plot on one page: ' + pdfPair('/downloads/adventures/the-rib-of-saint-hussey-plot') + '</p><p class="dl-links">GM cards: ' + pdfPair('/downloads/adventures/the-rib-of-saint-hussey-gm-cards')),
   ].join('') + '</div>';
   const jobs = [
     ['Adding up checks against the Target', 'The player says the total; the GM confirms it'],
@@ -138,7 +142,7 @@ function playInPerson(html) {
   ];
   const jobTable = '<div class="table-scroll"><table class="jobs"><thead><tr><th scope="col">The job</th><th scope="col">Who does it at a real table</th></tr></thead><tbody>' + jobs.map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + '</td></tr>').join('') + '</tbody></table></div>';
   html = html.replace(/<h2>(.*?)<\/h2>/g, (_, t) => '<h2 id="' + t.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '">' + t + '</h2>');
-  return html.replace('<p>{{PLAY_PATHS}}</p>', paths).replace('<p>{{DOWNLOADS}}</p>', downloads).replace('<p>{{ADVENTURE}}</p>', adventure).replace('<p>{{JOBS}}</p>', jobTable);
+  return html.replace('<p>{{PLAY_PATHS}}</p>', paths).replace('<p>{{DOWNLOADS}}</p>', downloads).replace('<p>{{ADVENTURE}}</p>', adventure).replace('<p>{{ADVENTURE_HUSSEY}}</p>', hussey).replace('<p>{{JOBS}}</p>', jobTable);
 }
 
 /* /play-online/: the ways into the Sacrament RPG Table. */
@@ -175,7 +179,7 @@ function build() {
   rmSync(new URL('./newsletter/', OUT), { recursive: true, force: true });
   const write = (path, html) => { const dir = new URL('.' + path, OUT); mkdirSync(dir, { recursive: true }); writeFileSync(new URL('index.html', dir), html); };
   const BSRC = new URL('blog/', SRC);
-  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
+  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug)) : [];
   const latest = posts[0];
   const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest news</h2><article><img class="ic-latest-image" src="${esc(postImage(latest).src)}" alt="${esc(postImage(latest).alt)}" loading="lazy" decoding="async"><div><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></div></article></section>` : '';
 
@@ -248,7 +252,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   posts.forEach((p, n) => {
     const newer = posts[n - 1], older = posts[n + 1];
     write('/news/' + p.slug + '/', page(p.title + ' | ' + NAME, p.summary || p.title, '/news/' + p.slug + '/',
-      `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
+      `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>').replace(/<h2>(.*?)<\/h2>/g, (_, t) => '<h2 id="' + t.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '">' + t + '</h2>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
 <nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
   const urls = [...new Set([...PAGES.map(p => p.path), '/character/', '/vtt/', '/solo/', '/brand/', '/adventure/', '/adventures/the-guest-at-greave/', '/adventures/the-rib-of-saint-hussey/', ...posts.map(p => '/news/' + p.slug + '/')])];
