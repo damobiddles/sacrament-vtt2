@@ -287,7 +287,7 @@
         card: 'A man in a hair shirt, starved to rope and bone, with a scourge in his fist. He believes he is doing God\'s work.',
         appears: 'He comes at you with the scourge, weeping, saying your sins aloud as if he could read them off you.',
         hits: 'The scourge lays your arm open',
-        defeated: 'He sits down hard in the straw and weeps, and does not get up again. In the morning he is gone, and his pack is not.',
+        defeated: 'He sits down hard in the straw and weeps, and will not look at you again. When you next look up he is gone, and his pack is not.',
         weakness: 'The dead in the grain tell you he has not slept in nine days. Wait for him to sway, then strike.' }
     }
   };

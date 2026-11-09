@@ -275,6 +275,9 @@
     if (t === DREAD.arrived && !s.arrived) { s.arrived = true; api.say('There is no more rest for you on this road.', 'note'); }
   }
 
+  /* a scene's own action, offered now? A scene's rest (the barn's sheaves, the guest cell) is still a rest: once the Horror has arrived there is none. */
+  function actionOpen(api, x) { return (!x.when || x.when(api)) && !(x.id === 'rest' && api.s.arrived); }
+
   /* ---------- harm ---------- */
   function hurt(api, n, why) {
     var s = api.s;
@@ -545,7 +548,7 @@
     var asked = who && s.flags['riddle_' + who.id];
     if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
     else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
-    (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
+    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
@@ -668,7 +671,7 @@
     /* the room's own things to do, by their words */
     var r = adv.rooms[s.room];
     if (!s.fight && r) {
-      var hit = (r.actions || []).filter(function (x) { return (!x.when || x.when(api)) && (x.words || []).some(function (k) { return t.indexOf(k) >= 0; }); })[0];
+      var hit = (r.actions || []).filter(function (x) { return actionOpen(api, x) && (x.words || []).some(function (k) { return t.indexOf(k) >= 0; }); })[0];
       if (hit) return 'do ' + hit.id;
     }
     /* attacks, spells and items by name */
@@ -744,7 +747,8 @@
     }
     else if (p[0] === 'do') {
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
-      if (!x || (x.when && !x.when(api))) api.say('That does nothing now.', 'note'); else x.run(api);
+      if (x && x.id === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
+      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else x.run(api);
     }
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
