@@ -19,7 +19,10 @@ The Sacrament RPG Table has no accounts. When you join a table you type a **name
 - **Pictures:** pictures a GM uploads are stored with that table and can be seen by anyone who can see the table, and by anyone who has the picture's exact address.
 
 ## Cookies, storage and tracking
-We do not run advertising or our own analytics. External services such as the Ko-fi widget have their own cookie and privacy policies. The table keeps a small note in your browser (which table you were at, and your place in it) so it can put you back, and the My heroes page keeps your heroes there too. You can clear these at any time through your browser settings.
+We do not run advertising. External services such as the Ko-fi widget have their own cookie and privacy policies. The table keeps a small note in your browser (which table you were at, and your place in it) so it can put you back, and the My heroes page keeps your heroes there too. You can clear these at any time through your browser settings.
+
+## Counting visits and play
+We use Umami, a privacy-friendly analytics service, to count visits and how the table and solo game are played (for example, how long a game lasts or where heroes fall). It uses no cookies, does not identify you, and never receives your name, table codes or anything you type. Data is kept for six months. If your browser sends a "Do Not Track" signal, nothing is counted.
 
 ## Typefaces
 The pages load their typefaces from Google Fonts, so your browser contacts Google when a page loads. Google may see your internet address when this happens.
@@ -41,4 +44,4 @@ The site is not aimed at young children.
 ## Changes
 If this page changes in a way that matters, we will say so on the [news page](/news/). The rules for using the site are in the [Terms of Use](/terms/).
 
-Last updated: 25 October 2026
+Last updated: 9 November 2026

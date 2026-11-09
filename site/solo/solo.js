@@ -79,13 +79,13 @@
 
   /* ---------- the first screen ---------- */
   function showStart() {
-    state = null; D.clear(); document.body.classList.remove('playing');
+    state = null; D.clear(); document.body.classList.remove('playing'); statClock(false);
     $('start').hidden = false; $('game').hidden = true; $('heroBtn').hidden = true; $('menuBtn').hidden = true;
     $('blurb').textContent = CAMP.blurb;
     var saved = load(), resume = $('resume'); resume.textContent = '';
     if (saved && !saved.game.over) {
       var b = pickButton('Continue as ' + saved.game.hero.name, 'Scene ' + (saved.game.run.at + 1) + ' of ' + saved.game.run.order.length + ', ' + S.sceneOf(saved.game).rooms[saved.game.room].short + ' · HP ' + saved.game.hp.cur + ' of ' + saved.game.hp.max, 'resume');
-      b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; showGame(false); });
+      b.addEventListener('click', function () { state = saved.game; state.origin = saved.hero; count('solo-resumed', { step: state.run.at + 1 }); showGame(false); });
       resume.appendChild(b);
     }
     showChronicle(); showHard();
@@ -131,7 +131,21 @@
   $('takeHero').addEventListener('click', function () { begin(T.generate($('pathPick').value)); });
 
   function begin(hero) {
-    D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save(); showGame(true);
+    D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save();
+    count('solo-start', { path: hero.path || '', hard: !!state.run.hard, scene: state.adventure });
+    showGame(true);
+  }
+  /* Anonymous play counts (site/analytics.js): where a road goes and how it ends, never the hero's name. Counting must never break play. */
+  function count(name, data) { try { if (window.SacStats) window.SacStats.track(name, data); } catch { /* not counted */ } }
+  function statClock(on) { try { if (!window.SacStats) return; if (on) window.SacStats.clock('solo-playing', function () { return { step: state && state.run ? state.run.at + 1 : 0 }; }); else window.SacStats.stop('solo-playing'); } catch { /* not counted */ } }
+  /* after each action: a new place, a fight's end, a scene cleared, the road's end */
+  function statAfter(b) {
+    if (!state || !state.run) return;
+    var step = state.run.at + 1;
+    if (state.room !== b.room && state.adventure === b.scene) count('solo-place', { scene: state.adventure, place: state.room });
+    if (b.fight && !state.fight) count('solo-fight', { scene: state.adventure, result: state.hp.cur <= 0 ? 'lost' : state.escaped ? 'fled' : 'won' });
+    if (state.done && !b.done) count('solo-scene-cleared', { scene: state.adventure, step: step });
+    if (state.over && !b.over) { count('solo-end', { end: state.over, scene: state.adventure, place: state.room, step: step }); statClock(false); }
   }
 
   /* ---------- the game screen ---------- */
@@ -139,6 +153,7 @@
     document.body.classList.add('playing'); $('start').hidden = true; $('game').hidden = false; $('heroBtn').hidden = false; $('menuBtn').hidden = false;
     $('log').textContent = ''; shown = 0; lastArt = ''; dying = false; whole = false; cardDamage = false; clearTimeout(foeTimer); foeTimer = 0;
     renderLog(!fresh); render();
+    statClock(!state.over);
     window.scrollTo(0, 0);
   }
   /* The story so far. On a phone only the latest beat (what the last thing you did brought) shows; the rest folds behind "The story so far", so play stays
@@ -331,7 +346,9 @@
     clearTimeout(foeTimer); foeTimer = 0; cardDamage = false; clearTimeout(cardTimer); cardTimer = 0;
     var cap = document.querySelector('.frame .caption'); if (cap) cap.remove();
     var overBefore = state.over, before = state.log.length, hpBefore = state.hp.cur, foeBefore = state.fight ? state.fight.hp.cur : null, horrorBefore = state.horror, doneBefore = !!state.done, place = ADV().rooms[state.room].art;
+    var was = { room: state.room, scene: state.adventure, fight: !!state.fight, done: !!state.done, over: state.over };
     S.act(state, ADV(), cmd, die);
+    statAfter(was);
     var slain = foeBefore != null && !state.fight && state.hp.cur > 0 && !state.escaped && !reduceMotion();
     if (slain) dying = true;   /* the picture keeps the foe a moment longer, to watch it go */
     remember(); save(); renderLog(false); roll(state.log.slice(before)); render(); caption(state.log.slice(before), before);
