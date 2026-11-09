@@ -10,6 +10,17 @@
   var UI = { open: {}, phys: '', sel: null, tool: 'select', adj: 'normal', roll: null, feedOpen: false, view: null, actAs: null, status: 'ok', pending: 0, aim: {}, hpOps: {}, netlog: [], reconcile: false, maxTries: 12, working: null, pressing: false, draw: null, drag: null, seenPtr: {}, dirty: false };
   var DRAW_COLORS = [['#e0b040', 'Gold'], ['#4da6ff', 'Blue — water'], ['#65b86a', 'Green — trees'], ['#ed6a5e', 'Red — fire'], ['#ffffff', 'White'], ['#000000', 'Black']];
   UI.drawColor = DRAW_COLORS[0][0];
+  /* Anonymous play counts (site/analytics.js): what kind of thing happened, never who, which table or what was typed. Counting must never break play. */
+  function count(name, data) { try { if (window.SacStats) window.SacStats.track(name, data); } catch { /* not counted */ } }
+  function statSat(role) { count('table-opened', { role: role }); try { if (window.SacStats) window.SacStats.clock('table-playing', function () { return { role: sess ? sess.role : '' }; }); } catch { /* not counted */ } }
+  var STAT_ROLLS = { roll: 1, push: 1, effort: 1, freeEffort: 1, gmDice: 1, monsterAttack: 1, monsterEffort: 1, lootRoll: 1, dying: 1 };
+  function statDone(cmd) {
+    var role = sess ? sess.role : '';
+    if (STAT_ROLLS[cmd.type]) count('table-roll', { kind: cmd.type, role: role });
+    else if (cmd.type === 'sceneReveal') count('table-scene-shown', {});
+    else if (cmd.type === 'bringHero') count('table-hero-brought', {});
+    else if (cmd.type === 'charCreate') count('table-hero-made', { role: role });
+  }
   /* a player's short instructions are shown until they have made their first roll, then never again (on this browser) */
   UI.hintSeen = (function () { try { return localStorage.getItem(KEY + 'hint') === '1'; } catch { return false; } })();
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -178,6 +189,7 @@
   function finish(L, job, body) {
     if (L.version !== sessionVersion) return;
     L.q.shift(); if (L.gameplay) { UI.pending--; if (!L.q.length) setStatus(UI.status === 'bad' && !body ? 'bad' : 'ok'); }
+    if (body) statDone(job.cmd);
     if (job.done) job.done(body); job.resolve(body); pump(L);
   }
 
@@ -202,6 +214,7 @@
   }
 
   function resetSession() {
+    try { if (window.SacStats) window.SacStats.stop('table-playing'); } catch { /* not counted */ }
     window.SacramentSceneTransfer.reset(); window.SacramentDialogs.reset(); D.clear();
     sessionVersion++; clearTimeout(timer); clearTimeout(UI.nudge); clearTimeout(UI.leaveTimer); polling = false; again = false;
     Object.keys(lanes).forEach(function (k) { lanes[k].q.forEach(function (job) { job.resolve(null); }); });
@@ -1333,12 +1346,12 @@
     commit:function(jobId){return send({type:'sceneImport',jobId:jobId});}
   });
   /* ---------- starting: make, join, resume ---------- */
-  function enter(s, state) { resetSession(); sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); }
+  function enter(s, state) { resetSession(); sess = s; save(); S = null; UI.sel = null; take(state); poll(); history.replaceState(null, '', '/vtt/?room=' + s.code); statSat(s.role); }
   $('makeForm').addEventListener('submit', function (e) {
     e.preventDefault(); var version = sessionVersion, mb = this.querySelector('button[type=submit]'); if (mb.disabled) return; mb.disabled = true; $('makeMsg').textContent = '';
     call('POST', { op: 'create', key: $('makeKey').value, sample: $('makeSample').checked }).then(function (r) {
       if (version !== sessionVersion || r.stale) return;
-      if (r.status === 200) { enter({ code: r.body.code, token: r.body.token, role: 'gm' }, r.body.state); if (UI.trying) { try { localStorage.setItem(KEY + 'try', r.body.code); } catch {} toast('This is a sample table and you are the GM. Select an enemy to attack, use GM dice for other rolls, or invite a friend from the Table tab.', 9000); } }
+      if (r.status === 200) { count('table-created', { sample: !!$('makeSample').checked, kind: UI.trying ? 'try' : 'new' }); enter({ code: r.body.code, token: r.body.token, role: 'gm' }, r.body.state); if (UI.trying) { try { localStorage.setItem(KEY + 'try', r.body.code); } catch {} toast('This is a sample table and you are the GM. Select an enemy to attack, use GM dice for other rolls, or invite a friend from the Table tab.', 9000); } }
       else { $('makeMsg').textContent = (r.body.error && r.body.error.message) || 'Could not make a table.'; if (r.status === 403) $('keyRow').hidden = false; }
     }, function () { if (version !== sessionVersion) return; $('makeMsg').textContent = 'Could not reach the server.'; }).then(function () { mb.disabled = false; });
   });
@@ -1351,13 +1364,13 @@
     btn.disabled = true;
     call('POST', { op: 'join', code: code, name: $('joinName').value.trim(), joinKey: joinKeyFor(code) }).then(function (r) {
       if (version !== sessionVersion || r.stale) return;
-      if (r.status === 200) enter({ code: code, token: r.body.token, role: 'player', pid: r.body.pid }, r.body.state);
+      if (r.status === 200) { count('table-joined', { role: 'player' }); enter({ code: code, token: r.body.token, role: 'player', pid: r.body.pid }, r.body.state); }
       else $('joinMsg').textContent = (r.body.error && r.body.error.message) || 'Could not join.';
     }, function () { if (version !== sessionVersion) return; $('joinMsg').textContent = 'Could not reach the server.'; }).then(function () { btn.disabled = false; });
   });
   function resume(code) {
     var s = load(code); if (!s) return false; resetSession(); sess = s; var version = sessionVersion;
-    call('GET', null, { code: code }).then(function (r) { if (version !== sessionVersion || r.stale) return; if (r.status === 200) { S = null; take(r.body.state); poll(); } else { sess = null; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = r.status === 404 ? 'That table has gone.' : 'Your place at that table was not recognised.'; } },
+    call('GET', null, { code: code }).then(function (r) { if (version !== sessionVersion || r.stale) return; if (r.status === 200) { S = null; take(r.body.state); poll(); statSat(s.role); } else { sess = null; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = r.status === 404 ? 'That table has gone.' : 'Your place at that table was not recognised.'; } },
       function () { if (version !== sessionVersion) return; sess = s; $('entry').hidden = false; $('resume').hidden = false; $('resume').textContent = 'Could not reach the server.'; });
     return true;
   }
