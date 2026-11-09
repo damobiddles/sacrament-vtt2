@@ -334,6 +334,7 @@ button[disabled][aria-busy=true]{opacity:.7;cursor:progress}
 .hz-meter.arrived i.on{background:var(--blood-hi)}
 .hz-gm{align-items:center;flex-wrap:wrap}
 .hz-gm .n{min-width:4.5em}
+.hz-fired{align-items:center;flex-wrap:wrap;gap:8px}
 .hz-set{display:flex;align-items:center;gap:6px}
 .hz-set label{flex-direction:row;align-items:center;gap:6px}
 .hz-set input{width:4.5em}

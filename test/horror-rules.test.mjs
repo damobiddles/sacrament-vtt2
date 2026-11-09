@@ -33,3 +33,10 @@ test('the meter: it moves by the amount, never below 0 or above 21, and names ea
   const down = R.horrorMove(15, -20); assert.deepEqual([down.to, down.applied], [0, -15]); assert.deepEqual(down.crossed, [], 'going down crosses nothing');
   assert.deepEqual(R.horrorMove(7, 0).crossed, [], 'standing on a threshold is not crossing it again');
 });
+
+test('each threshold fires once an adventure: one already passed is not announced again, and blood is 1 HP a point (owner, 2026-11-09)', () => {
+  assert.deepEqual(R.horrorMove(5, 3, [7]).crossed, [], '7 has fired already');
+  assert.deepEqual(R.horrorMove(5, 10, [7]).crossed, [14], 'only the new one');
+  assert.deepEqual(R.horrorMove(5, 3, []).crossed, [7]); assert.deepEqual(R.horrorMove(5, 3).crossed, [7], 'no list: nothing has fired');
+  assert.equal(R.HORROR.blood, 1); assert.equal(R.bloodCost(3), 3); assert.equal(R.bloodCost(0), 0); assert.equal(R.bloodCost(-2), 0);
+});

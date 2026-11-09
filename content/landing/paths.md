@@ -12,7 +12,7 @@ A path does **one thing**. **Every relic belongs to a path**: magic things that 
 
 ## Path relics and the Horror
 
-Every relic is forbidden magic, even in the hands of a Diplomat or a Knight. Using one tempts the Horror. A natural 1 adds Horror only when the relic is used to attack, and past 21 each point of Horror that cannot go on the meter costs the hero d4 HP. Many relics have only a few uses, counted on the sheet: when the last is spent they break, dry up or burn out.
+Every relic is forbidden magic, even in the hands of a Diplomat or a Knight. Using one tempts the Horror. A natural 1 adds Horror only when the relic is used to attack, and past 21 each point of Horror that cannot go on the meter costs the hero 1 HP. Many relics have only a few uses, counted on the sheet: when the last is spent they break, dry up or burn out.
 
 The Church holds that magic tempts the Horror, and it does not forgive those who use it. The Inquisition keeps lists. A hero who draws on relics too often, or brings the Horror down on a village, may find a summons waiting. That is the GM's story to tell, not a rule.
 

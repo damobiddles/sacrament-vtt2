@@ -38,8 +38,11 @@
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
      A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20),
      but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01).
-     Paying in blood (the owner's rule, 2026-11-01): a hero's Horror cost that cannot go on a full meter (a push, a natural 1, a spell or item) costs that hero one `bloodDie` of HP for each point instead. */
-  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, bloodDie: 4, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
+     Paying in blood (the owner's rule, 2026-11-01; made a flat 1 HP a point on 2026-11-09, it had been a d4 a point): a hero's Horror cost that cannot go on a full meter
+     (a push, a natural 1, a spell or item) costs that hero `blood` HP for each point instead.
+     Each threshold fires once an adventure (the owner's rule, 2026-11-09): once passed, climbing past it again after the Horror has fallen announces nothing, so
+     resting never sets a threshold off twice. `fired` is the list of thresholds already passed this adventure; a new adventure empties it. */
+  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, blood: 1, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
   var HORROR_DICE = /^([1-9]?)d(4|6|8|10|12|20)(?:\+([0-9]{1,2}))?$/;   /* "d6", "2d4", "d4+2" */
 
   /* What a Horror amount is: { fixed } for a number, { count, sides, plus } for dice, or null when there is none (missing, 0, or not readable). */
@@ -62,10 +65,12 @@
   /* Move the meter by `d` (up or down), kept from 0 to the maximum. `crossed` is every threshold passed on the way up, lowest first; going down crosses none. */
   /* Whether a hero's natural 1 tempts the Horror: { attack, spell, pushed } describe the roll. */
   function nat1Tempts(o) { o = o || {}; return !!(o.attack || o.spell || o.pushed); }
-  function horrorMove(cur, d) {
-    cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max);
-    return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t; }), arrived: to >= HORROR.max };
+  function horrorMove(cur, d, fired) {
+    cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max), done = Array.isArray(fired) ? fired : [];
+    return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t && done.indexOf(t) < 0; }), arrived: to >= HORROR.max };
   }
+  /* What paying in blood costs for `lost` points that could not go on the meter. */
+  function bloodCost(lost) { return Math.max(0, int(lost, 0)) * HORROR.blood; }
 
   /* Dying, as the Rules page has it (the owner asked for it on the table, 2026-10-21). A hero who falls to 0 is dying and rolls a d4: the rounds left. Each new round takes one off;
      at 0 the hero is dead. A blow that gets through on a dying hero takes a round off instead of damage. A stable hero's countdown stops; hurt again, they are dying again
@@ -185,6 +190,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+    HORROR: HORROR, DYING: DYING, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, bloodCost: bloodCost, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

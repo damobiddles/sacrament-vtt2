@@ -182,7 +182,7 @@ export function project(s, a, opt = {}) {
     done: s.appliedOrder.filter((id) => s.applied[id] && s.applied[id].by === (gm ? 'gm' : a.pid)).slice(-40),
     log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
-    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds }, gm ? { alert: horrorOf(s).alert } : {})
+    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds, fired: (horrorOf(s).fired || []).slice() }, gm ? { alert: horrorOf(s).alert } : {})
   };
   if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = (s.draw || []).filter((line) => gm || (line.sceneId || s.table.scene) === s.table.scene);
   if (gm) {
@@ -437,14 +437,15 @@ const noRaisingTheDead = (card, d) => { if (isHero(card) && card.dying && card.d
 const sayDying = (card) => (card.dying.dead ? card.name + ' has died.' : card.dying.stable ? card.name + ' is stable.' : card.name + ' is dying: ' + rounds(card.dying.left) + ' left.');
 
 /* ---------- the Rising Horror ---------- */
-/* The meter, made on first use for a table saved before it existed. `alert` is the highest threshold passed that the GM has not yet dealt with (0 for none). */
+/* The meter, made on first use for a table saved before it existed. `alert` is the highest threshold passed that the GM has not yet dealt with (0 for none).
+   `fired` lists the thresholds already passed this adventure: each fires once an adventure (the owner's rule, 2026-11-09); the GM's New adventure empties it. */
 const horrorOf = (s) => (s.horror = s.horror && typeof s.horror === 'object' ? s.horror : { cur: 0, alert: 0 });
 /* Move the meter by d, and say so: one line for the move (with an Undo for the GM), then one line for each threshold passed. `say(applied, now)` writes the line. */
 function moveHorror(s, a, ctx, d, say, dice) {
-  const h = horrorOf(s), m = R.horrorMove(h.cur, d); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
-  if (m.crossed.length) h.alert = Math.max(h.alert || 0, m.crossed[m.crossed.length - 1]);
+  const h = horrorOf(s), m = R.horrorMove(h.cur, d, h.fired); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
+  if (m.crossed.length) { h.alert = Math.max(h.alert || 0, m.crossed[m.crossed.length - 1]); h.fired = (h.fired || []).concat(m.crossed); }
   if (h.alert && h.cur < h.alert) h.alert = 0;
-  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects: m.applied ? [{ t: 'horror', d: m.applied }] : [], dice });
+  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects: m.applied ? [Object.assign({ t: 'horror', d: m.applied }, m.crossed.length ? { fired: m.crossed } : {})] : [], dice });
   m.crossed.forEach((t) => L(s, { role: 'gm', name: 'GM' }, ctx, R.HORROR.lines[t], { kind: 'alert' }));
   return { cur: h.cur, applied: m.applied, crossed: m.crossed, arrived: m.arrived, log: e.id };
 }
@@ -456,15 +457,15 @@ function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
 }
 
-/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes a d4 of that hero's HP instead, on a line of its own (only the GM can undo it). */
+/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes 1 HP of that hero's instead (the owner's rule, 2026-11-09;
+   it was a d4 a point), on a line of its own (only the GM can undo it). */
 function bleed(s, ctx, ch, lost, privateUse = false) {
   const card = ch && s.cards[ch.cardId]; if (!(lost > 0) || !card || !card.hp || card.hp.cur <= 0) return null;
-  const rolls = []; for (let i = 0; i < lost; i++) rolls.push(d(ctx, R.HORROR.bloodDie));
-  const total = rolls.reduce((x, y) => x + y, 0), was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
-  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + lost + 'd' + R.HORROR.bloodDie + ' shows ' + rolls.join(' + ') + ', ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
-    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card), dice: rolls.map((n) => ({ die: R.HORROR.bloodDie, n })) });
+  const total = R.bloodCost(lost), was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
+  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + (-applied) + ' HP for ' + lost + ' Horror the meter cannot hold (now ' + card.hp.cur + '/' + card.hp.max + ').',
+    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card) });
   settleHero(s, card, was, e, ctx);
-  return { lost, rolls, hp: -applied, log: e.id };
+  return { lost, hp: -applied, log: e.id };
 }
 
 /* An item's listed effects that fall on its user (sheet-core effectsOf, read the same way by the solo game): the Penitent's Chain takes a die of HP that nothing reduces
@@ -913,6 +914,10 @@ const HANDLERS = {
   },
   horror(s, c, a, ctx) { /* the GM moves the meter by hand: by an amount, to a number (0 resets it), or down by a d6 the server rolls in front of the table */
     const h = horrorOf(s);
+    if (c.mode === 'newAdventure') {   /* each threshold fires once an adventure: a new one lets them fire again (the meter itself is left where it is) */
+      if (!(h.fired || []).length) fail('invalid', 'No threshold has fired yet this adventure.');
+      h.fired = []; L(s, a, ctx, 'A new adventure: the Horror\'s thresholds can fire again.'); return { cur: h.cur, fired: [] };
+    }
     if (c.mode === 'lowerRoll') {
       if (!h.cur) fail('invalid', 'The Horror is already at 0.');
       const n = d(ctx, R.HORROR.lowerDie);
@@ -1146,7 +1151,8 @@ const HANDLERS = {
       else if (fx.t === 'healingUse') { const card = s.cards[fx.card]; if (fx.before) card.healingUses[fx.kind] = fx.before; else delete card.healingUses[fx.kind]; }
       else if (fx.t === 'healingReset') { const card = s.cards[fx.card]; card.healingUses = clone(fx.before); card.healEpoch = fx.epoch; }
       else if (fx.t === 'healingCharge') s.chars[fx.char].gear.find(g => g.key === fx.key).uses = fx.before;
-      else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
+      else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0;
+        if (fx.fired && h.fired) h.fired = h.fired.filter((t) => fx.fired.indexOf(t) < 0); }   /* an undone rise did not pass its thresholds after all */
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */
     e.effects.forEach((fx) => { const card = (fx.t === 'delta' || fx.t === 'dying') && s.cards[fx.card]; if (isHero(card) && card.hp.cur > 0) card.dying = null; });

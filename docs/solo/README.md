@@ -74,6 +74,7 @@ The rules leave a threshold's consequence to the GM; in the solo game the game i
 
 * **Horror 7, shaken:** the next check or attack is Hard (once).
 * **Horror 14, hunted:** every foe met from then on has 2 more HP.
+* **Each threshold fires once a road** (the rules: once an adventure), so a hero is shaken at 7 only once.
 * **Horror 21, arrived:** the rules' pay-in-blood, and no more rest of any kind: not between scenes, and not a scene's own rest (the barn's sheaves, the guest cell, the wayshrine).
 * **Falling:** the rules' dying roll (d4 rounds; each new round and each blow that gets through takes one off). The dying hero may heal (any healing stands them up) or crawl away with a CON check: out of the scene with 1 HP, leaving behind what they found in it. In the last scene, crawling away ends the road alive but unfinished.
 * **Break away (shared rule, Rules page, 2026-11-07):** in a fight, instead of acting, a DEX check against the Target (`R.BREAK_AWAY`). Success: clear, no attack; failure: the foe attacks as usual. Solo's GM calls (owner, 2026-11-07): only before the finale; getting away ends the scene, leaves its find behind and raises the Horror 1 (a GM's raise, so no blood at 21). Night falls: scenes 1-2 evening, 3-4 dusk, the finale at night with every place dark.

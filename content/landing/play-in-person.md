@@ -69,7 +69,7 @@ The Sacrament RPG Table quietly does the bookkeeping. Around a real table, peopl
 - **Defence:** 10 + CON + armour. A monster rolls d20 + its attack bonus against it. A monster's natural 1 always misses and its natural 20 always hits.
 - **Hearts:** 10 HP to a Heart. At 0 HP a hero is dying and rolls a d4 for the rounds they have left.
 - **Push:** after a failed attack, once, on your own turn. It costs 1 Horror and gives you an immediate second action, which cannot be pushed.
-- **The Horror:** one shared track from 0 to 21. Every spell except healing adds 1. Items add their listed cost. A Push adds 1. A hero's natural 1 adds 1 more on an attack, a spell or a pushed action, but not on other checks. At 7, 14 and 21 the GM decides what happens. Past 21 you pay in blood: each point that cannot go on the track costs the hero who caused it d4 HP.
+- **The Horror:** one shared track from 0 to 21. Every spell except healing adds 1. Items add their listed cost. A Push adds 1. A hero's natural 1 adds 1 more on an attack, a spell or a pushed action, but not on other checks. At 7, 14 and 21 the GM decides what happens, once an adventure each: falling back and climbing past one again does nothing new. Past 21 you pay in blood: each point that cannot go on the track costs the hero who caused it 1 HP.
 - **Party rest:** when the GM allows it, each living hero heals 10 HP and the Horror falls by d10 for every two living heroes, rounded up.
 
 The [Player guide](/player-guide/) and [GM guide](/gm-guide/) have the full rules. They describe the buttons of the online table, but the numbers are the same on paper. The rules are still being playtested: check [Rules updates and errata](/rules/updates/) before you print, and correct older printouts by hand.

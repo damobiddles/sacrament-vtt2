@@ -95,3 +95,20 @@ test('@phone The Horror at 360×640: the meter fits in the top bar beside the tu
   await shot(ann, '5-player-phone-after-reading');
   expect(ann.errors).toEqual([]); expect(gm.errors).toEqual([]);
 });
+
+test('The Horror: each threshold fires once an adventure; the GM sees which have fired and New adventure lets them fire again', async ({ browser }) => {
+  test.setTimeout(60000);
+  const gm = await newPage(browser); await makeTable(gm);
+  await gmSet(gm, 7);
+  await expect(gm.locator('.hz-fired')).toContainText('Fired this adventure: 7');
+  await gm.locator('[data-do=horrorAck]').click(); await saved(gm);
+  await gmSet(gm, 2); await gmSet(gm, 8);
+  await expect(gm.locator('#feed .alert.hz')).toHaveCount(0);   // climbing past 7 again: no second alert
+  await shot(gm, '9-gm-fired-this-adventure');
+  if (process.env.HORROR_SHOTS) await gm.locator('.hz-fired').screenshot({ path: `${SHOTS}/9b-fired-row.png` });
+  await gm.locator('[data-do=horrorNewAdventure]').click(); await saved(gm);
+  await expect(gm.locator('.hz-fired')).toHaveCount(0);
+  expect((await state(gm)).horror.fired).toEqual([]);
+  await gmSet(gm, 2); await gmSet(gm, 7);
+  await expect(gm.locator('#feed .alert.hz')).toContainText('The Horror stirs.');
+});

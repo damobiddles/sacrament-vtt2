@@ -61,14 +61,15 @@ test('a plain check\'s natural 1 costs no Horror', () => {
   assert.match(s.log.map((l) => l.t).join('\n'), /Target 12\. Miss/);
 });
 
-test('past the top of the meter the Horror is paid in blood, a d4 of HP per point', () => {
+test('past the top of the meter the Horror is paid in blood, 1 HP per point', () => {
   const s = S.start(T.generate('fighter', seeded(6)), A, fixed([1]));
   s.horror = R.HORROR.max; const hp = s.hp.cur;
   S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
   const attack = S.choices(s, A).find((c) => c.kind === 'attack');
-  S.act(s, A, attack.cmd, fixed([1, 3, 1]));          // natural 1 on an attack: 1 Horror that cannot go on the meter, paid with d4 = 3
+  S.act(s, A, attack.cmd, fixed([1]));          // natural 1 on an attack: 1 Horror that cannot go on the meter, paid with 1 HP
   assert.equal(s.horror, R.HORROR.max);
-  assert.ok(s.hp.cur <= hp - 3);
+  assert.match(s.log.map((l) => l.t).join('\n'), /You pay in blood: 1 point the meter cannot hold\.[\s\S]*The price: -1 HP/);
+  assert.ok(s.hp.cur <= hp - 1);
 });
 
 test('the offering box rolls on the real d100 loot table and the find goes to this copy of the hero', () => {
@@ -311,6 +312,19 @@ test('Horror 7 shakes the hero: the next check or attack is Hard, once', () => {
   const rolls = s.log.filter((l) => l.outcome);
   assert.equal(rolls[rolls.length - 1].outcome.note, 'Hard', 'the pushed attack was Hard');
   assert.equal(s.shaken, false, 'shaken is used up');
+});
+
+test('each threshold fires once a road (the rules: once an adventure): back below 7 and up again, the hero is not shaken twice', () => {
+  const s = cryptFight();
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  S.act(s, A, attack.cmd, fixed([5, 1])); s.horror = 6;
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'push').cmd, fixed([5, 5]));
+  assert.equal(s.horror, 7); assert.deepEqual(s.fired, [7]); assert.equal(s.log.filter((l) => l.t === 'You are shaken. Your next check or attack is Hard.').length, 1);
+  s.horror = 6; s.shaken = false; s.fight.phase = 'hero';
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([5, 1]));
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'push').cmd, fixed([5, 5]));
+  assert.equal(s.horror, 7); assert.equal(s.shaken, false, 'not shaken again');
+  assert.equal(s.log.filter((l) => l.t === 'The Horror stirs.').length, 1, 'not announced again');
 });
 
 test('Horror 14 hunts the hero: every foe met from then on has 2 more HP; Horror 21 stops resting', () => {

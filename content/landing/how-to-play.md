@@ -27,7 +27,7 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 - **Checks:** d20 + a score must meet the Target. Easy lowers the Target by 3; Hard raises it by 3.
 - **Effort:** a second die measures damage or progress when needed. Ordinary weapons, bows and crossbows use d6; guns use d8.
 - **Healing:** use it on yourself or a valid target. Supported catalogue healing updates HP, charges and rest limits automatically. The GM checks range.
-- **Horror:** healing spells have no casting Horror cost; other spells add 1. Items state their own cost. A Push adds 1. A hero's natural 1 adds 1 separately on an attack, a spell or a pushed action, not on other checks. At 21 each point that cannot go on the meter costs that hero d4 HP instead.
+- **Horror:** healing spells have no casting Horror cost; other spells add 1. Items state their own cost. A Push adds 1. A hero's natural 1 adds 1 separately on an attack, a spell or a pushed action, not on other checks. At 21 each point that cannot go on the meter costs that hero 1 HP instead. Each threshold (7, 14, 21) fires once an adventure.
 - **Push:** offered only after a failed attack, once per turn, for an immediate second action. That action cannot be pushed again.
 
 ## Returning, backups and help

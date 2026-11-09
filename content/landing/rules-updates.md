@@ -12,7 +12,7 @@ Sacrament is still being playtested, so its rules change. This page records each
 
 Corrections to text we published. These pages were written before the Horror change of 1 November 2026 and still described the old rule. The rule itself is the one under "1 November 2026" below. All of these are now corrected.
 
-- **Player cheat sheet (PDF).** It said every natural 1 adds 1 Horror, and that at 21 the meter simply stays full. Read instead: a natural 1 adds 1 Horror only on an attack, a spell or a pushed action, and at 21 each point that cannot go on the meter costs the hero d4 HP. The downloads have been replaced.
+- **Player cheat sheet (PDF).** It said every natural 1 adds 1 Horror, and that at 21 the meter simply stays full. Read instead: a natural 1 adds 1 Horror only on an attack, a spell or a pushed action, and at 21 each point that cannot go on the meter costs the hero blood (a d4 then, 1 HP since 9 November). The downloads have been replaced.
 - **The Guest at Greave, "Blood on snow".** It said a hero's natural 1 on the blood test adds 1 Horror. The test is a plain WIS check, so a natural 1 still smears the reading but adds no Horror. The online adventure and its PDFs are corrected.
 - **Player guide, "The shared Horror".** It said the table never applies extra damage when the Horror is full. Since 1 November it does: see "pay in blood" below.
 
@@ -23,10 +23,18 @@ Corrections to text we published. These pages were written before the Horror cha
 Questions the current text left open. The rules have not changed; these say how the table already works.
 
 - **Which natural 1s add Horror.** An *attack* is a roll with a weapon or a damaging item against something with HP, or **Attack without an item**. *Every spell* counts, healing spells included. *Any roll made as a pushed second action* counts, even a plain check. Everything else is a plain check and its natural 1 adds nothing: ordinary checks, items that do not deal damage (bandages, most relic powers), and a weapon or damaging item used to make progress on an obstacle.
-- **Paying in blood can drop a hero.** The d4s come off HP like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A hero already at 0 cannot act, so cannot pay.
-- **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
+- **Paying in blood can drop a hero.** The HP comes off like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A hero already at 0 cannot act, so cannot pay.
+- **Who sees the blood.** The cost has its own line in Activity. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **Seven relics now name their check (8 November 2026).** The Bone Bell (CHA), Censer of Ash (WIS), Widow's Listening Veil (WIS), Ward Medal of Saint Ursel (WIS), Vigil Coal (INT), Rod of the Ash Procession (INT) and Mourning Nail (WIS) always rolled that check at the table and in the solo game, but their words did not say which. They now read "make a … check. On a success…", like every other relic. Nothing about how they play has changed.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
+
+## 9 November 2026: the Horror's thresholds and paying in blood
+
+**Paying in blood is 1 HP a point.** Past 21, each point of a hero's Horror cost that cannot go on the meter now costs that hero 1 HP. Before, it cost a d4 for each point, so a relic costing 3 Horror at a full meter could take 3 to 12 HP in one go. The cost is now known before you choose to pay it, and it still bites when the healing has run out. The GM's own raises still cost no blood.
+
+**Each threshold fires once an adventure.** Before, the alert at 7, 14 or 21 came again every time the meter climbed back past it, so lowering the Horror (with a Party rest, say) set you up to suffer the same threshold twice, and resting felt like a trap. Now each threshold fires once an adventure. The GM's Table tab shows which have fired and has a **New adventure** button that lets them fire again. In the [solo game](/solo/), one road is one adventure.
+
+*Prompted by:* a playtest at a real table, where one bad roll of the dice at 21 hurt far more than the choice deserved, and by the question of what happens when the meter falls and climbs again. The designer chose both changes.
 
 ## 8 November 2026, last: plain finds work like their twins
 
