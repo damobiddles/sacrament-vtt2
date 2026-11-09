@@ -16,7 +16,7 @@ Sacrament was first played on the Sacrament RPG Table, in a browser. The rules w
 - **A coin** to mark the Horror, and another to mark the round.
 - **A map and pieces.** A printed map or a wipe-clean mat, and miniatures, tokens or coins. No grid is needed: distances are Close, Near, Far and Very Far.
 - **A GM screen** or a folder, to hide private rolls, notes and the adventure.
-- **About four hours** for The Guest at Greave, in one long session or two shorter ones.
+- **About two hours** for The Rib of Saint Hussey, or **about four** for The Guest at Greave, in one long session or two shorter ones.
 
 ## Free printables
 
@@ -32,13 +32,21 @@ A ready-to-run adventure in five scenes, written for a real table. The heroes ca
 
 {{ADVENTURE}}
 
+## A shorter adventure: The Rib of Saint Hussey
+
+One evening, about two hours. The heroes carry a saint's rib out of the city of Aubrecht to his chapel at Wendholt by dusk on his feast day, with a thief, the city watch, a canon's hired riders and the drowned dead in the way. It is for three to five starting heroes, and it is all chases and short fights.
+
+**The GM pack is for the GM only:** the adventure, the plot on one page and the GM cards give away every secret. The pack also has a blank hero sheet and the rules cheat sheet, so one download is everything you need to print.
+
+{{ADVENTURE_HUSSEY}}
+
 ## Before the game
 
 **Players**
 
 1. **Make a hero.** Open [My heroes](/character/), press **Generate a hero**, then **Print or save as PDF** to get a filled-in character sheet. Or fill in the blank hero sheet below by hand. Both have the Marks box for growing stronger.
 2. **Print the rules cheat sheet**, or read it once on your phone. It covers checks, Effort, Push, the Horror, healing and dying, and what story spells do.
-3. **Do not read the adventure.** If your GM runs The Guest at Greave, the only part meant for players is the opening reading, Before the Snow.
+3. **Do not read the adventure.** If your GM runs The Guest at Greave, the only part meant for players is the opening reading, Before the Snow. The Rib of Saint Hussey has no player handouts: the GM reads the opening aloud.
 
 **The GM**
 

@@ -20,9 +20,9 @@ function built() {
 test('every download linked from Play in person and the latest news post exists, and none is missing', () => {
   const b = built();
   try {
-    for (const page of ['play-in-person/index.html', 'news/the-guest-at-greave/index.html']) {
+    for (const [page, least] of [['play-in-person/index.html', 6], ['news/the-guest-at-greave/index.html', 6], ['news/the-rib-of-saint-hussey/index.html', 3]]) {
       const links = [...b.read(page).matchAll(/href="(\/downloads\/[^"]+)"/g)].map((m) => m[1]);
-      assert.ok(links.length >= 6, page + ' links its downloads');
+      assert.ok(links.length >= least, page + ' links its downloads');
       for (const href of links) assert.ok(existsSync(join(ROOT, 'site', href)), page + ' links a missing file: ' + href);
     }
     const html = b.read('play-in-person/index.html');
@@ -30,7 +30,9 @@ test('every download linked from Play in person and the latest news post exists,
       '/downloads/players/sacrament-rules-cheat-sheet-A4.pdf', '/downloads/players/sacrament-rules-cheat-sheet-Letter.pdf',
       '/downloads/players/sacrament-hero-sheet-A4.pdf', '/downloads/players/sacrament-hero-sheet-Letter.pdf', '/downloads/adventures/the-guest-at-greave-A4.pdf',
       '/downloads/adventures/before-the-snow-A4.pdf', '/downloads/adventures/the-guest-at-greave-players-map-A4.pdf',
-      '/adventures/the-guest-at-greave/', '/character/', '/loot/']) assert.ok(html.includes('href="' + href + '"'), 'offers ' + href);
+      '/adventures/the-guest-at-greave/', '/character/', '/loot/',
+      '/downloads/adventures/the-rib-of-saint-hussey-gm-pack.zip', '/downloads/adventures/the-rib-of-saint-hussey-A4.pdf', '/downloads/adventures/the-rib-of-saint-hussey-Letter.pdf',
+      '/adventures/the-rib-of-saint-hussey/']) assert.ok(html.includes('href="' + href + '"'), 'offers ' + href);
     assert.match(html, /for the GM only/i, 'the adventure is marked GM-only');
     assert.ok(!html.includes('{{'), 'no placeholder is left in the page');
   } finally { b.cleanup(); }
