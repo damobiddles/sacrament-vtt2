@@ -79,7 +79,7 @@ test('every page is built, and a new blog post is just one new file', () => {
     assert.match(list, /href="\/news\/a-brand-new-post\/"/);
     assert.ok(list.indexOf('a-brand-new-post') < list.indexOf('an-older-post'), 'newest first');
     const one = readFileSync(join(b.out, 'news/a-brand-new-post/index.html'), 'utf8');
-    assert.match(one, /<h2>Hello<\/h2>/); assert.match(one, /<b>bold<\/b>/); assert.match(one, /2 January 2030/);
+    assert.match(one, /<h2 id="hello">Hello<\/h2>/); assert.match(one, /<b>bold<\/b>/); assert.match(one, /2 January 2030/);
     assert.match(one, /href="\/news\/an-older-post\/"/, 'links to the older post');
   } finally { b.cleanup(); }
 });

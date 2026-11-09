@@ -175,7 +175,7 @@ function build() {
   rmSync(new URL('./newsletter/', OUT), { recursive: true, force: true });
   const write = (path, html) => { const dir = new URL('.' + path, OUT); mkdirSync(dir, { recursive: true }); writeFileSync(new URL('index.html', dir), html); };
   const BSRC = new URL('blog/', SRC);
-  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date)) : [];
+  const posts = existsSync(BSRC) ? readdirSync(BSRC).filter((f) => f.endsWith('.md')).map((f) => parse(f, BSRC)).sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug)) : [];
   const latest = posts[0];
   const latestPost = latest ? `<section class="ic-latest" aria-labelledby="latest-post-heading"><h2 id="latest-post-heading">Latest news</h2><article><img class="ic-latest-image" src="${esc(postImage(latest).src)}" alt="${esc(postImage(latest).alt)}" loading="lazy" decoding="async"><div><time datetime="${latest.date}">${fmt(latest.date)}</time><h3><a href="/news/${latest.slug}/">${esc(latest.title)}</a></h3>${latest.summary ? '<p>' + esc(latest.summary) + '</p>' : ''}<a class="more" href="/news/${latest.slug}/" aria-label="${esc('Read more: ' + latest.title)}">Read more</a></div></article></section>` : '';
 
@@ -248,7 +248,7 @@ ${notes('early', 'This is an early version, built in the open. The rules it foll
   posts.forEach((p, n) => {
     const newer = posts[n - 1], older = posts[n + 1];
     write('/news/' + p.slug + '/', page(p.title + ' | ' + NAME, p.summary || p.title, '/news/' + p.slug + '/',
-      `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
+      `<main class="wrap post"><a class="back" href="/news/">All news</a><article><time datetime="${p.date}">${fmt(p.date)}</time><h1>${esc(p.title)}</h1><div class="body">${todo(p.html).replace(/<(\/?)(h[34])>/g, (_, close, tag) => '<' + close + 'h' + (Number(tag[1]) - 1) + '>').replace(/<h2>(.*?)<\/h2>/g, (_, t) => '<h2 id="' + t.toLowerCase().replace(/<[^>]*>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '">' + t + '</h2>')}</div><aside class="site-next"><h2>Plan your next session</h2><p>This post records the game at its publication date. Use the <a href="/player-guide/">current player guide</a> or <a href="/gm-guide/">GM guide</a> for today’s VTT rules, and find <a href="/resources/">tools and artwork</a> for your table.</p></aside></article>
 <nav class="pager" aria-label="More posts">${older ? '<a href="/news/' + older.slug + '/">&larr; ' + esc(older.title) + '</a>' : '<span></span>'}${newer ? '<a href="/news/' + newer.slug + '/">' + esc(newer.title) + ' &rarr;</a>' : ''}</nav></main>`, '', postImage(p)));
   });
   const urls = [...new Set([...PAGES.map(p => p.path), '/character/', '/vtt/', '/solo/', '/brand/', '/adventure/', '/adventures/the-guest-at-greave/', '/adventures/the-rib-of-saint-hussey/', ...posts.map(p => '/news/' + p.slug + '/')])];
