@@ -692,12 +692,12 @@
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Web app manifest, icons and sharing image"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
 </div>
 </article>
-<article class="it" id="i48" data-id="i48" data-name="Play counts (Umami)" data-rec="keep" data-where="/analytics.js, /stats/s.js, /stats/api/send">
+<article class="it" id="i48" data-id="i48" data-name="Play counts (Umami)" data-rec="keep" data-where="/analytics.js (script from cloud.umami.is)">
 <h3>Play counts (Umami)</h3>
-<p class="addr"><span class="u plain">/analytics.js, /stats/s.js, /stats/api/send</span></p>
+<p class="addr"><span class="u plain">/analytics.js (script from cloud.umami.is)</span></p>
 <div class="cols">
 <div><h4>What it is</h4><p>Anonymous counts of visits and play (table and solo events, play time) sent to Umami Cloud. Loaded by nav.js on every page except the builder and this page. No cookies; never names, table codes or GM keys.</p></div>
-<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Sends nothing until the Website ID is filled in at the top of site/analytics.js, and only from playsacrament.com. /stats/ passes requests on to Umami (netlify.toml).</p></div>
+<div><h4>Does it work?</h4><p><span class="badge ok">Works</span> Sends nothing until the Website ID is filled in at the top of site/analytics.js, and only from playsacrament.com. Sends straight to Umami so countries are right; visitors with ad blockers are not counted.</p></div>
 <div><h4>What links to it</h4><p>Every page with the menu.</p></div>
 <div><h4>My recommendation</h4><p><span class="badge rec-keep">Keep</span> The owner asked to see who plays and for how long (2026-11-09).</p>
 <label class="pick">Your decision <select class="decide" aria-label="Your decision for Play counts (Umami)"><option value="keep">Keep</option><option value="merge">Merge</option><option value="archive">Archive</option><option value="later">Decide later</option></select></label></div>
