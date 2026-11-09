@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
   /* From Umami: Settings, Websites, Edit, Website ID. Not a secret (it is in every page's source). Empty: nothing is sent. */
-  var WEBSITE_ID = '';
+  var WEBSITE_ID = '54e19f06-f4e3-4d35-97ed-737d7032523a';
   var LIVE_HOSTS = ['playsacrament.com'];
   /* The owner's own pages are not counted: the builder, and any page kept out of search engines (noindex). */
   var PRIVATE = /^\/builder(\/|$)/;
