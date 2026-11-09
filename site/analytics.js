@@ -9,15 +9,16 @@
   /* From Umami: Settings, Websites, Edit, Website ID. Not a secret (it is in every page's source). Empty: nothing is sent. */
   var WEBSITE_ID = '';
   var LIVE_HOSTS = ['playsacrament.com'];
-  /* The owner's own pages are not counted. */
-  var PRIVATE = /^\/(builder|inventory)(\/|$)/;
+  /* The owner's own pages are not counted: the builder, and any page kept out of search engines (noindex). */
+  var PRIVATE = /^\/builder(\/|$)/;
+  function hidden() { var m = root.document && root.document.querySelector('meta[name=robots]'); return !!(m && /noindex/i.test(m.getAttribute('content') || '')); }
   /* The free plan has 100,000 events a month, and each property counts as one: keep events few and properties fewer. */
   var ALLOWED = ['role', 'sample', 'kind', 'path', 'hard', 'place', 'scene', 'step', 'result', 'end', 'minutes', 'link', 'file'];
   var CLOCK_EVERY = 5;        /* minutes between "still playing" counts */
   var CLOCK_MAX = 12 * 60;    /* a tab left open overnight stops counting after twelve hours */
 
   var log = [], queue = [], sending = false;
-  var live = LIVE_HOSTS.indexOf(root.location && root.location.hostname) >= 0 && !!WEBSITE_ID && !PRIVATE.test(root.location.pathname);
+  var live = LIVE_HOSTS.indexOf(root.location && root.location.hostname) >= 0 && !!WEBSITE_ID && !PRIVATE.test(root.location.pathname) && !hidden();
 
   /* Only allowed keys, and only plain values: a number, true/false, or a short plain word (letters, digits, spaces, - _ ' .). */
   function clean(data) {

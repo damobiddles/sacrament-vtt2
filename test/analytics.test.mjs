@@ -8,15 +8,17 @@ import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../site/analytics.js', import.meta.url), 'utf8');
 
-function load(hostname, pathname = '/') {
+const withId = source.replace(/var WEBSITE_ID = '[^']*';/, "var WEBSITE_ID = 'test-id';");
+
+function load(hostname, pathname = '/', robots = '', src = source) {
   const added = [];
   const document = {
     readyState: 'complete', hidden: false, head: { appendChild: (el) => added.push(el) },
-    querySelector: () => null, addEventListener() {},
+    querySelector: (q) => (q === 'meta[name=robots]' && robots ? { getAttribute: () => robots } : null), addEventListener() {},
     createElement: () => ({ dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } }),
   };
   const window = { location: { hostname, pathname, href: 'https://' + hostname + pathname, origin: 'https://' + hostname }, document };
-  vm.runInNewContext(source, { window, URL, setInterval, clearInterval, Date, Math, Object, isFinite });
+  vm.runInNewContext(src, { window, URL, setInterval, clearInterval, Date, Math, Object, isFinite });
   return { stats: window.SacStats, window, added };
 }
 
@@ -32,8 +34,9 @@ test('nothing is sent from this computer, a preview, or before the Website ID is
 });
 
 test('the owner\'s private pages are never counted', () => {
-  assert.equal(load('playsacrament.com', '/builder/').stats.live(), false);
-  assert.equal(load('playsacrament.com', '/inventory/').stats.live(), false);
+  assert.equal(load('playsacrament.com', '/solo/', '', withId).stats.live(), true, 'a public page is counted once the ID is in');
+  assert.equal(load('playsacrament.com', '/builder/', '', withId).stats.live(), false);
+  assert.equal(load('playsacrament.com', '/unlisted/', 'noindex, nofollow', withId).stats.live(), false);
 });
 
 test('an address loses everything after ? and #, so table codes and GM keys never leave', () => {

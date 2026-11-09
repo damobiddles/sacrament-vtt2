@@ -24,6 +24,8 @@ test('the solo game counts the start, places, and play time, with no hero name',
   test.setTimeout(60000);
   const page = await newPage(browser);
   await page.clock.install();
+  /* every die shows 1, so the road always starts in the same scene, one with a way onward (the first scene is otherwise random) */
+  await page.addInitScript(() => { crypto.getRandomValues = (a) => { a.fill(0); return a; }; });
   await page.goto('/solo/');
   await page.locator('#takeHero').click();
   await expect(page.locator('#game')).toBeVisible();

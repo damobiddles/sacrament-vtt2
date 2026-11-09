@@ -95,9 +95,9 @@
     else root.addEventListener('load', function () { setTimeout(load, 0); }, { once: true });
   }
 
-  /* Anonymous play counts (site/analytics.js): every page that has this menu, except the owner's private pages. */
+  /* Anonymous play counts (site/analytics.js): every page that has this menu. analytics.js itself leaves out the owner's private pages. */
   function stats() {
-    if (root.SacStats || document.querySelector('script[src="/analytics.js"]') || /^\/(builder|inventory)(\/|$)/.test(location.pathname)) return;
+    if (root.SacStats || document.querySelector('script[src="/analytics.js"]')) return;
     /* until the file arrives, what the table or the solo game counts waits here */
     var early = [], later = function (what) { return function () { early.push([what, Array.prototype.slice.call(arguments)]); }; };
     root.SacStats = { early: early, track: later('track'), clock: later('clock'), stop: later('stop') };
