@@ -917,3 +917,21 @@ test('every relic does something in solo: damage, healing, a tag, or effects fro
     assert.ok(r.cat || CORE.healingOf(r) || (r.tags && r.tags.length) || fx.any || ['candle'].includes(r.id), r.name + ' has nothing the solo game can do with it');
   }
 });
+
+test('every roll carries the numbers that rise off the die: each modifier, and a total that matches the rules (display only)', () => {
+  const s = S.start(T.generate('fighter', seeded(3)), A, fixed([10]));
+  S.act(s, A, 'go north', fixed([10])); S.act(s, A, 'go down', fixed([10]));
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack');
+  S.act(s, A, attack.cmd, fixed([18]));
+  const hit = s.log.filter((l) => l.outcome).pop(), t = hit.tally[0];
+  assert.equal(t.total, hit.outcome.total); assert.equal(t.total, 18 + t.parts.reduce((a, p) => a + p.n, 0));
+  assert.ok(t.parts.every((p) => p.n !== 0 && p.t)); assert.match(t.word, /^against Target \d+$/); assert.equal(t.good, true);
+  S.act(s, A, 'damage', fixed([2]));
+  const dmg = s.log.filter((l) => l.damage != null).pop(), d = dmg.tally[0];
+  assert.equal(d.total, dmg.damage); assert.equal(d.word, 'damage'); assert.equal(d.total, 2 + d.parts.reduce((a, p) => a + p.n, 0));
+  S.act(s, A, 'foe', fixed([20, 3]));
+  const foe = s.log.filter((l) => l.outcome).pop();
+  assert.equal(foe.tally.length, 2, 'a foe hit shows its attack total, then its damage');
+  assert.equal(foe.tally[0].total, foe.outcome.total); assert.equal(foe.tally[0].good, false);
+  assert.deepEqual([foe.tally[1].total, foe.tally[1].word, foe.tally[1].at], [3, 'damage', 1]);
+});
