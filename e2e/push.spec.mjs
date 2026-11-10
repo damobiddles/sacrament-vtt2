@@ -32,7 +32,7 @@ test('Push: a failed roll offers a push; it raises the Horror by 1 and offers th
   await offer.locator('[data-do=push]').click(); await saved(ann);
   await expect(meter(ann)).toHaveAttribute('aria-valuenow', '1'); await expect(meter(gm)).toHaveAttribute('aria-valuenow', '1');
   await expect(ann.locator('#strip [data-do=again]')).toBeVisible();
-  await gm.locator('[data-do=feed]').click(); await expect(gm.locator('#feed li.horror')).toContainText('Thorne pushes for a second action. The Horror rises 1 (now 1).');
+  await gm.locator('[data-do=feed]').click(); await expect(gm.locator('#feed li.horror')).toContainText('Thorne pushes for a second action. The Horror rises 1 (now 1 of 21).');
   await shot(ann, '2-player-pushed');
 
   await ann.locator('#strip input[data-phys]').fill('1');   // the second action: the same again, on a natural 1

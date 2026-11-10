@@ -935,3 +935,17 @@ test('every roll carries the numbers that rise off the die: each modifier, and a
   assert.equal(foe.tally[0].total, foe.outcome.total); assert.equal(foe.tally[0].good, false);
   assert.deepEqual([foe.tally[1].total, foe.tally[1].word, foe.tally[1].at], [3, 'damage', 1]);
 });
+
+/* Weekly audit 2026-11-09: the solo story names dice in the table's own words ("d4 shows 3"), as the table's Activity does, not "(d4 3)". */
+test('the solo story says dice the way the table does: "d4 shows 3"', () => {
+  const { s } = withRelic('chain', [3]); assert.ok(s.fight);
+  S.act(s, A, S.choices(s, A).find((c) => /Penitent's Chain/.test(c.label)).cmd, fixed([3, 1]));
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([20, 1]));
+  for (let i = 0; i < 6 && s.fight && !/\(d\d+ shows 2\)/.test(s.log.map((l) => l.t).join('\n')); i++) { const next = S.choices(s, A).find((c) => c.cmd === 'damage' || c.cmd === 'foe'); if (!next) break; S.act(s, A, next.cmd, fixed([20, 2])); }
+  const text = s.log.map((l) => l.t).join('\n');
+  assert.match(text, /\(d\d+ shows 2\)/, 'a foe hit names its die: "(d6 shows 2)"');
+  assert.match(text, /bites \(d4 shows 3, nothing reduces it\)/);
+  assert.doesNotMatch(text, /\(d\d+ \d+[),;]/, 'no "(d6 4)" left in the story');
+  const engine = require('node:fs').readFileSync(new URL('../site/solo/engine.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(engine, /'d' \+ [\w.]+ \+ ' ' \+/, 'every die in the story goes through diceSay');
+});

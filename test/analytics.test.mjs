@@ -64,10 +64,10 @@ test('the table and the solo game pass no name, table code, key or typed text to
   }
 });
 
-test('the counting script and its sends go through this site, and the privacy page says so', () => {
+test('the counting script comes straight from Umami (real countries), and the privacy page says so', () => {
   const toml = fs.readFileSync(new URL('../netlify.toml', import.meta.url), 'utf8');
-  assert.match(toml, /from = "\/stats\/s\.js"\s+to = "https:\/\/cloud\.umami\.is\/script\.js"\s+status = 200/);
-  assert.match(toml, /from = "\/stats\/api\/send"\s+to = "https:\/\/gateway\.umami\.is\/api\/send"\s+status = 200/);
+  assert.doesNotMatch(toml, /umami/i, 'not passed on through this site: Umami would see Netlify\'s server, not the visitor\'s country');
+  assert.match(source, /s\.src = 'https:\/\/cloud\.umami\.is\/script\.js'/); assert.doesNotMatch(source, /data-host-url/);
   assert.match(source, /data-exclude-search/); assert.match(source, /data-exclude-hash/); assert.match(source, /data-do-not-track/);
   const privacy = fs.readFileSync(new URL('../content/landing/privacy.md', import.meta.url), 'utf8');
   assert.match(privacy, /Umami/); assert.match(privacy, /no cookies/); assert.doesNotMatch(privacy, /own analytics/);
