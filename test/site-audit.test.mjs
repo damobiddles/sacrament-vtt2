@@ -53,3 +53,26 @@ test('plain look-alike finds work like their twins (owner decision 2026-11-08, d
   assert.match(engine, /var CANDLES = \['candles', 'stubs'\]/); assert.doesNotMatch(engine, /var LIGHTS = \[[^\]]*'stubs'/);
   assert.match(road, /FIRE = LIGHTS\.concat\(\['tinder', 'flintsteel'\]\)/);
 });
+
+test('the Paths page counts a pushed relic roll among the natural 1s that add Horror, as the rules and the engine do (weekly audit 2026-11-09)', () => {
+  const paths = read('content/landing/paths.md');
+  assert.match(paths, /A natural 1 adds Horror only when the relic is used to attack or as a pushed second action/);
+  assert.match(read('content/landing/rules-updates.md'), /A relic's natural 1 when pushed \(9 November 2026\)/);
+});
+
+test('news posts name the rules tabs as the site does (weekly audit 2026-11-09)', () => {
+  const tabs = read('scripts/build-landing.mjs').match(/const RULES_TABS = (\[.*\]);/)[1];
+  const names = [...tabs.matchAll(/'([^'/][^']*)'\]/g)].map((m) => m[1]);
+  const dispatch = read('content/landing/blog/2026-11-09-the-november-dispatch.md');
+  assert.ok(dispatch.includes('one row of tabs:** ' + names.slice(0, -1).join(', ') + ' and ' + names.at(-1) + '.'), 'the dispatch lists ' + names.join(', '));
+});
+
+test('the footer links both adventures and the Paths page, and names the rules tabs as the tabs do (owner decision 2026-11-10)', () => {
+  const nav = read('site/nav.js');
+  for (const link of ['<a href="/rules/paths/">Paths</a>', '<a href="/adventures/the-guest-at-greave/">The Guest at Greave</a>', '<a href="/adventures/the-rib-of-saint-hussey/">The Rib of Saint Hussey</a>', '<a href="/rules/updates/">Updates and errata</a>']) assert.ok(nav.includes(link), link);
+});
+
+test('the print-and-play kit PDFs carry paths and growing stronger (owner decision 2026-11-10)', () => {
+  for (const size of ['A4', 'Letter']) { const pdf = fs.statSync(new URL('../site/downloads/print-kit/sacrament-print-kit-' + size + '.pdf', import.meta.url)); assert.ok(pdf.size > 100000, size); }
+  assert.match(read('content/landing/rules-updates.md'), /Print-and-play kit \(PDF\), updated 10 November 2026/);
+});

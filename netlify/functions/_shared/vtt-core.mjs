@@ -452,7 +452,7 @@ function moveHorror(s, a, ctx, d, say, dice) {
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
   const what = privateUse ? 'A private use of magic tempts the Horror.' : u.spell ? ch.name + ' read from ' + u.item.name + '.' : ch.name + ' used ' + u.item.name + '.';
-  const hr = moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  const hr = moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
   bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
 }
 
@@ -489,7 +489,7 @@ function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0,
 /* A hero's d20 showing a natural 1 raises the Horror by itself on an attack, a spell, or a pushed second action of any kind; not on a plain check (the owner's rule, 2026-11-01). */
 function natOne(s, a, ctx, ch, chk, roll, spell) {
   if (!chk.nat1 || !R.nat1Tempts({ attack: !!(roll && roll.isAttack), spell: !!spell, pushed: !!(roll && roll.fromPush) })) return null;
-  const hr = moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  const hr = moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
   bleed(s, ctx, ch, R.HORROR.nat1 - hr.applied); return hr;
 }
 /* Scene allowances are scoped to the scene and caster, shared across copies.
@@ -512,7 +512,7 @@ function areaTargets(s, ids, a) {
 function checkPowerContext(s, roll) { if ((roll.area || roll.limited) && (roll.sceneId !== s.table.scene || (s.scenes[roll.sceneId].powerEpoch || 0) !== roll.sceneEpoch)) fail('conflict', 'That encounter has changed. Ask the GM to resolve the old roll.'); }
 function grantPush(s, r, ch, a, ctx) {
   r.pushed = true; ch.pushPending = true; ch.pushTurn = turnKey(s); ch.pushScene = s.table.scene;
-  const hr = moveHorror(s, a, ctx, R.HORROR.push, (applied, now) => ch.name + ' pushes for a second action.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ').' : ' The Horror can rise no further (' + now + ').'));
+  const hr = moveHorror(s, a, ctx, R.HORROR.push, (applied, now) => ch.name + ' pushes for a second action.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
   bleed(s, ctx, ch, R.HORROR.push - hr.applied);
   return { horror: { cur: hr.cur, applied: hr.applied, crossed: hr.crossed } };
 }
@@ -916,13 +916,13 @@ const HANDLERS = {
     if (c.mode === 'lowerRoll') {
       if (!h.cur) fail('invalid', 'The Horror is already at 0.');
       const n = d(ctx, R.HORROR.lowerDie);
-      const r = moveHorror(s, a, ctx, -n, (applied, now) => 'Horror d' + R.HORROR.lowerDie + ': ' + n + '. The GM lowers the Horror by ' + Math.abs(applied) + (Math.abs(applied) === n ? '' : ' of ' + n) + ' (now ' + now + ').', diceOf(false, R.HORROR.lowerDie, n));
+      const r = moveHorror(s, a, ctx, -n, (applied, now) => 'Horror d' + R.HORROR.lowerDie + ': ' + n + '. The GM lowers the Horror by ' + Math.abs(applied) + (Math.abs(applied) === n ? '' : ' of ' + n) + ' (now ' + now + ' of ' + R.HORROR.max + ').', diceOf(false, R.HORROR.lowerDie, n));
       return { cur: r.cur, applied: r.applied, rolled: n };
     }
     const v = int(c.value, NaN); if (!Number.isFinite(v)) fail('invalid', 'The Horror is a number.');
     const dl = c.mode === 'set' ? clamp(v, 0, R.HORROR.max) - h.cur : clamp(v, -R.HORROR.max, R.HORROR.max);
     if (!dl) return { cur: h.cur, applied: 0 };
-    const r = moveHorror(s, a, ctx, dl, (applied, now) => 'The GM ' + (applied > 0 ? 'raises' : 'lowers') + ' the Horror by ' + Math.abs(applied) + ' (now ' + now + ').');
+    const r = moveHorror(s, a, ctx, dl, (applied, now) => 'The GM ' + (applied > 0 ? 'raises' : 'lowers') + ' the Horror by ' + Math.abs(applied) + ' (now ' + now + ' of ' + R.HORROR.max + ').');
     return { cur: r.cur, applied: r.applied, crossed: r.crossed };
   },
   horrorAck(s) { horrorOf(s).alert = 0; return {}; },
@@ -1029,7 +1029,7 @@ const HANDLERS = {
     const h = horrorOf(s), n = h.cur > 0 ? R.restDice(heroes.length) : 0, rolled = []; for (let i = 0; i < n; i++) rolled.push(d(ctx, R.REST.horrorDie));
     const total = rolled.reduce((x, y) => x + y, 0), m = R.horrorMove(h.cur, -total); h.cur = m.to; if (h.alert && h.cur < h.alert) h.alert = 0;
     if (m.applied) effects.push({ t: 'horror', d: m.applied });
-    const horror = n ? 'Horror ' + n + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ').' : 'The Horror is at 0.';
+    const horror = n ? 'Horror ' + n + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ' of ' + R.HORROR.max + ').' : 'The Horror is at 0.';
     recapOf(s, ctx).rests += 1;
     const e = L(s, a, ctx, 'The party rests. ' + healed + ' ' + horror, { kind: 'horror', effects, dice: rolled.map((x) => ({ die: R.REST.horrorDie, n: x })) });
     return { log: e.id, horror: h.cur };

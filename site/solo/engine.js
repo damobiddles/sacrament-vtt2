@@ -260,7 +260,7 @@
       var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
       var total = rolls.reduce(function (a, b) { return a + b; }, 0);
       if (!mv.applied && why) api.say(why, 'horror');
-      api.say('The Horror can rise no further. You pay in blood: ' + rolls.map(function (x) { return 'd' + R.HORROR.bloodDie + ' ' + x; }).join(' + ') + '.', 'horror', { dice: rolls.slice(0, 2).map(function (x) { return { die: R.HORROR.bloodDie, n: x }; }) });
+      api.say('The Horror can rise no further. You pay in blood: ' + diceSay(rolls.length, R.HORROR.bloodDie, rolls) + '.', 'horror', { dice: rolls.slice(0, 2).map(function (x) { return { die: R.HORROR.bloodDie, n: x }; }) });
       hurt(api, total, 'The price');
     }
   }
@@ -275,7 +275,12 @@
     if (t === DREAD.arrived && !s.arrived) { s.arrived = true; api.say('There is no more rest for you on this road.', 'note'); }
   }
 
+  /* a scene's own action, offered now? A scene's rest (the barn's sheaves, the guest cell) is still a rest: once the Horror has arrived there is none. */
+  function actionOpen(api, x) { return (!x.when || x.when(api)) && !(x.id === 'rest' && api.s.arrived); }
+
   /* ---------- harm ---------- */
+  /* Dice in the table's own words (vtt-core.mjs Activity): "d6 shows 4", "2d4 shows 3 + 2". */
+  function diceSay(count, die, ns) { return (count > 1 ? count : '') + 'd' + die + ' shows ' + ns.join(' + '); }
   function hurt(api, n, why) {
     var s = api.s;
     if (s.dying) { api.say((why || 'You are hurt') + '.', 'hurt'); dyingTick(api, 'The blow costs you a round.'); return; }
@@ -391,7 +396,7 @@
     if (src.once === 'scene') { if (s.used[C.powerKey(src)]) { api.say('You have already used that in this scene.', 'note'); return; } s.used[C.powerKey(src)] = true; }
     api.say((pushed ? 'You push, and ' : 'You ') + (u.spell ? 'cast ' + u.spell.name + '.' : isDamage ? 'attack with ' + yours(u.item.name) + '.' : 'use ' + yours(u.item.name) + '.'), 'act');
     if (fx.any && fx.oncePerTurn && fight) (fight.once = fight.once || {})[src.id] = fight.round;
-    if (fx.selfHarm) { var bite = api.die(fx.selfHarm); hurt(api, bite, yours(u.item.name).replace(/^./, function (x) { return x.toUpperCase(); }) + ' bites (d' + fx.selfHarm + ' ' + bite + ', nothing reduces it)'); if (s.over) return; }
+    if (fx.selfHarm) { var bite = api.die(fx.selfHarm); hurt(api, bite, yours(u.item.name).replace(/^./, function (x) { return x.toUpperCase(); }) + ' bites (' + diceSay(1, fx.selfHarm, [bite]) + ', nothing reduces it)'); if (s.over) return; }
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
@@ -458,8 +463,8 @@
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     if (!chk || chk.success) {
-      var n = api.die(h.die), amount = n, words = 'd' + h.die + ' ' + n;
-      if (chk && chk.offerUltimate) { var c = api.die(R.DEFAULT_DICE.ultimate); amount += c; words += ' + d' + R.DEFAULT_DICE.ultimate + ' ' + c; }
+      var n = api.die(h.die), amount = n, words = diceSay(1, h.die, [n]);
+      if (chk && chk.offerUltimate) { var c = api.die(R.DEFAULT_DICE.ultimate); amount += c; words += '; ' + diceSay(1, R.DEFAULT_DICE.ultimate, [c]); }
       api.say('Healing: ' + words + '.', 'roll', chk ? null : { dice: [{ die: h.die, n: n }] }); api.heal(amount, 'You are mended');
       if (s.dying && s.hp.cur > 0) { s.dying = null; api.say('You are on your feet again.', 'win'); }
       if (h.kind) s.healed[h.kind] = true;
@@ -485,7 +490,7 @@
     var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
       d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
     api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true });
-    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (d' + size + ' ' + n + ')');
+    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (' + diceSay(1, size, [n]) + ')');
     if (s.fight && !s.over) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); }
   }
 
@@ -509,7 +514,7 @@
     var dice = []; for (var i = 0; i < R.restDice(1); i++) dice.push(api.die(R.REST.horrorDie));
     var down = dice.reduce(function (a, b) { return a + b; }, 0), before = s.horror; s.horror = Math.max(0, s.horror - down);
     api.heal(R.REST.heal, 'Rest');
-    api.say('The Horror falls ' + (before - s.horror) + ' (d' + R.REST.horrorDie + ' ' + dice.join(' + ') + '; now ' + s.horror + ').', 'horror', { dice: dice.slice(0, 2).map(function (x) { return { die: R.REST.horrorDie, n: x }; }) });
+    api.say('The Horror falls ' + (before - s.horror) + ' (' + diceSay(dice.length, R.REST.horrorDie, dice) + '; now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror', { dice: dice.slice(0, 2).map(function (x) { return { die: R.REST.horrorDie, n: x }; }) });
   }
 
   /* ---------- what can be done now: the buttons ---------- */
@@ -545,7 +550,7 @@
     var asked = who && s.flags['riddle_' + who.id];
     if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
     else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
-    (r.actions || []).forEach(function (x) { if (!x.when || x.when(api)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
+    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
@@ -668,7 +673,7 @@
     /* the room's own things to do, by their words */
     var r = adv.rooms[s.room];
     if (!s.fight && r) {
-      var hit = (r.actions || []).filter(function (x) { return (!x.when || x.when(api)) && (x.words || []).some(function (k) { return t.indexOf(k) >= 0; }); })[0];
+      var hit = (r.actions || []).filter(function (x) { return actionOpen(api, x) && (x.words || []).some(function (k) { return t.indexOf(k) >= 0; }); })[0];
       if (hit) return 'do ' + hit.id;
     }
     /* attacks, spells and items by name */
@@ -744,7 +749,8 @@
     }
     else if (p[0] === 'do') {
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
-      if (!x || (x.when && !x.when(api))) api.say('That does nothing now.', 'note'); else x.run(api);
+      if (x && x.id === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
+      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else x.run(api);
     }
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }

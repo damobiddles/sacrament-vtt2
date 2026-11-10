@@ -326,6 +326,24 @@ test('Horror 14 hunts the hero: every foe met from then on has 2 more HP; Horror
   assert.ok(S.choices(run).some((c) => c.cmd === 'rest'));
 });
 
+test('once the Horror has arrived, no scene offers its own rest either (the barn\'s "Sleep in the sheaves" did)', () => {
+  const ADV = globalThis.SacramentSoloAdventures, found = [];
+  for (const [id, adv] of Object.entries(ADV)) for (const [room, r] of Object.entries(adv.rooms || {})) for (const x of r.actions || []) if (x.id === 'rest') found.push([id, adv, room]);
+  assert.ok(found.length >= 6, 'the scenes with a rest of their own were found');
+  for (const [id, adv, room] of found) {
+    const s = S.start(T.generate('fighter', seeded(3)), adv, fixed([1]));
+    s.room = room; s.fight = null; s.hp.cur = 1; s.horror = R.HORROR.max;   // the ossuary opens with a fight: as if it were won
+    for (const f of ['talked', 'calm', 'beat_penitent', 'beat_wraith']) s.flags[f] = true;   // whatever each scene asks before its rest is offered
+    assert.ok(S.choices(s, adv).some((c) => c.cmd === 'do rest'), id + ': the rest is offered before the Horror arrives');
+    s.arrived = true;
+    assert.ok(!S.choices(s, adv).some((c) => c.cmd === 'do rest'), id + ': no rest button once the Horror has arrived');
+    const said = S.act(s, adv, 'do rest', fixed([1])).map((l) => l.t).join(' ');
+    assert.equal(s.hp.cur, 1, id + ': typing it does not heal'); assert.equal(s.horror, R.HORROR.max, id + ': nor lower the Horror'); assert.equal(s.rested, false);
+    assert.match(said, /no more rest/, id);
+    assert.ok(!S.act(s, adv, 'sleep', fixed([1])).some((l) => /Rest:|The Horror falls/.test(l.t)), id + ': nor does the typed word "sleep"');
+  }
+});
+
 test('falling: a hero at 0 HP is dying with a d4 of rounds, a round passing takes one off, and crawling away gets them out with 1 HP', () => {
   const s = cryptFight();
   s.hp.cur = 1;
@@ -898,4 +916,18 @@ test('every relic does something in solo: damage, healing, a tag, or effects fro
     const fx = CORE.effectsOf(r);
     assert.ok(r.cat || CORE.healingOf(r) || (r.tags && r.tags.length) || fx.any || ['candle'].includes(r.id), r.name + ' has nothing the solo game can do with it');
   }
+});
+
+/* Weekly audit 2026-11-09: the solo story names dice in the table's own words ("d4 shows 3"), as the table's Activity does, not "(d4 3)". */
+test('the solo story says dice the way the table does: "d4 shows 3"', () => {
+  const { s } = withRelic('chain', [3]); assert.ok(s.fight);
+  S.act(s, A, S.choices(s, A).find((c) => /Penitent's Chain/.test(c.label)).cmd, fixed([3, 1]));
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([20, 1]));
+  for (let i = 0; i < 6 && s.fight && !/\(d\d+ shows 2\)/.test(s.log.map((l) => l.t).join('\n')); i++) { const next = S.choices(s, A).find((c) => c.cmd === 'damage' || c.cmd === 'foe'); if (!next) break; S.act(s, A, next.cmd, fixed([20, 2])); }
+  const text = s.log.map((l) => l.t).join('\n');
+  assert.match(text, /\(d\d+ shows 2\)/, 'a foe hit names its die: "(d6 shows 2)"');
+  assert.match(text, /bites \(d4 shows 3, nothing reduces it\)/);
+  assert.doesNotMatch(text, /\(d\d+ \d+[),;]/, 'no "(d6 4)" left in the story');
+  const engine = require('node:fs').readFileSync(new URL('../site/solo/engine.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(engine, /'d' \+ [\w.]+ \+ ' ' \+/, 'every die in the story goes through diceSay');
 });

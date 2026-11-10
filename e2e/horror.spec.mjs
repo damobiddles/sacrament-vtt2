@@ -33,7 +33,7 @@ test('The Horror: everyone sees one meter; a spell raises it; the GM is alerted 
   await expect(meter(ann)).toHaveAttribute('aria-valuenow', '1'); await expect(meter(gm)).toHaveAttribute('aria-valuenow', '1');
   await expect(ann.locator('#sheetOverlay')).toBeHidden();
   await ann.locator('[data-do=feed]').click();
-  await expect(ann.locator('#feed li.horror')).toContainText('Thorne read from The Ashen Psalter. The Horror rises 1 (now 1).');
+  await expect(ann.locator('#feed li.horror')).toContainText('Thorne read from The Ashen Psalter. The Horror rises 1 (now 1 of 21).');
   await expect(ann.locator('#feed li.horror [data-do=undo]')).toHaveCount(0);   // a player cannot take the Horror back
   await expect(ann.locator('[data-do=horrorAdj], [data-do=horrorSet]')).toHaveCount(0);
   await shot(ann, '1-player-after-kindle');
@@ -48,13 +48,13 @@ test('The Horror: everyone sees one meter; a spell raises it; the GM is alerted 
 
   /* the GM's Undo on the rise puts it back */
   await gm.locator('[data-do=feed]').click();
-  await gm.locator('#feed li.horror', { hasText: 'rises 1 (now 7)' }).locator('[data-do=undo]').click(); await saved(gm);
+  await gm.locator('#feed li.horror', { hasText: 'rises 1 (now 7 of 21)' }).locator('[data-do=undo]').click(); await saved(gm);
   await expect(meter(gm)).toHaveAttribute('aria-valuenow', '6'); await expect(meter(ann)).toHaveAttribute('aria-valuenow', '6');
 
   await gm.locator('[data-do=horrorAdj][data-d="1"]').click(); await saved(gm); await expect(meter(gm)).toHaveAttribute('aria-valuenow', '7');
   /* lowering by a d6: the server rolls it, and everyone reads the roll in the feed */
   await gm.locator('[data-do=horrorRoll]').click(); await saved(gm);
-  await expect(ann.locator('#feed')).toContainText(/Horror d6: [1-6]\. The GM lowers the Horror by [1-6] \(now [0-6]\)\./);
+  await expect(ann.locator('#feed')).toContainText(/Horror d6: [1-6]\. The GM lowers the Horror by [1-6] \(now [0-6] of 21\)\./);
   const afterRoll = (await state(gm)).horror.cur; expect(afterRoll).toBeLessThan(7); await expect(meter(ann)).toHaveAttribute('aria-valuenow', String(afterRoll));
   await shot(gm, '5-gm-lowered-by-d6');
   await gmSet(gm, 21);
