@@ -421,7 +421,8 @@
 .tally-part.plus{color:#bfe8a4}
 .tally-part.minus{color:#ff9d8c}
 .tally-total{display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);animation:tally-pop .35s cubic-bezier(.2,.8,.3,1.4) both}
-.tally-total b{font:700 2.6rem/1 var(--display);color:#ffe2a0}
+.tally-total b{min-width:1.4em;padding:4px 10px 2px;border-radius:10px;background:#120f0bf2;box-shadow:0 0 0 2px #b8955a,0 6px 18px #000c;text-align:center;font:700 2.6rem/1 var(--display);color:#ffe2a0}
+.tally-total.bad b{box-shadow:0 0 0 2px #c4786a,0 6px 18px #000c}
 .tally-total.bad b{color:#ff9d8c}
 .tally-total small{margin-top:2px;padding:1px 8px;border-radius:9px;background:#120f0bd9;font:600 .78rem var(--label);letter-spacing:.08em;text-transform:uppercase;color:#f1e3c2;text-shadow:none}
 @keyframes tally-rise{0%{opacity:0;transform:translate(-14px,-50%) scale(.7)}12%{opacity:1;transform:translate(0,-50%) scale(1.08)}22%{transform:translate(0,-50%) scale(1)}70%{opacity:1}100%{opacity:0;transform:translate(0,-230%)}}
