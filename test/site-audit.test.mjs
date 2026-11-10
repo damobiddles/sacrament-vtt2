@@ -71,3 +71,8 @@ test('the footer links both adventures and the Paths page, and names the rules t
   const nav = read('site/nav.js');
   for (const link of ['<a href="/rules/paths/">Paths</a>', '<a href="/adventures/the-guest-at-greave/">The Guest at Greave</a>', '<a href="/adventures/the-rib-of-saint-hussey/">The Rib of Saint Hussey</a>', '<a href="/rules/updates/">Updates and errata</a>']) assert.ok(nav.includes(link), link);
 });
+
+test('the print-and-play kit PDFs carry paths and growing stronger (owner decision 2026-11-10)', () => {
+  for (const size of ['A4', 'Letter']) { const pdf = fs.statSync(new URL('../site/downloads/print-kit/sacrament-print-kit-' + size + '.pdf', import.meta.url)); assert.ok(pdf.size > 100000, size); }
+  assert.match(read('content/landing/rules-updates.md'), /Print-and-play kit \(PDF\), updated 10 November 2026/);
+});
