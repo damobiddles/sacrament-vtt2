@@ -177,3 +177,14 @@ test('rebuilding the Free Scenes page preserves reviewed downloads in their sepa
     assert.match(readFileSync(join(b.out,'resources','index.html'),'utf8'),/href="\/scenes\/"/);
   } finally {b.cleanup();}
 });
+
+test('a news post can embed a YouTube video with the no-cookie player and a plain link', () => {
+  const b=build((c)=>writeFileSync(join(c,'blog','2001-01-01-video-check.md'),'---\ntitle: Video check\ndate: 2001-01-01\nsummary: s\n---\n@youtube(12H-EJZA8KU "A <demo>")\n\n@youtube(bad "nope")\n'));
+  try {
+    assert.equal(b.r.status,0,b.r.stderr);
+    const html=readFileSync(join(b.out,'news','video-check','index.html'),'utf8');
+    assert.match(html,/<iframe src="https:\/\/www\.youtube-nocookie\.com\/embed\/12H-EJZA8KU" title="A &lt;demo&gt;" loading="lazy"/);
+    assert.match(html,/href="https:\/\/www\.youtube\.com\/watch\?v=12H-EJZA8KU">Watch on YouTube/);
+    assert.equal((html.match(/<iframe/g)||[]).length,1,'a malformed id must not become a player');
+  } finally {b.cleanup();}
+});
