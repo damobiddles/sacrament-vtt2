@@ -26,6 +26,7 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Paying in blood can drop a hero.** The d4s come off HP like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A hero already at 0 cannot act, so cannot pay.
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **Seven relics now name their check (8 November 2026).** The Bone Bell (CHA), Censer of Ash (WIS), Widow's Listening Veil (WIS), Ward Medal of Saint Ursel (WIS), Vigil Coal (INT), Rod of the Ash Procession (INT) and Mourning Nail (WIS) always rolled that check at the table and in the solo game, but their words did not say which. They now read "make a … check. On a success…", like every other relic. Nothing about how they play has changed.
+- **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
 ## 8 November 2026, last: plain finds work like their twins
