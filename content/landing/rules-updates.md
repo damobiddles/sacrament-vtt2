@@ -16,6 +16,7 @@ Corrections to text we published. These pages were written before the Horror cha
 - **The Guest at Greave, "Blood on snow".** It said a hero's natural 1 on the blood test adds 1 Horror. The test is a plain WIS check, so a natural 1 still smears the reading but adds no Horror. The online adventure and its PDFs are corrected.
 - **Player guide, "The shared Horror".** It said the table never applies extra damage when the Horror is full. Since 1 November it does: see "pay in blood" below.
 
+- **Print-and-play kit (PDF), updated 10 November 2026.** It had no paths, no way to grow stronger, no Break away and no darkness rule. The quick reference now has all four, and the kit's character sheet has a Path line and boxes for Marks and Advances taken. The story-spell tags are on the rules cheat sheet, not in the kit.
 - **Player cheat sheet (PDF), replaced 8 November 2026.** It did not have Break away, the story-spell tags, darkness or growing stronger. It is now the three-page rules cheat sheet, and the old download links lead to it. The print-and-play kit's blank character sheet has no Marks box: use the new blank hero sheet instead.
 
 ## Clarifications

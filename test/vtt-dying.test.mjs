@@ -94,7 +94,7 @@ test('REST: every living hero recovers a Heart (the fallen stand up), the Horror
   const r = await t.gm.cmd({ type: 'rest' }); assert.equal(r.status, 200);
   const st = r.body.state; assert.equal(find(st, 'Thorne').hp.cur, 10); assert.equal(find(st, 'Thorne').dying, null); assert.equal(find(st, 'Wisp').hp.cur, 10);
   assert.equal(st.horror.cur, 4, '12 - (3 + 5)');
-  const line = lastLog(st, /The party rests/); assert.match(line.text, /Thorne \+10 HP \(now 10\/10\), back on their feet; Wisp \+4 HP/); assert.match(line.text, /Horror 2d10: 3 \+ 5 = 8\. The Horror falls by 8 \(now 4\)\./);
+  const line = lastLog(st, /The party rests/); assert.match(line.text, /Thorne \+10 HP \(now 10\/10\), back on their feet; Wisp \+4 HP/); assert.match(line.text, /Horror 2d10: 3 \+ 5 = 8\. The Horror falls by 8 \(now 4 of 21\)\./);
   assert.equal((await t.gm.cmd({ type: 'undo', logId: line.id })).status, 200);
   const u = await t.state(); assert.equal(find(u, 'Thorne').hp.cur, 0); assert.equal(find(u, 'Thorne').dying.left, 2); assert.equal(find(u, 'Wisp').hp.cur, 6); assert.equal(u.horror.cur, 12);
 });
