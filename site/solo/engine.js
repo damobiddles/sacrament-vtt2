@@ -64,6 +64,9 @@
       hurt: function (n, why) { hurt(api, n, why); },
       heal: function (n, why) { var ch = R.change(s.hp.cur, s.hp.max, n); s.hp.cur = ch.cur; if (ch.applied) api.say((why || 'You recover') + ': +' + ch.applied + ' HP (' + s.hp.cur + ' of ' + s.hp.max + ').', 'heal'); return ch.applied; },
       give: function (id, why) { return give(api, id, why); },
+      /* Hand over or use up one carried thing (an item id or a list of them): it leaves the pack, and the end card counts it as put to use. */
+      spend: function (test, why) { return spend(api, test, why); },
+      used: function (name) { putToUse(s, name); },
       loot: function (why) { return loot(api, why); },
       fight: function (foeId) { startFight(api, foeId); },
       /* An obstacle, as at the table: a card with an Effort bar. A try is a check; a success rolls Effort into the bar; a full bar clears it. */
@@ -76,8 +79,10 @@
       foeHeal: function (n, why) { var f = s.fight; if (!f) return; var ch = R.change(f.hp.cur, f.hp.max, int(n, 0)); f.hp.cur = ch.cur; if (ch.applied) api.say((why || f.name + ' recovers') + ': +' + ch.applied + ' HP.', 'foe'); },
       rest: function () { rest(api); },
       /* The end of a scene. In a run of scenes, winning one leads on to the next; falling, or winning the last, ends the run. */
-      end: function (kind, text) {
+      /* ending: on the last scene, which of its endings this was (the finale's "endings" names them, for the end card and the Chronicle) */
+      end: function (kind, text, ending) {
         s.fight = null; if (text) api.say(text, kind === 'won' ? 'end' : 'hurt');
+        if (ending && s.run && s.run.at >= s.run.order.length - 1) s.run.ending = ending;
         if (kind === 'won' && s.run && s.run.at < s.run.order.length - 1) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is done.', 'note'); return; }
         s.over = kind;
       },
@@ -348,6 +353,13 @@
     (s.found = s.found || []).push(it.id); if (s.run) (s.run.found = s.run.found || []).push(it.id);
     return it;
   }
+  function spend(api, test, why) {
+    var s = api.s, i = (s.hero.gear || []).findIndex(function (g) { var it = C.itemOf(g); return it && (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); });
+    if (i < 0) return null;
+    var it = C.itemOf(s.hero.gear[i]), r = C.edit(s.hero, { op: 'remove', index: i }, { gm: true }, s.hp); if (!r.ok) return null;
+    api.say((why || 'You give up') + ': ' + it.name + '.', 'note'); putToUse(s, it.name);
+    return it;
+  }
   function loot(api, why) {
     var r = C.rollLoot(api.die); if (!r.ok) { api.say(r.why, 'note'); return null; }
     api.say((why || 'Loot') + ': d100 ' + C.sayLoot(r.steps) + '.', 'roll', { dice: r.steps.slice(0, 2).map(function (st) { return { die: st.die, n: st.n }; }) });
@@ -548,7 +560,7 @@
     var asked = who && s.flags['riddle_' + who.id];
     if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
     else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
-    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
+    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push(Object.assign({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }, x.item ? { useful: true, item: (api.has(x.item) || {}).name || '' } : null)); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
@@ -748,7 +760,7 @@
     else if (p[0] === 'do') {
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
       if (x && x.id === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
-      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else x.run(api);
+      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else { var held = x.item && api.has(x.item); x.run(api); if (held) putToUse(s, held.name); }
     }
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
@@ -872,7 +884,8 @@
       hero: s.hero.name, calling: s.hero.calling || '', road: (run.title || '') + (run.hard ? ': the Hard Road' : ''), hard: !!run.hard, to: last ? last.title : '', end: end, total: run.order.length,
       places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }), placeIds: walked.slice(), met: (run.met || []).slice(), escapes: int(run.escapes, 0),
       beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }), used: (run.used || []).slice(),
-      peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
+      peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : '',
+      ending: end === 'won' && run.ending && last && last.endings && last.endings[run.ending] ? last.endings[run.ending] : '', endingId: end === 'won' && run.ending ? run.ending : ''
     };
   }
 

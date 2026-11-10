@@ -30,7 +30,7 @@
     if (!state || !state.over || !state.run || state.run.logged) return;
     var sum = S.summary(state); state.run.logged = today() || true;
     var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
-      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard });
+      places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard, ending: sum.ending });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
     if (state.over === 'won') markHome();
@@ -47,7 +47,8 @@
   function world() {
     var A = window.SacramentSoloAdventures;
     return { friends: (window.SacramentSoloCameos || []).map(function (c) { return c.id; }), places: CAMP.scenes.slice(),
-      finales: CAMP.scenes.filter(function (id) { return A[id] && A[id].act === 'finale'; }) };
+      finales: CAMP.scenes.filter(function (id) { return A[id] && A[id].act === 'finale'; }),
+      endings: [].concat.apply([], CAMP.scenes.map(function (id) { var x = A[id]; return x && x.endings ? Object.keys(x.endings).map(function (k) { return x.endings[k]; }) : []; })) };
   }
   function showDeeds(l) {
     var box = $('deeds'), got = DEEDS.earned(l, world()); box.textContent = '';
@@ -58,6 +59,9 @@
       li.append(b, s); box.appendChild(li);
     });
     var rec = $('record'); rec.textContent = '';
+    /* the endings found so far, of every ending the last places have (each finale names its own) */
+    var all = world().endings, found = {}; l.forEach(function (e) { if (e.end === 'won' && e.ending && all.indexOf(e.ending) >= 0) found[e.ending] = true; });
+    if (all.length) { var ep = document.createElement('p'), eb = document.createElement('b'); eb.textContent = 'Endings found'; ep.append(eb, document.createTextNode(': ' + Object.keys(found).length + ' of ' + all.length)); rec.appendChild(ep); }
     DEEDS.record(l).slice(0, 6).forEach(function (r) {
       var p = document.createElement('p'), b = document.createElement('b'); b.textContent = r.hero;
       p.append(b, document.createTextNode(': ' + r.roads + (r.roads === 1 ? ' road' : ' roads') + ', home ' + r.home + ', ' + r.beaten + ' foes beaten, highest Horror ' + r.peak));
@@ -71,7 +75,7 @@
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
-      w.textContent = (e.hard ? ' · the Hard Road' : '') + (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '');
+      w.textContent = (e.hard ? ' · the Hard Road' : '') + (e.to ? ' · to ' + e.to : '') + ' · ' + (HOW[e.end] || e.end) + (e.end === 'dead' ? ' in scene ' + e.at + ' of ' + e.of : '') + (e.ending ? ': ' + e.ending : '');
       w.style.whiteSpace = 'normal'; d.textContent = e.date || '';
       var left = document.createElement('div'); left.append(b, w); li.append(left, d); box.appendChild(li);
     });
@@ -187,7 +191,7 @@
     el.appendChild(document.createTextNode(text.slice(at)));
   }
   /* each place has the tune of its mood */
-  var MOOD = { gate: 'gate', crossroads: 'gate', lane: 'gate', ford: 'gate', gibbet: 'gate', stones: 'gate', nave: 'nave', cloister: 'nave', barn: 'nave', crypt: 'crypt', undercroft: 'crypt', ossuary: 'crypt', mere: 'crypt', tower: 'tower', shrine: 'tower', hospice: 'nave', wood: 'gate', bridge: 'gate', chapter: 'nave', barrow: 'tower', pit: 'crypt', inn: 'gate', field: 'gate' };
+  var MOOD = { gate: 'gate', crossroads: 'gate', lane: 'gate', ford: 'gate', gibbet: 'gate', stones: 'gate', nave: 'nave', cloister: 'nave', barn: 'nave', crypt: 'crypt', undercroft: 'crypt', ossuary: 'crypt', mere: 'crypt', tower: 'tower', shrine: 'tower', hospice: 'nave', wood: 'gate', bridge: 'gate', chapter: 'nave', barrow: 'tower', pit: 'crypt', inn: 'gate', field: 'gate', wayside: 'nave', dorter: 'crypt', study: 'nave', towngate: 'gate', scriptorium: 'tower', fold: 'gate' };
   function render() {
     tune(state.over === 'won' || state.done ? 'won' : state.over ? 'dead' : state.fight ? 'fight' : MOOD[ADV().rooms[state.room].art] || 'gate');
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
@@ -323,7 +327,7 @@
       if (c.horror) bits.push('+' + R.sayHorrorAmount(c.horror) + ' Horror');
       if (od && od.cost.length) bits.push('Fail: ' + od.cost.join(', '));
       if (c.hint) { if (c.flee) bits.push(c.hint); else bits.unshift(c.hint); }
-      if (c.useful) bits.unshift('Useful here');
+      if (c.useful) bits.unshift(c.item ? 'Uses your ' + c.item : 'Useful here');
       if (bits.length) { var sm = document.createElement('small'); sm.className = 'odds' + (od && od.chance <= 35 ? ' long' : ''); sm.textContent = bits.join(' · '); b.appendChild(sm); }
     }
     if (c.cmd) b.addEventListener('click', function () { run(c.cmd); });

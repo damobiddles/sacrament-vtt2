@@ -3,7 +3,7 @@
    "some form of progression ... makes you keep coming back"). Pure: no DOM, no storage. */
 (function (root) {
   'use strict';
-  /* A Chronicle entry: { hero, to, end ('won' | 'dead' | 'fled'), at, of, peak, date, places: [scene ids], beaten: [foe names], met: [friend ids], used: [names], escapes, hard } */
+  /* A Chronicle entry: { hero, to, end ('won' | 'dead' | 'fled'), at, of, peak, date, places: [scene ids], beaten: [foe names], met: [friend ids], used: [names], escapes, hard, ending (the name of how the last place ended, since 2026-11-10) } */
   function won(e) { return e.end === 'won'; }
   function n(l) { return (l || []).length; }
   var DEEDS = [
@@ -17,6 +17,7 @@
     { id: 'company', name: 'Good company', hint: 'Spend time with three friends of the road on one road.', test: function (l) { return l.some(function (e) { return n(e.met) >= 3; }); } },
     { id: 'friends', name: 'Known on every road', hint: 'Over your roads, spend time with every friend of the road.', test: function (l, w) { var met = {}; l.forEach(function (e) { (e.met || []).forEach(function (id) { met[id] = true; }); }); return w.friends.length > 0 && w.friends.every(function (id) { return met[id]; }); } },
     { id: 'ends', name: 'Every end of the road', hint: 'Come home from each of the three last places.', test: function (l, w) { var done = {}; l.forEach(function (e) { if (won(e)) (e.places || []).forEach(function (id) { done[id] = true; }); }); return w.finales.length > 0 && w.finales.every(function (id) { return done[id]; }); } },
+    { id: 'endings', name: 'Many ends', hint: 'Come home by five different endings.', test: function (l) { var seen = {}; l.forEach(function (e) { if (won(e) && e.ending) seen[e.ending] = true; }); return Object.keys(seen).length >= 5; } },
     { id: 'walked', name: 'Walked it all', hint: 'Over your roads, see every place on the pilgrim road.', test: function (l, w) { var seen = {}; l.forEach(function (e) { (e.places || []).forEach(function (id) { seen[id] = true; }); }); return w.places.length > 0 && w.places.every(function (id) { return seen[id]; }); } },
     { id: 'hard', name: 'The Hard Road home', hint: 'Come home by the Hard Road.', test: function (l) { return l.some(function (e) { return won(e) && e.hard; }); } },
     { id: 'ten', name: 'Ten roads', hint: 'Walk the road ten times, whatever the end.', test: function (l) { return l.length >= 10; } }

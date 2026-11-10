@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js', 'solo/road-wide.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -504,7 +504,7 @@ test('a third reason to be on the road: the Inquisitor\'s warrant opens it, the 
   let warrantRuns = 0;
   for (let seed = 1; seed <= 120; seed++) {
     const rnd = seeded(seed * 7919 + 3), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n));
-    if (o.charge === 'warrant') { warrantRuns++; assert.equal(o.order[0], 'warrant'); assert.equal(o.order[4], 'barrow'); }
+    if (o.charge === 'warrant') { warrantRuns++; assert.equal(SCENES[o.order[0]].gives, 'warrant', 'a warrant opening (the chapter-house, or the deacon\'s lodging since 2026-11-10)'); assert.equal(o.order[4], 'barrow'); }
   }
   assert.ok(warrantRuns > 10, 'about a third of runs hunt the deacon: ' + warrantRuns);
   /* the opening: the warrant, then the pardoner talks (or is beaten) and tells you how the deacon moves */
@@ -762,7 +762,7 @@ test('spells and items that matter: a useful one is marked, the foe card says wh
 
 test('deeds and the hero record come from the Chronicle, and a road earns only what is new', () => {
   require('../site/solo/deeds.js');
-  const DD = globalThis.SacramentSoloDeeds, w = { friends: ['a', 'b'], finales: ['shrine', 'mere', 'barrow'], places: ['priory', 'shrine', 'mere', 'barrow'] };
+  require('../site/solo/deeds.js'); const DD = globalThis.SacramentSoloDeeds, w = { friends: ['a', 'b'], finales: ['shrine', 'mere', 'barrow'], places: ['priory', 'shrine', 'mere', 'barrow'] };
   const e = (o) => Object.assign({ hero: 'Ada', end: 'won', peak: 3, places: [], beaten: [], met: [], used: [], escapes: 0 }, o);
   assert.deepEqual(DD.earned([], w), []);
   let l = [e({ end: 'dead', peak: 9, places: ['priory'] })];
@@ -916,4 +916,132 @@ test('every relic does something in solo: damage, healing, a tag, or effects fro
     const fx = CORE.effectsOf(r);
     assert.ok(r.cat || CORE.healingOf(r) || (r.tags && r.tags.length) || fx.any || ['candle'].includes(r.id), r.name + ' has nothing the solo game can do with it');
   }
+});
+
+/* ---------- a wider road (owner, 2026-11-10: "more opening scenes ... more outcomes and more beginnings, and more opportunities to use some of the loot") ---------- */
+const lastScene = (id, charge) => ({ campaign: 'pilgrim-road', title: 'The Pilgrim Road', order: [id], spare: [], at: 0, charge, story: {}, met: [] });
+const withGear = (focus, ids) => { const h = T.generate(focus, seeded(5)); h.gear = h.gear.filter((g) => CORE.itemOf(g) && CORE.itemOf(g).kind !== 'supply').concat(ids.map((id) => ({ id, eq: false }))); return h; };
+const doLabel = (s, re) => S.choices(s).find((c) => c.kind === 'do' && re.test(c.label));
+
+test('more beginnings: each reason to be on the road can start in two places, and every opening leads to the finale that answers it', () => {
+  const byCharge = {};
+  for (const id of ROAD.scenes) { const x = SCENES[id]; if (x.act === 'opening') (byCharge[x.gives] = byCharge[x.gives] || []).push(id); }
+  assert.deepEqual(byCharge, { relic: ['priory', 'courier'], missing: ['cart', 'convent'], warrant: ['warrant', 'lodging'] });
+  for (const id of ['plaguegate', 'scriptorium', 'fold']) { assert.equal(SCENES[id].act, 'middle'); assert.ok(!SCENES[id].fits, id + ' fits every charge'); }
+  const firsts = new Set();
+  for (let seed = 1; seed <= 300; seed++) { const rnd = seeded(seed * 7919 + 3), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n)); firsts.add(o.order[0]); assert.ok(SCENES[o.order[4]].fits.includes(SCENES[o.order[0]].gives)); }
+  assert.equal(firsts.size, 6, 'all six openings come up');
+});
+
+test('the courier\'s chapel: climb for the Rib (Easy with a rope), then face the hound or slip away; bandages and aqua vitae open their own choices', () => {
+  const C1 = ADVS.courier;
+  let s = S.start(withGear('fighter', ['rope', 'bandages', 'spirits']), C1, fixed([20]));
+  assert.ok(!doLabel(s, /Climb/), 'not before he has spoken'); S.act(s, C1, 'do lucan', fixed([20]));
+  const tend = doLabel(s, /Bind Brother Lucan/); assert.ok(tend && tend.useful, 'the bandages are useful here');
+  S.act(s, C1, 'do tend', fixed([20, 50])); assert.ok(!s.hero.gear.some((g) => g.id === 'bandages'), 'the bandages are used up');
+  S.act(s, C1, 'do spirits', fixed([20])); assert.equal(s.flags.dogwise, true);
+  for (let i = 0; i < 6 && !s.flags.climbed; i++) S.act(s, C1, 'do climb', fixed([20]));
+  assert.equal(s.flags.climbed, true); assert.match(s.log.map((l) => l.t).join(' '), /Easy/, 'the rope makes the climb Easy');
+  S.act(s, C1, 'go up', fixed([20])); S.act(s, C1, 'do box', fixed([20])); assert.equal(s.flags.relic, true, 'the charge is the Rib, as at the priory');
+  S.act(s, C1, 'go down', fixed([20])); S.act(s, C1, 'do door', fixed([20])); assert.equal(s.fight.foe, 'hound'); assert.ok(s.fight.easy >= 1, 'Brother Lucan told you how it comes');
+  s = S.start(withGear('scout', []), C1, fixed([20])); S.act(s, C1, 'do lucan', fixed([20])); s.flags.climbed = true; s.flags.box = true;
+  S.act(s, C1, 'do window', fixed([20])); assert.equal(s.over, 'won', 'slipped out unheard');
+  s = S.start(withGear('scout', []), C1, fixed([2])); S.act(s, C1, 'do lucan', fixed([2])); for (let i = 0; i < 3 && !s.fight; i++) S.act(s, C1, 'do climb', fixed([2]));
+  assert.equal(s.fight && s.fight.foe, 'hound', 'three loud failures and it comes in through the vestry');
+});
+
+test('the house of the Seventh Bell: the bolted cell opens to force, a crowbar, the Open tag or a hospice key ring; her letters make the last fight\'s first attack Easy', () => {
+  const V = ADVS.convent;
+  let s = S.start(withGear('fighter', ['hospicekeys']), V, fixed([20]));
+  S.act(s, V, 'do abbess', fixed([20])); assert.equal(s.flags.missing, true); assert.equal(s.flags.convent, true);
+  S.act(s, V, 'go up', fixed([20])); const keys = doLabel(s, /hospice key ring/); assert.ok(keys && keys.useful);
+  S.act(s, V, 'do keys', fixed([20])); assert.equal(s.flags.opened, true);
+  S.act(s, V, 'go west', fixed([20])); S.act(s, V, 'do letters', fixed([20])); assert.equal(s.flags.tracks, true);
+  S.act(s, V, 'do follow', fixed([20])); assert.equal(s.over, 'won');
+  s = S.start(withGear('fighter', []), V, fixed([2])); S.act(s, V, 'do abbess', fixed([2])); S.act(s, V, 'go up', fixed([2]));
+  for (let i = 0; i < 3; i++) S.act(s, V, 'do force', fixed([2]));
+  assert.equal(s.flags.rung, true, 'three failed tries and the night bell rings'); assert.ok(s.horror >= 1);
+  /* the mere knows where she came from */
+  const M = ADVS.mere, h = withGear('fighter', []);
+  s = S.start(h, M, fixed([20]), Object.assign(lastScene('mere', 'missing'), { story: { convent: true } })); s.flags.beat_widow = true; s.flags.lost = true; s.flags.dived = true;
+  S.act(s, M, 'go north', fixed([20])); S.act(s, M, 'do turn', fixed([20])); assert.match(s.log.at(-1).t, /Vesperholt/);
+});
+
+test('the deacon\'s lodging: his notes, his strongbox, and chalk that shuts the Mutterer in before you face it', () => {
+  const L = ADVS.lodging;
+  let s = S.start(withGear('scholar', ['crowbar', 'chalk']), L, fixed([20]));
+  S.act(s, L, 'do clerk', fixed([20])); assert.equal(s.flags.warrant, true);
+  S.act(s, L, 'do desk', fixed([20])); assert.equal(s.flags.notes, true, 'his own rules tell you how he fights');
+  for (let i = 0; i < 6 && !s.flags.unlocked; i++) S.act(s, L, 'do prise', fixed([20]));
+  assert.equal(s.flags.unlocked, true);
+  S.act(s, L, 'go down', fixed([20])); const chalk = doLabel(s, /chalk/i); assert.ok(chalk && chalk.useful);
+  S.act(s, L, 'do chalk', fixed([20])); S.act(s, L, 'do face', fixed([20]));
+  assert.equal(s.fight.foe, 'mutterer'); assert.equal(s.fight.hp.cur, s.fight.hp.max - 4, 'the chalk has it thin');
+  const foe = L.foes.mutterer; assert.ok(foe.caster && foe.undead, 'Hush stops it, and holy water and oil work on it');
+});
+
+test('three more middle scenes: the plague gate has many ways in, the scriptorium fire can be fought or left, and the Grey Mother is met prepared or not', () => {
+  const P = ADVS.plaguegate;
+  for (const [gear, cmd] of [[['safepassage'], 'do papers'], [['plaguemask'], 'do mask'], [['purse'], 'do bribe']]) {
+    const s = S.start(withGear('fighter', gear), P, fixed([2]));
+    const c = S.choices(s).find((x) => x.cmd === cmd); assert.ok(c && c.useful, cmd + ' is offered and marked useful');
+    S.act(s, P, cmd, fixed([2])); assert.equal(s.room, 'yard', cmd + ' gets you in, without a roll');
+  }
+  let s = S.start(withGear('fighter', ['purse']), P, fixed([2])); S.act(s, P, 'do bribe', fixed([2])); assert.ok(!s.hero.gear.some((g) => g.id === 'purse'), 'the purse is spent');
+  s = S.start(withGear('fighter', ['tinder']), P, fixed([20])); S.act(s, P, 'do talk', fixed([20])); assert.equal(s.room, 'yard');
+  S.act(s, P, 'do burn', fixed([20])); assert.equal(s.flags.burned, true); assert.ok(!s.fight); S.act(s, P, 'do go', fixed([20])); assert.equal(s.over, 'won');
+  s = S.start(withGear('fighter', []), P, fixed([20])); S.act(s, P, 'do talk', fixed([20])); S.act(s, P, 'do heap', fixed([20])); assert.equal(s.fight.foe, 'king'); assert.ok(P.foes.king.beast);
+  /* the scriptorium: halfway through the fire the copyist gets up; snuffing him costs him his attack */
+  const W = ADVS.scriptorium;
+  s = S.start(withGear('fighter', ['waterskins']), W, fixed([20, 6]));
+  for (let i = 0; i < 4 && !s.fight; i++) S.act(s, W, 'do water', fixed([20, 6]));
+  assert.equal(s.fight && s.fight.foe, 'copyist'); assert.ok(W.foes.copyist.flame);
+  s = S.start(withGear('fighter', []), W, fixed([2])); S.act(s, W, 'do leave', fixed([2])); assert.equal(s.over, 'won', 'you may walk on by');
+  /* the fold: wolfsbane, a fire and a mended wall each tell in the fight */
+  const F = ADVS.fold;
+  s = S.start(withGear('fighter', ['wolfsbane', 'tinder']), F, fixed([20]));
+  S.act(s, F, 'do jorun', fixed([20])); S.act(s, F, 'do bane', fixed([20])); S.act(s, F, 'do fire', fixed([20]));
+  for (let i = 0; i < 4 && !s.flags.mended && !s.fight; i++) S.act(s, F, 'do pile', fixed([20]));
+  for (let i = 0; i < 8 && !s.fight; i++) S.act(s, F, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf'); assert.equal(s.fight.hp.cur, s.fight.hp.max - 4, 'the wolfsbane caught her'); assert.ok(s.fight.easy >= 2, 'the wall and the fire');
+});
+
+test('more outcomes: every last place has more than one ending, each named, and the end card and Chronicle say which one', () => {
+  require('../site/solo/art.js'); const ART = globalThis.SacramentSoloArt;
+  for (const id of ['shrine', 'mere', 'barrow']) assert.ok(Object.keys(SCENES[id].endings).length >= 3, id + ' has three endings or more');
+  const end = (id, charge, setup, cmds, roll) => {
+    const s = S.start(withGear('fighter', setup.gear || []), SCENES[id], fixed([roll || 20]), lastScene(id, charge)); Object.assign(s.flags, setup.flags || {});
+    for (const c of cmds) S.act(s, SCENES[id], c, fixed([roll || 20]));
+    return s;
+  };
+  /* the shrine: the line mended, or not, or the hag bought off with the salt pouch */
+  let s = end('shrine', 'relic', { flags: { beat_hag: true, mended: true } }, ['go up', 'do set']); assert.equal(s.over, 'won'); assert.equal(S.summary(s).ending, 'The boundary made whole');
+  s = end('shrine', 'relic', { flags: { beat_hag: true } }, ['go up', 'do set']); assert.equal(S.summary(s).ending, 'The Rib in the niche, the line still broken');
+  s = end('shrine', 'relic', { gear: ['saltpouch'] }, ['do feed']); assert.equal(s.flags.fed, true); assert.ok(!s.fight); assert.ok(!s.hero.gear.some((g) => g.id === 'saltpouch'));
+  S.act(s, SCENES.shrine, 'go up', fixed([20])); assert.ok(!s.fight, 'she has gone over the boundary'); S.act(s, SCENES.shrine, 'do set', fixed([20])); assert.equal(S.summary(s).ending, 'The Salt Hag fed and gone');
+  assert.ok(S.summary(s).used.includes(CORE.item('saltpouch').name), 'the pouch was put to use: ' + S.summary(s).used.join(', '));
+  s = end('shrine', 'relic', { gear: ['saltpouch'] }, ['do feed'], 2); assert.equal(s.fight && s.fight.foe, 'hag', 'a failed check: she is still hungry');
+  /* the mere: led out, pulled from the water on a rope, or home alone */
+  s = end('mere', 'missing', { flags: { beat_widow: true } }, ['go north', 'do lead']); assert.equal(S.summary(s).ending, 'Sister Ignatia led home');
+  s = end('mere', 'missing', { gear: ['rope'], flags: { beat_widow: true, lost: true } }, ['go north', 'do dive']); assert.equal(S.summary(s).ending, 'Sister Ignatia pulled from the water');
+  s = end('mere', 'missing', { flags: { beat_widow: true, lost: true } }, ['go north', 'do dive'], 2); assert.ok(!s.over && s.flags.dived, 'one try only'); S.act(s, SCENES.mere, 'do turn', fixed([2])); assert.equal(S.summary(s).ending, 'Home alone');
+  /* the barrow: the book burned, carried back, or read; the deacon brought in */
+  for (const [cmd, name] of [['do burn', 'The book burned'], ['do carry', 'The book brought back'], ['do read', 'The last page read']]) {
+    s = end('barrow', 'warrant', { flags: { beat_deacon: true } }, [cmd]); assert.equal(s.over, 'won'); assert.equal(S.summary(s).ending, name);
+  }
+  assert.ok(s.horror >= 3, 'reading the page raises the Horror');
+  s = end('barrow', 'warrant', {}, ['do call', 'do lead']); assert.equal(S.summary(s).ending, 'The deacon brought in');
+  assert.match(ART.endCard(S.summary(s), s, ''), /Ending: The deacon brought in/);
+  /* a road that does not come home has no ending, and the deed counts different endings */
+  s = end('barrow', 'warrant', {}, []); s.over = 'dead'; assert.equal(S.summary(s).ending, '');
+  require('../site/solo/deeds.js'); const DD = globalThis.SacramentSoloDeeds, w = { friends: [], finales: [], places: [] };
+  const roads = ['a', 'b', 'c', 'd', 'e'].map((x) => ({ hero: 'H', end: 'won', ending: x }));
+  assert.ok(DD.earned(roads, w).includes('endings')); assert.ok(!DD.earned(roads.slice(1), w).includes('endings'));
+});
+
+test('a choice that uses a carried item is marked useful and counted as put to use', () => {
+  const V = ADVS.convent, run = { campaign: 'pilgrim-road', title: 'The Pilgrim Road', order: ['convent', 'ford', 'mere'], spare: [], at: 0, charge: 'missing', story: {}, met: [] };
+  const s = S.start(withGear('fighter', ['crowbar']), V, fixed([20]), run);
+  S.act(s, V, 'do abbess', fixed([20])); S.act(s, V, 'go up', fixed([20])); S.act(s, V, 'do force', fixed([20, 6]));
+  assert.ok(S.summary(s).used.includes('Wayshrine Crowbar'), S.summary(s).used.join(', '));
 });
