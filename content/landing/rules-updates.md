@@ -16,6 +16,7 @@ Corrections to text we published. These pages were written before the Horror cha
 - **The Guest at Greave, "Blood on snow".** It said a hero's natural 1 on the blood test adds 1 Horror. The test is a plain WIS check, so a natural 1 still smears the reading but adds no Horror. The online adventure and its PDFs are corrected.
 - **Player guide, "The shared Horror".** It said the table never applies extra damage when the Horror is full. Since 1 November it does: see "pay in blood" below.
 
+- **Print-and-play kit (PDF), updated 10 November 2026.** It had no paths, no way to grow stronger, no Break away and no darkness rule. The quick reference now has all four, and the kit's character sheet has a Path line and boxes for Marks and Advances taken. The story-spell tags are on the rules cheat sheet, not in the kit.
 - **Player cheat sheet (PDF), replaced 8 November 2026.** It did not have Break away, the story-spell tags, darkness or growing stronger. It is now the three-page rules cheat sheet, and the old download links lead to it. The print-and-play kit's blank character sheet has no Marks box: use the new blank hero sheet instead.
 
 ## Clarifications
@@ -26,6 +27,7 @@ Questions the current text left open. The rules have not changed; these say how 
 - **Paying in blood can drop a hero.** The d4s come off HP like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A hero already at 0 cannot act, so cannot pay.
 - **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **Seven relics now name their check (8 November 2026).** The Bone Bell (CHA), Censer of Ash (WIS), Widow's Listening Veil (WIS), Ward Medal of Saint Ursel (WIS), Vigil Coal (INT), Rod of the Ash Procession (INT) and Mourning Nail (WIS) always rolled that check at the table and in the solo game, but their words did not say which. They now read "make a … check. On a success…", like every other relic. Nothing about how they play has changed.
+- **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
 ## 8 November 2026, last: plain finds work like their twins

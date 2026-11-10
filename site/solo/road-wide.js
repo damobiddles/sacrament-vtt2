@@ -400,7 +400,7 @@
               api.flag('helped', true); api.say('You hold the lamp and the basin while she works, and do not look at what she is doing.');
               var c = api.check('CON', { what: 'Keeping your stomach' });
               if (c.success) { api.say('"You will do," says Mistress Dray, and gives you what a physician can spare.', 'npc'); api.give('physician', 'Mistress Dray gives you'); }
-              else { var n = api.die(4); api.hurt(n, 'You breathe the yard in, and it sits in your chest like a stone (d4 ' + n + ')'); }
+              else { var n = api.die(4); api.hurt(n, 'You breathe the yard in, and it sits in your chest like a stone (d4 shows ' + n + ')'); }
             } },
           { id: 'go', label: 'Go out by the far gate', words: ['go', 'leave', 'far', 'gate', 'out'], when: function (api) { return (api.flag('beat_king') || api.flag('burned')) && !api.s.fight; },
             run: function (api) { api.end('won', 'Old Theodric\'s brother keeps the far gate, and he lets you out without a word, and makes the sign against plague at your back.'); } }
@@ -437,7 +437,7 @@
     timers: {
       roof: { name: 'The roof', room: 'scriptorium', max: 4, tick: 'fail',
         text: 'The fire is climbing toward the roof beams. It loses 1 each failed try at the fire. At 0 the roof catches, and every try at the fire is Hard.',
-        out: function (api) { api.flag('roof', true); var n = api.die(4); api.hurt(n, 'The roof catches with a roar and burning thatch comes down on you (d4 ' + n + ')'); api.say('From now on every try at the fire is Hard.', 'note'); } }
+        out: function (api) { api.flag('roof', true); var n = api.die(4); api.hurt(n, 'The roof catches with a roar and burning thatch comes down on you (d4 shows ' + n + ')'); api.say('From now on every try at the fire is Hard.', 'note'); } }
     },
     rooms: {
       scriptorium: {

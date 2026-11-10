@@ -80,7 +80,7 @@ On [Play in person](/play-in-person/), both in A4 and US Letter:
 
 - **A clearer menu.** Eight items: The game, The setting, Start here, Rules, Play online, Play solo, Play in person and Resources. News and Feedback live at the bottom of every page.
 - **Play online** is the one place to join a game, run one, open My heroes or go back to your tables.
-- **The rules pages share one row of tabs:** Rules, Player guide, GM guide and Rules updates.
+- **The rules pages share one row of tabs:** Rules, Paths, Player guide, GM guide and Updates and errata.
 - **A top-to-bottom check** of the site, the table, the solo game and the loot, so they all say the same thing. The fixes are on the updates page.
 
 ## A new adventure

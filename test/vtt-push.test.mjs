@@ -17,7 +17,7 @@ test('PUSH: a natural 1 on a hero\'s d20 raises the Horror by 1, and the feed sa
   const { ann, thorne } = await setup([d20(1)]);
   const r = await roll(ann, thorne); assert.equal(r.status, 200);
   assert.equal(r.body.state.horror.cur, 1); assert.deepEqual(r.body.result.horror, { cur: 1, applied: 1, crossed: [] });
-  assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1\)\./);
+  assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1 of 21\)\./);
 });
 
 test('PUSH: a natural 1 typed in from a physical die counts too; any other failure adds nothing by itself', async () => {
@@ -31,7 +31,7 @@ test('PUSH: a natural 1 on an item\'s check adds its own point beside the item\'
   await t.gm.cmd({ type: 'sheet', charId: thorne.id, op: { op: 'add', id: 'embers' } });
   const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0, spellId: 'ember' }); assert.equal(r.status, 200);
   assert.equal(r.body.state.horror.cur, 2, '1 for the spell, 1 for the natural 1');
-  assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1\)\..*The Horror rises 1 \(now 2\)/);
+  assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1 of 21\)\..*The Horror rises 1 \(now 2 of 21\)/);
 });
 
 test('PUSH: a natural 1 on a plain check (not an attack, not a spell) does not raise the Horror (the owner\'s rule, 2026-11-01)', async () => {
@@ -46,7 +46,7 @@ test('PUSH: a natural 1 on a pushed second action raises the Horror even when th
   const r1 = await roll(ann, thorne); assert.equal((await push(ann, last(r1).id)).body.state.horror.cur, 1);
   const r2 = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX' }); assert.equal(last(r2).fromPush, true);
   assert.equal(r2.body.state.horror.cur, 2, '1 for the push, 1 for the natural 1');
-  assert.match(feed(r2.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 2\)\./);
+  assert.match(feed(r2.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 2 of 21\)\./);
 });
 
 test('PUSH: a monster\'s natural 1 does not raise the Horror', async () => {
@@ -59,7 +59,7 @@ test('PUSH: after a failed attack the hero is offered a push; it raises the Horr
   const { t, ann, thorne } = await setup([d20(2), d20(15)]);
   const r1 = await roll(ann, thorne); assert.equal(last(r1).canPush, true);
   const p = await push(ann, last(r1).id); assert.equal(p.status, 200);
-  assert.equal(p.body.state.horror.cur, 1); assert.match(feed(p.body.state), /Thorne pushes for a second action\. The Horror rises 1 \(now 1\)\./);
+  assert.equal(p.body.state.horror.cur, 1); assert.match(feed(p.body.state), /Thorne pushes for a second action\. The Horror rises 1 \(now 1 of 21\)\./);
   assert.equal(last(p).pushed, true); assert.equal(last(p).canPush, false, 'pushed once, no more');
   assert.equal((await push(ann, last(r1).id)).status, 400, 'a roll is pushed once');
   const r2 = await roll(ann, thorne); assert.equal(last(r2).fromPush, true); assert.equal(last(r2).check.success, true);

@@ -511,7 +511,7 @@
                 api.flag('pulled', true);
                 api.say('Your hand finds wool, then an arm. You come up with her, both of you coughing black water, and drag her up the bank. She is breathing. She looks at you as if she has been a long way away.', 'npc');
                 api.end('won', 'You carry Sister Ignatia back over the boundary stones on your back. She will not speak of the mere, and in the spring she takes the veil again. This is the end of the run.', 'pulled');
-              } else { var n = api.die(6); api.hurt(n, 'The cold and the weed have you before you find her, and you only just find the bank again (d6 ' + n + ')'); api.horror(1, 'Something under the water held your ankle a moment, and let go.'); }
+              } else { var n = api.die(6); api.hurt(n, 'The cold and the weed have you before you find her, and you only just find the bank again (d6 shows ' + n + ')'); api.horror(1, 'Something under the water held your ankle a moment, and let go.'); }
             } },
           { id: 'turn', label: 'Turn back for the boundary', words: ['turn', 'back', 'leave', 'go'], when: function (api) { return api.flag('beat_widow') && api.flag('lost'); },
             run: function (api) { api.end('won', api.story('convent') ? 'You walk back alone over the boundary stones. At Vesperholt you will have to tell Mother Cordula, and the sisters, and her mother\'s grave. This is the end of the run.' : 'You walk back alone over the boundary stones. In Grimsby Fold you will have to tell Hob Sallow, and her order, and her mother\'s grave. This is the end of the run.', 'alone'); } }

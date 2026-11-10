@@ -762,7 +762,7 @@ test('spells and items that matter: a useful one is marked, the foe card says wh
 
 test('deeds and the hero record come from the Chronicle, and a road earns only what is new', () => {
   require('../site/solo/deeds.js');
-  require('../site/solo/deeds.js'); const DD = globalThis.SacramentSoloDeeds, w = { friends: ['a', 'b'], finales: ['shrine', 'mere', 'barrow'], places: ['priory', 'shrine', 'mere', 'barrow'] };
+  const DD = globalThis.SacramentSoloDeeds, w = { friends: ['a', 'b'], finales: ['shrine', 'mere', 'barrow'], places: ['priory', 'shrine', 'mere', 'barrow'] };
   const e = (o) => Object.assign({ hero: 'Ada', end: 'won', peak: 3, places: [], beaten: [], met: [], used: [], escapes: 0 }, o);
   assert.deepEqual(DD.earned([], w), []);
   let l = [e({ end: 'dead', peak: 9, places: ['priory'] })];
@@ -916,6 +916,20 @@ test('every relic does something in solo: damage, healing, a tag, or effects fro
     const fx = CORE.effectsOf(r);
     assert.ok(r.cat || CORE.healingOf(r) || (r.tags && r.tags.length) || fx.any || ['candle'].includes(r.id), r.name + ' has nothing the solo game can do with it');
   }
+});
+
+/* Weekly audit 2026-11-09: the solo story names dice in the table's own words ("d4 shows 3"), as the table's Activity does, not "(d4 3)". */
+test('the solo story says dice the way the table does: "d4 shows 3"', () => {
+  const { s } = withRelic('chain', [3]); assert.ok(s.fight);
+  S.act(s, A, S.choices(s, A).find((c) => /Penitent's Chain/.test(c.label)).cmd, fixed([3, 1]));
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([20, 1]));
+  for (let i = 0; i < 6 && s.fight && !/\(d\d+ shows 2\)/.test(s.log.map((l) => l.t).join('\n')); i++) { const next = S.choices(s, A).find((c) => c.cmd === 'damage' || c.cmd === 'foe'); if (!next) break; S.act(s, A, next.cmd, fixed([20, 2])); }
+  const text = s.log.map((l) => l.t).join('\n');
+  assert.match(text, /\(d\d+ shows 2\)/, 'a foe hit names its die: "(d6 shows 2)"');
+  assert.match(text, /bites \(d4 shows 3, nothing reduces it\)/);
+  assert.doesNotMatch(text, /\(d\d+ \d+[),;]/, 'no "(d6 4)" left in the story');
+  const engine = require('node:fs').readFileSync(new URL('../site/solo/engine.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(engine, /'d' \+ [\w.]+ \+ ' ' \+/, 'every die in the story goes through diceSay');
 });
 
 /* ---------- a wider road (owner, 2026-11-10: "more opening scenes ... more outcomes and more beginnings, and more opportunities to use some of the loot") ---------- */
