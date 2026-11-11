@@ -37,7 +37,7 @@
       el.className = 'die d' + size; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<svg viewBox="0 0 100 100">' + (SHAPES[size] || SHAPES[20]) + '</svg>';
       face.textContent = String(1 + Math.floor(Math.random() * size)); el.appendChild(face); g.appendChild(el);
       var t = setInterval(function () { face.textContent = String(1 + Math.floor(Math.random() * size)); }, 70); intervals.add(t);
-      later(function () { clearInterval(t); intervals.delete(t); face.textContent = String(n); el.classList.add('landed'); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
+      later(function () { clearInterval(t); intervals.delete(t); face.textContent = String(n); el.classList.add('landed'); if (api.onDie) api.onDie(size, n); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
     });
     h.appendChild(g); air++; if (own) mine++;
     later(function () { land(own); if (!persistent) later(function () { g.classList.add('gone'); later(function () { g.remove(); }, FADE); }, HOLD); }, SPIN + 150);
@@ -92,7 +92,7 @@
     show: show, clear: clear, action: action, sync: sync, resultId: function () { return result && result.rollId; },
     busy: function () { return mine > 0; },
     rolling: function () { return air > 0; },
-    onLand: null,
+    onLand: null, onDie: null,
     off: off, setOff: setOff
   };
 })();

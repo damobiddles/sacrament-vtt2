@@ -103,10 +103,10 @@ function pendingWeaponCat(s, roll) {
   const it = SC.itemOf(g);
   return it && it.kind === 'weapon' && it.cat === 'weapons' ? 'weapons' : roll.cat;
 }
-/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, path, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
+/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, path, appearance, shaken by the Horror); only the hero's player and the GM get the vow, background, notes and gear. */
 function charView(c, whole, uses) {
   gearKeys(c);
-  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '' };
+  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '', shaken: !!c.shaken };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
   if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), checkBonus: int(c.checkBonus, 0), checkBonusFrom: c.checkBonusFrom || '', gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
   return o;

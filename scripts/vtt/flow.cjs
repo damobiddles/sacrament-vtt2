@@ -325,7 +325,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* an empty table: no heroes at all */
   const g3 = await mk('gm3'); await g3.goto(base + '/vtt/'); await g3.click('#makeSample'); await g3.click('#makeForm button[type=submit]'); await g3.waitForSelector('#app:not([hidden])'); const code3 = (await g3.evaluate(() => window.__vtt.state().code));
   const p3 = await mk('p3'); await p3.goto(base + '/vtt/?room=' + code3); await p3.fill('#joinName', 'Dee'); await p3.click('#joinForm button[type=submit]'); await p3.waitForSelector('#app:not([hidden])');
-  await p3.waitForFunction(() => /no heroes yet/i.test(document.getElementById('panel').innerText) && /Choose your hero in Play/i.test(document.getElementById('strip').innerText));
+  await p3.waitForFunction(() => /no heroes yet/i.test(document.getElementById('panel').innerText) && /Choose your hero on the right/i.test(document.getElementById('strip').innerText));
   check('on a table with no heroes at all the player is told there are none yet (and not that every hero has a player)', !/Every hero already has a player/i.test(await p3.innerText('#panel')));
   /* the roll hint and the disclosure marks, on the main table */
   await A.click('[data-do=tool][data-tool=select]'); await A.keyboard.press('Escape'); await A.evaluate(() => { window.__vtt.ui.hintSeen = false; }); await A.click('#cards .c[data-id="' + ghoul.id + '"]');   /* the instruction shows until the first roll; this player has rolled, so it is switched back on */ await A.waitForSelector('#panel .note.hint');
