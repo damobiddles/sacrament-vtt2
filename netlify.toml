@@ -24,20 +24,6 @@
   status = 301
   force = true
 
-# Anonymous play counts (site/analytics.js, Umami Cloud). The counting script and its sends go through this site's own address,
-# so fewer ad blockers hide the visit. Netlify fetches from Umami on the visitor's behalf (status 200 = pass on, not redirect).
-[[redirects]]
-  from = "/stats/s.js"
-  to = "https://cloud.umami.is/script.js"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/stats/api/send"
-  to = "https://gateway.umami.is/api/send"
-  status = 200
-  force = true
-
 # The player cheat sheet became the rules cheat sheet (8 November 2026): printed links and the news post keep working.
 [[redirects]]
   from = "/downloads/players/sacrament-player-cheat-sheet-A4.pdf"

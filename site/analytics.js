@@ -89,10 +89,9 @@
   function load() {
     if (!live || root.document.querySelector('script[data-sac-stats]')) return;
     var s = root.document.createElement('script');
-    s.defer = true; s.src = '/stats/s.js'; s.dataset.sacStats = '1';
-    /* served from this site (netlify.toml passes it on to Umami), so fewer ad blockers hide the visit */
+    s.defer = true; s.src = 'https://cloud.umami.is/script.js'; s.dataset.sacStats = '1';
+    /* straight from Umami, so it sees the visitor's real country (passed on through this site, every visit looked like Netlify's server in Frankfurt; the owner chose this on 2026-11-09, accepting that ad blockers hide some visits) */
     s.setAttribute('data-website-id', WEBSITE_ID);
-    s.setAttribute('data-host-url', root.location.origin + '/stats');
     s.setAttribute('data-domains', LIVE_HOSTS.join(','));
     s.setAttribute('data-exclude-search', 'true');
     s.setAttribute('data-exclude-hash', 'true');

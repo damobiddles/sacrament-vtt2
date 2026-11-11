@@ -83,7 +83,7 @@
 
   /* ---------- the first screen ---------- */
   function showStart() {
-    state = null; D.clear(); document.body.classList.remove('playing'); statClock(false);
+    state = null; D.clear(); tallyClear(); document.body.classList.remove('playing'); statClock(false);
     $('start').hidden = false; $('game').hidden = true; $('heroBtn').hidden = true; $('menuBtn').hidden = true;
     $('blurb').textContent = CAMP.blurb;
     var saved = load(), resume = $('resume'); resume.textContent = '';
@@ -135,7 +135,7 @@
   $('takeHero').addEventListener('click', function () { begin(T.generate($('pathPick').value)); });
 
   function begin(hero) {
-    D.clear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save();
+    D.clear(); tallyClear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save();
     count('solo-start', { path: hero.path || '', hard: !!state.run.hard, scene: state.adventure });
     showGame(true);
   }
@@ -284,7 +284,7 @@
   function waiting(text) { var p = document.createElement('p'); p.className = 'waiting'; p.setAttribute('role', 'status'); p.textContent = text; return p; }
   function foeSoon() {
     if (foeTimer) return;
-    var wait = D.off() || reduceMotion() ? 700 : 1700;
+    var wait = Math.max(D.off() || reduceMotion() ? 700 : 1700, afterTally() + 1000);   /* the foe waits until your total has been seen */
     foeTimer = setTimeout(function go() {
       if (document.querySelector('dialog[open]') || document.hidden) { foeTimer = setTimeout(go, 500); return; }   /* wait while the sheet or a card is open */
       foeTimer = 0; if (state && state.fight && state.fight.phase === 'foe' && !state.over) run('foe');
@@ -375,11 +375,11 @@
     frame.classList.remove('hit', 'good'); void frame.offsetWidth;
     var spot = ART.spot(o.place), foeLoss = o.foe != null ? o.foe - (state.fight ? state.fight.hp.cur : 0) : 0, hpLoss = o.hp - state.hp.cur;
     if (foeLoss > 0) {
-      frame.classList.add('good'); float('-' + foeLoss, (spot[0] + 40 * spot[2]) / 3.2, Math.max(8, spot[1] - 6) / 1.92, 'dmg');
+      frame.classList.add('good'); var fx0 = (spot[0] + 40 * spot[2]) / 3.2, fy0 = Math.max(8, spot[1] - 6) / 1.92; setTimeout(function () { float('-' + foeLoss, fx0, fy0, 'dmg'); }, afterTally());
       var foe = document.querySelector('#art .who.foe'); if (foe && !o.slain) { foe.classList.remove('flinch'); void foe.getBoundingClientRect(); foe.classList.add('flinch'); }
       sfx(o.fresh.some(function (l) { return l.outcome && l.outcome.critical; }) || /natural 20/i.test(o.fresh.map(function (l) { return l.t; }).join(' ')) ? 'crit' : 'hit');
     } else if (last && !last.outcome.success && !last.foeAttack) sfx('miss');
-    if (hpLoss > 0) { frame.classList.add('hit'); float('-' + hpLoss, 26, 48, 'hurt'); buzz(70); setTimeout(function () { sfx('hurt'); }, foeLoss > 0 ? 160 : 0); }
+    if (hpLoss > 0) { frame.classList.add('hit'); setTimeout(function () { float('-' + hpLoss, 26, 48, 'hurt'); }, afterTally()); buzz(70); setTimeout(function () { sfx('hurt'); }, foeLoss > 0 ? 160 : 0); }
     else if (last && last.foeAttack && !last.outcome.success) sfx('miss');
     if (state.horror > o.horror) {
       setTimeout(function () { sfx('horror'); }, 250);
@@ -509,14 +509,50 @@
     var checks = fresh.filter(function (l) { return l.outcome; });
     if (checks.length) {
       var last = checks[checks.length - 1], o = last.outcome;
-      D.show(last.dice || [], o.who, !last.foeAttack, o);
+      D.show(last.dice || [], o.who, !last.foeAttack, o); tally(last);
       if (o.pendingDamage && state.fight && state.fight.phase === 'damage' && !D.off() && !reduceMotion()) { cardDamage = true; D.action({ label: 'Roll damage', run: function () { run('damage'); } }); }
       else settle();
       return;
     }
     var plain = fresh.filter(function (l) { return l.dice; });
-    if (plain.length) { var p = plain[plain.length - 1]; D.show(p.dice, p.by === 'hero' ? state.hero.name : '', true); }
+    if (plain.length) { var p = plain[plain.length - 1]; D.show(p.dice, p.by === 'hero' ? state.hero.name : '', true); tally(p); }
   }
+
+  /* The numbers that rise off the dice, as in a video game (the owner's ask, 2026-11-10): once a die lands, each modifier floats up from it in turn
+     ("+3 STR", "+2 Crossbow"), then the total pops over the die ("15 against 13", "8 damage") and fades. Display only: the numbers are the ones the rules
+     worked out, and the words are in the story too. Without moving dice (dice off, or reduced motion) the same numbers appear and fade where the dice would be. */
+  var TALLY_STEP = 420, TALLY_HOLD = 1500, tallyTimers = [], tallyEnd = 0;
+  function tallyClear() { tallyTimers.forEach(clearTimeout); tallyTimers = []; document.querySelectorAll('.frame .tally').forEach(function (t) { t.remove(); }); }
+  function tally(entry) {
+    tallyClear(); tallyEnd = 0;
+    var list = entry && entry.tally; if (!list || !list.length) return;
+    var frame = document.querySelector('.frame'); if (!frame) return;
+    var moving = !D.off() && !reduceMotion(), t = moving ? 950 : 0;
+    var later = function (fn, ms) { tallyTimers.push(setTimeout(fn, ms)); };
+    list.forEach(function (one) {
+      var at = t;
+      later(function () {
+        var box = frame.getBoundingClientRect(), dice = document.querySelectorAll('#dice .die'), die = dice[Math.min(one.at || 0, dice.length - 1)];
+        var r = die && die.offsetParent ? die.getBoundingClientRect() : (document.querySelector('#dice .reveal-result, #dice .dice-roll') || frame).getBoundingClientRect();
+        var x = r.left + r.width / 2 - box.left, y = die && die.offsetParent ? r.top + r.height / 2 - box.top : Math.min(r.top - box.top + 40, box.height / 2);
+        var t2 = document.createElement('div'); t2.className = 'tally'; t2.setAttribute('aria-hidden', 'true'); t2.style.left = x + 'px'; t2.style.top = y + 'px'; t2.style.setProperty('--half', (die && die.offsetParent ? r.width / 2 : 0) + 'px'); frame.appendChild(t2);
+        one.parts.forEach(function (p, k) {
+          later(function () { var c = document.createElement('span'); c.className = 'tally-part ' + (p.n < 0 ? 'minus' : 'plus'); c.textContent = (p.n < 0 ? '\u2212' + Math.abs(p.n) : '+' + p.n) + ' ' + p.t; c.style.setProperty('--k', k); t2.appendChild(c); }, k * TALLY_STEP);
+        });
+        later(function () {
+          var c = document.createElement('span'); c.className = 'tally-total ' + (one.good ? 'good' : 'bad');
+          var b = document.createElement('b'); b.textContent = one.total; c.appendChild(b);
+          if (one.word) { var w = document.createElement('small'); w.textContent = one.word; c.appendChild(w); }
+          t2.appendChild(c);
+        }, one.parts.length * TALLY_STEP);
+        later(function () { t2.classList.add('gone'); later(function () { t2.remove(); }, 400); }, one.parts.length * TALLY_STEP + TALLY_HOLD);
+      }, at);
+      t += one.parts.length * TALLY_STEP + (list.length > 1 ? TALLY_HOLD : 0);
+    });
+    tallyEnd = Date.now() + t + 200;
+  }
+  /* how long until the totals have shown, so the number over the foe or the hero waits for them */
+  function afterTally() { return Math.max(0, tallyEnd - Date.now()); }
 
   /* In solo the result card blocks nothing (the buttons below still work and the foe moves by itself), so its button only closes it, and it fades
      by itself once it has been read. It waits while the pointer is on it or its button has focus. */

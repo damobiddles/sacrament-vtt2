@@ -55,7 +55,8 @@
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
         var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj });
-        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o) });
+        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o),
+          tally: [sum(c.mod, [[s.hero.stats[stat] || 0, stat], [o.bonus || 0, o.item || 'bonus'], [boost, from]], c.total, 'against Target ' + c.target, c.success)] });
         if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
         if (shaken) api.say('You were shaken: that roll was Hard.', 'note');
         return c;
@@ -100,6 +101,18 @@
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
       note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
   }
+  /* What a roll adds up to, for the numbers that rise off the die on screen (display only: every number here is one the rules already worked out).
+     A part is [amount, what it is]; parts of 0 are left out, and if the parts do not add up to the rules' modifier (it is capped) the modifier is shown whole. */
+  function sum(mod, parts, total, word, good) {
+    parts = parts.filter(function (x) { return x[0]; }).map(function (x) { return { n: x[0], t: x[1] }; });
+    if (parts.reduce(function (a, x) { return a + x.n; }, 0) !== mod) parts = mod ? [{ n: mod, t: 'bonus' }] : [];
+    return { parts: parts, total: total, word: word, good: !!good };
+  }
+  function effortTally(e, word) {
+    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'heavy weapon' }];
+    if (e.critical) parts.push({ n: e.critical.rolled, t: 'critical d' + e.critical.die }, { n: e.critical.bonus, t: 'Ultimate' });
+    return { parts: parts.filter(function (x) { return x.n; }), total: e.total, word: word, good: true };
+  }
   /* Why a natural 1 did or did not raise the Horror, in the Rules page's terms, so the player learns the rule by seeing it (the owner's ask, 2026-11-07). */
   function nat1Note(o) {
     return R.nat1Tempts({ attack: !!o.attack, spell: !!o.spell, pushed: !!o.pushed }) ? 'Natural 1 on ' + (o.pushed ? 'a pushed action' : o.spell ? 'a spell' : 'an attack') + ': +' + R.HORROR.nat1 + ' Horror'
@@ -138,7 +151,7 @@
     if (o.half) { add = Math.ceil((ob.max - have) / 2); words = 'you find the way of it: half of what is left, ' + add + '.'; }
     else { var cat = o.cat || ob.cat || 'basic', e = R.effort({ cat: cat, bonus: s.hero.effort[cat] || 0, rolled: api.die(R.DEFAULT_DICE[cat]) }); add = e.total; dice = [{ die: e.die, n: e.rolled }]; words = R.sayEffort(e, 'Effort'); }
     s.bars[id] = Math.min(ob.max, have + add);
-    api.say(ob.name + ': ' + words + ' Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll', dice ? { dice: dice, by: 'hero' } : null);
+    api.say(ob.name + ': ' + words + ' Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll', dice ? { dice: dice, by: 'hero', tally: [effortTally(e, 'Effort')] } : null);
     if (s.bars[id] >= ob.max) clearObstacle(api, id);
     else if (ob.progress) ob.progress(api);
     return c;
@@ -458,7 +471,7 @@
     if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
     if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
     f.pending = null;
-    api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero' });
+    api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero', tally: [effortTally(e, 'damage')] });
     damageFoe(api, e.total);
     if (s.fight) s.fight.phase = 'foe';
   }
@@ -494,7 +507,7 @@
     if (!chk || chk.success) {
       var n = api.die(h.die), amount = n, words = diceSay(1, h.die, [n]);
       if (chk && chk.offerUltimate) { var c = api.die(R.DEFAULT_DICE.ultimate); amount += c; words += '; ' + diceSay(1, R.DEFAULT_DICE.ultimate, [c]); }
-      api.say('Healing: ' + words + '.', 'roll', chk ? null : { dice: [{ die: h.die, n: n }] }); api.heal(amount, 'You are mended');
+      api.say('Healing: ' + words + '.', 'roll', chk ? null : { dice: [{ die: h.die, n: n }], tally: [{ parts: [], total: amount, word: 'HP back', good: true }] }); api.heal(amount, 'You are mended');
       if (s.dying && s.hp.cur > 0) { s.dying = null; api.say('You are on your feet again.', 'win'); }
       if (h.kind) s.healed[h.kind] = true;
     } else api.say('It does not take.', 'miss');
@@ -518,7 +531,8 @@
     var n = a.hit ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: size, n: n });
     var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
       d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
-    api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true });
+    var tally = [sum(a.mod, [[f.attack, 'attack'], [-dim, 'dazed']], a.total, 'against Defence ' + a.defence, !a.hit)]; if (a.hit) tally.push({ parts: [], total: n, word: 'damage', good: false, at: 1 });
+    api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true, tally: tally });
     if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (' + diceSay(1, size, [n]) + ')');
     if (s.fight && !s.over) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); }
   }
