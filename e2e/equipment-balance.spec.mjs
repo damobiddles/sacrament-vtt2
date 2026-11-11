@@ -12,7 +12,7 @@ test('the loot designer saves weapon and armour roles and fixes grimoires at thr
   await editor.locator('[data-lf=cat]').selectOption('weapons');
   await editor.locator('[data-lf=weaponStyle]').selectOption('heavy');
   await expect(editor.locator('[data-lf=slots]')).toHaveValue('2');
-  await expect(editor.locator('#ltPrev')).toContainText('+2 heavy damage');
+  await expect(editor.locator('#ltPrev')).toContainText('+2 damage, two hands');
   await expect(editor.locator('[data-lf=cat]')).toBeDisabled();
   await editor.locator('[data-lb=save]').click();
   await expect(editor.locator('#ltLib')).toContainText('Heavy equipment test');
@@ -72,7 +72,7 @@ test('a player must put away their shield before a heavy attack and sees the ext
   await ann.locator('#attackTarget').selectOption({label:'Pit Ghoul'}); await ann.locator('[data-do=confirmAttack]').click();await rollPrepared(ann);
   await expect(ann.locator('#feed li.success .tx')).toContainText('Success');
   await ann.locator('#strip [data-do=effort][data-cat=weapons]').click();
-  await expect(ann.locator('#feed')).toContainText('heavy weapon');
+  await expect(ann.locator('#feed')).toContainText('two hands');
   await expect.poll(async () => (await state(gm)).rolls.at(-1)?.effort?.weaponBonus).toBe(2);
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
 });
