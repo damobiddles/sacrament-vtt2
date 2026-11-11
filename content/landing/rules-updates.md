@@ -31,6 +31,14 @@ Questions the current text left open. The rules have not changed; these say how 
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 11 November 2026, last: shorter rules, and no tags to learn
+
+**Designer's decision.** The solo game had pushed some of its own machinery into the rules everyone learns. This tidies that up. **No rule or number changes.**
+
+- The [Rules](/rules/) page is now the game alone, shorter, starting your turn with **Move and Act, in either order**.
+- What the online table and the solo game count and decide for you moved to a new page, [Online and solo](/rules/online-and-solo/). The solo game's own calls (falling alone, breaking away, marks) are there too.
+- **Tags, the Hinder and Stop results, and the "needs" notes are gone** from the Rules page and the hero sheet. A spell or relic does what its words say, and the GM decides the rest. The solo game still uses them quietly to work out what a story spell does there.
+
 ## 11 November 2026, later: ways through an obstacle
 
 **What changed.** How a hero gets past an obstacle now sets the Effort die and the price, and the GM rolls only when something presses.

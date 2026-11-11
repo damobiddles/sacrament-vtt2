@@ -126,7 +126,8 @@ test('the solo engine keeps no rules of its own: every number and roll comes fro
 });
 
 /* ---------- the owner's calls of 2026-11-07: solo's own rules are written in the shared rules, and solo follows them ---------- */
-const G = globalThis.SACRAMENT_GEAR, RULES = fs.readFileSync(new URL('../content/landing/rules.md', import.meta.url), 'utf8');
+// Owner decision 2026-11-11 (keep or pull back the solo game's rules): what the solo game does for you moved off the Rules page onto Online and solo.
+const G = globalThis.SACRAMENT_GEAR, RULES = fs.readFileSync(new URL('../content/landing/rules.md', import.meta.url), 'utf8'), SOLO_PAGE = fs.readFileSync(new URL('../content/landing/online-and-solo.md', import.meta.url), 'utf8');
 
 test('darkness: one rule in the lantern, the Light tag, the Rules page and the solo game (WIS checks to search or notice are Hard)', () => {
   assert.match(C.item('lantern').does, /every WIS check to search or notice is Hard/);
@@ -147,17 +148,17 @@ test('tallow candles: lighting one in a dark scene spends one of its three uses,
   assert.equal(S.sceneInfo(s, adv).dark, false); assert.equal(s.hero.gear[0].uses, 2);
 });
 
-test('Ward protects an ally: alone it has no use, in its own words and on the Rules page', () => {
+test('Ward protects an ally: alone it has no use, in its own words and on the Online and solo page', () => {
   for (const id of ['ward']) assert.match(G.spells.find((x) => x.id === id).does, /One ally/);
   assert.match(C.item('wardmedal').does, /\ban ally\b/i);
-  assert.match(RULES, /protect \*\*an ally\*\*, such as Ward, have no use alone/);
+  assert.match(SOLO_PAGE, /protect \*\*an ally\*\*, such as Ward, have no use alone/);
   const { s, adv } = soloGame(['seventhpenance']); S.act(s, adv, 'do fight', fixed([10]));
   const ward = choice(s, adv, /^Cast Ward/); assert.ok(ward && ward.idle, 'Ward shows "No use here"');
 });
 
-test('falling alone is written on the Rules page, and the solo game does exactly that', () => {
-  assert.match(RULES, /## Playing alone/);
-  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*3 rounds; crawl away free, or pay 1 Horror to act anyway[^\n]*1 HP[^\n]*Bandages cannot tend yourself/);
+test('falling alone is written on the Online and solo page, and the solo game does exactly that', () => {
+  assert.match(SOLO_PAGE, /## In the solo game/);
+  assert.match(SOLO_PAGE, /\*\*Falling alone\.\*\*[^\n]*3 rounds; crawl away free, or pay 1 Horror to act anyway[^\n]*1 HP[^\n]*Bandages cannot tend yourself/);
   assert.match(RULES, /dying for 3 rounds[^\n]*crawl away[^\n]*CON check, which costs nothing[^\n]*pay 1 Horror to act anyway/);
   const { s, adv } = dyingGame(['seventhpenance']);
   const ch = S.choices(s, adv), labels = ch.map((c) => c.label);

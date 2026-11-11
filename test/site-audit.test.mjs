@@ -69,7 +69,7 @@ test('news posts name the rules tabs as the site does (weekly audit 2026-11-09)'
 
 test('the footer links both adventures and the Paths page, and names the rules tabs as the tabs do (owner decision 2026-11-10)', () => {
   const nav = read('site/nav.js');
-  for (const link of ['<a href="/rules/paths/">Paths</a>', '<a href="/adventures/the-guest-at-greave/">The Guest at Greave</a>', '<a href="/adventures/the-rib-of-saint-hussey/">The Rib of Saint Hussey</a>', '<a href="/rules/updates/">Updates and errata</a>']) assert.ok(nav.includes(link), link);
+  for (const link of ['<a href="/rules/paths/">Paths</a>', '<a href="/rules/online-and-solo/">Online and solo</a>', '<a href="/adventures/the-guest-at-greave/">The Guest at Greave</a>', '<a href="/adventures/the-rib-of-saint-hussey/">The Rib of Saint Hussey</a>', '<a href="/rules/updates/">Updates and errata</a>']) assert.ok(nav.includes(link), link);
 });
 
 test('the print-and-play kit PDFs carry paths and growing stronger (owner decision 2026-11-10)', () => {

@@ -18,11 +18,15 @@ test('public rules text no longer says the table adds no extra damage at 21', ()
   assert.ok(!read('site/adventures/the-guest-at-greave/index.html').includes('adds its 1 Horror as usual'));
 });
 
-test('the Rules page lists every spell and item tag from the gear list, and the change has its entry', async () => {
-  await import('../site/sheet/gear.js'); const { tagTable } = await import('../scripts/lib/current-rules.mjs'), G = globalThis.SACRAMENT_GEAR;
-  assert.ok(read('content/landing/rules.md').includes('\n{{TAGS}}\n'), 'the Rules page draws its tag table from the gear list');
-  const html = tagTable(G);
-  for (const t of G.tags) { assert.ok(html.includes('data-tag="' + t.id + '"'), t.id); }
-  assert.ok(html.includes('Pillar of Ash'));
+// Owner decision 2026-11-11 (keep or pull back the solo game's rules): tags, Hinder and Stop, and "needs" notes leave what players read.
+// The solo game keeps them in the gear list to decide what a story spell or item does there.
+test('tags stay in the gear list for the solo game but no longer appear in the rules or on the hero sheet', async () => {
+  await import('../site/sheet/gear.js'); const G = globalThis.SACRAMENT_GEAR;
+  assert.ok(G.tags.length && G.spells.some((s) => s.tags), 'the solo game still reads tags from the gear list');
+  for (const f of ['content/landing/rules.md', 'content/landing/player-guide.md', 'content/landing/gm-guide.md']) {
+    const t = read(f); assert.ok(!t.includes('{{TAGS}}'), f); assert.doesNotMatch(t, /\bHinder\b|\btags?\b/i, f);
+  }
+  assert.doesNotMatch(read('site/sheet/sheet.js'), /tagText|tagLine/, 'the hero sheet shows no tag line');
+  assert.ok(read('content/landing/rules.md').includes('**A spell or relic does what its words say.**'));
   assert.ok(read('content/landing/rules-updates.md').includes('## 6 November 2026: story spells and items'));
 });

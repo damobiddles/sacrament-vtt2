@@ -2,6 +2,14 @@
 
 Moved here from `CLAUDE.md` (word for word) to keep that file short. These are the owner's dated decisions and the reasons behind how the table behaves. **Read the relevant entry before changing anything it mentions.** The hard rules that must never be broken are repeated in `CLAUDE.md` under "Standing rules from owner decisions".
 
+## Keep or pull back the solo game's rules (owner, 2026-11-11)
+
+The owner felt the solo game had pushed crunch into the table and paper game. He approved the write-up "Keep or pull back: the solo game's rules" (https://claude.ai/artifact/RAXqhzQwBnJxWcFjEoeNud, "This looks good"). The principle: **one set of rules, and solo plays a smaller slice of it.** Step 1 (words only, no rule or number changes):
+
+- `/rules/` is the core game only. What the online table and the solo game count or decide moved to `/rules/online-and-solo/` (new page, a Rules tab). The old "Playing alone" section moved there as "In the solo game".
+- **Tags, Hinder/Stop and `needs` leave what players read:** no tag table on the Rules page, no "When in doubt" line on the hero sheet. They stay in `gear.js` for the solo engine. Do not show them to players again without asking.
+- Still to come: a solo-only loot list (step 2), and simpler healing and overcasting after a table playtest (step 3).
+
 ## The Horror at the heart (owner, 2026-11-11)
 
 After a rules review for simplicity and fun, the owner approved one change set ("lets do all of this and go with your recommendations"), the same at the table, on paper and in solo. Plan: the Claude Doc "Sacrament rules: the Horror at the heart".

@@ -2,31 +2,37 @@
 title: Rules
 summary: The current Sacrament RPG rules, the same at the online table, around a real table and in the solo game.
 ---
-These are the **current Sacrament rules**. They are the same everywhere you play: on the Sacrament RPG Table, around a real table with dice and paper, and in the [solo game](/solo/). The [Player guide](/player-guide/) explains your character and first turn; the [GM guide](/gm-guide/) explains running the table. For a first session, see [Start here](/how-to-play/). What has changed recently, and corrections to earlier text, are on [Rules updates and errata](/rules/updates/). Playing on paper? The numbers are the same; [Play in person](/play-in-person/) has the printable rules cheat sheet, a blank hero sheet and more.
+These are the **current Sacrament rules**, the same wherever you play: on the Sacrament RPG Table, around a real table with dice and paper, and in the [solo game](/solo/). They are the whole game; what the online table and the solo game do for you is on [Online and solo](/rules/online-and-solo/). The [Player guide](/player-guide/) walks you through your hero and first turn, and the [GM guide](/gm-guide/) through running a session. For a first session, see [Start here](/how-to-play/). Recent changes and corrections are on [Rules updates and errata](/rules/updates/). Playing on paper? [Play in person](/play-in-person/) has the printable cheat sheet and a blank hero sheet.
 
 ## The numbers at the table
 
 {{RULE_VALUES}}
 
-The values above come from the VTT rules file used by the server. GMs may change Effort dice, enable automatic scene danger or switch off the natural-20 Ultimate option for their own table. Explain house rules before play.
+A GM may change these for their own table (different Effort dice, no Ultimate die, extra scene danger). Say so before play.
 
 ## Checks and natural rolls
 
-Roll d20 and add the relevant score. Meet or beat the Target to succeed. Easy and Hard change the Target, not the number of dice. The Target cannot fall below 1. A single check modifier is capped at +10.
+Roll d20 and add the score that fits. Meet or beat the Target to succeed. Easy and Hard move the Target, never the number of dice, and the Target never falls below 1.
 
-A hero's natural 1 adds 1 Horror only when they tempt it: on **magic** (any spell, healing spells included, or a relic or other item that costs Horror) or on a **pushed** second action of any kind. A natural 1 on anything else adds no Horror: an ordinary weapon attack, an ordinary check, bandages and other mundane items. **Hero success still depends on the total:** natural 1 and natural 20 do not override it. A successful natural 20 adds one plain **Ultimate die** (normally d12) to the normal damage or Effort roll when enabled. Ultimate is a die, not a bonus: no hero puts Effort points in it, and nothing is added to that d12. A two-handed weapon adds its +2 damage only once. Older pending rolls keep the rule they began with.
+**Success depends on the total**, for a hero's natural 1 and natural 20 alike. A natural 20 that succeeds adds one **Ultimate die** (d12) to the damage, Effort or healing; Ultimate is a die, not a bonus, so nothing is added to it. A hero's natural 1 adds 1 Horror only when they tempt it: on **magic** (any spell, or a relic or other item that costs Horror) or on a **pushed** action. A natural 1 on an ordinary attack, check, bandage or tool adds nothing.
 
-**Darkness.** Without a light, a WIS check to search or notice in a dark place is Hard (+3), as the Hooded Lantern says. Anything else the dark does is the GM's call.
+Monsters roll differently: their natural 1 always misses and their natural 20 always hits. Otherwise the monster's d20 plus its Attack bonus must meet the hero's Defence.
 
-Monster attacks are different: natural 1 always misses and natural 20 always hits. Otherwise the monster's d20 plus Attack bonus must meet the hero's Defence.
+**Darkness.** Without a light, a WIS check to search or notice in a dark place is Hard. Anything else the dark does is the GM's call.
 
-## A turn and an attack
+## Your turn
 
-Tell the GM what you do and agree whether a check is needed. Movement, action costs, positioning, reloads and special manoeuvres are adjudicated by the GM; the VTT does not count them for you. A Push grants another Action after a failed roll; it does not grant another Move or reload a crossbow.
+**Move and Act, in either order.** Tell the GM what you do; together you agree whether it needs a check. An action can be an attack, a spell, a check, helping someone, or anything else you can describe. How far you can move, reloads and special manoeuvres are the GM's call.
 
-Select an enemy or obstacle, then use a weapon or spell. Choose a target when asked. On success, roll damage or Effort; the VTT applies it to the named target automatically. Damage against HP reduces health; Effort against an obstacle fills its progress. Looking at a different card does not change the attack’s recorded target. Only the GM advances turns. Passing the last entry starts a new round and ticks running timers and dying countdowns once.
+On a successful attack, roll your Effort die for damage. On a successful check against an obstacle, roll Effort to fill its bar.
 
-**Obstacles.** Roll only when something presses. If nothing is lost by failing, or a hero's plan simply makes sense, it just happens. An obstacle gets an Effort bar only when the heroes are racing something, a timer or a foe; otherwise one check settles it. How a hero tackles it sets the Effort die and the price:
+**Push.** Any failed roll can be pushed, once, on your turn: an attack, a spell or a check. Add 1 Horror and act again. That second action cannot itself be pushed, and it gives you no extra Move.
+
+**Break away.** Instead of acting, make a DEX check to get clear of a foe. On a success it does not attack you as you go; on a failure you stay put. Where you can run to is the GM's call. It is a plain check: no Horror on a natural 1, and no Push.
+
+## Obstacles
+
+Roll only when something presses. If nothing is lost by failing, or a hero's plan simply makes sense, it just happens. An obstacle gets an Effort bar only when the heroes are racing something, a timer or a foe; otherwise one check settles it. How a hero tackles it sets the Effort die and the price:
 
 - **Bare hands or wits:** Basic d4. Slow, so the timer is the danger.
 - **A weapon or tool that fits:** Weapons d6, only if you carry one.
@@ -36,68 +42,48 @@ Select an enemy or obstacle, then use a weapon or spell. Choose a target when as
 
 Several heroes can work on the same bar in a round, adding their Effort together.
 
-**Push.** Any failed roll can be pushed: an attack, a spell, a check. Push adds 1 Horror and makes the next action the second action; that action cannot itself be pushed. Players can Push only during their own active turn, once. For an explicit exception, the GM selects the hero and presses **Allow this Push (+1 Horror)** beside their latest failed roll. This grants the extra action and charges Horror once; the extra action cannot be pushed. Without turn order, only this GM exception can grant a Push. A fresh round begins a new exchange; the VTT does not count all narrative Moves and Actions.
-
-**Break away.** On your turn, instead of acting, make a DEX check against the Target. On a success you get clear: the foe does not attack you as you go. On a failure you stay put and the foe attacks as usual. Where you can run to is the GM's call. Breaking away is a plain check, so its natural 1 adds no Horror, and it cannot be pushed.
-
 ## Distance and range
 
 {{RANGES}}
 
 ## Equipment
 
-Each item lists its slots. Only equipped weapons, armour, relics and grimoires work; supplies work from the pack. Wear one body armour, one helmet and one shield. Two-handed weapons require your shield to be packed. Ordinary weapons, including bows and crossbows, use Weapons d6; guns use Guns d8. **Every two-handed weapon adds +2 damage**: heavy melee, reach weapons, bows, crossbows and long guns. Crossbows cost a Move to reload; bows can keep their Move. Reach/control weapons also keep their listed manoeuvres; the GM resolves those.
+Each item lists its slots. Only equipped weapons, armour, relics and grimoires work; supplies work from the pack. Wear one body armour, one helmet and one shield. A two-handed weapon needs your shield packed, and **every two-handed weapon adds +2 damage**: heavy weapons, reach weapons, bows, crossbows and long guns. Weapons, bows and crossbows roll Weapons d6. A crossbow takes a Move to reload; a bow does not.
 
-**Guns** are rare and unreliable: the hand cannon, the arquebus and the wheellock pistol, 5 in 100 on the Arms table. On a **natural 1 to 3 the powder fails** and the shot misses, whatever the total (an ordinary attack, so no Horror). Reloading takes a Move, and a shot is heard by everything in earshot. The first time a hero finds a gun, their player may move Effort points into Guns on the sheet.
+**Guns** are rare and unreliable: the hand cannon, the arquebus and the wheellock pistol, 5 in 100 on the Arms table. They roll Guns d8. On a **natural 1 to 3 the powder fails** and the shot misses, whatever the total. Reloading takes a Move, and everything in earshot hears the shot. The first time a hero finds a gun, they may move Effort points into Guns.
 
-Grimoires take **three slots** and each contains **three spells**. Read the spell's own range, effect and Horror cost. A book has no single range shared by all its spells. A hero may choose one starting grimoire; found books and relics are awarded by the GM. The current VTT limits carried Horror-tempting items to three, including relics, grimoires and supernatural curios. Packed items count too. This is broader than the older wording “three relics and grimoires”.
+A **grimoire** takes three slots and holds three spells; each spell lists its own range, effect and Horror cost. A hero may start with one grimoire. A hero can carry at most **three Horror-tempting things**: relics, grimoires and other uncanny finds, packed ones included.
 
-**Paths.** A hero may follow one of 20 **paths**, such as Knight, Scholar, Cutpurse or Witch, or none. Choose it on the character sheet. A path does two things. **Once a scene, a check that fits your path is Easy**: say so as you roll (the **Fits my path** button at the table), and the GM judges whether it fits; it is never an attack. In the solo game each path names one score for this (a Knight's STR, a Scholar's INT), and the first check on it in a scene is Easy. And **every relic belongs to a path**: a relic of **your own path costs 1 less Horror** each time you use it. Any hero can use any relic. See [Paths](/rules/paths/) for the full list.
+**Paths.** A hero may follow one of 20 [paths](/rules/paths/), such as Knight, Scholar, Cutpurse or Witch, or none. **Once a scene, a check that fits your path is Easy**; say so as you roll, and the GM judges whether it fits (never an attack). And **every relic belongs to a path**: a relic of your own path costs **1 less Horror** to use. Any hero can use any relic.
 
-## Story spells and items: when in doubt
+## Spells and relics
 
-Many spells and relics have no damage die: their words describe what happens, and the GM decides the rest (Pillar of Ash fills the room with ash; Hush takes a voice). Each one now carries one or two **tags** saying what it is good for, and each tag has a default effect. **The spell's or item's own words always come first.** Use the tag when the words leave it open and you want a quick answer. The solo game always uses it. Costs do not change: the same Horror, and the same check where the words ask for one.
-
-In a fight, a tag gives one of two results: **Hinder**, the foe's next attack rolls 3 less, or **Stop**, it loses its next attack. (Learn makes your next attack Easy instead, and Guard gives you +2 Defence.) Out of a fight, a tag says what kind of trouble the spell can answer: a fitting spell is one more way past an obstacle or a danger, as the GM judges: against an obstacle's bar it rolls Magic d10 (the solo game does this, or opens the obstacle outright where the words say so). A few spells say "needs a corpse close by" or "only against the undead". *The Last Verse* and *Its Real Name* have no tag: they stay the GM's call.
-
-{{TAGS}}
+**A spell or relic does what its words say.** Many have no damage die: Pillar of Ash fills a room with ash, and Hush takes a voice. The GM decides the rest, and calls for a roll only when failing would be interesting. The cost never changes: a spell costs its Horror even if its check fails.
 
 ## Healing, dying and rest
 
-Healing spells have no casting Horror cost. Their natural 1 can still add the separate natural-1 point. Healing relics use their own listed cost. Healing never exceeds maximum HP and cannot raise a dead hero.
+Healing spells add no casting Horror, though their natural 1 still does. Healing relics cost what they list. Healing never goes above maximum HP and never raises the dead. **Each healing spell or item can heal a hero once between rests**, and a hero at 0 HP can always be healed.
 
-**Each healing spell or item can heal a hero once between rests; a hero at 0 HP can always be healed.** The table counts this for you; the [GM guide](/gm-guide/) has the finer points (copies, charges and failed checks).
+Bandages need Close contact. On a wounded hero, a WIS check heals d6. On a dying hero, an Easy WIS check stops the countdown (and a natural 20 also heals d4). Mend heals d8 after a WIS check.
 
-Bandages require Close contact. On an injured target they check WIS and heal d6; on a dying target they make an Easy WIS Tend check, stopping the countdown on success. A natural 20 on Tend also heals d4. Mend checks WIS and heals d8. Ordinary healing on a natural 20 adds d12 when Ultimate is enabled; it does not use Effort bonuses.
+A hero at 0 HP is **dying for 3 rounds**: each new round takes one off, and at zero they are dead. On their turn a dying hero may **crawl away** (a CON check, which costs nothing) or **pay 1 Horror to act anyway**. The dead cannot act. A hit on a dying hero takes away a round. A hero whose countdown was stopped is **stable**; another hit starts the 3 rounds again. Healing of 1 HP or more puts a fallen hero back on their feet.
 
-A hero at 0 HP is **dying for 3 rounds**: each new round takes one off, and at 0 they are dead. On their turn a dying hero may **crawl away** (a CON check, which costs nothing), or **pay 1 Horror to act anyway**, at the table and alone alike. The dead cannot act. A hit on a dying hero takes a countdown round instead of rolling damage. Stable stops the countdown at 0 HP; another hit starts the 3 rounds again. Healing at least 1 HP puts a living fallen hero back on their feet.
+**Party rest**, when the GM agrees the place and time allow it, heals every living hero 10 HP, lets each healing spell and item heal again, and lowers the Horror as shown above. It does not bring back spent supplies or the dead.
 
-The GM decides whether a place and time allow Party rest. It heals living heroes, refreshes healing allowances and lowers Horror as shown above. It does not restore spent consumables or bring the dead back. Undo related healing and rests in reverse order when warned.
+## The Horror
 
-## Horror and GM rulings
+The whole party shares one Horror meter, from 0 to 21. Every spell except a healing one costs 1 Horror, whether or not it works. Relics cost what they list. A Push costs 1, a counted natural 1 costs 1, and a dying hero who acts costs 1. Each cost is added on its own.
 
-Non-healing spells cost 1 Horror even if the check fails. A natural 1 and a Push add separate costs.
-
-**What the Horror brings.** Each threshold fires **once an adventure**; when the Horror falls and climbs past it again, nothing new happens until the GM starts a new adventure (the **New adventure** button in the Table tab). An adventure's own Horror lines come first; where it has none, these are the defaults:
+**What the Horror brings.** Each threshold fires **once an adventure**, even if the meter falls and climbs past it again. An adventure's own Horror lines come first; where it has none:
 
 - **7: shaken.** Every hero's next roll is Hard.
 - **14: hunted.** Every foe met from then on has 2 more HP.
 - **21: arrived.** There is no more rest this adventure.
 
-At 21 the meter stays capped, and the hero pays in blood instead: each point of their Horror cost that cannot go on the meter (a Push, a natural 1 that counts, a spell or an item) costs them **1 HP**. That HP loss can drop a hero to 0 and start their dying countdown. The GM's own manual raises cost no blood.
-
-Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, conditional bonuses, esoteric magic (see "when in doubt" above) require GM adjudication unless the controls explicitly say they are automated. Rend the Veil lets you choose several foes before the check, roll damage once; it applies to the selected foes together automatically. One Undo restores all that damage. The GM still confirms eligible targets and range. Once-per-scene abilities spend their use on the attempt, including a miss; copies share the same caster/source allowance. Rest, refreshing the page or leaving and returning to a scene do not refill it. In Play, the GM can confirm **Refresh scene abilities** for a new encounter in the named live scene; unfinished limited rolls from the previous encounter cannot then be applied. To restore a mistaken use, the GM undoes its damage first and then its attempt in Activity. Horror has its own Undo. The Executioner's Blade has a separate **final blow** action: Ultimate damage, 3 Horror and one attempt per scene, all tracked by the VTT.
+At 21 the meter is full, and **a hero pays in blood** instead: each point of their Horror cost that cannot go on the meter costs them **1 HP**. That can bring a hero down. Horror the GM adds by hand costs no blood.
 
 ## Growing stronger
 
-Each adventure a hero lives through to its end earns **1 mark**. The hero's player ticks it in the **Marks** box on the character sheet, at the table or on My heroes. At **3 marks** the hero takes one advance: **+1 to one score**, up to the usual 6, or **+1 to one Effort bonus**, up to +10. The marks then start again. Each advance adds one point to share, so the build limits on the sheet grow with the hero. A mark ticked by mistake can be taken back until the advance is taken.
+Each adventure a hero lives through to its end earns **1 mark**; tick it in the **Marks** box on the hero sheet. At **3 marks** the hero takes one advance: **+1 to one score**, up to 6, or **+1 to one Effort bonus**, up to +10. Then the marks start again.
 
-## Playing alone
-
-The [solo game](/solo/) uses every rule on this page. There the game is the GM, and it makes the GM's calls itself: each scene's Target, its foes and obstacles, when a place is dark, what Horror 7, 14 and 21 bring, a rest after each scene, and where a hero who breaks away can run to: on to the next scene, leaving behind what they found in this one, with the Horror rising 1 for running (no blood is paid for it, as for any GM's raise). There is nowhere to run in the last scene of a road. One thing works differently, because no one else is there to help:
-
-- **Falling alone.** A hero alone falls and is dying as at the table (3 rounds; crawl away free, or pay 1 Horror to act anyway). A crawl that succeeds leaves the scene at 1 HP and leaves behind what they found in it; a failed crawl costs a round. Bandages cannot tend yourself.
-- **Marks.** A road won is an adventure lived through: a hero from My heroes who comes home gets its mark ticked for them.
-- Spells and items that protect **an ally**, such as Ward, have no use alone.
-
-The [Current Loot Tables](/loot/) page uses the same catalogue as the VTT. GMs can create custom loot in their own tables. Custom descriptions do not automatically implement new effects. Private GM notes and custom table loot are not published in that catalogue.
+The [Current Loot Tables](/loot/) list every item a hero can find.
