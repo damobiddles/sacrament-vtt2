@@ -52,13 +52,19 @@
       check: function (stat, o) {
         o = o || {}; var adj = o.adj || 'normal';
         if (api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item) adj = adj === 'easy' ? 'normal' : 'hard';
+        /* the hero's path: once a scene, a check on its score is Easy (not an attack, a spell, an item, a crawl or a break away; the Rules page, 2026-11-11) */
+        var onPath = !o.attack && !o.item && !o.noPush && !o.pushed && C.pathScore(s.hero) === stat && s.pathRoom !== s.room;
+        if (onPath) { s.pathRoom = s.room; adj = R.easier(adj); }
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
-        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj });
+        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj, misfire: o.misfire || 0 });
         api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o),
           tally: [sum(c.mod, [[s.hero.stats[stat] || 0, stat], [o.bonus || 0, o.item || 'bonus'], [boost, from]], c.total, 'against Target ' + c.target, c.success)] });
         if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
+        if (onPath) api.say('Your path (' + C.pathOf(s.hero) + ') fits that check: it was Easy, once this scene.', 'note');
         if (shaken) api.say('You were shaken: that roll was Hard.', 'note');
+        if (!c.success && !o.noPush && !o.pushed && !s.pushing) s.failed = true;   /* a failed roll can be pushed (the rules: any failed roll, once); see act */
+        if (s.pushing && !o.pushed && c.nat1) raiseHorror(api, R.HORROR.nat1, 'A natural 1 on a pushed roll.');   /* useAction counts its own */
         return c;
       },
       horror: function (n, why) { raiseHorror(api, n, why); },
@@ -109,14 +115,16 @@
     return { parts: parts, total: total, word: word, good: !!good };
   }
   function effortTally(e, word) {
-    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'heavy weapon' }];
+    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'two hands' }];
     if (e.critical) parts.push({ n: e.critical.rolled, t: 'critical d' + e.critical.die }, { n: e.critical.bonus, t: 'Ultimate' });
     return { parts: parts.filter(function (x) { return x.n; }), total: e.total, word: word, good: true };
   }
+  /* Magic, for a natural 1 (as at the table, vtt-core isMagic): a spell, or an item that tempts the Horror. */
+  function magicOf(u) { return !!(u && (u.spell || (u.source || u.item || {}).temptsHorror || (u.item && u.item.temptsHorror))); }
   /* Why a natural 1 did or did not raise the Horror, in the Rules page's terms, so the player learns the rule by seeing it (the owner's ask, 2026-11-07). */
   function nat1Note(o) {
-    return R.nat1Tempts({ attack: !!o.attack, spell: !!o.spell, pushed: !!o.pushed }) ? 'Natural 1 on ' + (o.pushed ? 'a pushed action' : o.spell ? 'a spell' : 'an attack') + ': +' + R.HORROR.nat1 + ' Horror'
-      : 'Natural 1 on a plain check: no Horror';
+    return R.nat1Tempts({ magic: !!o.magic, pushed: !!o.pushed }) ? 'Natural 1 on ' + (o.pushed ? 'a pushed action' : o.spell ? 'a spell' : 'magic') + ': +' + R.HORROR.nat1 + ' Horror'
+      : 'Natural 1 ' + (o.attack ? 'on an ordinary attack' : 'on a plain check') + ': no Horror';
   }
   function itemsCarried(s) { return (s.hero.gear || []).map(function (g) { return C.itemOf(g); }).filter(Boolean); }
   function carried(s, test) { return itemsCarried(s).filter(function (it) { return typeof test === 'function' ? test(it) : (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); })[0] || null; }
@@ -284,25 +292,25 @@
   function roomOf(api, id) { return api._adv.rooms[id] || null; }
 
   /* ---------- Horror ---------- */
-  /* Raise the meter. A cost that cannot go on a full meter is paid in blood: one d4 of HP for each point (the owner's rule, 2026-11-01). */
+  /* Raise the meter. A cost that cannot go on a full meter is paid in blood: R.HORROR.blood HP for each point (the owner's rule, 2026-11-01; 1 HP since 2026-11-09).
+     Each threshold fires once a road, as once an adventure at the table: s.fired lists those already fired. */
   function raiseHorror(api, n, why, o) {
     var s = api.s; n = int(n, 0); if (n <= 0) return;
-    var mv = R.horrorMove(s.horror, n); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
+    s.fired = s.fired || []; var mv = R.horrorMove(s.horror, n, s.fired); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
     if (mv.applied) api.say((why ? why + ' ' : '') + 'The Horror rises ' + mv.applied + ' (now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror');
-    mv.crossed.forEach(function (t) { api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
+    mv.crossed.forEach(function (t) { s.fired.push(t); api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
     var left = n - mv.applied;
     if (left > 0 && s.hp.cur > 0 && !(o && o.gm)) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood, nor does the GM's own raise */
-      var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
-      var total = rolls.reduce(function (a, b) { return a + b; }, 0);
+      var total = left * R.HORROR.blood;
       if (!mv.applied && why) api.say(why, 'horror');
-      api.say('The Horror can rise no further. You pay in blood: ' + diceSay(rolls.length, R.HORROR.bloodDie, rolls) + '.', 'horror', { dice: rolls.slice(0, 2).map(function (x) { return { die: R.HORROR.bloodDie, n: x }; }) });
+      api.say('The Horror can rise no further. You pay in blood: ' + total + ' HP.', 'horror');
       hurt(api, total, 'The price');
     }
   }
 
-  /* What each threshold does in the solo game. These are the solo game's own GM calls (the owner's, 2026-11-06), not rules: the rules leave a threshold's
-     consequence to the GM. 7: shaken, the next check or attack is Hard. 14: hunted, every foe met from then on has 2 more HP. 21: the rules' pay-in-blood, and no more rest. */
-  var DREAD = { shaken: 7, hunted: 14, arrived: 21, huntedHp: 2 };
+  /* What each threshold does: the shared rules (R.HORROR.dread, the owner's decision 2026-11-11: what solo did first is now every table's default).
+     7: shaken, the next check or attack is Hard. 14: hunted, every foe met from then on has 2 more HP. 21: pay in blood, and no more rest. A road's own lines come first. */
+  var DREAD = R.HORROR.dread;
   function dread(api, t) {
     var s = api.s;
     if (t === DREAD.shaken) { s.shaken = true; api.say('You are shaken. Your next check or attack is Hard.', 'note'); }
@@ -323,12 +331,12 @@
     api.say((why || 'You are hurt') + ': ' + ch.applied + ' HP (' + s.hp.cur + ' of ' + s.hp.max + ' left).', 'hurt');
     if (s.hp.cur === 0 && !s.over) fall(api);
   }
-  /* Falling, as the rules have it: at 0 HP the hero is dying and rolls a d4 for the rounds left. Each new round takes one off, and so does a blow that gets
-     through; at none left the hero is dead. Any healing stands them up. Alone, they may also crawl away (a CON check): out of the scene with 1 HP, leaving
-     behind what they found in it. That way out is the solo game's GM call (the owner's, 2026-11-06). */
+  /* Falling, as the rules have it: at 0 HP the hero is dying, with R.DYING.start rounds left. Each new round takes one off, and so does a blow that gets
+     through; at none left the hero is dead. Any healing stands them up. As at the table, a dying hero may crawl away (a CON check, free) or pay
+     R.DYING.actHorror Horror to act anyway. Where a crawl leads (out of the scene with 1 HP, leaving behind what was found in it) is the solo game's GM call (2026-11-06). */
   function fall(api) {
-    var s = api.s, n = api.die(R.DYING.die); s.dying = R.dyingFall(n);
-    api.say('You fall. You are dying: d' + R.DYING.die + ' ' + n + ', so ' + plural(s.dying.left, 'round') + ' left. Heal yourself, or crawl away.', 'hurt', { dice: [{ die: R.DYING.die, n: n }] });
+    var s = api.s; s.dying = R.dyingFall();
+    api.say('You fall. You are dying: ' + plural(s.dying.left, 'round') + ' left. Crawl away, or pay ' + R.DYING.actHorror + ' Horror to act anyway.', 'hurt');
     if (s.fight) { s.fight.pending = null; if (s.fight.phase !== 'hero') s.fight.phase = 'foe'; }
   }
   function dyingTick(api, why) {
@@ -342,7 +350,7 @@
   function canHeal(s, a) { var h = a.ok && a.healing && a.u && a.u.healing; return !!h && !h.tend && !(h.kind && !h.force && s.hp.cur > 0 && s.healed[h.kind]); }
   function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
   function crawl(api) {
-    var s = api.s, c = api.check('CON', { what: 'You crawl away', nonDamage: true });
+    var s = api.s, c = api.check(R.DYING.crawl, { what: 'You crawl away', nonDamage: true, noPush: true });
     if (s.over) return;
     if (!c.success) { if (s.fight) s.fight.phase = 'foe'; else dyingTick(api, 'You do not get far.'); return; }
     s.dying = null; s.hp.cur = 1; s.fight = null;
@@ -365,7 +373,7 @@
   function canFlee(s) { return !!(s.run && s.run.at < s.run.order.length - 1 && s.fight && !s.dying); }
   function breakAway(api) {
     var s = api.s, f = s.fight; if (!canFlee(s)) return false;
-    var c = api.check(R.BREAK_AWAY.stat, { what: 'You break away', nonDamage: true });
+    var c = api.check(R.BREAK_AWAY.stat, { what: 'You break away', nonDamage: true, noPush: true });   /* breaking away cannot be pushed */
     if (s.over) return true;
     if (!c.success) { api.say(f.name + ' is on you before you can get clear.', 'miss'); f.phase = 'foe'; return true; }
     s.fight = null;
@@ -421,7 +429,7 @@
   }
   /* The hero acts with an item or spell, in a fight or out of one. */
   function useAction(api, a, pushed) {
-    var s = api.s, u = a.u, fight = s.fight;
+    var s = api.s, u = a.u, fight = s.fight; pushed = pushed || !!s.pushing;
     if (!u || !u.ok) { api.say((u && u.why) || 'You cannot use that now.', 'note'); return; }
     var src = u.source || u.item, isDamage = !!u.cat && !u.healing && src.effect !== 'esoteric';
     if (u.pick) { /* a grimoire read by the die */
@@ -442,8 +450,8 @@
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
-      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
-      if (chk.nat1 && R.nat1Tempts({ attack: isDamage, spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
+      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, misfire: isDamage && !u.spell ? R.misfireOf(u.item) : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
+      if (chk.nat1 && R.nat1Tempts({ magic: magicOf(u), pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
@@ -452,11 +460,12 @@
     if (!isDamage) {
       if (ok) { if (story) { story.run(api); putToUse(s, u.spell ? u.spell.name : u.item.name); } else if (fx.any) applyFx(api, fx, u.item.name); else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
       else if (story || fx.foe) api.say('It does not take.', 'miss');
+      if (fight && chk && !ok && !pushed) { fight.phase = 'push'; api.say('It fails. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or end your turn.', 'note'); s.failed = false; return; }
       if (fight && !(fx.any && fx.free)) fight.phase = 'foe';   /* a Free use does not take the turn */
       return;
     }
     if (!ok) {
-      if (!pushed) { fight.phase = 'push'; api.say('You miss. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or end your turn.', 'note'); }
+      if (!pushed) { fight.phase = 'push'; s.failed = false; api.say('You miss. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or end your turn.', 'note'); }
       else fight.phase = 'foe';
       return;
     }
@@ -469,7 +478,7 @@
     var size = stepped(s, f, p.cat), dice0 = {}; dice0[p.cat] = size;
     var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(size), settings: { dice: dice0 } }), dice = [{ die: e.die, n: e.rolled }];
     if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
-    if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
+    if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
     f.pending = null;
     api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero', tally: [effortTally(e, 'damage')] });
     damageFoe(api, e.total);
@@ -500,7 +509,7 @@
     if (h.kind && !h.force && s.hp.cur > 0 && s.healed[h.kind]) { api.say('That has already helped you since your last rest.', 'note'); return; }
     if (h.tend && s.dying) { api.say('A dying hero cannot tend themselves.', 'note'); return; }
     api.say('You use ' + (u.spell ? u.spell.name : yours(u.item.name)) + '.', 'act');
-    var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, pushed: !!pushed }); if (chk.nat1 && R.nat1Tempts({ spell: !!u.spell, pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
+    var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed }); if (chk.nat1 && R.nat1Tempts({ magic: magicOf(u), pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
@@ -551,7 +560,7 @@
     return ((s.run && s.run.found) || []).filter(function (id) { return have[id]-- > 0; });
   }
 
-  /* ---------- the hero's own rest ---------- */
+  /* ---------- the hero's own rest: one d6 off the Horror (R.REST) ---------- */
   function rest(api) {
     var s = api.s; s.rested = true; s.healed = {};
     var dice = []; for (var i = 0; i < R.restDice(1); i++) dice.push(api.die(R.REST.horrorDie));
@@ -567,9 +576,11 @@
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];
-    if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
-      heroActions(s).filter(function (a) { return canHeal(s, a); }).forEach(function (a) { out.push({ label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) }); });
-      out.push({ label: 'Crawl away', cmd: 'crawl', kind: 'do' });
+    if (s.dying && !(s.fight && s.fight.phase === 'foe')) {   /* dying: crawl away for nothing, or act anyway for R.DYING.actHorror (the rules, 2026-11-11) */
+      out.push({ label: 'Crawl away (' + R.DYING.crawl + ')', cmd: 'crawl', kind: 'do' });
+      var acts = s.fight && s.fight.phase === 'hero' ? fightOptions(api, s, s.fight).filter(function (c) { return !c.idle && !c.flee && !c.free && !(c.heal && !canHeal(s, findAction(s, c.cmd.split(' ')) || {})); })
+        : heroActions(s).filter(function (a) { return canHeal(s, a); }).map(function (a) { return { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: true }; });
+      acts.forEach(function (c) { var o = Object.assign({}, c); out.push(Object.assign(o, { label: c.label + ' (dying: +' + R.DYING.actHorror + ' Horror)', cmd: 'dying ' + c.cmd, horror: (c.horror || 0) + R.DYING.actHorror })); });
       return out;
     }
     if (s.done) {
@@ -597,6 +608,9 @@
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
+    /* the last roll failed: push it (the rules: any failed roll, once) while the same thing can still be tried */
+    var again = s.pushable && out.filter(function (x) { return x.cmd === s.pushable; })[0];
+    if (again) out.unshift({ label: 'Push: try again (' + again.label + ')', cmd: 'repush', kind: 'push', horror: R.HORROR.push, hint: 'A second try, pushed: +' + R.HORROR.push + ' Horror' });
     return out;
   }
   /* Anointing (Flask of Holy Oil, from its fx in the gear list): "Until the end of the scene its Effort steps up one size against the unquiet dead and
@@ -644,7 +658,7 @@
   function markIdle(api, a, c) {
     var h = a.u && a.u.healing;
     if (isStorySpell(a.u)) { var src = a.u.source || a.u.item, f = api.s.fight; if (!spellUse(api, src)) { c.idle = true; c.why = f && f.lasting && f.lasting[src.id] ? 'Already done: it lasts the scene' : 'No use here'; } else c.useful = true; }
-    else if (h && h.kind && !h.force && api.s.healed[h.kind]) { c.idle = true; c.why = 'Used since your last rest'; }
+    else if (h && h.kind && !h.force && api.s.healed[h.kind] && api.s.hp.cur > 0) { c.idle = true; c.why = 'Used since your last rest'; }
     else if (hasFx(a, true)) { var src2 = a.u.source || a.u.item, fx = C.effectsOf(src2), busy = fxBusy(api.s, src2, fx); if (busy) { c.idle = true; c.why = busy; } else if (fx.free) { c.hint = 'Free: it does not take your turn'; c.free = true; } }
     return c;
   }
@@ -730,6 +744,14 @@
     return any ? any.cmd : '?' + t;
   }
 
+  /* A hero's own action, by its words (use ..., punch, brace, anoint), for a dying hero who acts anyway. */
+  function heroDo(api, p) {
+    var s = api.s, f = s.fight, c = p.join(' ');
+    if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); }
+    else if (c === 'punch') useAction(api, bareHands(), false);
+    else if (c === 'brace' && f && !f.guard) { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
+    else if (c === 'anoint') anoint(api);
+  }
   /* ---------- one command ---------- */
   function act(s, adv, cmd, die) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, die);
@@ -739,14 +761,24 @@
     if (c.charAt(0) === '?') { api.say('> ' + c.slice(1), 'cmd'); api.say('That does nothing here. ' + HELP, 'note'); return s.log.slice(before); }
     var p = c.split(' '), wasFight = !!s.fight;
     var label = (choices(s, adv).filter(function (x) { return x.cmd === c; })[0] || {}).label;
+    if (c !== 'repush') s.failed = false;
     api.say('> ' + (label || c), 'cmd');
     if (c === 'look') { var r0 = adv.rooms[s.room]; api.say(r0.name, 'room'); api.say(typeof r0.text === 'function' ? r0.text(api, false) : r0.text); if (darkRoom(s, r0)) api.say(lit(s) ? lightLine(s) : DARK_LINE, 'note'); if (s.fight) api.say(s.fight.name + ' is here (' + hurtWord(s.fight.hp) + ' hurt).', 'foe'); }
     else if (c === 'help') api.say(HELP, 'note');
     else if (c === 'inventory') api.say(inventoryText(s), 'note');
+    else if (c === 'repush' && s.pushable && !s.fight && !s.dying && !s.done) {   /* push the failed roll: the Horror rises, and the same thing is tried again, pushed */
+      var pc = s.pushable; s.pushable = null; raiseHorror(api, R.HORROR.push, 'You push for a second try.');
+      if (!s.over) { s.pushing = true; act(s, adv, pc, die); s.pushing = false; }
+      return s.log.slice(before);
+    }
     else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
       if (c === 'crawl') crawl(api);
-      else if (p[0] === 'use') { var hd = findAction(s, p); if (hd && canHeal(s, hd)) { useAction(api, hd, false); if (s.dying && !s.fight && !s.over) dyingTick(api, 'Time passes.'); } else api.say('You are dying: heal yourself, or crawl away.', 'note'); }
-      else api.say('You are dying: heal yourself, or crawl away.', 'note');
+      else if (p[0] === 'dying' && choices(s, adv).some(function (x) { return x.cmd === c; })) {
+        raiseHorror(api, R.DYING.actHorror, 'You are dying, and act anyway.');
+        if (!s.over) heroDo(api, p.slice(1));
+        if (s.dying && !s.fight && !s.over) dyingTick(api, 'Time passes.');
+      }
+      else api.say('You are dying: crawl away, or pay ' + R.DYING.actHorror + ' Horror to act anyway.', 'note');
     }
     else if (s.done) {
       if (c === 'next') nextScene(api);   /* typed "next" at a fork takes the first road */
@@ -798,6 +830,9 @@
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
     else api.say('That does nothing here. ' + HELP, 'note');
+    /* a failed roll outside a fight may be pushed next (a fight has its own push step); a pushed roll may not */
+    if (c !== 'repush' && c !== 'look' && c !== 'help' && c !== 'inventory') s.pushable = !s.pushing && s.failed && !s.fight && !s.over && !s.dying && !s.done && !wasFight && /^(do|way|use|meet)$/.test(p[0]) ? c : null;
+    s.failed = false;
     /* a timer on the scene's own clock moves each time the hero does something outside a fight */
     if (!s.over && !s.done && !s.fight && s.adventure === adv.id && /^(go|do|use|way)$/.test(p[0]) && !wasFight) tickTimers(apiFor(s, adv, die), 'action');
     return s.log.slice(before);

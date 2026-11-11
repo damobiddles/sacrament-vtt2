@@ -9,11 +9,11 @@ test('only the GM advances turns, even when it is the player’s own turn', asyn
  assert.equal((await t.gm.cmd({type:'endTurn'})).status,200);
 });
 
-test('rest lowers Horror with d10s while keeping one die per two living heroes', async () => {
- const t=await table({dice:[0.99,0.99]});await t.gm.cmd({type:'horror',value:21});
+test('rest lowers Horror by one d6, whatever the size of the party', async () => {
+ const t=await table({dice:[0.99]});await t.gm.cmd({type:'horror',value:20});
  const r=await t.gm.cmd({type:'rest'});assert.equal(r.status,200);const log=r.body.state.log.find(e=>e.id===r.body.result.log);
- assert.deepEqual(log.dice.map(d=>d.die),[10,10]);assert.equal(log.dice.reduce((n,d)=>n+d.n,0),20);assert.equal(r.body.state.horror.cur,1);
- await t.gm.cmd({type:'undo',logId:r.body.result.log});assert.equal((await t.state()).horror.cur,21);
+ assert.deepEqual(log.dice.map(d=>d.die),[6]);assert.equal(log.dice[0].n,6);assert.equal(r.body.state.horror.cur,14);
+ await t.gm.cmd({type:'undo',logId:r.body.result.log});assert.equal((await t.state()).horror.cur,20);
 });
 
 test('scene deletion is GM-only, rejects the live scene, and preserves heroes and other scenes', async () => {

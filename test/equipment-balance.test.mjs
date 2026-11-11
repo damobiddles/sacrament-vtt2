@@ -25,13 +25,14 @@ test('body armour cannot stack, but a helmet and shield remain compatible', () =
   assert.equal(C.armourBonus(hero(['gambeson', 'brigandine'])), 3, 'legacy overlapping suits contribute only the strongest');
 });
 
-test('two-handed attacks cannot gain a shield benefit; heavy melee has a distinct bonus', () => {
+test('two-handed attacks cannot gain a shield benefit; every two-handed weapon adds +2 damage (the owner\'s decision, 2026-11-11)', () => {
   const h = hero(['tithemaul', 'shield']);
   assert.equal(C.useOf(h, 0).ok, false);
   h.gear[1].eq = false;
   assert.equal(C.useOf(h, 0).ok, true);
   assert.equal(C.useOf(h, 0).damageBonus, 2);
-  assert.equal(C.useOf(hero(['spear']), 0).damageBonus, 0, 'reach is not also heavy damage');
+  assert.equal(C.useOf(hero(['spear']), 0).damageBonus, 2, 'reach is two-handed too'); assert.equal(C.useOf(hero(['crossbow']), 0).damageBonus, 2); assert.equal(C.useOf(hero(['crossbow']), 0).attackBonus || 0, 0, 'no +2 to hit');
+  assert.equal(C.useOf(hero(['arquebus']), 0).damageBonus, 2); assert.equal(C.useOf(hero(['wheellock']), 0).damageBonus, 0, 'a pistol takes one hand');
   assert.equal(C.useOf(hero(['sword']), 0).damageBonus, 0);
 });
 
@@ -124,7 +125,7 @@ test('saved-table armour correction is private, keeps every item and applies onl
 test('future catalogue weapons and armour must declare the roles used by the equipment rules', () => {
   for (const it of C.items) {
     if (it.kind === 'weapon') {
-      assert.ok(['single', 'heavy', 'reach', 'ranged', 'crossbow'].includes(it.weaponStyle), it.name);
+      assert.ok(['single', 'heavy', 'reach', 'ranged', 'crossbow', 'firearm', 'pistol'].includes(it.weaponStyle), it.name);
       if (C.weaponHands(it) === 2) assert.ok(it.slots >= 2, it.name);
     }
     if (it.kind === 'armour') assert.ok(['body', 'head', 'shield'].includes(it.armourPart), it.name);

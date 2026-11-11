@@ -9,7 +9,7 @@ Sacrament was first played on the Sacrament RPG Table, in a browser. The rules w
 ## What to bring
 
 - **One GM and three to five players.** The GM describes the world and plays everyone in it; each player plays one hero.
-- **Dice for each player:** a d20 for checks, plus a d4, d6, d8, d10 and d12 for Effort. The d4 also counts down a dying hero's rounds.
+- **Dice for each player:** a d20 for checks, plus a d4, d6, d8, d10 and d12 for Effort.
 - **Dice for the GM:** two d10s for d100 loot rolls, and enough d10s for a Party rest (one for every two heroes).
 - **A hero sheet for each hero,** and pencils with erasers. HP, charges and Horror go up and down all evening.
 - **The print-and-play kit** (below): the quick reference, the Horror track, the Target sign, foe cards, turn slips, countdowns and a healing log.
@@ -54,7 +54,7 @@ One evening, about two hours. The heroes carry a saint's rib out of the city of 
 2. **Read the adventure** all the way through, and listen to the narrated version if it helps.
 3. **Prepare the foe and obstacle cards** for the first scene, and keep them face down until the heroes find them.
 4. **Print the [Current Loot Tables](/loot/)** page, or keep it open on a phone. You roll on it when the heroes search.
-5. **Decide the house rules** and tell the players before you start: whether a natural 20 adds an Ultimate die, and whether scene danger adds to monster attacks. Both are optional.
+5. **Decide the house rules** and tell the players before you start: whether a natural 20 adds the Ultimate d12, and whether scene danger adds to monster attacks. Both are optional.
 
 ## Who keeps track of what
 
@@ -65,12 +65,13 @@ The Sacrament RPG Table quietly does the bookkeeping. Around a real table, peopl
 ## The rules at a glance
 
 - **Checks:** roll d20 and add your score. Meet or beat the Target to succeed. Easy lowers the Target by 3; Hard raises it by 3.
-- **Effort:** after a success, when the amount matters, roll the Effort die for what you used and add your Effort bonus. Ordinary weapons, bows and crossbows use d6; guns use d8; damaging magic uses d10.
+- **Effort:** after a success, when the amount matters, roll the Effort die for what you used and add your Effort bonus. Ordinary weapons, bows and crossbows use d6; guns use d8 (and misfire on a natural 1 to 3); damaging magic uses d10. Every two-handed weapon adds +2 damage. A successful natural 20 adds a plain d12.
 - **Defence:** 10 + CON + armour. A monster rolls d20 + its attack bonus against it. A monster's natural 1 always misses and its natural 20 always hits.
-- **Hearts:** 10 HP to a Heart. At 0 HP a hero is dying and rolls a d4 for the rounds they have left.
-- **Push:** after a failed attack, once, on your own turn. It costs 1 Horror and gives you an immediate second action, which cannot be pushed.
-- **The Horror:** one shared track from 0 to 21. Every spell except healing adds 1. Items add their listed cost. A Push adds 1. A hero's natural 1 adds 1 more on an attack, a spell or a pushed action, but not on other checks. At 7, 14 and 21 the GM decides what happens. Past 21 you pay in blood: each point that cannot go on the track costs the hero who caused it d4 HP.
-- **Party rest:** when the GM allows it, each living hero heals 10 HP and the Horror falls by d10 for every two living heroes, rounded up.
+- **Hearts:** 10 HP to a Heart. At 0 HP a hero is dying for 3 rounds. On their turn they may crawl away (a free CON check) or pay 1 Horror to act anyway.
+- **Push:** after any failed roll, once, on your own turn. It costs 1 Horror and gives you an immediate second action, which cannot be pushed.
+- **Paths:** once a scene, a check that fits your path is Easy, if the GM agrees. Never an attack.
+- **The Horror:** one shared track from 0 to 21. Every spell except healing adds 1. Items add their listed cost. A Push adds 1. A hero's natural 1 adds 1 more only on magic or a pushed action. At 7, 14 and 21 the Horror strikes, once an adventure each: 7, every hero's next roll is Hard; 14, every foe met from then on has 2 more HP; 21, no more rest. Past 21 you pay in blood: each point that cannot go on the track costs the hero who caused it 1 HP.
+- **Party rest:** when the GM allows it, each living hero heals 10 HP and the Horror falls by one d6.
 
 The [Player guide](/player-guide/) and [GM guide](/gm-guide/) have the full rules. They describe the buttons of the online table, but the numbers are the same on paper. The rules are still being playtested: check [Rules updates and errata](/rules/updates/) before you print, and correct older printouts by hand.
 

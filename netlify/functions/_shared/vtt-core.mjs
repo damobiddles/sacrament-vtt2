@@ -180,9 +180,9 @@ export function project(s, a, opt = {}) {
     drawV: s.drawV || 0, pv: s.pv || 0, pointers: projectPointers(s, a), rolls, nextSession: s.next || null,
     /* the viewer's own most recent actions the table has already applied, so a screen showing a change it is still waiting to hear about does not count it twice */
     done: s.appliedOrder.filter((id) => s.applied[id] && s.applied[id].by === (gm ? 'gm' : a.pid)).slice(-40),
-    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
+    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
-    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds }, gm ? { alert: horrorOf(s).alert } : {})
+    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds, fired: horrorOf(s).fired.slice() }, gm ? { alert: horrorOf(s).alert } : {})
   };
   if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = (s.draw || []).filter((line) => gm || (line.sceneId || s.table.scene) === s.table.scene);
   if (gm) {
@@ -230,7 +230,7 @@ export function addCharacter(s, p) {
   if (Object.keys(s.chars).length >= LIMITS.chars) fail('limit', 'That is as many characters as a table can hold.');
   const stats = {}, effort = {};
   R.STATS.forEach((k) => { stats[k] = clamp(int(p.stats && p.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
-  R.CATS.forEach((k) => { effort[k] = clamp(int(p.effort && p.effort[k], 0), 0, R.MAX_BONUS); });
+  R.CATS.forEach((k) => { effort[k] = R.BONUS_CATS.includes(k) ? clamp(int(p.effort && p.effort[k], 0), 0, R.MAX_BONUS) : 0; });
   const id = nid(s, 'h');
   const card = newCard(s, { kind: 'pc', name: p.name || 'Unnamed Pilgrim', img: p.img, desc: p.desc, hp: { cur: R.HEART, max: R.HEART }, charId: id, x: p.x, y: p.y }, { role: 'gm' });
   s.chars[id] = { id, name: str(p.name, LIMITS.name, 'Unnamed Pilgrim') || 'Unnamed Pilgrim', owner: null, cardId: card.id, stats, effort, armour: clamp(int(p.armour, 0), 0, R.MAX_BONUS),
@@ -242,7 +242,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -274,6 +274,7 @@ export function apply(s, cmd, a, ctx) {
   Object.values(s.chars).forEach(gearKeys);
   migrateAnnotations(s);
   fixSupplies(s, ctx);
+  fixUltimate(s, ctx);
   if (cmd.type !== 'point') fixArmour(s, ctx);
   const H = HANDLERS[cmd.type]; if (!H) fail('invalid', 'Unknown command: ' + str(cmd.type, 30));
   a = Object.assign({}, a, { name: isGM(a) ? 'GM' : (s.players[a.pid] || {}).name || 'Player' });
@@ -290,6 +291,12 @@ export function apply(s, cmd, a, ctx) {
 
 /* A table saved before supplies were kept to the pack may have a hero with one marked as equipped. The first command after this rule puts every such hero right, once, and tells the GM
    (only the GM) which heroes and which items were moved. */
+/* Ultimate is a die, not a bonus (the owner's decision, 2026-11-11). A hero saved with points in it gets them back to spend on another kind; the GM is told who, once. */
+function fixUltimate(s, ctx) {
+  const freed = [];
+  for (const ch of Object.values(s.chars)) { const n = int(ch.effort && ch.effort.ultimate, 0); if (n > 0) { ch.effort.ultimate = 0; freed.push(ch.name + ' ' + n); } }
+  if (freed.length) addLog(s, { role: 'gm' }, 'The Ultimate Effort bonus is gone (a natural 20 adds a plain d12), so these Effort points are free to spend again on the sheet: ' + freed.join(', ') + '.', { now: ctx.now, private: true, kind: 'info' });
+}
 function fixSupplies(s, ctx) {
   if (s.supplyFix === 1) return; s.supplyFix = 1;
   const moved = [];
@@ -391,16 +398,16 @@ function applyEffort(s, roll, card, field, a, ctx) {
   if (field === 'hp') settleHero(s, card, was, e, ctx);
   return hide && !isGM(a) ? {} : { applied };
 }
-/* A monster's blow that gets through on a hero at 0: no damage is rolled. A dying hero loses a round (at 0, dead); a stable one is dying again with a new d4;
+/* A monster's blow that gets through on a hero at 0: no damage is rolled. A dying hero loses a round (at 0, dead); a stable one is dying again, from the start;
    one at 0 with no countdown yet falls now. */
 function blow(s, roll, hero, a, ctx) {
   if (hero.dying && hero.dying.dead) fail('invalid', hero.name + ' is dead.');
-  const who = attackerNames(s, roll), before = hero.dying && clone(hero.dying); let after, dice = [];
-  if (!before || before.stable) { const n = d(ctx, R.DYING.die); hero.dying = R.dyingFall(n); dice = diceOf(false, R.DYING.die, n); after = hero.name + ' is dying' + (before ? ' again' : '') + ': d' + R.DYING.die + ' shows ' + n + ', ' + rounds(n) + ' left.'; }
+  const who = attackerNames(s, roll), before = hero.dying && clone(hero.dying); let after;
+  if (!before || before.stable) { hero.dying = R.dyingFall(); after = hero.name + ' is dying' + (before ? ' again' : '') + ': ' + rounds(hero.dying.left) + ' left.'; }
   else { hero.dying = R.dyingTick(before); after = hero.dying.dead ? hero.name + ' has died.' : hero.name + ' loses a round: ' + rounds(hero.dying.left) + ' left.'; }
   roll.blow = true; recapDeath(s, ctx, hero);
   const line = (n) => n + ' strikes ' + hero.name + ', who is down. ' + after;
-  const e = L(s, a, ctx, line(who.pub), { kind: hero.dying.dead ? 'alert' : 'apply', effects: [dyingFx(hero, before), { t: 'roll', roll: roll.id }], private: !isPublic(s, hero), gmText: who.pub !== who.gm ? line(who.gm) : '', dice });
+  const e = L(s, a, ctx, line(who.pub), { kind: hero.dying.dead ? 'alert' : 'apply', effects: [dyingFx(hero, before), { t: 'roll', roll: roll.id }], private: !isPublic(s, hero), gmText: who.pub !== who.gm ? line(who.gm) : '' });
   roll.applied = { cardId: hero.id, field: 'hp', applied: 0, log: e.id };
   return { dying: hero.dying };
 }
@@ -418,10 +425,10 @@ const isHero = (card) => !!card && card.kind === 'pc' && !!card.hp;
 const dyingFx = (card, before) => ({ t: 'dying', card: card.id, before: before ? clone(before) : null });
 const rounds = (n) => n + (n === 1 ? ' round' : ' rounds');
 const GM_VOICE = { role: 'gm', name: 'GM' };   /* lines the table writes itself: only the GM can undo them */
-/* A hero falls: the d4 is rolled where everyone sees it, on a line of its own. */
+/* A hero falls: dying, with R.DYING.start rounds left (no die: the owner's decision, 2026-11-11), on a line of its own. */
 function fall(s, card, ctx, how, before) {
-  const n = d(ctx, R.DYING.die); card.dying = R.dyingFall(n); listAdd(recapOf(s, ctx).fell, card.name);
-  L(s, GM_VOICE, ctx, card.name + ' ' + (how || 'falls') + ' and is dying: d' + R.DYING.die + ' shows ' + n + ', ' + rounds(n) + ' left.', { kind: 'alert', effects: [dyingFx(card, before || null)], private: !isPublic(s, card), dice: diceOf(false, R.DYING.die, n) });
+  card.dying = R.dyingFall(); listAdd(recapOf(s, ctx).fell, card.name);
+  L(s, GM_VOICE, ctx, card.name + ' ' + (how || 'falls') + ' and is dying: ' + rounds(card.dying.left) + ' left.', { kind: 'alert', effects: [dyingFx(card, before || null)], private: !isPublic(s, card) });
 }
 /* After a hero's HP has moved from `was` and line `e` has said so: rising above 0 stands a dying or stable hero up (said on that line, and undone with it); falling to 0 starts the countdown. */
 function settleHero(s, card, was, e, ctx) {
@@ -438,16 +445,49 @@ const sayDying = (card) => (card.dying.dead ? card.name + ' has died.' : card.dy
 
 /* ---------- the Rising Horror ---------- */
 /* The meter, made on first use for a table saved before it existed. `alert` is the highest threshold passed that the GM has not yet dealt with (0 for none). */
-const horrorOf = (s) => (s.horror = s.horror && typeof s.horror === 'object' ? s.horror : { cur: 0, alert: 0 });
+/* `fired` lists the thresholds this adventure has fired (each fires once an adventure); `hunted` is set once 14 has fired: every foe met from then on has more HP. */
+const horrorOf = (s) => { const h = s.horror = s.horror && typeof s.horror === 'object' ? s.horror : { cur: 0, alert: 0 }; if (!Array.isArray(h.fired)) h.fired = []; return h; };
+const arrived = (s) => horrorOf(s).fired.includes(R.HORROR.dread.arrived);
 /* Move the meter by d, and say so: one line for the move (with an Undo for the GM), then one line for each threshold passed. `say(applied, now)` writes the line. */
 function moveHorror(s, a, ctx, d, say, dice) {
-  const h = horrorOf(s), m = R.horrorMove(h.cur, d); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
+  const h = horrorOf(s), m = R.horrorMove(h.cur, d, h.fired); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
   if (m.crossed.length) h.alert = Math.max(h.alert || 0, m.crossed[m.crossed.length - 1]);
   if (h.alert && h.cur < h.alert) h.alert = 0;
-  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects: m.applied ? [{ t: 'horror', d: m.applied }] : [], dice });
-  m.crossed.forEach((t) => L(s, { role: 'gm', name: 'GM' }, ctx, R.HORROR.lines[t], { kind: 'alert' }));
+  /* the thresholds this move fires, and what they do, belong to the move: undoing it un-fires them */
+  /** @type {any[]} */ const effects = m.applied ? [{ t: 'horror', d: m.applied }] : [];
+  m.crossed.forEach((t) => effects.push(dread(s, t)));
+  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects, dice });
+  m.crossed.forEach((t) => L(s, { role: 'gm', name: 'GM' }, ctx, R.HORROR.lines[t] + ' ' + R.HORROR.effects[t], { kind: 'alert' }));
   return { cur: h.cur, applied: m.applied, crossed: m.crossed, arrived: m.arrived, log: e.id };
 }
+/* A threshold fires (once an adventure): 7 shakes every hero (their next roll is Hard), 14 hunts (foes met from now on have more HP), 21 ends rest until a new adventure.
+   Returns the effect that records it, for Undo. */
+function dread(s, t) {
+  const h = horrorOf(s), D = R.HORROR.dread, fx = { t: 'threshold', at: t, shaken: [] };
+  h.fired.push(t); h.fired.sort((x, y) => x - y);
+  if (t === D.shaken) Object.values(s.chars).forEach((ch) => { if (!ch.shaken) { ch.shaken = true; fx.shaken.push(ch.id); } });
+  if (t === D.hunted) h.hunted = true;
+  return fx;
+}
+/* A foe the heroes meet once the Horror hunts them: more HP, once. Returns the words for the line that says so, or ''. */
+function hunt(s, card) {
+  if (!horrorOf(s).hunted || !card || card.kind === 'pc' || card.charId || !card.hp || card.hunted) return '';
+  const n = R.HORROR.dread.huntedHp; card.hp.max = Math.min(999, card.hp.max + n); card.hp.cur = Math.min(card.hp.max, card.hp.cur + n); card.hunted = true;
+  return card.name + ' has ' + n + ' more HP: the Horror hunts the heroes.';
+}
+/* A shaken hero's next roll is Hard (Easy becomes normal). Returns the roll's difficulty and the words that say why. */
+/* Once a scene, a check that fits the hero's path is Easy (the owner's decision, 2026-11-11). The player says so with the roll; the GM judges whether it fits, and
+   can refresh scene abilities for a new encounter. Not on attacks. It is kept with the scene's other once-a-scene uses. */
+function pathEasy(s, ch, c, adj) {
+  if (c.path !== true) return { adj, text: '' };
+  const path = SC.pathOf(ch); if (!path) fail('invalid', ch.name + ' follows no path.');
+  if (c.attack === true) fail('invalid', 'A path makes a check Easy, not an attack.');
+  const scene = s.scenes[s.table.scene] || fail('conflict', 'There is no live scene.'); scene.powers = scene.powers || {};
+  const uses = scene.powers[ch.id] || (scene.powers[ch.id] = {}); if (uses[PATH_KEY]) fail('invalid', ch.name + '\'s path has made a check Easy in this scene already.');
+  uses[PATH_KEY] = nid(s, 'u'); return { adj: R.easier(adj), text: ' (path, ' + path + ': Easy)' };
+}
+const PATH_KEY = 'path:easy';
+function takeShaken(ch, adj) { if (!ch.shaken) return { adj, text: '' }; ch.shaken = false; return { adj: adj === 'easy' ? 'normal' : 'hard', text: ' (shaken: Hard)' }; }
 /* A hero has used something that tempts the Horror: its amount (fixed, or rolled now with the table's dice) goes on the meter, whatever the check did. No amount, no line. */
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
@@ -456,15 +496,15 @@ function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
 }
 
-/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes a d4 of that hero's HP instead, on a line of its own (only the GM can undo it). */
+/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes 1 HP from that hero instead (the owner's rule after the
+   playtest of 2026-11-09; it was a d4), on a line of its own (only the GM can undo it). */
 function bleed(s, ctx, ch, lost, privateUse = false) {
   const card = ch && s.cards[ch.cardId]; if (!(lost > 0) || !card || !card.hp || card.hp.cur <= 0) return null;
-  const rolls = []; for (let i = 0; i < lost; i++) rolls.push(d(ctx, R.HORROR.bloodDie));
-  const total = rolls.reduce((x, y) => x + y, 0), was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
-  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + lost + 'd' + R.HORROR.bloodDie + ' shows ' + rolls.join(' + ') + ', ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
-    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card), dice: rolls.map((n) => ({ die: R.HORROR.bloodDie, n })) });
+  const total = lost * R.HORROR.blood, was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
+  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
+    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card) });
   settleHero(s, card, was, e, ctx);
-  return { lost, rolls, hp: -applied, log: e.id };
+  return { lost, hp: -applied, log: e.id };
 }
 
 /* An item's listed effects that fall on its user (sheet-core effectsOf, read the same way by the solo game): the Penitent's Chain takes a die of HP that nothing reduces
@@ -486,9 +526,10 @@ function selfEffects(s, a, ctx, ch, u, fx, priv) {
 /* The bonus waiting for a hero's next check (the Penitent's Chain), taken by that check. */
 function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0, text: '' }; const from = ch.checkBonusFrom || ''; ch.checkBonus = 0; ch.checkBonusFrom = ''; return { n, text: ' (+' + n + (from ? ' from ' + from : '') + ')' }; }
 
-/* A hero's d20 showing a natural 1 raises the Horror by itself on an attack, a spell, or a pushed second action of any kind; not on a plain check (the owner's rule, 2026-11-01). */
-function natOne(s, a, ctx, ch, chk, roll, spell) {
-  if (!chk.nat1 || !R.nat1Tempts({ attack: !!(roll && roll.isAttack), spell: !!spell, pushed: !!(roll && roll.fromPush) })) return null;
+/* A hero's d20 showing a natural 1 raises the Horror by itself on magic (a spell, or an item that tempts the Horror) or a pushed second action of any kind;
+   not on any other roll, an ordinary weapon's included (the owner's rules, 2026-11-01 and 2026-11-11). */
+function natOne(s, a, ctx, ch, chk, roll, magic) {
+  if (!chk.nat1 || !R.nat1Tempts({ magic: !!magic, pushed: !!(roll && roll.fromPush) })) return null;
   const hr = moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
   bleed(s, ctx, ch, R.HORROR.nat1 - hr.applied); return hr;
 }
@@ -534,18 +575,27 @@ function automaticEffortTarget(s, roll, a) {
   return { id: card.id, field };
 }
 
-function standingHero(s, ch) { const card = s.cards[ch.cardId]; if (card && card.hp && card.hp.cur === 0) fail('invalid', 'A fallen hero at 0 HP cannot act. Ask someone else to tend or heal them.'); }
-/* Why a roll cannot be pushed now, or '' when it can. A push follows a failed attack: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
+/* Magic, for a natural 1: a spell, or an item that tempts the Horror (a relic, a grimoire, a supernatural curio). */
+const isMagic = (u) => !!(u && (u.spell || (u.source || u.item || {}).temptsHorror || (u.item && u.item.temptsHorror)));
+/* A hero at 0 HP who is not dead may still act (the owner's decision, 2026-11-11): crawling away, a CON check, costs nothing; anything else costs R.DYING.actHorror,
+   on its own line before the roll. The dead cannot act. */
+function standingHero(s, a, ctx, ch, crawl) {
+  const card = s.cards[ch.cardId]; if (!card || !card.hp || card.hp.cur > 0) return;
+  if (card.dying && card.dying.dead) fail('invalid', ch.name + ' is dead.');
+  if (crawl) return;
+  moveHorror(s, a, ctx, R.DYING.actHorror, (applied, now) => ch.name + ' is ' + (card.dying && card.dying.stable ? 'down' : 'dying') + ' and acts anyway.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
+}
+/* Why a roll cannot be pushed now, or '' when it can. A push follows any failed roll (the owner's decision, 2026-11-11; it was attacks only): the hero's latest roll,
+   not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
 function pushBlock(s, r, override = false) {
   if (!r || !r.check || r.attack || r.void) return 'There is nothing to push.';
-  if (!r.isAttack) return 'Only a failed attack can be pushed.';
   if (r.check.success) return 'That roll succeeded.';
-  if (r.pushContext && r.pushContext !== turnKey(s)) return 'That exchange has ended. Make a new attack before pushing.';
+  if (r.pushContext && r.pushContext !== turnKey(s)) return 'That exchange has ended. Make a new roll before pushing.';
   if (r.pushed) return 'That roll has been pushed already.';
   if (r.fromPush) return 'A pushed action cannot be pushed again.';
   if (s.rollOrder.slice(s.rollOrder.indexOf(r.id) + 1).some((id) => s.rolls[id] && s.rolls[id].charId === r.charId)) return 'Only the latest roll can be pushed.';
   const ch = s.chars[r.charId]; if (!ch) return 'That hero is no longer at the table.';
-  if (s.cards[ch.cardId] && s.cards[ch.cardId].hp && s.cards[ch.cardId].hp.cur === 0) return 'A fallen hero at 0 HP cannot act.';
+  if (s.cards[ch.cardId] && s.cards[ch.cardId].dying && s.cards[ch.cardId].dying.dead) return ch.name + ' is dead.';
   if (!override && (!s.table.order.length || s.table.order[s.table.idx] !== ch.cardId)) return 'Push is available on your turn. Ask the GM for an exception.';
   if (ch.pushTurn && (ch.pushTurn === turnKey(s) || ch.pushTurn === s.table.round + ':' + s.table.idx)) return 'You have pushed once this turn already.';
   return '';
@@ -559,7 +609,6 @@ function takeAction(ch, roll) { if (ch.pushPending) { roll.fromPush = true; ch.p
    Usage belongs to the recipient and source, so changing caster or carrying duplicate books cannot bypass a rest limit. */
 function useHealing(s, c, a, ctx, ch, u, selected) {
   const h = u.healing, actor = s.cards[ch.cardId];
-  if (actor && actor.hp && actor.hp.cur === 0) fail('invalid', 'A fallen hero cannot use healing. Ask someone else to tend or heal them.');
   const target = h.self ? actor : selected || actor;
   if (!target || !target.hp) fail('invalid', 'Choose a target with HP to heal.');
   noRaisingTheDead(target, 1);
@@ -570,14 +619,14 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
   let chk = null, roll = null;
   if (u.stat) {
     const manual = c.d20 != null && c.d20 !== '', n = manual ? int(c.d20, 0) : d(ctx, 20);
-    const tb = takeBonus(ch); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: tending ? 'easy' : c.adj, settings: s.settings });
+    const tb = takeBonus(ch), sh = takeShaken(ch, tending ? 'easy' : c.adj); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
     roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual,
       targetCardId: target.id, effort: null, applied: null, void: false, at: ctx.now, item: u.name, nonDamage: true, isAttack: false,
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
     L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text, { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
-    natOne(s, a, ctx, ch, chk, roll, u.spell);
+    natOne(s, a, ctx, ch, chk, roll, isMagic(u));
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
   const effects = [], dice = [];
@@ -650,7 +699,8 @@ const HANDLERS = {
 
   cardCreate(s, c, a, ctx) {
     const card = newCard(s, c.card || {}, a); if (c.addToOrder) joinSceneOrder(s, card);
-    L(s, a, ctx, 'Added ' + card.name + '.', vis(s, card)); return { id: card.id };
+    const hunted = card.sceneId === s.table.scene ? hunt(s, card) : '';
+    L(s, a, ctx, 'Added ' + card.name + '.' + (hunted ? ' ' + hunted : ''), Object.assign(vis(s, card), hunted && numbersHidden(card) ? { gmText: 'Added ' + card.name + '. ' + hunted } : {})); return { id: card.id };
   },
   cardUpdate(s, c, a, ctx) {
     const card = cardOf(s, c.id), p = c.patch || {}, wasPublic = isPublic(s, card);
@@ -677,7 +727,8 @@ const HANDLERS = {
   cardDuplicate(s, c, a, ctx) {
     const src = cardOf(s, c.id), l = s.layout[src.id] || { x: 40, y: 40 };
     const copy = newCard(s, { kind: src.kind === 'pc' ? 'token' : src.kind, name: src.name + ' 2', img: src.img, desc: src.desc, gmNotes: src.gmNotes, visible: src.visible, hideNumbers: src.hideNumbers, sceneId: src.sceneId, attack: src.attack, loot: src.loot && clone(src.loot), hp: src.hp, progress: src.progress, timer: src.timer && Object.assign({}, src.timer, { fired: false }), x: l.x + 3, y: l.y + 3, w: l.w, h: l.h }, a);
-    L(s, a, ctx, 'Duplicated ' + src.name + '.', vis(s, copy)); return { id: copy.id };
+    const hunted = copy.sceneId === s.table.scene ? hunt(s, copy) : '';
+    L(s, a, ctx, 'Duplicated ' + src.name + '.' + (hunted ? ' ' + hunted : ''), vis(s, copy)); return { id: copy.id };
   },
   cardDelete(s, c, a, ctx) {
     const card = cardOf(s, c.id), open = isPublic(s, card); dropCard(s, card);
@@ -781,7 +832,9 @@ const HANDLERS = {
       s.table.order = turns.order.slice(); s.table.idx = turns.idx;
       Object.values(s.chars).forEach(ch => { ch.pushPending = false; });
     }
-    s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {};
+    s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.');
+    Object.values(s.cards).filter((card) => card.sceneId === sc.id).forEach((card) => { const said = hunt(s, card); if (said) L(s, GM_VOICE, ctx, said, { private: !isPublic(s, card) || numbersHidden(card) }); });
+    return {};
   },
 
   orderSet(s, c) {
@@ -802,7 +855,7 @@ const HANDLERS = {
     const ch = charOf(s, c.id), p = c.patch || {};
     if (own(p, 'name')) { ch.name = str(p.name, LIMITS.name, ch.name) || ch.name; const card = s.cards[ch.cardId]; if (card) card.name = ch.name; }
     if (p.stats) R.STATS.forEach((k) => { if (own(p.stats, k)) ch.stats[k] = clamp(int(p.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
-    if (p.effort) R.CATS.forEach((k) => { if (own(p.effort, k)) ch.effort[k] = clamp(int(p.effort[k], 0), 0, R.MAX_BONUS); });
+    if (p.effort) R.BONUS_CATS.forEach((k) => { if (own(p.effort, k)) ch.effort[k] = clamp(int(p.effort[k], 0), 0, R.MAX_BONUS); });
     if (own(p, 'armour')) ch.armour = clamp(int(p.armour, 0), 0, R.MAX_BONUS); return {};
   },
   sheet(s, c, a, ctx) { /* a change on the character sheet: the hero's player, or the GM. The rules are the sheet's own (sheet-core.js), so what the screen allowed is what is allowed here. */
@@ -839,13 +892,14 @@ const HANDLERS = {
   },
 
   roll(s, c, a, ctx) {
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
     if (!R.STATS.includes(c.stat)) fail('invalid', 'Choose a stat.');
+    standingHero(s, a, ctx, ch, c.stat === R.DYING.crawl && c.attack !== true);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal'; const manual = c.d20 != null && c.d20 !== '';
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
-    const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj, settings: s.settings });
+    const pe = pathEasy(s, ch, c, adj), tb = takeBonus(ch), sh = takeShaken(ch, pe.adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += pe.text + sh.text;
     const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
@@ -856,7 +910,7 @@ const HANDLERS = {
   },
   useItem(s, c, a, ctx) { /* a hero uses an item: a check with the item's stat; on a success the player then rolls the item's own Effort die (see `effort`), plus their bonus in that kind. No Effort kind, no Effort roll;
      no stat either (a spell said without a check), no roll at all. Whatever it is, if it tempts the Horror the meter rises by its amount. */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
     const index = gearIndex(ch, c.gearKey);
     let u = SC.useOf(powerHero(s, ch), index, c.spellId, c.mode); if (!u.ok) fail('invalid', u.why);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal', manual = c.d20 != null && c.d20 !== '';
@@ -873,13 +927,14 @@ const HANDLERS = {
     if (selfFx && fx.nextCheck && int(ch.checkBonus, 0)) fail('invalid', 'The +' + ch.checkBonus + ' from ' + (ch.checkBonusFrom || 'it') + ' is still waiting for ' + ch.name + '\'s next roll.');
     const area = u.area ? areaTargets(s, c.targetCardIds || (target ? [target] : []), a) : null;
     if (area) target = area[0].id;
+    standingHero(s, a, ctx, ch, false);
     const sceneFx = powerSpend(s, ch, u);
     if (u.healing) return Object.assign(out, useHealing(s, Object.assign({}, c, { index, adj }), a, ctx, ch, u, tc));
     const tempts = (u.spell || u.item).temptsHorror ? ' It tempts the Horror.' : ''; let nat = null;
     if (!u.stat) ch.pushPending = false;   /* a pushed second action with no roll is still the second action */
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
-      const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj, settings: s.settings });
+      const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj: sh.adj, settings: s.settings, misfire: u.spell ? 0 : R.misfireOf(u.item) }); tb.text += sh.text;
       const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
@@ -889,14 +944,14 @@ const HANDLERS = {
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
-      nat = natOne(s, a, ctx, ch, chk, roll, u.spell);
+      nat = natOne(s, a, ctx, ch, chk, roll, isMagic(u));
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [] });
     if (selfFx) selfEffects(s, a, ctx, ch, u, fx, priv);
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
     const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
-  push(s, c, a, ctx) { /* after a failed attack the hero may push for a second action: the Horror rises, and their next roll is that action */
+  push(s, c, a, ctx) { /* after any failed roll the hero may push for a second action: the Horror rises, and their next roll is that action */
     const r = s.rolls[c.rollId] || fail('not_found', 'That roll is no longer at the table.'), ch = charOf(s, r.charId);
     if (!ownsChar(ch, a) || r.by !== (isGM(a) ? 'gm' : a.pid)) fail('forbidden', 'That is not your roll.');
     const why = pushBlock(s, r); if (why) fail('invalid', why);
@@ -926,6 +981,13 @@ const HANDLERS = {
     return { cur: r.cur, applied: r.applied, crossed: r.crossed };
   },
   horrorAck(s) { horrorOf(s).alert = 0; return {}; },
+  newAdventure(s, c, a, ctx) { /* a new adventure begins: each threshold may fire again, the hunt ends and no hero is still shaken. The meter itself stays where it is. One Undo. */
+    const h = horrorOf(s), shaken = Object.values(s.chars).filter((ch) => ch.shaken).map((ch) => ch.id);
+    const fx = { t: 'adventure', fired: h.fired.slice(), hunted: !!h.hunted, alert: h.alert || 0, shaken };
+    h.fired = []; h.hunted = false; h.alert = 0; shaken.forEach((id) => { s.chars[id].shaken = false; });
+    const e = L(s, a, ctx, 'A new adventure begins. The Horror stays at ' + h.cur + ' of ' + R.HORROR.max + '; 7, 14 and 21 can each fire again.', { kind: 'horror', effects: [fx] });
+    return { log: e.id };
+  },
   nextSession(s, c, a, ctx) { /* the GM's date for the next game, shown to everyone at the table in their own time; null clears it */
     if (c.at == null || c.at === '') { s.next = null; L(s, a, ctx, 'The next session is not set.'); return {}; }
     const at = +c.at; if (!Number.isFinite(at) || at < 1e12 || at > 1e13) fail('invalid', 'Choose a date and time.');
@@ -1011,9 +1073,10 @@ const HANDLERS = {
     } else fail('invalid', 'Choose stable, hurt or round.');
     return { dying: card.dying };
   },
-  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by a d10 for every two of them. One line, one Undo. */
+  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by one d6. One line, one Undo. */
     const heroes = Object.values(s.cards).filter((card) => isHero(card) && !(card.dying && card.dying.dead));
     if (!heroes.length) fail('invalid', 'There is no living hero to rest.');
+    if (arrived(s)) fail('invalid', 'The Horror has arrived: there is no more rest this adventure. Start a new adventure in the Table tab when this one ends.');
     const effects = [], parts = [];
     Object.values(s.cards).filter(card => card.hp && Object.keys(card.healingUses || {}).length).forEach(card => {
       const before = clone(card.healingUses || {}), epoch = card.healEpoch || 0;
@@ -1029,7 +1092,7 @@ const HANDLERS = {
     const h = horrorOf(s), n = h.cur > 0 ? R.restDice(heroes.length) : 0, rolled = []; for (let i = 0; i < n; i++) rolled.push(d(ctx, R.REST.horrorDie));
     const total = rolled.reduce((x, y) => x + y, 0), m = R.horrorMove(h.cur, -total); h.cur = m.to; if (h.alert && h.cur < h.alert) h.alert = 0;
     if (m.applied) effects.push({ t: 'horror', d: m.applied });
-    const horror = n ? 'Horror ' + n + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ' of ' + R.HORROR.max + ').' : 'The Horror is at 0.';
+    const horror = n ? 'Horror ' + (n > 1 ? n : '') + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ' of ' + R.HORROR.max + ').' : 'The Horror is at 0.';
     recapOf(s, ctx).rests += 1;
     const e = L(s, a, ctx, 'The party rests. ' + healed + ' ' + horror, { kind: 'horror', effects, dice: rolled.map((x) => ({ die: R.REST.horrorDie, n: x })) });
     return { log: e.id, horror: h.cur };
@@ -1048,10 +1111,10 @@ const HANDLERS = {
     const ult = roll.criticalRule !== 'extra' && c.cat === 'ultimate' && roll.check.offerUltimate;
     if (roll.criticalRule === 'extra' && !roll.cat && c.cat === 'ultimate') fail('invalid', 'Choose the normal Effort type. Critical damage is added automatically.');
     const ch = charOf(s, roll.charId), cat = roll.cat && !ult ? roll.cat : R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
-    if (!(isGM(a) && c.force)) standingHero(s, ch);
+    if (!(isGM(a) && c.force)) standingHero(s, a, ctx, ch, true);   /* the Effort of an action already paid for */
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
-    e.weaponBonus = roll.weaponBonus === 2 && roll.cat === 'weapons' ? 2 : 0; e.total += e.weaponBonus;
+    e.weaponBonus = roll.weaponBonus === 2 && (roll.cat === 'weapons' || roll.cat === 'guns') ? 2 : 0; e.total += e.weaponBonus;
     if (roll.criticalRule === 'extra' && roll.check.offerUltimate) { const size = R.settingsOf(s.settings).dice.ultimate, extra = c.criticalRolled != null ? int(c.criticalRolled, 0) : d(ctx, size); try { e = R.criticalEffort({ base: e, rolled: extra, bonus: ch.effort.ultimate, settings: s.settings }); } catch (err) { fail('invalid', err.message); } }
     e.manual = manual; roll.effort = e; const tc = roll.targetCardId && s.cards[roll.targetCardId];
     L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled).concat(e.critical ? diceOf(c.criticalRolled != null, e.critical.die, e.critical.rolled) : []) });
@@ -1063,7 +1126,7 @@ const HANDLERS = {
     return { rollId: roll.id };
   },
   freeEffort(s, c, a, ctx) { /* Effort on its own, with no check before it: a standing blow, a physical roll, a task the GM has already allowed */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, a, ctx, ch, false);
     const cat = R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
@@ -1115,7 +1178,7 @@ const HANDLERS = {
     if (e.undone) fail('conflict', 'That has already been undone.');
     if (!e.effects.length) fail('invalid', 'That cannot be undone.');
     if (!isGM(a) && e.by !== a.pid) fail('forbidden', 'You can only undo your own actions.');
-    if (!isGM(a) && e.effects.some((fx) => fx.t === 'horror')) fail('forbidden', 'Only the GM can lower the Horror.');
+    if (!isGM(a) && e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'adventure')) fail('forbidden', 'Only the GM can lower the Horror.');
     if (!isGM(a) && e.effects.some((fx) => fx.t === 'turn')) fail('forbidden', 'Only the GM can take a turn back.');   /* a new round also ticks timers and countdowns for everyone */
     if ((e.private || e.only) && !isGM(a) && !e.only) fail('not_found', 'That entry is no longer there.');
     for (const fx of e.effects) {
@@ -1147,6 +1210,8 @@ const HANDLERS = {
       else if (fx.t === 'healingReset') { const card = s.cards[fx.card]; card.healingUses = clone(fx.before); card.healEpoch = fx.epoch; }
       else if (fx.t === 'healingCharge') s.chars[fx.char].gear.find(g => g.key === fx.key).uses = fx.before;
       else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
+      else if (fx.t === 'threshold') { const h = horrorOf(s); h.fired = h.fired.filter((t) => t !== fx.at); if (fx.at === R.HORROR.dread.hunted) h.hunted = false; (fx.shaken || []).forEach((id) => { if (s.chars[id]) s.chars[id].shaken = false; }); }
+      else if (fx.t === 'adventure') { const h = horrorOf(s); h.fired = fx.fired.slice(); h.hunted = fx.hunted; h.alert = fx.alert; fx.shaken.forEach((id) => { if (s.chars[id]) s.chars[id].shaken = true; }); }
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */
     e.effects.forEach((fx) => { const card = (fx.t === 'delta' || fx.t === 'dying') && s.cards[fx.card]; if (isHero(card) && card.hp.cur > 0) card.dying = null; });

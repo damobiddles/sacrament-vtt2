@@ -72,7 +72,7 @@ test('the loot tables: every number on the d100 and on each sub-table gives exac
     hits.forEach((h, k) => { assert.equal(h.length, 1, 'on the ' + t.id + ' table the roll ' + (k + 1) + ' gives ' + (h.length ? h.join(' and ') : 'nothing')); });
   }
   for (const i of all()) if (i.table) assert.ok((G.tables || []).some((t) => t.id === i.table), i.name + ' is on a table that does not exist: ' + i.table);
-  assert.equal(listed, 251); // Owner request 2026-11-08: 100 path relics (five for each of 20 paths) on their own table, reached from the Relics table.
+  assert.equal(listed, 254); // Owner decision 2026-11-11: three rare guns on the Arms table. Owner request 2026-11-08: 100 path relics (five for each of 20 paths) on their own table, reached from the Relics table.
   const depth = (t, k = 1) => (!t.on || t.on === 'd100' ? k : depth(G.tables.find((x) => x.id === t.on), k + 1));
   for (const t of G.tables || []) assert.ok(depth(t) <= 3, 'the ' + t.name + ' table is more than three tables deep');
 });

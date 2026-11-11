@@ -54,9 +54,9 @@ test('plain look-alike finds work like their twins (owner decision 2026-11-08, d
   assert.match(road, /FIRE = LIGHTS\.concat\(\['tinder', 'flintsteel'\]\)/);
 });
 
-test('the Paths page counts a pushed relic roll among the natural 1s that add Horror, as the rules and the engine do (weekly audit 2026-11-09)', () => {
+test('the Paths page says a relic\'s natural 1 adds Horror, as the rules and the engine do (weekly audit 2026-11-09; every magic natural 1 counts since 2026-11-11)', () => {
   const paths = read('content/landing/paths.md');
-  assert.match(paths, /A natural 1 adds Horror only when the relic is used to attack or as a pushed second action/);
+  assert.match(paths, /A natural 1 on a relic adds 1 more Horror, as on any magic/);
   assert.match(read('content/landing/rules-updates.md'), /A relic's natural 1 when pushed \(9 November 2026\)/);
 });
 

@@ -12,7 +12,7 @@
   var int = function (v, d) { v = parseInt(v, 10); return isFinite(v) ? v : d; };
   var clamp = function (n, lo, hi) { return Math.max(lo, Math.min(hi, n)); };
   var STAT_HELP = { STR: 'force, climbing, melee', DEX: 'shooting, stealth, balance', CON: 'endurance, Defence', INT: 'knowledge, most spells', WIS: 'awareness, healing', CHA: 'persuasion, presence' };
-  var EFFORT_HELP = { basic: 'bare hands, basic work', weapons: 'blades, bows, slings', guns: 'guns, gunpowder', magic: 'magical damage', ultimate: 'when granted' };
+  var EFFORT_HELP = { basic: 'bare hands, basic work', weapons: 'blades, bows, slings', guns: 'guns (misfire on 1–3)', magic: 'magical damage' };
 
   /* The address can be typed or edited by anyone, so only the shape of a hero is kept: known items, whole numbers, text within the sheet's limits. */
   function read(hash) {
@@ -72,9 +72,9 @@
     s += '<h2 class="ps-black">Scores · ' + share(B.points, adv.stats) + ' points to share, none above ' + B.scoreMax + '</h2><div class="ps-boxes ps-six">' + R.STATS.map(function (k) {
       return '<div class="ps-box"><b class="ps-name">' + k + '</b><small>' + STAT_HELP[k] + '</small><span class="ps-num">' + num(h.stats[k]) + '</span></div>';
     }).join('') + '</div>';
-    s += '<h2 class="ps-black">Effort bonuses · ' + share(B.effortPoints, adv.effort) + ' points to share, none above +' + R.ADVANCE.effortMax + '</h2><div class="ps-boxes ps-five">' + R.CATS.map(function (k) {
+    s += '<h2 class="ps-black">Effort bonuses · ' + share(B.effortPoints, adv.effort) + ' points to share, none above +' + R.ADVANCE.effortMax + '</h2><div class="ps-boxes ps-four">' + R.BONUS_CATS.map(function (k) {
       return '<div class="ps-box"><b class="ps-name">' + R.CAT_NAMES[k] + '</b><small>d' + R.DEFAULT_DICE[k] + ' · ' + EFFORT_HELP[k] + '</small><span class="ps-num">' + num(h.effort[k]) + '</span></div>';
-    }).join('') + '</div>';
+    }).join('') + '</div><p class="ps-small">A successful natural 20 adds a plain d' + R.DEFAULT_DICE.ultimate + '. Two-handed weapons deal 2 more damage.</p>';
 
     /* Advancement (rules.js ADVANCE): a mark for each adventure lived through; at 3 marks, one advance, and the marks start again. */
     var taken = adv.stats + adv.effort, tallies = Math.max(10, taken);
@@ -93,7 +93,7 @@
     }
     s += '<p class="ps-small">Maximum: <b>' + (blank ? '____' : max) + '</b> (10, plus 10 for each Heart your worn gear grants).' + (blank ? ' Cross out the boxes beyond it.' : ' Boxes beyond it are crossed out.') + '</p></section>';
     s += '<section class="ps-frame ps-def"><h2 class="ps-black">Defence</h2><div class="ps-sum"><span>10 +</span><span class="ps-cell"><b>' + num(h.stats.CON) + '</b><small>CON</small></span><span>+</span><span class="ps-cell"><b>' + num(armour) + '</b><small>armour (max +' + R.ARMOUR_CAP + ')</small></span><span>=</span><span class="ps-cell ps-total"><b>' + (blank ? '\u00a0' : C.defence(h)) + '</b><small>Defence</small></span></div>';
-    s += '<h2 class="ps-black">When down</h2><p class="ps-tick-line"><i></i> Dying · rounds left <i></i><i></i><i></i></p><p class="ps-tick-line"><i></i> Stable <i></i> Dead</p></section></div>';
+    s += '<h2 class="ps-black">When down</h2><p class="ps-tick-line"><i></i> Dying · rounds left <i></i><i></i><i></i></p><p class="ps-tick-line"><i></i> Stable <i></i> Dead</p><p class="ps-small">On your turn: crawl away (CON, free) or pay ' + R.DYING.actHorror + ' Horror to act.</p></section></div>';
 
     s += '<div class="ps-split ps-even"><section><h2 class="ps-black">Equipped · ' + B.slots + ' slots</h2><table class="ps-table"><thead><tr><th></th><th>Item</th><th>Slots</th></tr></thead><tbody>' +
       rows(eq.map(function (x) { return '<td>' + esc(x.it.name) + detail(x.it) + '</td><td class="ps-r">' + x.it.slots + '</td>'; }), 2, rowsMin) +
@@ -108,7 +108,7 @@
       if (!x) return '<div class="ps-col">' + line('Item', '') + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><div class="ps-blank"></div><div class="ps-blank"></div></div>';
       var list = x.it.kind === 'grimoire' ? C.spellsOf(x.it) : [x.it];
       return '<div class="ps-col">' + line('Item', x.it.name) + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><ul>' + list.map(power).join('') + '</ul></div>';
-    }).join('') + '</div><p class="ps-small">A grimoire takes 3 slots and holds 3 spells. You may choose one starting grimoire; the GM gives the rest. Path (optional): a relic of your own path costs 1 less Horror to use.</p></section>';
+    }).join('') + '</div><p class="ps-small">A grimoire takes 3 slots and holds 3 spells. You may choose one starting grimoire; the GM gives the rest. Path (optional): a relic of your own path costs 1 less Horror to use, and once a scene a check that fits your path is Easy.</p></section>';
     s += '<footer class="ps-foot"><span class="ps-tick-line">Once per scene used: <i></i><i></i><i></i> · Notes on the back</span><span>Sacrament RPG</span></footer></article>';
 
     /* the back: what the hero's sheet holds in words, with room to write */

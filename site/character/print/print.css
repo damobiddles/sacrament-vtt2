@@ -27,6 +27,7 @@
 .ps-boxes{display:grid;gap:3mm}
 .ps-six{grid-template-columns:repeat(6,1fr)}
 .ps-five{grid-template-columns:repeat(5,1fr)}
+.ps-four{grid-template-columns:repeat(4,1fr)}
 .ps-box{border:1px solid var(--ink);padding:1mm 1.6mm;text-align:center;display:flex;flex-direction:column;align-items:center}
 .ps-box small{font-size:7pt;color:var(--muted);line-height:1.2;min-height:2.4em;border-bottom:1px solid var(--rule);width:100%;padding-bottom:.6mm}
 .ps-name{font-family:var(--display);font-size:13.5pt;line-height:1.1}

@@ -6,7 +6,7 @@
 (function (root, factory) { root.SacramentSheetCore = factory(root.SacramentRules, root.SACRAMENT_GEAR); })(typeof window !== 'undefined' ? window : globalThis, function (R, G) {
   'use strict';
   if (!R || !G) throw new Error('Load rules.js and gear.js before sheet-core.js.');
-  var B = R.BUILD, STATS = R.STATS, CATS = R.CATS;
+  var B = R.BUILD, STATS = R.STATS, CATS = R.CATS, BONUS_CATS = R.BONUS_CATS;
   var TEXT_LIMITS = { name: 60, calling: 30, vow: 120, appearance: 600, background: 1500, notes: 1500 };
   var ALL = G.items.concat(G.relics, G.grimoires, G.found || []), BY = {}; ALL.concat(G.retiredGrimoires || []).forEach(function (i) { BY[i.id] = i; });
   /* a thing only the GM gives out: a relic, or anything from the loot table that is not one of the starter items */
@@ -17,6 +17,8 @@
   var PATHS = (G.paths || []).map(function (p) { return p.name; }), PATH_ABOUT = {}; (G.paths || []).forEach(function (p) { PATH_ABOUT[p.name] = p.about || ''; });
   function pathOf(h) { return h && PATHS.indexOf(h.path) >= 0 ? h.path : ''; }
   function onPath(h, it) { return !!(it && it.path && pathOf(h) === it.path); }
+  var PATH_SCORE = {}; (G.paths || []).forEach(function (p) { PATH_SCORE[p.name] = p.score || ''; });
+  function pathScore(h) { return PATH_SCORE[pathOf(h)] || ''; }
   /* What a story spell or item is good for when its words leave it to the GM: its tags from the gear list, each with its default in a fight and out of one. */
   function tagsOf(src) { return ((src && src.tags) || []).map(function (id) { return TAG[id]; }).filter(Boolean); }
   var NEEDS = { corpse: 'needs a corpse close by', undead: 'only against the undead', animal: 'needs an ordinary animal close by', person: 'needs someone close by who can see, hear or answer you', body: 'needs a body, a wound or a sample close by', writing: 'needs writing, carving or a map close by', wild: 'only outdoors, among growing things', obstacle: 'for a door, a path or a watcher in the way, not a fight', ally: 'needs a willing companion' };
@@ -51,13 +53,13 @@
       horrorReason: text(raw.horrorReason, 240), temptsHorror: raw.temptsHorror === true, horror: raw.temptsHorror === true ? horrorOf(raw.horror) : 0 };
     o.band = rangeBand(raw.band); o.rangeNote = text(raw.rangeNote, 240);
     o.cat = CATS.indexOf(raw.cat) >= 0 ? raw.cat : ''; o.roll = o.cat ? (STATS.indexOf(raw.roll) >= 0 ? raw.roll : 'STR') : o.temptsHorror && STATS.indexOf(raw.roll) >= 0 ? raw.roll : '';
-    if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged', 'crossbow', 'firearm'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
+    if (kind === 'weapon') o.weaponStyle = ['single', 'heavy', 'reach', 'ranged', 'crossbow', 'firearm', 'pistol'].indexOf(raw.weaponStyle) >= 0 ? raw.weaponStyle : 'single';
     if (kind === 'weapon' && o.weaponStyle !== 'single') o.slots = Math.max(2, o.slots);
     if (kind === 'armour') o.armourPart = ['body', 'head', 'shield'].indexOf(raw.armourPart) >= 0 ? raw.armourPart : 'body';
     if (kind === 'weapon' && (o.weaponStyle === 'ranged' || o.weaponStyle === 'crossbow')) o.cat = 'weapons';
-    if (kind === 'weapon' && o.weaponStyle === 'firearm') o.cat = 'guns';
+    if (kind === 'weapon' && (o.weaponStyle === 'firearm' || o.weaponStyle === 'pistol')) o.cat = 'guns';
     if (kind === 'weapon' && (!o.cat || o.cat === 'basic')) o.cat = 'weapons';
-    if (kind === 'weapon' && !o.roll) o.roll = o.weaponStyle === 'ranged' || o.weaponStyle === 'crossbow' || o.weaponStyle === 'firearm' ? 'DEX' : 'STR';
+    if (kind === 'weapon' && !o.roll) o.roll = o.weaponStyle === 'ranged' || o.weaponStyle === 'crossbow' || o.weaponStyle === 'firearm' || o.weaponStyle === 'pistol' ? 'DEX' : 'STR';
     if (kind === 'weapon' && o.weaponStyle === 'heavy') { o.cat = 'weapons'; if (STATS.indexOf(o.roll) < 0) o.roll = 'STR'; }
     if (kind === 'grimoire') {
       o.theme = (G.grimoireThemes || []).indexOf(raw.theme) >= 0 ? raw.theme : '';
@@ -116,13 +118,13 @@
   /* Advancement (rules.js ADVANCE): each advance a hero has taken adds one point to share among the scores, or among the Effort kinds. */
   var AD = R.ADVANCE;
   /* the most advances a hero can ever have taken: every score at its top and every Effort bonus at its top (more is a hand-edited save) */
-  var MAX_ADVANCES = STATS.length * AD.scoreMax - B.points + CATS.length * AD.effortMax - B.effortPoints;
+  var MAX_ADVANCES = STATS.length * AD.scoreMax - B.points + BONUS_CATS.length * AD.effortMax - B.effortPoints;
   function advancesOf(h) { var a = (h && h.advances) || {}; return { stats: Math.max(0, int(a.stats, 0)), effort: Math.max(0, int(a.effort, 0)) }; }
   function marksOf(h) { return clamp(int(h && h.marks, 0), 0, AD.marks); }
   function scorePoints(h) { return B.points + advancesOf(h).stats; }
   function effortPoints(h) { return B.effortPoints + advancesOf(h).effort; }
   function pointsLeft(h) { return scorePoints(h) - sum(h.stats, STATS); }
-  function effortLeft(h) { return effortPoints(h) - sum(h.effort, CATS); }
+  function effortLeft(h) { return effortPoints(h) - sum(h.effort, BONUS_CATS); }
 
   /* ---------- gear ---------- */
   /* Whether an item can be equipped at all: its own "equippable" flag in gear.js if it has one, otherwise by its type (everything but a supply). Decided from the data, never from a name. */
@@ -153,8 +155,9 @@
   function weaponEffortNote(h) {
     return h.effort && h.effort.guns > 0 && (h.gear || []).some(function (g) { var it = itemOf(g); return it && it.kind === 'weapon' && it.cat === 'weapons' && (it.weaponStyle === 'ranged' || it.band === 'far'); }) ? 'Your Guns bonus does not apply to bows, crossbows or slings. These use Weapons d6. If your Guns points were for a bow, lower Guns and add those points to Weapons. Your saved points have been kept.' : '';
   }
-  function attackBonus(it) { return it && it.kind === 'weapon' && it.weaponStyle === 'crossbow' ? 2 : 0; }
-  function damageBonus(it) { return it && it.kind === 'weapon' && it.weaponStyle === 'heavy' && it.cat === 'weapons' ? 2 : 0; }
+  /* Every two-handed weapon adds +2 damage; no weapon adds to its attack check (the owner's decision, 2026-11-11: the crossbow's +2 to hit went). */
+  function attackBonus(it) { void it; return 0; }   /* kept so older callers still ask */
+  function damageBonus(it) { return it && it.kind === 'weapon' && weaponHands(it) === 2 && (it.cat === 'weapons' || it.cat === 'guns') ? 2 : 0; }
   /* Preserve every saved item. Extra suits/helmets/shields move to the pack, even
      if an old loadout needs manual rearranging afterwards. Preserve wounds. */
   function reconcileArmour(h, hp) {
@@ -348,10 +351,11 @@
       h.stats[op.stat] = val; return { ok: true };
     }
     if (op.op === 'effort') {
-      if (CATS.indexOf(op.cat) < 0) return no('That is not a kind of Effort.');
+      if (op.cat === 'ultimate') return no('Ultimate is a die, not a bonus: a successful natural 20 adds a d12. Put your points in another kind.');
+      if (BONUS_CATS.indexOf(op.cat) < 0) return no('That is not a kind of Effort.');
       var eo = h.effort[op.cat] || 0, ev = op.delta != null ? eo + int(op.delta, NaN) : int(op.value, NaN); if (!isFinite(ev)) return no('Effort is a whole number.');
       if (ev < 0) return no('Effort cannot go below 0.');
-      var eafter = sum(h.effort, CATS) - eo + ev;
+      var eafter = sum(h.effort, BONUS_CATS) - eo + ev;
       if (ev > AD.effortMax && ev > eo) return no('An Effort bonus can be at most +' + AD.effortMax + '.');
       if (eafter > effortPoints(h) && ev > eo) { var el = effortLeft(h); return no(el <= 0 ? 'You have no Effort points left: all ' + effortPoints(h) + ' are spent. Take a point off another kind first.' : 'You have only ' + plural(el, 'Effort point', 'Effort points') + ' left for this.'); }
       h.effort[op.cat] = ev; return { ok: true };
@@ -372,7 +376,7 @@
         if ((h.stats[op.stat] || 0) >= AD.scoreMax) return no(op.stat + ' is already ' + AD.scoreMax + ', as high as a score goes.');
         h.stats[op.stat] = (h.stats[op.stat] || 0) + 1; a.stats += 1;
       } else {
-        if (CATS.indexOf(op.cat) < 0) return no('Choose a score or a kind of Effort.');
+        if (BONUS_CATS.indexOf(op.cat) < 0) return no('Choose a score or a kind of Effort.');
         if ((h.effort[op.cat] || 0) >= AD.effortMax) return no(R.CAT_NAMES[op.cat] + ' Effort is already +' + AD.effortMax + ', as high as it goes.');
         h.effort[op.cat] = (h.effort[op.cat] || 0) + 1; a.effort += 1;
       }
@@ -419,7 +423,7 @@
   /* ---------- checking a whole hero (bringing one to a table) ----------
      who.arriving: a hero brought from My heroes may arrive with the relics and grimoires of a ready-made kit (up to three in all); the sheet still will not let a player add them. */
   function problems(h, who) {
-    var gm = !!(who && who.gm), keep = gm || !!(who && who.arriving), out = [], spent = sum(h.stats, STATS), espent = sum(h.effort, CATS), sp = scorePoints(h), ep = effortPoints(h);
+    var gm = !!(who && who.gm), keep = gm || !!(who && who.arriving), out = [], spent = sum(h.stats, STATS), espent = sum(h.effort, BONUS_CATS), sp = scorePoints(h), ep = effortPoints(h);
     if (spent > sp) out.push('The scores add up to ' + spent + ' points; this hero has ' + sp + '.');
     STATS.forEach(function (k) { var v = h.stats[k] || 0; if (v > B.scoreMax) out.push(k + ' is ' + v + '; a score can be at most ' + B.scoreMax + '.'); if (v < 0) out.push(k + ' is below 0.'); });
     if (espent > ep) out.push('The Effort adds up to ' + espent + ' points; this hero has ' + ep + '.');
@@ -443,7 +447,7 @@
     ['calling', 'vow', 'appearance', 'background', 'notes'].forEach(function (f) { h[f] = text(raw[f], TEXT_LIMITS[f]); });
     h.path = pathOf(raw);
     STATS.forEach(function (k) { h.stats[k] = clamp(int(raw.stats && raw.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
-    CATS.forEach(function (k) { h.effort[k] = clamp(int(raw.effort && raw.effort[k], 0), 0, R.MAX_BONUS); });
+    CATS.forEach(function (k) { h.effort[k] = BONUS_CATS.indexOf(k) < 0 ? 0 : clamp(int(raw.effort && raw.effort[k], 0), 0, R.MAX_BONUS); });   /* Ultimate points come back to spend (2026-11-11) */
     h.armour = clamp(int(raw.armour, 0), 0, R.MAX_BONUS);
     h.marks = marksOf(raw); var ra = advancesOf(raw); h.advances = { stats: clamp(ra.stats, 0, MAX_ADVANCES), effort: clamp(ra.effort, 0, MAX_ADVANCES) };
     h.gear = (Array.isArray(raw.gear) ? raw.gear : []).filter(function (g) { return g && item(g.id); }).slice(0, 60).map(function (g) { var it = item(g.id), o = { id: it.id, eq: g.eq === true && canEquip(it) }; if (it.uses) o.uses = clamp(int(g.uses, it.uses), 0, it.uses); return o; });
@@ -451,5 +455,5 @@
   }
 
   return { weaponEffortNote: weaponEffortNote, armourPart: armourPart, weaponHands: weaponHands, attackBonus: attackBonus, damageBonus: damageBonus, activeArmour: activeArmour, equipmentProblems: equipmentProblems, reconcileArmour: reconcileArmour, TEXT_LIMITS: TEXT_LIMITS, item: item, spellsOf: spellsOf, blankHero: blankHero, pointsLeft: pointsLeft, effortLeft: effortLeft, scorePoints: scorePoints, effortPoints: effortPoints, marksOf: marksOf, advancesOf: advancesOf, slotsUsed: slotsUsed, armourBonus: armourBonus, defence: defence,
-    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, PATH_ABOUT: PATH_ABOUT, pathOf: pathOf, onPath: onPath, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, effectsOf: effectsOf, FOE_STATUS: FOE_STATUS, stepDie: stepDie, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
+    edit: edit, problems: problems, cleanHero: cleanHero, PATHS: PATHS, PATH_ABOUT: PATH_ABOUT, pathOf: pathOf, onPath: onPath, pathScore: pathScore, PATH_SCORE: PATH_SCORE, items: ALL, itemOf: itemOf, makeCustom: makeCustom, designOf: designOf, healingOf: healingOf, usesCounted: usesCounted, effectLabel: effectLabel, horrorText: horrorText, CUSTOM_CATS: CUSTOM_CATS, powerKey: powerKey, rangeText: rangeText, rangeBand: rangeBand, isFind: isFind, canEquip: canEquip, unequipSupplies: unequipSupplies, useOf: useOf, useSpell: useSpell, pickSpell: pickSpell, effectsOf: effectsOf, FOE_STATUS: FOE_STATUS, stepDie: stepDie, horrorOf: horrorOf, designError: designError, automationText: automationText, tagsOf: tagsOf, tagText: tagText, TAGS: G.tags || [], actions: actions, lootItem: lootItem, lootEntry: lootEntry, lootTable: lootTable, rollLoot: rollLoot, sayLoot: sayLoot, LOOT_TABLES: TABLES, LOOT_DEPTH: MAX_DEPTH };
 });

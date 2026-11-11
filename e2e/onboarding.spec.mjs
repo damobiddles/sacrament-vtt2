@@ -9,7 +9,7 @@ test('current role guides have working contents and public rules omit the obsole
   await expect(page.getByRole('navigation', { name: 'Rules pages' }).getByRole('link', { name: 'Player guide', exact: true })).toBeVisible();
   await expect(page.locator('.earlier-draft')).toHaveCount(0);
   await expect(page.locator('.range-reference tbody tr')).toHaveCount(4);
-  await expect(page.locator('#current-rule-values')).toContainText('d10 per 2 living heroes');
+  await expect(page.locator('#current-rule-values')).toContainText('Horror falls by one d6');
   for (const path of ['/player-guide/', '/gm-guide/']) {
     await page.goto(path);
     const nav = page.getByRole('navigation', { name: 'On this page', exact: true });

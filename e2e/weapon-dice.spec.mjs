@@ -39,6 +39,6 @@ test('GM designer separates bows and firearms and multiplayer bows use d6',async
   const hit=await cmd({type:'useItem',charId:ch.id,gearKey:weapon.key,d20:15},1);if(hit.status!==200)return hit;
   const rollId=hit.body.result.rollId;const damage=await cmd({type:'effort',rollId,cat:'guns',rolled:6},2);return {status:damage.status,roll:damage.body.state.rolls.find(r=>r.id===rollId)};
  }),15000,'using the scout bow in a disposable multiplayer table');
- expect(result.status).toBe(200);expect(result.roll.effort.die).toBe(6);expect(result.roll.effort.total).toBe(9);expect(result.roll.effort.cat).toBe('weapons');
+ expect(result.status).toBe(200);expect(result.roll.effort.die).toBe(6);expect(result.roll.effort.total).toBe(11);expect(result.roll.effort.cat).toBe('weapons');
  expect(gm.errors).toEqual([]);expect(player.errors).toEqual([]);
 });

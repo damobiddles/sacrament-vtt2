@@ -29,8 +29,8 @@ server.listen(0, async () => {
   console.log('--- 1. the rules page');
   let p = await open('/rules/');
   check('current rules show the shared range definitions and link to both role guides', (await p.$$eval('.range-reference [data-range]', es=>es.map(e=>e.dataset.range))).join() === 'close,near,far,veryfar' && !!(await p.$('a[href="/player-guide/"]')) && !!(await p.$('a[href="/gm-guide/"]')));
-  check('current rules show d10 rest, shared Horror and ordinary weapon dice', /one d10 per 2 living heroes/.test(await txt(p, '#current-rule-values')) && /thresholds 7, 14, 21/.test(await txt(p, '#current-rule-values')) && /Weapons d6; Guns d8/.test(await txt(p, '#current-rule-values')));
-  check('current critical damage adds a die and obsolete prototype controls remain absent', !(await p.$('.earlier-draft, #aftertables, #trackdemo')) && /adds an extra Ultimate die/.test(await txt(p, 'body')) && !/Ultimate replaces/.test(await txt(p, 'body')));
+  check('current rules show d6 rest, shared Horror and ordinary weapon dice', /Horror falls by one d6/.test(await txt(p, '#current-rule-values')) && /thresholds 7, 14, 21/.test(await txt(p, '#current-rule-values')) && /Weapons d6; Guns d8/.test(await txt(p, '#current-rule-values')));
+  check('current critical damage adds a die and obsolete prototype controls remain absent', !(await p.$('.earlier-draft, #aftertables, #trackdemo')) && /adds one plain Ultimate die/.test(await txt(p, 'body')) && /Ultimate is a die, not a bonus/.test(await txt(p, 'body')) && !/Ultimate replaces/.test(await txt(p, 'body')));
   check('the rules page is indexable and canonical', !(await p.$('meta[name=robots]')) && /playsacrament.com\/rules\//.test(await p.getAttribute('link[rel=canonical]', 'href')));
   await p.setViewportSize({ width: PW, height: 800 }); await noScroll(p, 'the rules page at phone width');
 
@@ -51,7 +51,8 @@ server.listen(0, async () => {
   check('both sets stop at ten slots', (await p.$$eval('#sheetHere h4 .sh-note', (e) => e.map((x) => x.textContent.trim()).join('|'))) === '10 of 10 slots|10 of 10 slots');
   await p.selectOption('#shAdd', 'harness'); await p.click('[data-sh=add]'); check('and it says why, in words', /Drop something first/.test(await txt(p, '#sheetHere .sh-msg')), await txt(p, '#sheetHere .sh-msg'));
   // point buy: six points among six scores, four among five kinds of Effort
-  check('Ottoline has spent all six points and all four of Effort', /0 of 6 points left/.test(await txt(p, '#sheetHere')) && /0 of 4 points left/.test(await txt(p, '#sheetHere')));
+  // Owner decision 2026-11-11: Ultimate is a die, not a bonus, so her old Ultimate point comes back to spend.
+  check('Ottoline has spent all six points and three of four Effort, her old Ultimate point given back', /0 of 6 points left/.test(await txt(p, '#sheetHere')) && /1 of 4 points left/.test(await txt(p, '#sheetHere')));
   await p.click('[data-sh=score][data-k=INT][data-d="-1"]'); check('taking a point back frees one', /1 of 6 points left/.test(await txt(p, '#sheetHere')));
   await p.click('[data-sh=score][data-k=STR][data-d="1"]'); check('and spending it on another score uses it up', /0 of 6 points left/.test(await txt(p, '#sheetHere')));
   await p.click('[data-sh=score][data-k=DEX][data-d="1"]'); check('one more is refused in plain words', /no points left/.test(await txt(p, '#sheetHere .sh-msg')));

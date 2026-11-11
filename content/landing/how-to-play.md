@@ -25,10 +25,12 @@ Sacrament is a conversation: the GM describes a situation, the players say what 
 ## The five rules to remember first
 
 - **Checks:** d20 + a score must meet the Target. Easy lowers the Target by 3; Hard raises it by 3.
-- **Effort:** a second die measures damage or progress when needed. Ordinary weapons, bows and crossbows use d6; guns use d8.
+- **Effort:** a second die measures damage or progress when needed. Ordinary weapons, bows and crossbows use d6; guns use d8. Every two-handed weapon adds +2 damage.
 - **Healing:** use it on yourself or a valid target. Supported catalogue healing updates HP, charges and rest limits automatically. The GM checks range.
-- **Horror:** healing spells have no casting Horror cost; other spells add 1. Items state their own cost. A Push adds 1. A hero's natural 1 adds 1 separately on an attack, a spell or a pushed action, not on other checks. At 21 each point that cannot go on the meter costs that hero d4 HP instead.
-- **Push:** offered only after a failed attack, once per turn, for an immediate second action. That action cannot be pushed again.
+- **Horror:** healing spells have no casting Horror cost; other spells add 1. Items state their own cost. A Push adds 1. A hero's natural 1 adds 1 separately only on magic (a spell or a relic) or a pushed action, never on an ordinary attack or check. At 21 each point that cannot go on the meter costs that hero 1 HP instead. Each of 7, 14 and 21 strikes once an adventure: shaken, hunted, no more rest.
+- **Push:** after any failed roll, once per turn, for an immediate second action. That action cannot be pushed again.
+- **Dying:** at 0 HP a hero has 3 rounds. They may crawl away (a free CON check) or pay 1 Horror to act anyway.
+- **Paths:** once a scene, a check that fits your path is Easy, if the GM agrees.
 
 ## Returning, backups and help
 

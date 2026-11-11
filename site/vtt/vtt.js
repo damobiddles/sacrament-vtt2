@@ -351,7 +351,7 @@
   function horrorBanner() {
     var H = S.horror, b = ''; if (!H) return '';
     if (H.cur < H.max) UI.arrivalSeen = false;
-    if (gm() && H.alert) b += '<div class="alert hz">' + esc(R.HORROR.lines[H.alert] || 'The Horror rises.') + ' <span class="note">(' + H.cur + ' of ' + H.max + ')</span> <button class="chip" data-do="horrorAck">Dealt with</button></div>';
+    if (gm() && H.alert) b += '<div class="alert hz">' + esc((R.HORROR.lines[H.alert] || 'The Horror rises.') + (R.HORROR.effects[H.alert] ? ' ' + R.HORROR.effects[H.alert] : '')) + ' <span class="note">(' + H.cur + ' of ' + H.max + ')</span> <button class="chip" data-do="horrorAck">Dealt with</button></div>';
     else if (!gm() && H.cur >= H.max && !UI.arrivalSeen) b += '<div class="alert hz" role="alert">' + esc(R.HORROR.lines[H.max]) + ' <button class="chip" data-do="arrivalSeen">OK</button></div>';
     return b;
   }
@@ -525,8 +525,8 @@
       h += '<div class="roll-next">' + (UI.working ? '<span role="status">Rolling ' + word + '…</span>' : '') + '<b>' + esc(r.charName || (actor && actor.name) || 'Attack') + (target ? ' → ' + esc(target.name) : '') + '</b>';
       if (down) h += '<button class="btn main" data-do="monsterEffort" data-cat="weapons" data-roll="' + r.id + '"' + busy + '>Resolve hit on downed hero</button>';
       else {
-        h += '<div class="cats">' + (cat ? [cat] : R.CATS.filter(function (k) { return k !== 'ultimate' || r.criticalRule !== 'extra'; })).map(function (k) { return '<button class="btn main" data-do="' + (r.attack ? 'monsterEffort' : 'effort') + '" data-cat="' + k + '" data-roll="' + r.id + '"' + busy + '>Roll ' + word + ': ' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 heavy' : '') + '</button>'; }).join('') + '</div>';
-        if (r.attack) h += '<div class="row"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== cat; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 heavy' : '') + '</button>'; }).join('') + '</div>';
+        h += '<div class="cats">' + (cat ? [cat] : R.CATS.filter(function (k) { return k !== 'ultimate' || r.criticalRule !== 'extra'; })).map(function (k) { return '<button class="btn main" data-do="' + (r.attack ? 'monsterEffort' : 'effort') + '" data-cat="' + k + '" data-roll="' + r.id + '"' + busy + '>Roll ' + word + ': ' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 two hands' : '') + '</button>'; }).join('') + '</div>';
+        if (r.attack) h += '<div class="row"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== cat; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 two hands' : '') + '</button>'; }).join('') + '</div>';
         else if (cat && ch && ch.offerUltimate && r.criticalRule !== 'extra' && cat !== 'ultimate') h += '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + busy + '>Roll Ultimate instead</button>';
         h += physical('physE', 'Own die for ' + word) + criticalPrompt(r);
       }
@@ -599,9 +599,9 @@
   /* The GM's hand on a hero's countdown, in the hero's panel: Stable after a successful Tend, hurt again while stable, a round more or less to put a mistake right. */
   function dyingControls(c) {
     var st = c.dying, b = function (op, label, extra, title) { return '<button class="btn small" data-do="dying" data-id="' + c.id + '" data-op="' + op + '"' + (extra || '') + (title ? ' title="' + title + '"' : '') + '>' + label + '</button>'; };
-    if (!st) return '<div class="row">' + b('fall', 'Start the countdown (d4)', '', 'Roll the d4 for a hero who is at 0') + '</div>';
+    if (!st) return '<div class="row">' + b('fall', 'Start the countdown', '', 'A hero at 0 is dying for ' + R.DYING.start + ' rounds') + '</div>';
     if (st.dead) return '<div class="row">' + b('round', 'Give a round back', ' data-d="1"', 'Brings the hero back to dying, with 1 round left') + '</div>';
-    return '<div class="row">' + (st.stable ? b('hurt', 'Hurt again (new d4)') : b('stable', 'Stable', '', 'After a successful Tend: the countdown stops')) + b('round', '−1 round', ' data-d="-1"') + b('round', '+1 round', ' data-d="1"') + '</div>' +
+    return '<div class="row">' + (st.stable ? b('hurt', 'Hurt again', '', 'Dying again, from ' + R.DYING.start + ' rounds') : b('stable', 'Stable', '', 'After a successful Tend: the countdown stops')) + b('round', '−1 round', ' data-d="-1"') + b('round', '+1 round', ' data-d="1"') + '</div>' +
       '<p class="hint">' + (st.stable ? 'Stable: the countdown has stopped. Any healing stands them up.' : 'One round comes off at each new round. Any healing stands them up.') + '</p>';
   }
   function trackerView(c) {
@@ -629,7 +629,7 @@
     if (!downMark(c)) return '';
     var st = c.dying, t = !st ? '<b>You are at 0 HP.</b> The GM starts your countdown.' : st.dead ? '<b>' + esc(c.name) + ' has died.</b>' :
       st.stable ? '<b>You are stable.</b> The countdown has stopped. Any healing puts you back on your feet.' :
-      '<b>You are dying: ' + st.left + (st.left === 1 ? ' round' : ' rounds') + ' left.</b> One comes off at each new round. An ally in reach can Tend you (a WIS check), and then the GM marks you stable. Any healing puts you back on your feet.';
+      '<b>You are dying: ' + st.left + (st.left === 1 ? ' round' : ' rounds') + ' left.</b> One comes off at each new round. On your turn you may crawl away (a CON check, free) or pay ' + R.DYING.actHorror + ' Horror to act anyway. An ally in reach can Tend you (a WIS check), and then the GM marks you stable. Any healing puts you back on your feet.';
     return '<div class="down-help" role="status"><p>' + t + '</p></div>';
   }
   function playerTable() {
@@ -675,7 +675,7 @@
     if (UI.cardEdit === c.id) return gmCardEdit(c);
     var id = c.id, pc = c.kind === 'pc', current = S.table.order[S.table.idx], actor = current && S.cards[current.id], h = '<p class="hint turn-context">Live: ' + esc(S.table.scene.name) + ' · Turn: ' + esc(actor ? actor.name : 'No one') + '</p><div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
     h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
-    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed attack. Its extra action cannot be pushed again.</p>'; }
+    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed roll. Its extra action cannot be pushed again.</p>'; }
     var fights = !pc && (c.kind === 'enemy' || c.kind === 'obstacle' || !!c.hp || !!c.progress);   /* Hazards and obstacles can attack heroes as well as enemies. */
     var liveAttack = viewScene() === S.table.scene.id && (c.sceneId == null || c.sceneId === S.table.scene.id);
     if (fights && !liveAttack) h += '<p class="hint">Preparing this scene. Show it to players before attacking.</p>';
@@ -703,7 +703,7 @@
       (!pc && (c.hp || c.progress || c.timer) ? '<button class="btn small ' + (c.hideNumbers ? 'on' : '') + '" data-do="hideNumbers" data-id="' + id + '" aria-pressed="' + !!c.hideNumbers + '" title="Players see the card but not its numbers">' + (c.hideNumbers ? 'Numbers hidden from players' : 'Hide the numbers from players') + '</button>' : '') + '</div>';
     if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId];
       h += '<h4>Hero: ' + esc(ch.name) + '</h4><p class="hint">Defence ' + ch.defence + ' (10 + CON + armour, armour counting for at most +5).</p><div class="row">' + R.STATS.map(function (k) { return '<label>' + k + '<input type="number" min="-10" max="10" value="' + ch.stats[k] + '" data-stat="' + k + '" data-char="' + ch.id + '"></label>'; }).join('') + '</div>' +
-        '<div class="row">' + R.CATS.map(function (k) { return '<label>' + R.CAT_NAMES[k] + ' Effort<input type="number" min="0" max="10" value="' + ch.effort[k] + '" data-eff="' + k + '" data-char="' + ch.id + '"></label>'; }).join('') + '<label>Armour<input type="number" min="0" max="10" value="' + ch.armour + '" data-armour="1" data-char="' + ch.id + '"></label></div>'; }
+        '<div class="row">' + R.BONUS_CATS.map(function (k) { return '<label>' + R.CAT_NAMES[k] + ' Effort<input type="number" min="0" max="10" value="' + ch.effort[k] + '" data-eff="' + k + '" data-char="' + ch.id + '"></label>'; }).join('') + '<label>Armour<input type="number" min="0" max="10" value="' + ch.armour + '" data-armour="1" data-char="' + ch.id + '"></label></div>'; }
     if (!pc && (c.hp || c.progress)) h += '<div class="row"><button class="btn small" data-do="saveMonster" data-id="' + id + '">Save to my monsters</button></div>';
     h += '<h4>Give, move, copy</h4>';
     if (!pc && S.players.length) h += '<div class="row"><select id="giveTo" aria-label="Give to">' + S.players.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select><button class="btn small" data-do="give" data-id="' + id + '">Give to player</button>' + (c.owner ? '<button class="btn small" data-do="take" data-id="' + id + '">Put back on table</button>' : '') + '</div>';
@@ -756,10 +756,10 @@
     }).join('') + '</ul>' : '<p class="hint">Nobody is in the turn order yet.</p>';
     if (edit && addable.length) h += '<div class="row"><select id="addOrder" aria-label="Add to the order">' + addable.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small" data-do="addOrder">Add</button></div>';
     h += '<p class="hint">Each scene remembers its order. Tap a name to inspect; use Edit order to set a different turn.</p>';
-    var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, nd = R.restDice(living);
-    if (!living) UI.restAsk = false;
-    return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
-      '<p class="hint">Safe rest: +10 HP to living heroes; Horror −' + (nd || 1) + 'd' + R.REST.horrorDie + '; healing allowances refresh.</p></section>' + encounterControls();
+    var living = cardList().filter(function (c) { return c.kind === 'pc' && c.hp && !(c.dying && c.dying.dead); }).length, noRest = ((S.horror && S.horror.fired) || []).indexOf(R.HORROR.dread.arrived) >= 0;
+    if (!living || noRest) UI.restAsk = false;
+    return h + '</section><section class="play-section"><h3>Rest</h3><div class="row"><button class="btn small' + (UI.restAsk ? ' danger' : '') + '" data-do="rest"' + (living && !noRest ? '' : ' disabled') + '>' + (UI.restAsk ? 'Sure? The party rests' : 'Party rest') + '</button></div>' +
+      '<p class="hint">' + (noRest ? 'The Horror has arrived: no more rest this adventure. Start a new adventure in the Table tab when it ends.' : 'Safe rest: +' + R.REST.heal + ' HP to living heroes; Horror −d' + R.REST.horrorDie + '; healing allowances refresh.') + '</p></section>' + encounterControls();
   }
   function encounterControls() {
     if (viewScene() !== S.table.scene.id) return '<p class="hint">Preparing another scene. Go back to the live scene to run or refresh its encounter.</p>';
@@ -812,7 +812,7 @@
     send({ type: 'cardCreate', card: card, addToOrder: true }, function (b) { if (b) { UI.sel = b.result.id; render();  } });
   }
   function tabTable() {
-    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in House rules. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + in a hero’s Play tray or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 rolls a d4, loses a round at each new round, and dies at 0. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
+    if (UI.sub) return '<div class="row"><button type="button" class="link" data-do="gmsub" data-s="">Back</button></div>' + (UI.sub === 'rules' ? '<h3>House rules</h3>' + rulesPanel() : UI.sub === 'recap' ? recapPanel() : '<h3>Running things by hand</h3><p class="hint">Catalogue healing, bandage uses and once-per-rest limits are automated. Scene danger can be switched on in House rules. Custom items written only as free text, ranges, esoteric effects and other rules outside the automated controls are run by hand. Change HP with − and + in a hero’s Play tray or in any card’s panel, and say what happens.</p><p class="hint">The table keeps the dying countdown: a hero at 0 is dying for ' + R.DYING.start + ' rounds, loses one at each new round, and dies at 0. On their turn they may crawl away (a CON check, free) or pay ' + R.DYING.actHorror + ' Horror to act anyway. Press Stable in their panel after a successful Tend. <b>Party rest</b> is in the Play tab. A new hero starts with 10 HP (1 Heart), plus any Hearts from their gear.</p>');
     var h = '<h3>Invite players</h3><div class="row"><b class="code">' + esc(S.code) + '</b><button class="btn main grow" data-do="copy">Copy invite link</button></div>';
     h += horrorControls();
     h += '<h3>Players</h3>' + (S.players.length ? '<ul class="ol">' + S.players.map(function (p) { var mine = Object.keys(S.chars).filter(function (k) { return S.chars[k].owner === p.id; })[0]; return '<li class="player-row"><span class="n">' + esc(p.name) + '</span><select data-assign="' + p.id + '" aria-label="Hero for ' + esc(p.name) + '"><option value="">No hero</option>' + Object.keys(S.chars).map(function (k) { var c = S.chars[k]; return '<option value="' + k + '"' + (k === mine ? ' selected' : '') + (c.owner && c.owner !== p.id ? ' disabled' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select><button class="btn small danger" data-do="removePlayer" data-pid="' + p.id + '"' + (UI.removeBusy === p.id ? ' disabled' : '') + ' aria-label="' + (UI.removePlayerAsk === p.id ? 'Confirm removal of ' : 'Remove ') + esc(p.name) + '">' + (UI.removeBusy === p.id ? 'Removing…' : UI.removePlayerAsk === p.id ? 'Confirm removal' : 'Remove') + '</button>' + (UI.removePlayerAsk === p.id ? '<p class="hint player-warning">Their current access will stop and their hero becomes available. Private possessions return hidden to the GM. They can join again with the invitation code.</p><button class="btn small" data-do="cancelRemovePlayer">Cancel</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="hint">Nobody has joined yet. Send them the invite link.</p>');
@@ -835,7 +835,14 @@
       '<button class="btn small" data-do="horrorAdj" data-d="-1" aria-label="Lower the Horror by 1">−1</button><button class="btn small" data-do="horrorAdj" data-d="1" aria-label="Raise the Horror by 1">+1</button>' +
       (H.cur > 0 ? '<button class="btn small' + (UI.hzResetAsk ? ' danger' : '') + '" data-do="horrorReset">' + (UI.hzResetAsk ? 'Sure? Reset to 0' : 'Reset to 0') + '</button>' : '') +
       '<span class="hz-set"><label>Set to<input id="hzSet" type="number" min="0" max="' + H.max + '" inputmode="numeric" value="' + H.cur + '"></label><button class="btn small" data-do="horrorSet">Set</button></span></div>' +
-      '<p class="hint">Healing spells cost 0; other spells +1; items list their own cost. Push adds 1; a natural 1 adds 1 separately on attacks, spells and pushed actions. At 21, each point that cannot go on costs that hero d4 HP. Party rest lowers Horror with d10s. These controls are manual GM adjustments.</p>';
+      '<p class="hint">Healing spells cost 0; other spells +1; items list their own cost. Push adds 1, after any failed roll; a natural 1 adds 1 separately only on magic (a spell or a relic) or a pushed action. At 21, each point that cannot go on costs that hero ' + R.HORROR.blood + ' HP. Party rest lowers Horror by d' + R.REST.horrorDie + '. These controls are manual GM adjustments.</p>' + adventureControls();
+  }
+  /* Each threshold fires once an adventure. The GM starts a new adventure here, so 7, 14 and 21 can fire again (asked twice, like Reset). */
+  function adventureControls() {
+    var H = S.horror, fired = (H && H.fired) || [];
+    return '<h3>New adventure</h3><p class="hint">7: every hero\'s next roll is Hard. 14: foes met from now on have ' + R.HORROR.dread.huntedHp + ' more HP. 21: no more rest. Each fires once an adventure' +
+      (fired.length ? ' (fired so far: ' + fired.join(', ') + ')' : '') + '. An adventure\'s own Horror lines come first.</p>' +
+      '<div class="row"><button class="btn small' + (UI.advAsk ? ' danger' : '') + '" data-do="newAdventure">' + (UI.advAsk ? 'Sure? Start a new adventure' : 'New adventure') + '</button></div>';
   }
   /* The next session: the GM sets it in the Play tab; everyone reads it in their own time, with links to put it in a calendar (three hours, by default). */
   function sayWhen(ms) { return new Date(ms).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -888,7 +895,7 @@
   function rulesPanel() {
     var s = S.settings, h = '<p class="unv">House rules for this table. Everything else is a fixed rule.</p>';
     h += '<h4>Monster attacks</h4><label class="check"><input type="checkbox" data-setting="sceneDanger"' + (s.sceneDanger ? ' checked' : '') + '> Add scene danger automatically</label><p class="hint">At Target ' + S.table.target + ', add +' + R.sceneDanger(S.table.target) + ' to monster attacks. Keep the monster’s base Attack bonus only; remove any danger bonus already added by hand before enabling.</p>';
-    h += '<label class="check"><input type="checkbox" data-setting="nat20Ultimate"' + (s.nat20Ultimate ? ' checked' : '') + '> A natural 20 offers Ultimate Effort</label>';
+    h += '<label class="check"><input type="checkbox" data-setting="nat20Ultimate"' + (s.nat20Ultimate ? ' checked' : '') + '> A natural 20 adds the Ultimate d12</label>';
     h += '<h4>Effort dice</h4><div class="row">' + R.CATS.map(function (k) { return '<label>' + R.CAT_NAMES[k] + '<select data-die="' + k + '">' + [4, 6, 8, 10, 12, 20].map(function (d) { return '<option' + (s.dice[k] === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select></label>'; }).join('') + '</div>';
     return h;
   }
@@ -939,7 +946,7 @@
       '<details data-detail="playerActions"' + (!ready && !currentRoll() ? ' open' : '') + '><summary data-detail="playerActions">Weapons, spells and items</summary><div class="action-options">' + itemButtons(window.SacramentSheetCore.actions(heroOf(ch))) + '</div></details>' +
       '<div class="row"><button class="chip" data-do="ordinaryCheck">Ordinary check</button>' + (foe ? '<button class="chip" data-do="basicAttack" data-card="' + foe.id + '">Attack without an item</button>' : '') + '<button class="chip" data-do="standaloneEffort">Standalone Effort</button></div>' +
       (UI.basicAttack ? '<label>Attack using<select id="basicStat">' + R.STATS.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><button class="btn" data-do="prepareBasic">Prepare attack</button>' : '') +
-      '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div><details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
+      '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>' + pathToggle(ch) + '<details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
   }
   function putStrip(el, h, context) {
     var active = document.activeElement, sameSession = el.dataset.session === String(sessionVersion), keep = sameSession && el.dataset.context === context;
@@ -990,6 +997,12 @@
   function physVal(id) { var i = $(id); var v = i && i.value.trim(); if (i) i.value = ''; return v ? +v : undefined; }
   /* Read the field that the person can actually see. Browser restoration/autofill
      need not fire input, so the cached UI value alone is not authoritative. */
+  /* Once a scene, a check that fits the hero's path is Easy; the GM judges what fits. Not on attacks. */
+  function pathToggle(ch) {
+    if (!ch.path) return '';
+    var used = !!(ch.usedPowers && ch.usedPowers['path:easy']); if (used) UI.pathEasy = false;
+    return '<div class="row"><button class="chip" data-do="pathEasy" aria-pressed="' + !!UI.pathEasy + '"' + (used ? ' disabled' : '') + ' title="Once a scene, a check that fits your path is Easy. The GM says whether it fits. Not on attacks.">' + (used ? 'Path used this scene' : 'Fits my path (' + esc(ch.path) + '): Easy') + '</button></div>';
+  }
   function takeD20() {
     var input = document.querySelector('#strip input[data-phys]'), value = input ? input.value : UI.phys;
     UI.phys = ''; if (input) input.value = '';
@@ -1000,7 +1013,8 @@
     UI.rolling = 'Rolling ' + stat; var d20 = takeD20();
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     render();
-    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
+    var path = !!UI.pathEasy && attack !== true; if (path) UI.pathEasy = false;
+    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, path: path || undefined, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', path: ch.path || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [], marks: ch.marks || 0, advances: ch.advances || { stats: 0, effort: 0 } }; }
@@ -1078,6 +1092,7 @@
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
       case 'adj': UI.adj = d.adj; render(); break;
+      case 'pathEasy': UI.pathEasy = !UI.pathEasy; render(); break;
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
       case 'leave': UI.sceneRename = null; leaveTable(); break;
@@ -1157,6 +1172,11 @@
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
       case 'horrorSet': { var hv = $('hzSet') && $('hzSet').value.trim(); if (!/^[0-9]+$/.test(hv || '')) { toast('Type a number from 0 to ' + S.horror.max + '.'); break; } send({ type: 'horror', mode: 'set', value: +hv }); break; }
       case 'horrorRoll': send({ type: 'horror', mode: 'lowerRoll' }); break;
+      case 'newAdventure': {   /* asked twice, like Reset */
+        clearTimeout(UI.advTimer);
+        if (!UI.advAsk) { UI.advAsk = true; renderPanel(); UI.advTimer = setTimeout(function () { UI.advAsk = false; if (S) renderPanel(); }, 5000); break; }
+        UI.advAsk = false; send({ type: 'newAdventure' }); break;
+      }
       case 'rest': {   /* asked twice, like Reset: the first press turns the button into "Sure?" for five seconds */
         clearTimeout(UI.restTimer);
         if (!UI.restAsk) { UI.restAsk = true; renderPanel(); UI.restTimer = setTimeout(function () { UI.restAsk = false; if (S) renderPanel(); }, 5000); break; }

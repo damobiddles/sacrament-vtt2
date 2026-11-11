@@ -11,14 +11,15 @@ test('RECAP: a new table starts one; rolls, the hardest blow, a fall, a gift and
   t.queue(d20(20)); const r = await p.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: ghoul.id }); assert.equal(r.status, 200, JSON.stringify(r.body));
   t.queue(die(8, 8)); await p.cmd({ type: 'effort', rollId: r.body.result.rollId, cat: 'weapons' });
   await p.cmd({ type: 'apply', rollId: r.body.result.rollId, cardId: ghoul.id, field: 'hp' });
-  t.queue(d20(1)); await p.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX', attack: true, targetCardId: ghoul.id });   /* an attack: a plain check's natural 1 adds no Horror */
+  t.queue(d20(1)); await p.cmd({ type: 'roll', charId: thorne.id, stat: 'DEX', attack: true, targetCardId: ghoul.id });   /* an ordinary attack: its natural 1 adds no Horror either (2026-11-11) */
   await t.gm.cmd({ type: 'track', id: thorne.cardId, field: 'hp', value: 0 });
   const bell = find(st, 'Warden’s Bell'); await t.gm.cmd({ type: 'giveCard', id: bell.id, pid: p.pid });
   st = await t.state(); const C = st.recap, h = C.heroes[thorne.id];
   assert.deepEqual([h.rolls, h.hits, h.n20, h.n1], [2, 1, 1, 1]);
   assert.ok(h.dealt > 0); assert.equal(C.best.who, 'Thorne'); assert.equal(C.best.on, 'Pit Ghoul'); assert.equal(C.best.n, h.dealt);
   assert.deepEqual(C.fell, ['Thorne']); assert.deepEqual(C.found, ['Ash: Warden’s Bell']);
-  assert.equal(C.horrorPeak, 1, 'the natural 1 raised the Horror to 1');
+  await t.gm.cmd({ type: 'horror', mode: 'set', value: 3 }); await t.gm.cmd({ type: 'horror', mode: 'set', value: 1 });
+  assert.equal((await t.state()).recap.horrorPeak, 3, 'the highest the Horror reached');
   const ps = (await p.get()).body; assert.equal(ps.state.recap, undefined, 'a player is not sent the recap');
 });
 

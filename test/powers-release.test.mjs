@@ -44,10 +44,10 @@ test('critical damage adds to the normal roll and never counts heavy or Ultimate
  await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:'lastconfessions'}});const cast=await p.cmd({type:'useItem',charId:h.id,index:1,spellId:'rend',d20:20,targetCardIds:[find(await t.state(),'Pit Ghoul').id]});
  const ult=await p.cmd({type:'effort',rollId:cast.body.result.rollId,cat:'ultimate',rolled:2,criticalRolled:3});assert.equal(ult.status,200);assert.equal(ult.body.state.rolls.at(-1).effort.total,2+3+h.effort.ultimate);
 });
-test('crossbow accuracy is automatic, stays d6, and does not apply to a bow',async()=>{
+test('a crossbow has no +2 to hit since 2026-11-11 (two hands: +2 damage instead), stays d6, and a bow is the same',async()=>{
  const {t,p,h}=await setup();await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:'crossbow'}});
- const r=await p.cmd({type:'useItem',charId:h.id,index:0,d20:10});assert.equal(r.status,200);assert.equal(r.body.state.rolls.at(-1).check.mod,h.stats.DEX+2);assert.equal(r.body.state.rolls.at(-1).check.success,true);
- const d=await p.cmd({type:'effort',rollId:r.body.result.rollId,cat:'weapons',rolled:3});assert.equal(d.body.state.rolls.at(-1).effort.die,6);assert.equal(C.attackBonus(C.item('bow')),0);
+ const r=await p.cmd({type:'useItem',charId:h.id,index:0,d20:18});assert.equal(r.status,200);assert.equal(r.body.state.rolls.at(-1).check.mod,h.stats.DEX);assert.equal(r.body.state.rolls.at(-1).check.success,true);
+ const d=await p.cmd({type:'effort',rollId:r.body.result.rollId,cat:'weapons',rolled:3});assert.equal(d.body.state.rolls.at(-1).effort.die,6);assert.equal(d.body.state.rolls.at(-1).effort.weaponBonus,2);assert.equal(C.attackBonus(C.item('bow')),0);
 });
 test('alternate relic modes and copied scene powers share their canonical limits',async()=>{
  const {t,p,h}=await setup();await t.gm.cmd({type:'sheet',charId:h.id,op:{op:'add',id:'blade'}});
@@ -61,11 +61,12 @@ test('power completion preserves all catalogue IDs, slots, spell assignments and
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  // Owner request 2026-11-08: twenty path relics on a new Path relics table (67 to 100 on Relics); the 22 older relics share 1 to 66. A sub-table's "on" is now locked too. The list of hero paths is part of the gear list.
  // Owner request 2026-11-08 (later): twenty paths and 100 path relics, five per path; the Path relics table numbers them 1 to 100.
+ // Owner decision 2026-11-11: three rare guns join the Arms table, which is re-divided (snare, stole picks, Vesper axe, quarry hammer and the harness each give one number).
  // Owner decision 2026-11-08 (decision card): the found Gravedigger's spade is a weapon, like its twin the Sexton's Spade.
  const {createHash}=await import('node:crypto');
  // Owner decision 2026-11-06: the list of spell and item tags is not part of the catalogue's IDs, slots or odds, so it is left out here.
  const stable=Object.fromEntries(Object.entries(globalThis.SACRAMENT_GEAR).filter(([k])=>k!=='tags').map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>['id','kind','slots','table','loot','spells','pick','pickDie','die','on'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'2ccf2305ebbe1b4eb7da0df6d5eb6d1956fe1ad9d259288b6dc7fff095b02198');
+ assert.equal(createHash('sha256').update(JSON.stringify(stable)).digest('hex'),'f75e8864f96e51d527071489b2077830f6c7585588caac472b3dc93221b3f640');
 });
 
 test('scene uses survive rest, reload and returning to a scene; reset invalidates pending limited damage',async()=>{

@@ -49,7 +49,7 @@ test('a grimoire read by the die casts the same spell at the table and in the so
 
 test('a natural 1 costs the same Horror at the table and in the solo game: attack, damage spell, healing spell, item check', async () => {
   const cases = [
-    { gear: ['hatchet'], solo: /^Attack: Gravedigger's Hatchet/, table: { index: 0 }, foe: true, expect: R.HORROR.nat1 },
+    { gear: ['hatchet'], solo: /^Attack: Gravedigger's Hatchet/, table: { index: 0 }, foe: true, expect: 0 },
     { gear: ['brokenbell'], solo: /^Cast Unmake/, table: { index: 0, spellId: 'unmake' }, foe: true, expect: 1 + R.HORROR.nat1 },
     { gear: ['seventhpenance'], solo: /^Cast Mend/, table: { index: 0, spellId: 'mend' }, hurt: true, expect: R.HORROR.nat1 },
     { gear: ['bandages'], solo: /^Use Linen Bandages/, table: { index: 0 }, hurt: true, expect: 0 }
@@ -121,7 +121,7 @@ test('the Black Candle gives light only when it is lit, and lighting it costs it
 
 test('the solo engine keeps no rules of its own: every number and roll comes from the shared rules', () => {
   for (const name of ['HORROR', 'DYING', 'BREAK_AWAY', 'REST', 'HEART', 'ADJ', 'BUILD', 'DEFENCE_BASE', 'ARMOUR_CAP']) assert.doesNotMatch(ENGINE, new RegExp('\\b' + name + '\\s*=\\s*[{0-9]'), name + ' is defined in the rules, not here');
-  for (const use of ['R.check(', 'R.effort(', 'R.criticalEffort(', 'R.attack(', 'C.defence(', 'R.horrorMove(', 'R.nat1Tempts(', 'R.rollHorror(', 'R.HORROR.push', 'R.HORROR.nat1', 'R.HORROR.bloodDie', 'R.dyingFall(', 'R.BREAK_AWAY.stat', 'R.dyingTick(', 'R.REST.heal', 'R.restDice(', 'C.useOf(', 'C.actions(', 'C.pickSpell(', 'C.rollLoot(']) assert.ok(ENGINE.includes(use), 'the engine uses ' + use);
+  for (const use of ['R.check(', 'R.effort(', 'R.criticalEffort(', 'R.attack(', 'C.defence(', 'R.horrorMove(', 'R.nat1Tempts(', 'R.rollHorror(', 'R.HORROR.push', 'R.HORROR.nat1', 'R.HORROR.blood', 'R.HORROR.dread', 'R.dyingFall(', 'R.BREAK_AWAY.stat', 'R.dyingTick(', 'R.REST.heal', 'R.restDice(', 'C.useOf(', 'C.actions(', 'C.pickSpell(', 'C.rollLoot(']) assert.ok(ENGINE.includes(use), 'the engine uses ' + use);
   assert.doesNotMatch(ENGINE, /% *u\.spells\.length|Math\.floor\(\(n - 1\)/, 'a grimoire read by the die uses the shared C.pickSpell');
 });
 
@@ -157,10 +157,11 @@ test('Ward protects an ally: alone it has no use, in its own words and on the Ru
 
 test('falling alone is written on the Rules page, and the solo game does exactly that', () => {
   assert.match(RULES, /## Playing alone/);
-  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*d4 rounds[^\n]*use healing on themselves[^\n]*bandages cannot tend yourself[^\n]*crawl away with a CON check[^\n]*1 HP/);
+  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*3 rounds; crawl away free, or pay 1 Horror to act anyway[^\n]*1 HP[^\n]*Bandages cannot tend yourself/);
+  assert.match(RULES, /dying for 3 rounds[^\n]*crawl away[^\n]*CON check, which costs nothing[^\n]*pay 1 Horror to act anyway/);
   const { s, adv } = dyingGame(['seventhpenance']);
-  const labels = S.choices(s, adv).map((c) => c.label);
-  assert.ok(labels.includes('Crawl away') && labels.some((l) => /Mend/.test(l)));
+  const ch = S.choices(s, adv), labels = ch.map((c) => c.label);
+  assert.ok(labels.some((l) => /^Crawl away/.test(l)), 'a free crawl'); assert.ok(ch.some((c) => /Mend/.test(c.label) && c.horror >= 1), 'healing for 1 Horror');
   S.act(s, adv, 'crawl', fixed([20])); assert.equal(s.hp.cur, 1); assert.equal(s.dying, null);
 });
 
