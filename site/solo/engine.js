@@ -631,8 +631,8 @@
     Object.keys(adv.obstacles || {}).forEach(function (id) {
       var ob = adv.obstacles[id]; if (ob.room !== s.room || !obstacleOpen(api, id) || (ob.blocked && ob.blocked(api))) return;
       var tool = toolFor(s, ob), gun = gunFor(s, ob), die = function (way) { var c = R.obstacleCat(way); return R.CAT_NAMES[c] + ' d' + R.DEFAULT_DICE[c]; };
-      if (tool) out.push({ label: 'Use ' + yours(tool.name) + ' on ' + lower(ob.name), cmd: 'tool ' + id, kind: 'do', way: 'tool', useful: true, item: tool.name, hint: die('tool') + ' into the bar' });
-      if (gun) out.push({ label: 'Shoot ' + lower(ob.name) + ' with ' + yours(gun.name), cmd: 'gun ' + id, kind: 'do', way: 'gun', useful: true, item: gun.name, hint: die('gun') + ', and loud: the clock moves' });
+      if (tool) out.push({ label: 'Use ' + yours(tool.name) + ' on ' + lower(ob.name), cmd: 'tool ' + id, kind: 'do', way: 'tool', useful: true, hint: die('tool') + ' into the bar' });
+      if (gun) out.push({ label: 'Shoot ' + lower(ob.name) + ' with ' + yours(gun.name), cmd: 'gun ' + id, kind: 'do', way: 'gun', useful: true, hint: die('gun') + ', and loud: the clock moves' });
       (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: 'Once, Easy: half of what is left' }); });
     });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
