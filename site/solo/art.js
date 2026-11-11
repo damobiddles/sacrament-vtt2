@@ -223,6 +223,29 @@
         + '<path d="M26 36 C24 20 56 20 54 36 L58 70 C50 64 30 64 22 70 Z" fill="#8a9aa6"' + OF + '/>'
         + '<ellipse cx="40" cy="38" rx="8" ry="10" fill="#d4d8d0"' + OF + '/><path d="M36 36 h3 M41 36 h3" stroke="' + P.ink + '" stroke-width="1.6"/><path d="M37 43 q3 1.4 6 0" stroke="' + P.ink + '" stroke-width=".9" fill="none"/>'
         + '<circle class="drip" cx="60" cy="120" r="1.4" fill="' + P.azure + '"/><circle class="drip" cx="18" cy="110" r="1.2" fill="' + P.azure + '" style="animation-delay:-1.6s"/>';
+    },
+    /* the Grey Mother: an old she-wolf, grey with a white muzzle */
+    wolf: function () {
+      return '<ellipse cx="40" cy="139" rx="40" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path d="M2 92 C-6 86 -8 78 -4 70 C0 78 4 84 10 88 Z" fill="#8c8a86"' + OF + '/>'
+        + '<path d="M6 92 C10 78 30 74 52 78 C58 66 70 62 78 68 L86 76 C88 80 84 84 78 84 C76 92 70 96 64 96 L62 136 L56 136 L54 102 C44 106 30 106 22 102 L20 136 L14 136 L12 104 C6 104 2 98 6 92 Z" fill="#8c8a86"' + OF + '/>'
+        + '<path d="M16 86 C28 80 44 80 52 86 M22 94 q4 -4 8 0 M36 94 q4 -4 8 0 M58 80 C62 74 70 72 74 76" stroke="' + P.white + '" stroke-width="1" fill="none" opacity=".7"/>'
+        + '<path d="M66 66 L68 54 L74 66 Z M74 66 L78 56 L80 68 Z" fill="#8c8a86"' + OF + '/>'
+        + '<path d="M78 80 C82 82 86 80 86 76 L80 78 Z" fill="' + P.white + '"' + O + '/>'
+        + '<circle cx="74" cy="72" r="1.6" fill="' + P.goldHi + '" class="blink"/><path d="M76 84 l2 3 l2 -3" stroke="' + P.white + '" stroke-width=".8" fill="none"/>'
+        + '<path d="M56 128 L60 128 M16 128 L20 128" stroke="' + P.ink + '" stroke-width="1.2"/>';
+    },
+    /* the Burning Copyist: a monk at his desk an hour dead, alight */
+    monk: function () {
+      return '<ellipse cx="40" cy="139" rx="30" ry="3.4" fill="' + P.ink + '" opacity=".3"/>'
+        + '<path class="hem" d="M24 44 C16 72 12 106 8 138 L72 138 C68 106 64 72 56 44 Z" fill="#3a2e24"' + OF + '/>'
+        + '<path d="M30 54 C28 80 26 110 24 136 M40 56 V136 M50 54 C52 80 54 110 56 136" stroke="' + P.ink + '" stroke-width="1" fill="none" opacity=".6"/>'
+        + '<path d="M18 120 C14 104 22 98 20 84 C28 92 30 102 26 112 M60 124 C66 108 58 100 62 86 C54 94 52 104 56 116" fill="' + P.verm + '" stroke="' + P.ink + '" stroke-width=".7"/>'
+        + '<path d="M26 40 C22 22 58 22 54 40 L58 60 C50 54 30 54 22 60 Z" fill="#4a3a2a"' + OF + '/>'
+        + '<ellipse cx="40" cy="40" rx="8" ry="10" fill="#6a5040"' + OF + '/><circle cx="36" cy="38" r="1.4" fill="' + P.goldHi + '" class="blink"/><circle cx="44" cy="38" r="1.4" fill="' + P.goldHi + '" class="blink"/>'
+        + '<path d="M28 74 C34 82 46 82 52 74" stroke="#6a5040" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M52 74 L62 66" stroke="' + P.white + '" stroke-width="1.4"/>'
+        + '<g class="glow"><path class="flame" d="M40 2 C50 14 52 22 40 30 C28 22 30 14 40 2 Z" fill="' + P.verm + '" opacity=".9"/><path class="flame" d="M40 12 C45 18 45 22 40 26 C35 22 35 18 40 12 Z" fill="' + P.goldHi + '"/>'
+        + '<path class="flame" d="M14 72 C22 80 22 86 16 92 C10 86 10 80 14 72 Z M66 70 C72 78 72 84 66 90 C60 84 60 78 66 70 Z" fill="' + P.goldHi + '" opacity=".85"/></g>';
     }
   };
   function foe(kind, id, x, y, scale, ratio) {
@@ -611,14 +634,112 @@
         + [[60, 112, 26, -6], [100, 106, 30, 2], [300, 108, 28, 5], [262, 102, 30, -3], [150, 104, 26, 4]].map(function (b) { return stone(b[0], b[1], b[2], b[3]); }).join('')
         + (f.lost ? '' : '<path d="M150 152 C148 138 150 128 154 122 C158 128 160 138 158 152 Z" fill="' + P.grey + '"' + O + '/><circle cx="154" cy="118" r="4" fill="' + P.flesh + '"' + O + '/>')
         + hero(s, id, 50, 78, 0.6, hasLight(s)) + fog(id, 138, '', 3) + motes(20, 300, 100, 180, '', 4, 121);
+    },
+    /* the wayside chapel: four benches, a painted saint, the loft ladder, the hurt courier on the altar step */
+    wayside: function (s, id) {
+      var f = (s && s.flags) || {}, rungs = '';
+      for (var i = 0; i < 9; i++) if (f.climbed || [1, 3, 4, 7].indexOf(i) < 0) rungs += '<path d="M262 ' + (40 + i * 13) + ' H284" stroke="' + P.umber + '" stroke-width="2.4"/>';
+      return '<rect width="320" height="192" fill="url(#' + id + 'ash)"/>' + arch(130, 60, 20, 112, P.deep) + star(160, 46, 1.6, 1)
+        /* the painted saint over the altar */
+        + '<path d="M150 106 V64 Q160 54 170 64 V106 Z" fill="' + P.verm + '"' + O + '/><circle cx="160" cy="62" r="6" fill="' + P.flesh + '"' + O + '/><circle cx="160" cy="62" r="9" fill="none" stroke="' + P.goldHi + '" stroke-width="1.4"/>'
+        + floor(id, 140) + '<rect x="120" y="112" width="80" height="28" fill="' + P.stone + '"' + O + '/><rect x="116" y="108" width="88" height="6" fill="' + P.white + '"' + O + '/>'
+        /* the loft ladder, missing rungs until it is climbed */
+        + '<path d="M262 30 V150 M284 30 V150" stroke="' + P.umber + '" stroke-width="3"/>' + rungs + '<rect x="250" y="14" width="46" height="14" fill="#1c140e"' + O + '/>'
+        /* benches */
+        + [[20, 156], [70, 162], [220, 160]].map(function (b) { return '<rect x="' + b[0] + '" y="' + b[1] + '" width="40" height="6" fill="' + P.earth + '"' + O + '/><path d="M' + (b[0] + 4) + ' ' + (b[1] + 6) + ' V' + (b[1] + 16) + ' M' + (b[0] + 36) + ' ' + (b[1] + 6) + ' V' + (b[1] + 16) + '" stroke="' + P.umber + '" stroke-width="2"/>'; }).join('')
+        /* Brother Lucan on the step, a candle in each fist */
+        + '<path d="M126 140 C134 128 176 128 190 140 Z" fill="' + P.ink + '"' + OF + '/><circle cx="128" cy="134" r="5" fill="' + P.flesh + '"' + OF + '/>'
+        + (f.tended ? '<path d="M176 136 h10" stroke="' + P.white + '" stroke-width="3"/>' : '<path d="M176 137 h10" stroke="' + P.verm + '" stroke-width="2.4"/>')
+        + [136, 166].map(function (x) { return '<path d="M' + x + ' 132 V124" stroke="' + P.white + '" stroke-width="2"/><ellipse class="flame" cx="' + x + '" cy="121" rx="1.3" ry="2.4" fill="' + P.goldHi + '"/>'; }).join('')
+        + '<g class="glow">' + rays(150, 124, 4, 22, 10) + '</g>'
+        + hero(s, id, 46, 72, 0.58, hasLight(s)) + motes(100, 220, 80, 140, '', 4, 201);
+    },
+    /* the dorter: a whitewashed passage of cell doors, all dark, one at the end bolted */
+    dorter: function (s, id) {
+      var f = (s && s.flags) || {}, doors = '';
+      [[24, 0.9], [80, 0.8], [232, 0.8], [290, 0.9]].forEach(function (d) { doors += '<path d="M' + (d[0] - 14 * d[1]) + ' 150 V' + (150 - 70 * d[1]) + ' Q' + d[0] + ' ' + (150 - 84 * d[1]) + ' ' + (d[0] + 14 * d[1]) + ' ' + (150 - 70 * d[1]) + ' V150 Z" fill="' + P.umber + '"' + O + '/><circle cx="' + (d[0] + 8 * d[1]) + '" cy="' + (150 - 34 * d[1]) + '" r="1.4" fill="' + P.gold + '"/>'; });
+      return '<rect width="320" height="192" fill="' + P.parch + '"/>'
+        /* the passage running away to her door at the end */
+        + '<path d="M110 30 H210 V150 H110 Z" fill="#cbb98c"' + O + '/><path d="M0 0 L110 30 M320 0 L210 30 M0 192 L110 150 M320 192 L210 150" stroke="' + P.stoneDk + '" stroke-width="1"/>'
+        + '<path d="M146 150 V96 Q160 84 174 96 V150 Z" fill="' + (f.opened ? '#1c140e' : P.earth) + '"' + O + '/>' + (f.opened ? '<path d="M174 96 L184 92 V146 L174 150 Z" fill="' + P.earth + '"' + O + '/>' : '<path d="M168 120 h8" stroke="' + P.grey + '" stroke-width="2.4"/>')
+        + doors + floor(id, 150)
+        + [52, 268].map(function (x) { return '<path d="M' + (x - 6) + ' 90 V76 Q' + x + ' 70 ' + (x + 6) + ' 76 V90 Z" fill="#3a2e24"' + O + '/>'; }).join('')
+        + '<path d="M0 150 H320" stroke="' + P.ink + '" stroke-width="1"/>'
+        + hero(s, id, 120, 70, 0.6, hasLight(s)) + motes(120, 200, 60, 150, '', 3, 211);
+    },
+    /* the deacon's rooms: books stacked to the height of a man, a desk at the window, the trapdoor, the strongbox under the bed */
+    study: function (s, id) {
+      var f = (s && s.flags) || {}, stacks = '', r = rnd(221), cols = [P.verm, P.lapis, P.umber, P.verd, P.ochre];
+      [[16, 9], [36, 7], [232, 8], [300, 10]].forEach(function (st) { for (var i = 0; i < st[1]; i++) stacks += '<rect x="' + (st[0] - 9 + Math.round(r() * 3)) + '" y="' + (146 - (i + 1) * 9) + '" width="' + (16 + Math.round(r() * 4)) + '" height="8" fill="' + cols[(i + st[0]) % 5] + '"' + O + '/>'; });
+      return '<rect width="320" height="192" fill="#4a3424"/><path d="M0 20 H320" stroke="' + P.umber + '" stroke-width="6"/>'
+        /* the window over the desk, night outside */
+        + '<rect x="120" y="36" width="60" height="50" fill="' + P.deep + '"' + O + '/><path d="M150 36 V86 M120 61 H180" stroke="' + P.umber + '" stroke-width="3"/>' + star(134, 48, 1.4, 1) + star(166, 72, 1.2, 2)
+        + '<rect x="110" y="96" width="80" height="8" fill="' + P.earth + '"' + O + '/><path d="M118 104 V140 M182 104 V140" stroke="' + P.umber + '" stroke-width="4"/><rect x="132" y="88" width="24" height="8" fill="' + P.white + '"' + O + '/>'
+        + '<path d="M170 96 V88" stroke="' + P.white + '" stroke-width="2"/><ellipse class="flame" cx="170" cy="85" rx="1.4" ry="2.6" fill="' + P.goldHi + '"/><g class="glow">' + rays(170, 86, 4, 16, 8) + '</g>'
+        + floor(id, 140) + stacks
+        /* the bed and the strongbox under it */
+        + '<rect x="252" y="120" width="60" height="12" fill="' + P.parch + '"' + O + '/><rect x="252" y="132" width="60" height="8" fill="' + P.umber + '"' + O + '/>'
+        + '<rect x="262" y="142" width="28" height="14" fill="' + P.grey + '"' + O + '/>' + (f.unlocked ? '<path d="M262 142 L268 132 H296 L290 142 Z" fill="' + P.grey + '"' + O + '/>' : '<path d="M262 147 H290" stroke="' + P.ink + '" stroke-width="1"/>')
+        /* the trapdoor */
+        + '<path d="M60 160 L120 160 L128 176 L52 176 Z" fill="#1c140e"' + O + '/><path d="M64 164 H116" stroke="' + P.umber + '" stroke-width="1.4"/>'
+        /* Brother Valentin by the door */
+        + '<path d="M210 140 C206 122 208 110 212 104 L222 104 C226 110 228 122 224 140 Z" fill="' + P.ink + '"' + OF + '/><circle cx="217" cy="98" r="6" fill="' + P.flesh + '"' + OF + '/>'
+        + hero(s, id, 60, 70, 0.56, false) + motes(110, 200, 60, 130, '', 4, 231);
+    },
+    /* the plague gate: a gatehouse with its portcullis down and a red cross on the gate, the wall running off with ivy */
+    towngate: function (s, id) {
+      var f = (s && s.flags) || {}, grid = '';
+      for (var x = 136; x <= 184; x += 8) grid += '<path d="M' + x + ' ' + (f.in ? 76 : 98) + ' V' + (f.in ? 102 : 150) + '" stroke="' + P.ink + '" stroke-width="1.6"/>';
+      for (var y = f.in ? 80 : 104; y <= (f.in ? 100 : 148); y += 10) grid += '<path d="M134 ' + y + ' H186" stroke="' + P.ink + '" stroke-width="1.2"/>';
+      return sky(id, 150) + land(146, P.moss, 241)
+        + '<rect x="0" y="70" width="320" height="80" fill="url(#' + id + 'ash)"' + O + '/>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 22) + '" y="62" width="12" height="10" fill="' + P.stone + '"' + O + '/>'; }).join('')
+        + '<rect x="114" y="34" width="92" height="116" fill="url(#' + id + 'ash)"' + O + '/>' + [0, 1, 2, 3].map(function (i) { return '<rect x="' + (114 + i * 26) + '" y="26" width="14" height="10" fill="' + P.stone + '"' + O + '/>'; }).join('')
+        + '<path d="M130 150 V100 Q160 78 190 100 V150 Z" fill="#1c140e"' + O + '/>' + grid
+        + '<path d="M152 112 L168 128 M168 112 L152 128" stroke="' + P.verm + '" stroke-width="3"/>'
+        /* ivy on the wall */
+        + [[24, 80], [50, 96], [262, 84], [290, 100]].map(function (v) { return '<path d="M' + v[0] + ' 150 C' + (v[0] - 6) + ' ' + (v[1] + 30) + ' ' + (v[0] + 6) + ' ' + (v[1] + 14) + ' ' + v[0] + ' ' + v[1] + '" stroke="' + P.verd + '" stroke-width="3" fill="none"/><circle cx="' + (v[0] + 3) + '" cy="' + (v[1] + 20) + '" r="3" fill="' + P.sap + '"' + O + '/>'; }).join('')
+        /* Old Theodric on the parapet, with his lantern */
+        + '<g transform="translate(0 12)"><path d="M150 26 C148 16 150 10 154 8 L162 8 C166 10 168 16 166 26 Z" fill="' + P.umber + '"' + OF + '/><circle cx="158" cy="4" r="5" fill="' + P.flesh + '"' + OF + '/><path d="M170 26 L176 -6" stroke="' + P.grey + '" stroke-width="1.6"/></g>'
+        + [0, 1, 2, 3].map(function (i) { return '<rect x="' + (114 + i * 26) + '" y="26" width="14" height="10" fill="' + P.stone + '"' + O + '/>'; }).join('')
+        + (f.seen ? '<g class="glow">' + rays(188, 22, 4, 18, 10) + '</g>' : '') + '<rect x="184" y="18" width="8" height="10" fill="' + P.goldHi + '"' + O + '/>'
+        + hero(s, id, 58, 82, 0.56, hasLight(s)) + fog(id, 150, '', 3) + motes(20, 300, 100, 170, '', 4, 251);
+    },
+    /* the scriptorium: desks under tall windows, the far end a wall of fire until it is put out */
+    scriptorium: function (s, id) {
+      var f = (s && s.flags) || {}, burning = !f.out, desks = '', flames = '';
+      [[30, 148], [90, 152], [150, 148], [210, 152], [270, 148]].forEach(function (d, i) { desks += '<path d="M' + (d[0] - 18) + ' ' + d[1] + ' L' + (d[0] + 18) + ' ' + (d[1] - 8) + ' L' + (d[0] + 18) + ' ' + (d[1] - 4) + ' L' + (d[0] - 18) + ' ' + (d[1] + 4) + ' Z" fill="' + (burning && i >= 3 ? '#1c140e' : P.earth) + '"' + O + '/><path d="M' + (d[0] - 14) + ' ' + (d[1] + 4) + ' V' + (d[1] + 26) + ' M' + (d[0] + 14) + ' ' + (d[1] - 2) + ' V' + (d[1] + 26) + '" stroke="' + P.umber + '" stroke-width="2.4"/><rect x="' + (d[0] - 8) + '" y="' + (d[1] - 8) + '" width="14" height="5" fill="' + P.white + '"' + O + '/>'; });
+      if (burning) for (var i = 0; i < 9; i++) { var x = 196 + i * 15, h = 40 + (i * 37 % 30); flames += '<path class="flame" style="animation-delay:-' + (i * 0.3).toFixed(1) + 's" d="M' + x + ' 150 C' + (x + 12) + ' ' + (150 - h * 0.5) + ' ' + (x + 6) + ' ' + (150 - h * 0.8) + ' ' + (x + 2) + ' ' + (150 - h) + ' C' + (x - 6) + ' ' + (150 - h * 0.7) + ' ' + (x - 10) + ' ' + (150 - h * 0.4) + ' ' + x + ' 150 Z" fill="' + (i % 2 ? P.verm : P.ochre) + '"' + O + '/><path class="flame" d="M' + x + ' 150 C' + (x + 5) + ' ' + (150 - h * 0.35) + ' ' + (x + 2) + ' ' + (150 - h * 0.5) + ' ' + x + ' ' + (150 - h * 0.6) + ' C' + (x - 3) + ' ' + (150 - h * 0.45) + ' ' + (x - 5) + ' ' + (150 - h * 0.3) + ' ' + x + ' 150 Z" fill="' + P.goldHi + '"/>'; }
+      return '<rect width="320" height="192" fill="' + (burning ? '#5a3e26' : '#3a2e24') + '"/>'
+        + [40, 120, 200, 280].map(function (x) { return '<path d="M' + (x - 14) + ' 110 V44 Q' + x + ' 26 ' + (x + 14) + ' 44 V110 Z" fill="' + (burning && x > 180 ? P.verm : P.deep) + '"' + O + '/><path d="M' + x + ' 30 V110 M' + (x - 14) + ' 76 H' + (x + 14) + '" stroke="' + P.ink + '" stroke-width="1"/>'; }).join('')
+        + floor(id, 150) + flames + desks
+        + (burning ? '<rect width="320" height="192" fill="' + P.verm + '" opacity=".08"/>' + fog(id, 30, '', 4) : '<path class="fog f1" d="M220 60 q10 -14 0 -28 q-10 -14 4 -26" stroke="' + P.grey + '" stroke-width="4" fill="none" opacity=".5"/>')
+        + hero(s, id, 40, 74, 0.58, false) + motes(20, 300, 60, 160, '', burning ? 9 : 3, 261);
+    },
+    /* the high fold: a round stone fold on a bare hill, the shepherd's turf hut, the tops behind */
+    fold: function (s, id) {
+      var f = (s && s.flags) || {}, sheep = '', r = rnd(271);
+      for (var i = 0; i < 9; i++) { var x = 124 + Math.round(r() * 100), y = 134 + Math.round(r() * 12); sheep += '<ellipse cx="' + x + '" cy="' + y + '" rx="6" ry="4" fill="' + P.white + '"' + O + '/><circle cx="' + (x + 6) + '" cy="' + (y - 2) + '" r="2" fill="' + P.ink + '"/>'; }
+      /* the fold: a ring of piled stone seen from the road, the sheep inside, and the gap in its near side until it is mended */
+      return sky(id, 140) + hill(80, 92, 220, 40, P.moss) + hill(260, 96, 200, 40, P.sap) + land(132, P.sap, 281)
+        + '<ellipse cx="175" cy="140" rx="82" ry="20" fill="' + P.grey + '"' + O + '/><ellipse cx="175" cy="138" rx="72" ry="13" fill="' + P.moss + '"' + O + '/>' + sheep
+        + '<path d="M93 140 C96 160 254 160 257 140 L257 148 C254 168 96 168 93 148 Z" fill="' + P.stoneDk + '"' + O + '/>'
+        + '<path d="M110 150 l6 2 M130 155 l8 1 M160 157 l8 0 M196 156 l8 -1 M226 152 l8 -2" stroke="' + P.ink + '" stroke-width=".7"/>'
+        + (f.mended ? '' : '<path d="M196 152 L222 150 L224 166 L198 168 Z" fill="' + P.sap + '"' + O + '/><path d="M200 168 l4 -3 l5 2 M214 166 l4 -2" stroke="' + P.ink + '" stroke-width=".7" fill="' + P.grey + '"/>')
+        + '<path d="M260 152 V128 Q280 112 300 128 V152 Z" fill="' + P.earth + '"' + O + '/><rect x="274" y="134" width="12" height="18" fill="' + P.ink + '"/>'
+        + (f.fire ? '<g class="glow">' + rays(214, 142, 5, 24, 12) + '</g><path class="flame" d="M214 128 C222 136 222 142 214 148 C206 142 206 136 214 128 Z" fill="' + P.verm + '"' + O + '/><path class="flame" d="M214 136 C217 140 217 143 214 146 C211 143 211 140 214 136 Z" fill="' + P.goldHi + '"/>' : '')
+        + (f.bane ? '<path d="M104 124 l4 -8 l4 8 M106 118 l-4 -4 M110 118 l4 -4" stroke="' + P.lapis + '" stroke-width="1.6" fill="none"/>' : '')
+        /* Jorun on the wall with her crook */
+        + '<path d="M140 124 C138 110 140 104 144 100 L152 100 C156 104 158 110 156 124 Z" fill="' + P.ochre + '"' + OF + '/><circle cx="148" cy="94" r="5" fill="' + P.flesh + '"' + OF + '/><path d="M160 126 V82 Q166 76 170 82" stroke="' + P.umber + '" stroke-width="2" fill="none"/>'
+        + hero(s, id, 34, 82, 0.56, hasLight(s)) + fog(id, 100, '', 3) + motes(20, 300, 90, 170, '', 4, 291);
     }
   };
   /* where the foe stands in each place [x, y, scale], and where the light falls in a dark place */
   var SPOT = { crypt: [170, 60, 0.78], gate: [196, 64, 0.78], nave: [196, 64, 0.78], tower: [196, 64, 0.78], cloister: [190, 62, 0.72], undercroft: [180, 66, 0.7],
     crossroads: [200, 66, 0.7], ford: [190, 70, 0.62], barn: [200, 58, 0.72], gibbet: [196, 70, 0.66], ossuary: [186, 60, 0.74], shrine: [196, 66, 0.7], stones: [200, 70, 0.66], mere: [200, 64, 0.72], lane: [200, 70, 0.66],
     hospice: [210, 62, 0.7], wood: [196, 74, 0.62], bridge: [150, 56, 0.6],
-    chapter: [196, 64, 0.66], barrow: [150, 62, 0.64], pit: [140, 82, 0.6], inn: [200, 52, 0.66], field: [196, 66, 0.66] };
-  var DARK = { crypt: [120, 140], undercroft: [110, 140], ossuary: [110, 140] };
+    chapter: [196, 64, 0.66], barrow: [150, 62, 0.64], pit: [140, 82, 0.6], inn: [200, 52, 0.66], field: [196, 66, 0.66],
+    wayside: [196, 66, 0.66], dorter: [190, 62, 0.66], study: [190, 62, 0.66], towngate: [200, 70, 0.62], scriptorium: [200, 62, 0.68], fold: [190, 70, 0.62] };
+  var DARK = { crypt: [120, 140], undercroft: [110, 140], ossuary: [110, 140], dorter: [140, 120] };
 
   /* the dark: an ink wash over everything beyond the light; without a light, the room is nearly lost */
   function dark(id, light) {
@@ -684,6 +805,7 @@
     y = 128; lines(fit(sum.hero, 20, 230, true), 20, { x: 100, bold: true });
     if (sum.calling) lines(fit(sum.calling, 13, 230), 13, { x: 100, fill: P.umber });
     y += 4; lines(['Highest Horror: ' + sum.peak + ' of ' + sum.horrorMax], 13, { x: 100 });
+    if (sum.ending) lines(fit('Ending: ' + sum.ending, 13, 230, true), 13, { x: 100, bold: true, fill: P.lapis });
     y = Math.max(y, 222);
     head('The road' + (sum.to ? ' to ' + sum.to : ''));
     sum.places.forEach(function (pl, k) {

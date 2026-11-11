@@ -16,7 +16,7 @@
     fall: function () { return 'The Inquisition writes your name in a ledger, under a line, and sends for someone else.'; },
     rooms: {
       chapter: {
-        name: 'The Chapter-House', short: 'the chapter-house', art: 'chapter',
+        name: 'The Chapter-House', people: true, writing: true, short: 'the chapter-house', art: 'chapter',
         text: function (api) {
           return 'A long room of dark panelling, a table under a crucifix, ledgers in rows to the ceiling.'
             + (api.flag('talked') ? ' Inquisitor Mathilde Orme has gone back to her writing.' : ' Inquisitor Mathilde Orme sits at the table writing, and does not look up.')
@@ -53,7 +53,7 @@
       }
     },
     foes: {
-      pardoner: { name: 'The Pardoner', art: 'pardoner', hp: 8, attack: 1, damage: 4,
+      pardoner: { name: 'The Pardoner', person: true, art: 'pardoner', hp: 8, attack: 1, damage: 4,
         card: 'A seller of pardons in a coat sewn with lead seals, quick and cheerful, with a knife up his sleeve.',
         appears: 'He comes out of the cell low and fast, still smiling, the little knife held close.',
         hits: 'His knife finds the gap under your arm',
@@ -70,7 +70,8 @@
   /* ---------- the finale that answers it: the deacon reading at the barrow ---------- */
   A.barrow = {
     id: 'barrow', act: 'finale', fits: ['warrant'], title: 'The Barrow at Ulm Vethra', target: 13, start: 'barrow',
-    intro: function (api) { api.say('The last day. Past the last boundary stone the pilgrim road goes on as a sheep track, and then as nothing. On a bare hill stands the barrow the pardoner named.'); },
+    endings: { burned: 'The book burned', yielded: 'The deacon brought in', returned: 'The book brought back', read: 'The last page read' },
+    intro: function (api) { api.say('The last day. Past the last boundary stone the pilgrim road goes on as a sheep track, and then as nothing. On a bare hill stands the barrow of Ulm Vethra.'); },
     fall: function () { return 'A shepherd finds the warrant a year later, in the heather by the barrow, its seal unbroken. Of the deacon and the book, nothing.'; },
     timers: {
       reading: { name: 'The deacon\'s reading', room: 'barrow', max: 4, tick: 'action',
@@ -79,7 +80,7 @@
     },
     rooms: {
       barrow: {
-        name: 'Ulm Vethra', short: 'the barrow', art: 'barrow',
+        name: 'Ulm Vethra', people: true, wild: true, writing: true, short: 'the barrow', art: 'barrow',
         text: function (api) {
           return 'A long mound of turf on a bare hill, older than the Church, with a doorway of three great stones at one end.'
             + (api.flag('beat_deacon') ? ' The deacon lies in the heather by his fire. The book lies face down beside him.'
@@ -103,22 +104,35 @@
           { id: 'burn', label: 'Burn the book in his fire', words: ['burn', 'book', 'fire'], when: function (api) { return !!api.flag('beat_deacon'); },
             run: function (api) {
               api.say('The pages go up one at a time, slowly, as if each of them were being read one last time.', 'end');
-              api.end('won', 'You walk back over the boundary with the deacon on a rope and the ash of the Unsealed Canticles in your boots. At Wexstead the Inquisitor writes it in her ledger, and thanks you in four words. This is the end of the run.');
+              api.end('won', 'You walk back over the boundary with the deacon on a rope and the ash of the Unsealed Canticles in your boots. At Wexstead the Inquisitor writes it in her ledger, and thanks you in four words. This is the end of the run.', 'burned');
+            } },
+          /* or keep the book from the fire: carry it back as the Inquisitor asked, or read the last page yourself */
+          { id: 'carry', label: 'Carry the book back to the Inquisitor', words: ['carry', 'keep', 'bring'], when: function (api) { return !!api.flag('beat_deacon'); },
+            run: function (api) {
+              api.say('You wrap the book in your coat without opening it. All the way to the boundary it is warm against you, like something asleep.', 'end');
+              api.end('won', 'At Wexstead the Inquisitor unwraps the Unsealed Canticles, counts the pages, and locks it back in the strongroom with her own key. "I said I would rather the book," she says. "I meant it." This is the end of the run.', 'returned');
+            } },
+          { id: 'read', label: 'Read the last page yourself', words: ['read', 'page', 'open'], when: function (api) { return !!api.flag('beat_deacon'); },
+            run: function (api) {
+              api.say('You open the book where his finger kept the place, and read the last page aloud, as he meant to. The names on the doorway stones are not hard to read after all.', 'horror');
+              api.horror(3, 'You know what the stones say now.');
+              if (api.s.over || api.s.dying) return;   /* paid in blood past 21, and fell: the dying roll comes first */
+              api.end('won', 'You burn the book afterwards, page by page, and walk home over the boundary. You know what the names on the stones say. You will never say them aloud, and you will never stop knowing them. This is the end of the run.', 'read');
             } },
           { id: 'lead', label: 'Take him back to answer', words: ['take', 'lead', 'back', 'deacon', 'go'], when: function (api) { return !!api.flag('yielded'); },
             run: function (api) {
               api.say('He walks ahead of you all the way to the boundary, and never once asks for the book back.', 'npc');
-              api.end('won', 'At Wexstead the Inquisitor takes the deacon and the book from you without a word, and locks them both away. You do not ask where. This is the end of the run.');
+              api.end('won', 'At Wexstead the Inquisitor takes the deacon and the book from you without a word, and locks them both away. You do not ask where. This is the end of the run.', 'yielded');
             } }
         ]
       }
     },
     foes: {
-      deacon: { name: 'The Runaway Deacon', art: 'deacon', hp: 16, attack: 2, damage: 6, caster: true,
+      deacon: { name: 'The Runaway Deacon', person: true, art: 'deacon', hp: 16, attack: 2, damage: 6, caster: true,
         card: 'Deacon Nikolas Brand, in torn black, with a forbidden book open in his left hand. He reads from it as he fights, and the words hurt to hear.',
         appears: function (api) {
           var f = api.s.fight, out = 'He gets to his feet with the book held open in front of him, and reads at you.';
-          if (api.story('notes')) { f.easy = (f.easy || 0) + 1; out += ' The pardoner was right: he keeps the book in his left hand and turns his whole body to guard it. Your first attack is Easy.'; }
+          if (api.story('notes')) { f.easy = (f.easy || 0) + 1; out += ' What you learned of him was right: he keeps the book in his left hand and turns his whole body to guard it. Your first attack is Easy.'; }
           return out;
         },
         hits: 'He reads a line at you, and your nose runs with blood',
@@ -156,7 +170,7 @@
     },
     rooms: {
       pit: {
-        name: 'The Plague Pit', short: 'the plague pit', art: 'pit', dead: true,
+        name: 'The Plague Pit', people: true, short: 'the plague pit', art: 'pit', dead: true,
         text: function (api) {
           return 'The churchyard at Pellstead. The church is shut, a plague cross daubed on its door. At the edge of the yard is a long pit'
             + (api.flag('filled') ? ', filled and trodden flat.' : ', half full and white with lime.') + ' Wulf the Sexton, an old man in a leather apron, is shovelling earth into it without stopping.';
@@ -215,7 +229,7 @@
     },
     rooms: {
       yard: {
-        name: 'The Inn Yard at Tarnby', short: 'the inn yard', art: 'inn',
+        name: 'The Inn Yard at Tarnby', people: true, short: 'the inn yard', art: 'inn',
         text: function (api) {
           return 'An inn yard lit with torches, packed with farmers and their children. On the players\' cart a Saint in gold, a Demon in red and a Fool in motley are halfway through the Binding.'
             + (api.flag('beat_mummer') ? ' The play has stopped. Three players sit on the edge of the cart, very quiet.' : ' There were three players in the company when they came through the gate. There are three on the cart. Something about it is wrong.');
@@ -245,7 +259,7 @@
       }
     },
     foes: {
-      mummer: { name: 'The Painted Mummer', art: 'mummer', hp: 12, attack: 2, damage: 6, caster: true,
+      mummer: { name: 'The Painted Mummer', person: true, art: 'mummer', hp: 12, attack: 2, damage: 6, caster: true,
         card: 'A player in a painted mask that is not a mask. It wears faces the way the players wear costumes, and it speaks in other people\'s voices.',
         appears: function (api) {
           var f = api.s.fight, out = 'It turns its painted face to you, and for a moment the face is yours.';
@@ -281,7 +295,7 @@
     },
     rooms: {
       field: {
-        name: 'The Field at Fallowby', short: 'the field', art: 'field', dead: true,
+        name: 'The Field at Fallowby', wild: true, short: 'the field', art: 'field', dead: true, animals: true,
         text: function (api) {
           return 'A wide grey field under a low sky, all hummocks and old pits, with rusted iron in the grass.'
             + (api.flag('beat_knight') || api.flag('rites') ? ' In the middle of it a suit of old armour lies in the grass, and the crows have gone.' : ' In the middle of it a knight in old armour stands among the crows, leaning on his sword, as if the battle were only resting.');
@@ -315,7 +329,7 @@
       }
     },
     foes: {
-      knight: { name: 'The Unburied Knight', art: 'knight', hp: 16, attack: 2, damage: 6, undead: true,
+      knight: { name: 'The Unburied Knight', person: true, art: 'knight', hp: 16, attack: 2, damage: 6, undead: true,
         card: 'A knight in old plate, rust and crows, who still holds a battlefield nobody wants. He fights fair, and he does not tire.',
         appears: 'He comes on at a walk, his sword held up before his helm, the way knights were taught a hundred years ago.',
         hits: 'His old sword comes down on you like a door closing',

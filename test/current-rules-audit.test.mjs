@@ -51,7 +51,8 @@ test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // hard bread, chalk sticks, Gravedigger's spade as a weapon, iron-shod staff, silvered dagger, sallet, jerkin).
  // Audit 2026-11-08: flavour lines added to the six older relics that had none (words only; every mechanic is unchanged).
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
+ // Owner report 2026-11-10, finished 2026-11-11: spells and items that work only on something that must be there say so (needs: animal, person, body, writing, wild, obstacle, ally), like needs: corpse. Words for the GM only; no numbers changed.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'c7f5403eb29739e5774c2b192be98ca2493f05ef2c43d44ef037f325b85d7669');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'91aa48b77532415ac3f2071e6333ee8ac6595028ebb86442cce17412f19c3bd7');
 });

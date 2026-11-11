@@ -16,7 +16,8 @@
     title: 'The Pilgrim Road',
     blurb: 'Five nights on the pilgrim road, out to the boundary stones. Every road is different.',
     intro: 'The pilgrim road runs from the heartlands to the boundary of the consecrated land, five days on foot. You have walked it before. Not like this.',
-    scenes: ['priory', 'cart', 'warrant', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'pit', 'inn', 'field', 'shrine', 'mere', 'barrow'],
+    /* road-wide.js (2026-11-10) adds an opening for each charge (courier, convent, lodging) and three middle scenes (plaguegate, scriptorium, fold) */
+    scenes: ['priory', 'cart', 'warrant', 'courier', 'convent', 'lodging', 'ford', 'silent-bell', 'barn', 'gibbet', 'ossuary', 'hospice', 'wood', 'bridge', 'pit', 'inn', 'field', 'plaguegate', 'scriptorium', 'fold', 'shrine', 'mere', 'barrow'],
     middle: 3,
     /* the closing line on the end card, by how the run ended (won, dead, or fled: crawled out of the finale alive) */
     endings: {
@@ -82,7 +83,7 @@
     fall: function () { return 'They find you in the morning among the barrels, and say a mass for you, and send someone else.'; },
     rooms: {
       cloister: {
-        name: 'The Cloister', short: 'the cloister', art: 'cloister',
+        name: 'The Cloister', people: true, short: 'the cloister', art: 'cloister',
         text: function (api) { return 'A square of wet grass under four walks of arches. A well in the middle.' + (api.flag('talked') ? ' The Prior has gone in.' : ' Prior Severin Ashby waits by the well with his hands in his sleeves.') + ' Steps lead down to the undercroft; the gatehouse is to the east.'; },
         secret: 'The well remembers every face that has looked into it. Tonight it remembers the Prior\'s, three times, and each time he was afraid.',
         exits: { down: 'undercroft', east: { to: 'gatehouse', when: function (api) { return api.flag('talked'); }, closed: 'The Prior is waiting to speak to you.' } },
@@ -100,7 +101,7 @@
         ]
       },
       undercroft: {
-        name: 'The Undercroft', short: 'the undercroft', art: 'undercroft', dark: true,
+        name: 'The Undercroft', animals: true, short: 'the undercroft', art: 'undercroft', dark: true,
         text: function (api) { return 'Barrels, sacks of grain, and the priory\'s winter candles in their boxes.' + (api.flag('beat_rats') ? ' The boxes are torn open and the floor is quiet.' : ' Something has been at the boxes. The sacks are moving.'); },
         exits: { up: 'cloister' },
         enter: function (api) { if (!api.flag('beat_rats') && !api.s.fight) api.fight('rats'); },
@@ -110,7 +111,7 @@
         ]
       },
       gatehouse: {
-        name: 'The Gatehouse', short: 'the gatehouse', art: 'cloister',
+        name: 'The Gatehouse', people: true, short: 'the gatehouse', art: 'cloister',
         text: 'The gate stands open on the pilgrim road. Brother Konrad Tarn, the porter, holds up a lantern to see you off.',
         exits: { west: 'cloister' },
         actions: [
@@ -158,7 +159,7 @@
     },
     rooms: {
       crossroads: {
-        name: 'The Crossroads', short: 'the crossroads', art: 'crossroads',
+        name: 'The Crossroads', people: true, wild: true, short: 'the crossroads', art: 'crossroads', animals: true,
         text: function (api) { return 'A plague cart stands ' + (api.flag('freed') ? 'on the road again, its wheel caked with mud.' : 'half in the ditch, one wheel sunk to the hub.') + ' The carter, Hob Sallow, sits on the shaft. The cart is empty. A wayshrine leans at the crossing.'; },
         secret: 'Under the wayshrine someone has scratched a name, fresh: IGNATIA. Under it, older, the same name again, in the same hand.',
         exits: { north: { to: 'lane', when: function (api) { return api.flag('freed'); }, closed: '"Help me or leave me," says Hob. He will not tell you which way she went until the cart is out of the ditch.' } },
@@ -179,7 +180,7 @@
         ]
       },
       lane: {
-        name: 'The Sunken Lane', short: 'the lane', art: 'lane',
+        name: 'The Sunken Lane', wild: true, short: 'the lane', art: 'lane',
         text: 'A sunken lane between black hedges. In the mud, the prints of bare feet, walking steady, toward the boundary.',
         exits: { south: 'crossroads' },
         actions: [
@@ -221,7 +222,7 @@
     },
     rooms: {
       bank: {
-        name: 'The Riverbank', short: 'the riverbank', art: 'ford',
+        name: 'The Riverbank', wild: true, short: 'the riverbank', art: 'ford',
         text: function (api) { return 'The ferryman\'s hut is empty and the ferry is gone. Beyond the reeds the ford\'s stepping stones show as a line of pale broken water.' + (api.flag('flood') ? ' They are under now.' : ' The river is rising.'); },
         secret: 'Every year the ford takes someone. Last spring it was an acolyte carrying a censer to a burial on the far bank. He never put it down.',
         enter: function (api, first) { if (first) api.timer('river', 'start'); },
@@ -254,7 +255,7 @@
     fall: function () { return 'In the morning the reeve finds two bodies in the Church\'s grain, and has to decide whose sin it was.'; },
     rooms: {
       barn: {
-        name: 'The Tithe Barn', short: 'the tithe barn', art: 'barn',
+        name: 'The Tithe Barn', people: true, short: 'the tithe barn', art: 'barn',
         text: function (api) {
           return 'A long hall of oak posts and stacked sheaves, the Church\'s tenth of the harvest. Rain on the roof.'
             + (api.flag('calm') ? ' Faustin sleeps against a post, his hands folded.' : api.flag('beat_penitent') ? ' The far end is empty now.' : ' At the far end, under the sheaves, a man in a hair shirt sits with his back to you, very thin, eating grain from his hand.');
@@ -283,7 +284,7 @@
       }
     },
     foes: {
-      penitent: { name: 'The Gaunt Penitent', art: 'penitent', hp: 10, attack: 1, damage: 4,
+      penitent: { name: 'The Gaunt Penitent', person: true, art: 'penitent', hp: 10, attack: 1, damage: 4,
         card: 'A man in a hair shirt, starved to rope and bone, with a scourge in his fist. He believes he is doing God\'s work.',
         appears: 'He comes at you with the scourge, weeping, saying your sins aloud as if he could read them off you.',
         hits: 'The scourge lays your arm open',
@@ -316,7 +317,7 @@
     },
     rooms: {
       gibbet: {
-        name: 'Holloway Cross', short: 'the crossing', art: 'gibbet', dead: true,
+        name: 'Holloway Cross', wild: true, animals: true, short: 'the crossing', art: 'gibbet', dead: true,
         text: function (api) { return 'An iron cage creaks on a tall post over the crossing. The man in it has been dead a week. Crows. ' + (api.flag('candle') ? 'The wayshrine\'s candle burns.' : 'A wayshrine stands by the road with its candle out.') + ' The light is going.'; },
         secret: function (api) { return api.charge() === 'warrant' ? 'The hanged man answers in a voice like a sack of gravel. "A deacon on a horse stopped under me to read by the wayshrine\'s candle. He read aloud. I wish he had not. He went on toward the boundary, and the candle went out behind him."' : relic(api) ? 'The hanged man answers in a voice like a sack of gravel. He did the theft they hanged him for: he took the relic from the shrine at Saint Aubrel\'s Cross, and sold it to an old woman who was scraping salt off the boundary stones. "She paid in salt," he says. "I should have known."' : 'The hanged man answers in a voice like a sack of gravel. "A sister in grey passed under me two nights back, walking in her sleep, toward the mere past the boundary. Someone was calling her, in a voice she knew. I knew it too. It was my mother\'s."'; },
         enter: function (api, first) { if (first) api.timer('dark', 'start'); },
@@ -394,6 +395,8 @@
   /* ---------- the end of the road ---------- */
   A.shrine = {
     id: 'shrine', act: 'finale', fits: ['relic'], title: 'Saint Aubrel\'s Cross', target: 13, start: 'stones',
+    /* how the road can end here, for the end card and the Chronicle */
+    endings: { whole: 'The boundary made whole', niche: 'The Rib in the niche, the line still broken', fed: 'The Salt Hag fed and gone' },
     intro: function (api) { api.say('The last day. The road climbs to the boundary of the consecrated land, and to the shrine at Saint Aubrel\'s Cross.'); },
     fall: function () { return 'The salt is scraped from the last stone by morning. The niche stays empty, and the lead box is never found.'; },
     obstacles: {
@@ -410,37 +413,47 @@
     timers: {
       hag: { name: 'Something on the hill', room: 'stones', max: 4, tick: 'fail',
         text: 'Each failed try at the salt line draws what scraped it closer. When it comes, the line is still broken.',
-        out: function (api) { if (api.flag('beat_hag') || api.s.fight) return; api.say('An old woman comes down the hill toward you, quickly, a horn spoon in her hand.', 'foe'); api.fight('hag'); } }
+        out: function (api) { if (api.flag('beat_hag') || api.flag('fed') || api.s.fight) return; api.say('An old woman comes down the hill toward you, quickly, a horn spoon in her hand.', 'foe'); api.fight('hag'); } }
     },
     rooms: {
       stones: {
-        name: 'The Boundary Stones', short: 'the boundary stones', art: 'stones',
+        name: 'The Boundary Stones', wild: true, short: 'the boundary stones', art: 'stones',
         text: function (api) { return 'A line of boundary stones runs over the hill, each with a saint\'s mark cut in it. Between them runs a salt line, white in the dusk' + (api.flag('mended') ? ', whole.' : ', broken in long gaps where something has scraped it away.') + ' Beyond the stones the land goes on, unblessed. Up the hill, the shrine.'; },
         secret: 'Three of the stones bear the same new marks: spoon-scrapes, small and patient, made over many nights.',
         exits: { up: 'shrine' },
         actions: [
-          { id: 'salt', label: 'Mend the salt line', words: ['salt', 'mend', 'line', 'pray'], when: function (api) { return !api.flag('mended') && !api.flag('beat_hag'); },
+          /* the salt pouch can mend the line, or buy the hag off: one or the other */
+          { id: 'feed', label: 'Leave your salt pouch on the last stone for her', item: 'saltpouch', words: ['feed', 'leave', 'offer', 'pouch'], when: function (api) { return !api.flag('mended') && !api.flag('beat_hag') && !api.flag('fed') && !api.s.fight && !!api.has('saltpouch'); },
+            run: function (api) {
+              api.spend('saltpouch', 'You leave on the last boundary stone'); api.say('You step back. After a long time an old woman comes down the hill with a horn spoon in her hand, and squats by the stone, and eats.');
+              var c = api.check('CHA', { what: 'Holding still while she eats' });
+              if (c.success) { api.flag('fed', true); api.timer('hag', 'stop'); api.say('She licks the spoon clean, looks at you as if she might remember your face, and walks off over the boundary into the unblessed land without looking back. The shrine is empty of her.'); }
+              else { api.say('She finishes it, and is still hungry, and you are standing very close.'); api.fight('hag'); }
+            } },
+          { id: 'salt', label: 'Mend the salt line', words: ['salt', 'mend', 'line', 'pray'], when: function (api) { return !api.flag('mended') && !api.flag('beat_hag') && !api.flag('fed'); },
             run: function (api) { api.say(api.has('saltpouch') ? 'You open your salt pouch and walk the line, praying the Doorward.' : 'You gather what salt is left in the grass and walk the line, praying the Doorward.'); var c = api.work('salt', { adj: api.has('saltpouch') ? 'easy' : 'normal', what: 'Mending the line' }); if (!c.success) api.say('The wind takes it.'); else if (!api.flag('mended')) api.say('A little of the line is whole again.'); } }
         ]
       },
       shrine: {
         name: 'The Shrine', short: 'the shrine', art: 'shrine',
-        text: function (api) { return 'A stone hood over an empty niche. The reliquary door hangs open.' + (api.flag('beat_hag') ? ' The step is swept clean.' : ' On the step, a heap of grey salt, scraped and gathered, and the smell of the sea a hundred miles from any sea.'); },
+        text: function (api) { return 'A stone hood over an empty niche. The reliquary door hangs open.' + (api.flag('beat_hag') || api.flag('fed') ? ' The step is swept clean.' : ' On the step, a heap of grey salt, scraped and gathered, and the smell of the sea a hundred miles from any sea.'); },
         secret: 'The niche remembers what stood in it: a finger of Saint Aubrel in a silver case. It remembers the hand that took it, and the old woman who bought it, and that she ate the case.',
         exits: { down: 'stones' },
-        enter: function (api) { if (!api.flag('beat_hag') && !api.s.fight) api.fight('hag'); },
+        enter: function (api) { if (!api.flag('beat_hag') && !api.flag('fed') && !api.s.fight) api.fight('hag'); },
         actions: [
-          { id: 'set', label: 'Set Saint Dunstan\'s Rib in the niche', words: ['set', 'rib', 'relic', 'niche', 'place', 'box'], when: function (api) { return api.flag('beat_hag'); },
+          { id: 'set', label: 'Set Saint Dunstan\'s Rib in the niche', words: ['set', 'rib', 'relic', 'niche', 'place', 'box'], when: function (api) { return api.flag('beat_hag') || api.flag('fed'); },
             run: function (api) {
               api.say('You open the lead box at last. Inside, on red cloth, a brown curved bone, and nothing else. You set it in the niche and close the reliquary door.');
+              if (api.flag('fed')) { api.say('Out past the stones, a long way off, something is singing to itself with its mouth full.', 'end'); api.end('won', 'You have carried Saint Dunstan\'s Rib to the boundary, and paid the road\'s toll in salt. The Salt Hag is out there still, beyond the stones, and fed. This is the end of the run.', 'fed'); return; }
+              if (!api.flag('mended')) { api.say('The wind drops. Down the hill the salt line still lies broken in the grass, and the Rib will have to hold the gaps alone.', 'end'); api.end('won', 'You have carried Saint Dunstan\'s Rib to the boundary. Someone will have to come back with salt before the winter. Perhaps it will be you. This is the end of the run.', 'niche'); return; }
               api.say('The wind drops. Along the hill, as far as you can see, the salt line glitters as if wet.', 'end');
-              api.end('won', 'You have carried Saint Dunstan\'s Rib to the boundary. The road home is five days, and every one of them is a little lighter. This is the end of the run.');
+              api.end('won', 'You have carried Saint Dunstan\'s Rib to the boundary. The road home is five days, and every one of them is a little lighter. This is the end of the run.', 'whole');
             } }
         ]
       }
     },
     foes: {
-      hag: { name: 'The Salt Hag', art: 'hag', hp: 16, attack: 2, damage: 6,
+      hag: { name: 'The Salt Hag', person: true, art: 'hag', hp: 16, attack: 2, damage: 6,
         card: 'A very old woman with a horn spoon, who scrapes the salt from boundary stones and eats it. She is much stronger than she looks.',
         appears: function (api) {
           var f = api.s.fight, out = 'Behind the shrine an old woman is scraping salt from a boundary stone with a horn spoon, and eating it. She is very old, and she stands up quickly.';
@@ -456,6 +469,7 @@
 
   A.mere = {
     id: 'mere', act: 'finale', fits: ['missing'], title: 'The Mere of Ossvaer', target: 13, start: 'edge',
+    endings: { saved: 'Sister Ignatia led home', pulled: 'Sister Ignatia pulled from the water', alone: 'Home alone' },
     intro: function (api) { api.say('The last day. Past the boundary stones the road gives up. The footprints do not.'); },
     fall: function () { return 'You hear your own mother calling, at the end, and you go to her. The mere is very still afterwards.'; },
     timers: {
@@ -465,7 +479,7 @@
     },
     rooms: {
       edge: {
-        name: 'Beyond the Stones', short: 'beyond the stones', art: 'stones',
+        name: 'Beyond the Stones', wild: true, short: 'beyond the stones', art: 'stones',
         text: 'The last boundary stone stands behind you. Ahead is moor, and on the moor a mere, black and flat, ringed with standing stones that no saint\'s mark was ever cut into. A figure in grey stands at the water\'s edge, very still.',
         secret: 'The moor remembers every pilgrim who walked out this way in their sleep. It has stopped counting.',
         exits: { north: 'mere' },
@@ -475,7 +489,7 @@
         ]
       },
       mere: {
-        name: 'The Mere', short: 'the mere', art: 'mere',
+        name: 'The Mere', wild: true, people: true, short: 'the mere', art: 'mere',
         text: function (api) { return 'Black water, flat as slate, in a ring of leaning stones.' + (api.flag('lost') ? ' There is no one at the water\'s edge now.' : api.flag('beat_widow') ? ' Sister Ignatia stands up to her knees in the water, shaking, awake.' : ' Sister Ignatia stands up to her knees in it, walking slowly out, answering someone softly.'); },
         secret: 'The stones remember the mere\'s other name, and it is the name of a woman.',
         exits: { south: 'edge' },
@@ -484,10 +498,23 @@
           { id: 'lead', label: 'Lead Sister Ignatia out of the water', words: ['lead', 'ignatia', 'sister', 'take', 'help'], when: function (api) { return api.flag('beat_widow') && !api.flag('lost'); },
             run: function (api) {
               api.say('She lets you take her hand. Her eyes are open. "She sounded just like her," she says. "Just like her."', 'npc');
-              api.end('won', 'You walk Sister Ignatia back over the boundary stones, and she does not look behind her, and neither do you. This is the end of the run.');
+              api.end('won', 'You walk Sister Ignatia back over the boundary stones, and she does not look behind her, and neither do you. This is the end of the run.', 'saved');
+            } },
+          /* the water has closed over her: going in after her is one try, Easy on a rope */
+          { id: 'dive', label: 'Go into the mere after her', words: ['dive', 'swim', 'water', 'after', 'pull'], when: function (api) { return api.flag('beat_widow') && api.flag('lost') && !api.flag('dived'); },
+            run: function (api) {
+              api.flag('dived', true); var rope = api.has(ROPES);
+              api.say(rope ? 'You tie your rope round a leaning stone and wade out, and go under where the grey habit went down.' : 'You wade out and go under where the grey habit went down. The cold shuts your eyes for you.');
+              if (rope) api.used(rope.name);
+              var c = api.check('STR', { adj: rope ? 'easy' : 'normal', what: 'Pulling her out' });
+              if (c.success) {
+                api.flag('pulled', true);
+                api.say('Your hand finds wool, then an arm. You come up with her, both of you coughing black water, and drag her up the bank. She is breathing. She looks at you as if she has been a long way away.', 'npc');
+                api.end('won', 'You carry Sister Ignatia back over the boundary stones on your back. She will not speak of the mere, and in the spring she takes the veil again. This is the end of the run.', 'pulled');
+              } else { var n = api.die(6); api.hurt(n, 'The cold and the weed have you before you find her, and you only just find the bank again (d6 shows ' + n + ')'); api.horror(1, 'Something under the water held your ankle a moment, and let go.'); }
             } },
           { id: 'turn', label: 'Turn back for the boundary', words: ['turn', 'back', 'leave', 'go'], when: function (api) { return api.flag('beat_widow') && api.flag('lost'); },
-            run: function (api) { api.end('won', 'You walk back alone over the boundary stones. In Grimsby Fold you will have to tell Hob Sallow, and her order, and her mother\'s grave. This is the end of the run.'); } }
+            run: function (api) { api.end('won', api.story('convent') ? 'You walk back alone over the boundary stones. At Vesperholt you will have to tell Mother Cordula, and the sisters, and her mother\'s grave. This is the end of the run.' : 'You walk back alone over the boundary stones. In Grimsby Fold you will have to tell Hob Sallow, and her order, and her mother\'s grave. This is the end of the run.', 'alone'); } }
         ]
       }
     },
@@ -496,7 +523,7 @@
         card: 'A drowned woman in a widow\'s veil who calls in the voices of your dead. Folk say she wants company, and is never satisfied.',
         appears: function (api) {
           var f = api.s.fight, out = 'The water in front of Sister Ignatia rises into a shape: a woman in a widow\'s veil, streaming, her arms already open. She speaks with your mother\'s voice.';
-          if (api.story('tracks')) { f.easy = (f.easy || 0) + 1; out += ' You know Ignatia\'s sleepwalker\'s step; you know which way she will move, and where the widow will be. Your first attack is Easy.'; }
+          if (api.story('tracks')) { f.easy = (f.easy || 0) + 1; out += ' You know Ignatia\'s ways now; you know which way she will move, and where the widow will be. Your first attack is Easy.'; }
           return out;
         },
         hits: 'Cold hands pull you toward the water',

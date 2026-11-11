@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js', 'solo/road-wide.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools, R = globalThis.SacramentRules;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
@@ -453,7 +453,7 @@ test('every story spell and story item carries tags from the shared list, except
   for (const x of story) {
     if (untagged.includes(x.id)) { assert.ok(!x.tags, x.id); continue; }
     assert.ok(x.tags && x.tags.length, x.id + ' has tags'); for (const t of x.tags) assert.ok(ids.has(t), x.id + ': ' + t);
-    assert.ok(!x.needs || ['corpse', 'undead'].includes(x.needs), x.id);
+    assert.ok(!x.needs || ['corpse', 'undead', 'animal', 'person', 'body', 'writing', 'wild', 'obstacle', 'ally'].includes(x.needs), x.id);
   }
   assert.match(CORE.tagText(G.spells.find((x) => x.id === 'pillarash')), /Hide\. In a fight: .*rolls 3 less\. Out of a fight: /);
 });
@@ -508,7 +508,7 @@ test('a third reason to be on the road: the Inquisitor\'s warrant opens it, the 
   let warrantRuns = 0;
   for (let seed = 1; seed <= 120; seed++) {
     const rnd = seeded(seed * 7919 + 3), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n));
-    if (o.charge === 'warrant') { warrantRuns++; assert.equal(o.order[0], 'warrant'); assert.equal(o.order[4], 'barrow'); }
+    if (o.charge === 'warrant') { warrantRuns++; assert.equal(SCENES[o.order[0]].gives, 'warrant', 'a warrant opening (the chapter-house, or the deacon\'s lodging since 2026-11-10)'); assert.equal(o.order[4], 'barrow'); }
   }
   assert.ok(warrantRuns > 10, 'about a third of runs hunt the deacon: ' + warrantRuns);
   /* the opening: the warrant, then the pardoner talks (or is beaten) and tells you how the deacon moves */
@@ -952,4 +952,187 @@ test('the solo story says dice the way the table does: "d4 shows 3"', () => {
   assert.doesNotMatch(text, /\(d\d+ \d+[),;]/, 'no "(d6 4)" left in the story');
   const engine = require('node:fs').readFileSync(new URL('../site/solo/engine.js', import.meta.url), 'utf8');
   assert.doesNotMatch(engine, /'d' \+ [\w.]+ \+ ' ' \+/, 'every die in the story goes through diceSay');
+});
+
+/* ---------- a wider road (owner, 2026-11-10: "more opening scenes ... more outcomes and more beginnings, and more opportunities to use some of the loot") ---------- */
+const lastScene = (id, charge) => ({ campaign: 'pilgrim-road', title: 'The Pilgrim Road', order: [id], spare: [], at: 0, charge, story: {}, met: [] });
+const withGear = (focus, ids) => { const h = T.generate(focus, seeded(5)); h.gear = h.gear.filter((g) => CORE.itemOf(g) && CORE.itemOf(g).kind !== 'supply').concat(ids.map((id) => ({ id, eq: false }))); return h; };
+const doLabel = (s, re) => S.choices(s).find((c) => c.kind === 'do' && re.test(c.label));
+
+test('more beginnings: each reason to be on the road can start in two places, and every opening leads to the finale that answers it', () => {
+  const byCharge = {};
+  for (const id of ROAD.scenes) { const x = SCENES[id]; if (x.act === 'opening') (byCharge[x.gives] = byCharge[x.gives] || []).push(id); }
+  assert.deepEqual(byCharge, { relic: ['priory', 'courier'], missing: ['cart', 'convent'], warrant: ['warrant', 'lodging'] });
+  for (const id of ['plaguegate', 'scriptorium', 'fold']) { assert.equal(SCENES[id].act, 'middle'); assert.ok(!SCENES[id].fits, id + ' fits every charge'); }
+  const firsts = new Set();
+  for (let seed = 1; seed <= 300; seed++) { const rnd = seeded(seed * 7919 + 3), o = S.pickOrder(ROAD, (n) => 1 + Math.floor(rnd() * n)); firsts.add(o.order[0]); assert.ok(SCENES[o.order[4]].fits.includes(SCENES[o.order[0]].gives)); }
+  assert.equal(firsts.size, 6, 'all six openings come up');
+});
+
+test('the courier\'s chapel: climb for the Rib (Easy with a rope), then face the hound or slip away; bandages and aqua vitae open their own choices', () => {
+  const C1 = ADVS.courier;
+  let s = S.start(withGear('fighter', ['rope', 'bandages', 'spirits']), C1, fixed([20]));
+  assert.ok(!doLabel(s, /Climb/), 'not before he has spoken'); S.act(s, C1, 'do lucan', fixed([20]));
+  const tend = doLabel(s, /Bind Brother Lucan/); assert.ok(tend && tend.useful, 'the bandages are useful here');
+  S.act(s, C1, 'do tend', fixed([20, 50])); assert.ok(!s.hero.gear.some((g) => g.id === 'bandages'), 'the bandages are used up');
+  S.act(s, C1, 'do spirits', fixed([20])); assert.equal(s.flags.dogwise, true);
+  for (let i = 0; i < 6 && !s.flags.climbed; i++) S.act(s, C1, 'do climb', fixed([20]));
+  assert.equal(s.flags.climbed, true); assert.match(s.log.map((l) => l.t).join(' '), /Easy/, 'the rope makes the climb Easy');
+  S.act(s, C1, 'go up', fixed([20])); S.act(s, C1, 'do box', fixed([20])); assert.equal(s.flags.relic, true, 'the charge is the Rib, as at the priory');
+  S.act(s, C1, 'go down', fixed([20])); S.act(s, C1, 'do door', fixed([20])); assert.equal(s.fight.foe, 'hound'); assert.ok(s.fight.easy >= 1, 'Brother Lucan told you how it comes');
+  s = S.start(withGear('scout', []), C1, fixed([20])); S.act(s, C1, 'do lucan', fixed([20])); s.flags.climbed = true; s.flags.box = true;
+  S.act(s, C1, 'do window', fixed([20])); assert.equal(s.over, 'won', 'slipped out unheard');
+  s = S.start(withGear('scout', []), C1, fixed([2])); S.act(s, C1, 'do lucan', fixed([2])); for (let i = 0; i < 3 && !s.fight; i++) S.act(s, C1, 'do climb', fixed([2]));
+  assert.equal(s.fight && s.fight.foe, 'hound', 'three loud failures and it comes in through the vestry');
+});
+
+test('the house of the Seventh Bell: the bolted cell opens to force, a crowbar, the Open tag or a hospice key ring; her letters make the last fight\'s first attack Easy', () => {
+  const V = ADVS.convent;
+  let s = S.start(withGear('fighter', ['hospicekeys']), V, fixed([20]));
+  S.act(s, V, 'do abbess', fixed([20])); assert.equal(s.flags.missing, true); assert.equal(s.flags.convent, true);
+  S.act(s, V, 'go up', fixed([20])); const keys = doLabel(s, /hospice key ring/); assert.ok(keys && keys.useful);
+  S.act(s, V, 'do keys', fixed([20])); assert.equal(s.flags.opened, true);
+  S.act(s, V, 'go west', fixed([20])); S.act(s, V, 'do letters', fixed([20])); assert.equal(s.flags.tracks, true);
+  S.act(s, V, 'do follow', fixed([20])); assert.equal(s.over, 'won');
+  s = S.start(withGear('fighter', []), V, fixed([2])); S.act(s, V, 'do abbess', fixed([2])); S.act(s, V, 'go up', fixed([2]));
+  for (let i = 0; i < 3; i++) S.act(s, V, 'do force', fixed([2]));
+  assert.equal(s.flags.rung, true, 'three failed tries and the night bell rings'); assert.ok(s.horror >= 1);
+  /* the mere knows where she came from */
+  const M = ADVS.mere, h = withGear('fighter', []);
+  s = S.start(h, M, fixed([20]), Object.assign(lastScene('mere', 'missing'), { story: { convent: true } })); s.flags.beat_widow = true; s.flags.lost = true; s.flags.dived = true;
+  S.act(s, M, 'go north', fixed([20])); S.act(s, M, 'do turn', fixed([20])); assert.match(s.log.at(-1).t, /Vesperholt/);
+});
+
+test('the deacon\'s lodging: his notes, his strongbox, and chalk that shuts the Mutterer in before you face it', () => {
+  const L = ADVS.lodging;
+  let s = S.start(withGear('scholar', ['crowbar', 'chalk']), L, fixed([20]));
+  S.act(s, L, 'do clerk', fixed([20])); assert.equal(s.flags.warrant, true);
+  S.act(s, L, 'do desk', fixed([20])); assert.equal(s.flags.notes, true, 'his own rules tell you how he fights');
+  for (let i = 0; i < 6 && !s.flags.unlocked; i++) S.act(s, L, 'do prise', fixed([20]));
+  assert.equal(s.flags.unlocked, true);
+  S.act(s, L, 'go down', fixed([20])); const chalk = doLabel(s, /chalk/i); assert.ok(chalk && chalk.useful);
+  S.act(s, L, 'do chalk', fixed([20])); S.act(s, L, 'do face', fixed([20]));
+  assert.equal(s.fight.foe, 'mutterer'); assert.equal(s.fight.hp.cur, s.fight.hp.max - 4, 'the chalk has it thin');
+  const foe = L.foes.mutterer; assert.ok(foe.caster && foe.undead, 'Hush stops it, and holy water and oil work on it');
+});
+
+test('three more middle scenes: the plague gate has many ways in, the scriptorium fire can be fought or left, and the Grey Mother is met prepared or not', () => {
+  const P = ADVS.plaguegate;
+  for (const [gear, cmd] of [[['safepassage'], 'do papers'], [['plaguemask'], 'do mask'], [['purse'], 'do bribe']]) {
+    const s = S.start(withGear('fighter', gear), P, fixed([2]));
+    const c = S.choices(s).find((x) => x.cmd === cmd); assert.ok(c && c.useful, cmd + ' is offered and marked useful');
+    S.act(s, P, cmd, fixed([2])); assert.equal(s.room, 'yard', cmd + ' gets you in, without a roll');
+  }
+  let s = S.start(withGear('fighter', ['purse']), P, fixed([2])); S.act(s, P, 'do bribe', fixed([2])); assert.ok(!s.hero.gear.some((g) => g.id === 'purse'), 'the purse is spent');
+  s = S.start(withGear('fighter', ['tinder']), P, fixed([20])); S.act(s, P, 'do talk', fixed([20])); assert.equal(s.room, 'yard');
+  S.act(s, P, 'do burn', fixed([20])); assert.equal(s.flags.burned, true); assert.ok(!s.fight); S.act(s, P, 'do go', fixed([20])); assert.equal(s.over, 'won');
+  s = S.start(withGear('fighter', []), P, fixed([20])); S.act(s, P, 'do talk', fixed([20])); S.act(s, P, 'do heap', fixed([20])); assert.equal(s.fight.foe, 'king'); assert.ok(P.foes.king.beast);
+  /* the scriptorium: halfway through the fire the copyist gets up; snuffing him costs him his attack */
+  const W = ADVS.scriptorium;
+  s = S.start(withGear('fighter', ['waterskins']), W, fixed([20, 6]));
+  for (let i = 0; i < 4 && !s.fight; i++) S.act(s, W, 'do water', fixed([20, 6]));
+  assert.equal(s.fight && s.fight.foe, 'copyist'); assert.ok(W.foes.copyist.flame);
+  s = S.start(withGear('fighter', []), W, fixed([2])); S.act(s, W, 'do leave', fixed([2])); assert.equal(s.over, 'won', 'you may walk on by');
+  /* the fold: wolfsbane, a fire and a mended wall each tell in the fight */
+  const F = ADVS.fold;
+  s = S.start(withGear('fighter', ['wolfsbane', 'tinder']), F, fixed([20]));
+  S.act(s, F, 'do jorun', fixed([20])); S.act(s, F, 'do bane', fixed([20])); S.act(s, F, 'do fire', fixed([20]));
+  for (let i = 0; i < 4 && !s.flags.mended && !s.fight; i++) S.act(s, F, 'do pile', fixed([20]));
+  for (let i = 0; i < 8 && !s.fight; i++) S.act(s, F, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf'); assert.equal(s.fight.hp.cur, s.fight.hp.max - 4, 'the wolfsbane caught her'); assert.ok(s.fight.easy >= 2, 'the wall and the fire');
+});
+
+test('more outcomes: every last place has more than one ending, each named, and the end card and Chronicle say which one', () => {
+  require('../site/solo/art.js'); const ART = globalThis.SacramentSoloArt;
+  for (const id of ['shrine', 'mere', 'barrow']) assert.ok(Object.keys(SCENES[id].endings).length >= 3, id + ' has three endings or more');
+  const end = (id, charge, setup, cmds, roll) => {
+    const s = S.start(withGear('fighter', setup.gear || []), SCENES[id], fixed([roll || 20]), lastScene(id, charge)); Object.assign(s.flags, setup.flags || {});
+    for (const c of cmds) S.act(s, SCENES[id], c, fixed([roll || 20]));
+    return s;
+  };
+  /* the shrine: the line mended, or not, or the hag bought off with the salt pouch */
+  let s = end('shrine', 'relic', { flags: { beat_hag: true, mended: true } }, ['go up', 'do set']); assert.equal(s.over, 'won'); assert.equal(S.summary(s).ending, 'The boundary made whole');
+  s = end('shrine', 'relic', { flags: { beat_hag: true } }, ['go up', 'do set']); assert.equal(S.summary(s).ending, 'The Rib in the niche, the line still broken');
+  s = end('shrine', 'relic', { gear: ['saltpouch'] }, ['do feed']); assert.equal(s.flags.fed, true); assert.ok(!s.fight); assert.ok(!s.hero.gear.some((g) => g.id === 'saltpouch'));
+  S.act(s, SCENES.shrine, 'go up', fixed([20])); assert.ok(!s.fight, 'she has gone over the boundary'); S.act(s, SCENES.shrine, 'do set', fixed([20])); assert.equal(S.summary(s).ending, 'The Salt Hag fed and gone');
+  assert.ok(S.summary(s).used.includes(CORE.item('saltpouch').name), 'the pouch was put to use: ' + S.summary(s).used.join(', '));
+  s = end('shrine', 'relic', { gear: ['saltpouch'] }, ['do feed'], 2); assert.equal(s.fight && s.fight.foe, 'hag', 'a failed check: she is still hungry');
+  /* the mere: led out, pulled from the water on a rope, or home alone */
+  s = end('mere', 'missing', { flags: { beat_widow: true } }, ['go north', 'do lead']); assert.equal(S.summary(s).ending, 'Sister Ignatia led home');
+  s = end('mere', 'missing', { gear: ['rope'], flags: { beat_widow: true, lost: true } }, ['go north', 'do dive']); assert.equal(S.summary(s).ending, 'Sister Ignatia pulled from the water');
+  s = end('mere', 'missing', { flags: { beat_widow: true, lost: true } }, ['go north', 'do dive'], 2); assert.ok(!s.over && s.flags.dived, 'one try only'); S.act(s, SCENES.mere, 'do turn', fixed([2])); assert.equal(S.summary(s).ending, 'Home alone');
+  /* the barrow: the book burned, carried back, or read; the deacon brought in */
+  for (const [cmd, name] of [['do burn', 'The book burned'], ['do carry', 'The book brought back'], ['do read', 'The last page read']]) {
+    s = end('barrow', 'warrant', { flags: { beat_deacon: true } }, [cmd]); assert.equal(s.over, 'won'); assert.equal(S.summary(s).ending, name);
+  }
+  assert.ok(s.horror >= 3, 'reading the page raises the Horror');
+  s = end('barrow', 'warrant', {}, ['do call', 'do lead']); assert.equal(S.summary(s).ending, 'The deacon brought in');
+  assert.match(ART.endCard(S.summary(s), s, ''), /Ending: The deacon brought in/);
+  /* a road that does not come home has no ending, and the deed counts different endings */
+  s = end('barrow', 'warrant', {}, []); s.over = 'dead'; assert.equal(S.summary(s).ending, '');
+  require('../site/solo/deeds.js'); const DD = globalThis.SacramentSoloDeeds, w = { friends: [], finales: [], places: [] };
+  const roads = ['a', 'b', 'c', 'd', 'e'].map((x) => ({ hero: 'H', end: 'won', ending: x }));
+  assert.ok(DD.earned(roads, w).includes('endings')); assert.ok(!DD.earned(roads.slice(1), w).includes('endings'));
+});
+
+test('a choice that uses a carried item is marked useful and counted as put to use', () => {
+  const V = ADVS.convent, run = { campaign: 'pilgrim-road', title: 'The Pilgrim Road', order: ['convent', 'ford', 'mere'], spare: [], at: 0, charge: 'missing', story: {}, met: [] };
+  const s = S.start(withGear('fighter', ['crowbar']), V, fixed([20]), run);
+  S.act(s, V, 'do abbess', fixed([20])); S.act(s, V, 'go up', fixed([20])); S.act(s, V, 'do force', fixed([20, 6]));
+  assert.ok(S.summary(s).used.includes('Wayshrine Crowbar'), S.summary(s).used.join(', '));
+});
+
+/* Damien, 2026-11-10: The Beast Tongue showed as "Useful here" in the Inquisitor's chapter-house, where there is no animal to ask. A spell that speaks to or
+   through an ordinary animal (needs: animal in the gear list, like needs: corpse) is useful only where the scene has animals, or against a beast. */
+test('a spell that needs an animal is no use where there is none: The Beast Tongue in the chapter-house; it is in the fold and against a beast', () => {
+  const sp = (id) => G.spells.find((x) => x.id === id);
+  assert.equal(sp('beasttongue').needs, 'animal'); assert.equal(sp('borrowedsenses').needs, 'animal');
+  assert.match(CORE.tagText(sp('beasttongue')), /needs an ordinary animal close by/);
+  const hero = (book) => { const h = T.generate('scholar', seeded(4)); h.gear = [{ id: book, eq: true }]; return h; };
+  const holder = [...G.grimoires, ...G.items, ...G.found].find((g) => (g.spells || []).includes('beasttongue'));
+  assert.ok(holder, 'a grimoire holds The Beast Tongue');
+  const spell = (s) => S.choices(s).find((c) => /Beast Tongue/.test(c.label));
+  let s = S.start(hero(holder.id), ADVS.warrant, fixed([20]));
+  assert.ok(spell(s) && spell(s).idle && !spell(s).useful, 'the chapter-house: no animal, no use');
+  s = S.start(hero(holder.id), ADVS.fold, fixed([20]));
+  assert.ok(spell(s) && !spell(s).idle && spell(s).useful, 'the fold has sheep to ask');
+  S.act(s, ADVS.fold, 'do jorun', fixed([20])); s.flags.mended = true; for (let i = 0; i < 8 && !s.fight; i++) S.act(s, ADVS.fold, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf'); assert.ok(spell(s) && !spell(s).idle, 'against the Grey Mother, a beast');
+  s = S.start(hero(holder.id), A, fixed([20])); S.act(s, A, 'go north', fixed([20])); S.act(s, A, 'go down', fixed([20]));
+  assert.ok(s.fight && spell(s).idle, 'against the Candle-Eater, no animal');
+});
+
+/* The wider issue behind that report: a spell or item was offered whenever one of its tags matched, even when what it works on is not there.
+   Each one's own words now say what it needs (gear.js "needs"), and each place and foe says what is there. */
+test('spells and items are offered only where what they work on is there', () => {
+  const all = [...G.spells, ...G.items, ...G.found];
+  const needs = (id) => all.find((x) => x.id === id).needs;
+  assert.deepEqual(['rootgrasp', 'frostseal', 'honeylozenges', 'burnedmargins', 'toadstone', 'pactmark'].map(needs), ['wild', 'obstacle', 'person', 'writing', 'body', 'ally']);
+  for (const x of all.filter((x) => x.needs)) assert.doesNotMatch(CORE.tagText(x), /\(undefined\)|\((?!needs|only|for)/, x.id + ' has words for what it needs');
+  const name = (id) => all.find((x) => x.id === id).name;
+  const offer = (s, n) => S.choices(s).find((c) => c.label.includes(n));
+  const start = (id, adv) => {   /* the first book or item holding it that a hero can carry today */
+    for (const g of [...G.found, ...G.grimoires, ...G.items].filter((g) => g.id === id || (g.spells || []).includes(id))) {
+      const h = T.generate('scholar', seeded(4)); h.gear = [{ id: g.id, eq: true }]; const s = S.start(h, adv, fixed([20])); if (offer(s, name(id))) return s;
+    }
+    assert.fail('no hero can carry ' + id);
+  };
+  const idle = (id, adv) => { const s = start(id, adv), c = offer(s, name(id)); assert.ok(c, name(id) + ' is on the list'); return !c.useful; };
+  assert.ok(idle('rootgrasp', ADVS.warrant), 'no growing roots in the chapter-house');
+  assert.ok(idle('readsky', ADVS.warrant), 'no sky to read indoors');
+  assert.ok(idle('twofacedmirror', ADVS.fold), 'nobody at the fold to catch in a mirror');
+  assert.ok(!idle('twofacedmirror', ADVS.warrant), 'the Inquisitor can be watched');
+  assert.ok(idle('truescales', ADVS.warrant), 'weighing an object tells nothing of the room');
+  assert.ok(!idle('burnedmargins', ADVS.warrant), 'the ledgers can be read');
+  assert.ok(!idle('readsky', ADVS.fold), 'the sky over the fold can be read');
+  // in a fight: no talking a she-wolf round, no freezing a door shut on her, no reading the room for her weakness
+  let s = start('honeylozenges', ADVS.fold); S.act(s, ADVS.fold, 'do jorun', fixed([20])); s.flags.mended = true;
+  for (let i = 0; i < 8 && !s.fight; i++) S.act(s, ADVS.fold, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf');
+  assert.ok(!offer(s, name('honeylozenges')).useful, 'the Grey Mother does not understand you');
+  for (const id of ['frostseal', 'witnesslens']) {
+    const t = start(id, ADVS.fold); S.act(t, ADVS.fold, 'do jorun', fixed([20])); t.flags.mended = true;
+    for (let i = 0; i < 8 && !t.fight; i++) S.act(t, ADVS.fold, 'do wait', fixed([20]));
+    assert.ok(t.fight && !offer(t, name(id)).useful, name(id) + ' is no use against the Grey Mother');
+  }
 });
