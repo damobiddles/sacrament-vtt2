@@ -38,8 +38,14 @@
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
      A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20),
      but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01).
-     Paying in blood (the owner's rule, 2026-11-01): a hero's Horror cost that cannot go on a full meter (a push, a natural 1, a spell or item) costs that hero one `bloodDie` of HP for each point instead. */
-  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, bloodDie: 4, lowerDie: 6, lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' } };
+     Paying in blood (the owner's rule, 2026-11-01; 1 HP a point since the playtest of 2026-11-09): a hero's Horror cost that cannot go on a full meter (a push, a natural 1, a spell or item)
+     costs that hero `blood` HP for each point instead.
+     Each threshold fires once an adventure (the owner's rule after the playtest of 2026-11-09): a meter that falls and climbs again does not fire it twice, until the GM starts a new adventure.
+     What each one does (the owner's decision, 2026-11-11; the solo game's own effects, now everyone's): `dread` names them, `effects` says them. An adventure's own lines come first. */
+  var HORROR = { max: 21, thresholds: [7, 14, 21], push: 1, nat1: 1, blood: 1, lowerDie: 6,
+    lines: { 7: 'The Horror stirs.', 14: 'The Horror draws near.', 21: 'The Horror has arrived.' },
+    dread: { shaken: 7, hunted: 14, arrived: 21, huntedHp: 2 },
+    effects: { 7: 'Every hero is shaken: their next roll is Hard.', 14: 'Every foe met from now on has 2 more HP.', 21: 'There is no more rest this adventure.' } };
   var HORROR_DICE = /^([1-9]?)d(4|6|8|10|12|20)(?:\+([0-9]{1,2}))?$/;   /* "d6", "2d4", "d4+2" */
 
   /* What a Horror amount is: { fixed } for a number, { count, sides, plus } for dice, or null when there is none (missing, 0, or not readable). */
@@ -62,9 +68,10 @@
   /* Move the meter by `d` (up or down), kept from 0 to the maximum. `crossed` is every threshold passed on the way up, lowest first; going down crosses none. */
   /* Whether a hero's natural 1 tempts the Horror: { attack, spell, pushed } describe the roll. */
   function nat1Tempts(o) { o = o || {}; return !!(o.attack || o.spell || o.pushed); }
-  function horrorMove(cur, d) {
-    cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max);
-    return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t; }), arrived: to >= HORROR.max };
+  /* `fired` lists the thresholds this adventure has already fired: those are passed again in silence. */
+  function horrorMove(cur, d, fired) {
+    cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max), done = Array.isArray(fired) ? fired : [];
+    return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t && done.indexOf(t) < 0; }), arrived: to >= HORROR.max };
   }
 
   /* Dying, as the Rules page has it (the owner asked for it on the table, 2026-10-21). A hero who falls to 0 is dying and rolls a d4: the rounds left. Each new round takes one off;
@@ -86,9 +93,10 @@
     var left = clamp(int(st.left, 0) + int(d, 0), 0, DYING.maxLeft); return { left: left, stable: left > 0 && !!st.stable, dead: left === 0 };
   }
 
-  /* Party rest heals a Heart and lowers Horror by d10 per two living heroes, rounded up. */
-  var REST = { heal: HEART, horrorDie: 10, perDie: 2 };
-  function restDice(living) { return Math.ceil(Math.max(0, int(living, 0)) / REST.perDie); }
+  /* Party rest heals a Heart and lowers the Horror by one d6, whatever the size of the party (the owner's decision, 2026-11-11; it was a d10 per two heroes),
+     so the meter keeps climbing across an adventure. Once the Horror has arrived there is no rest until the adventure ends. */
+  var REST = { heal: HEART, horrorDie: 6 };
+  function restDice(living) { return int(living, 0) > 0 ? 1 : 0; }
 
   /* The two table settings. Everything else is a fixed rule. */
   var DEFAULT_SETTINGS = { sceneDanger: false, nat20Ultimate: true, dice: DEFAULT_DICE };

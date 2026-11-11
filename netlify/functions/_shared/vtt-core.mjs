@@ -180,9 +180,9 @@ export function project(s, a, opt = {}) {
     drawV: s.drawV || 0, pv: s.pv || 0, pointers: projectPointers(s, a), rolls, nextSession: s.next || null,
     /* the viewer's own most recent actions the table has already applied, so a screen showing a change it is still waiting to hear about does not count it twice */
     done: s.appliedOrder.filter((id) => s.applied[id] && s.applied[id].by === (gm ? 'gm' : a.pid)).slice(-40),
-    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
+    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
-    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds }, gm ? { alert: horrorOf(s).alert } : {})
+    horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds, fired: horrorOf(s).fired.slice() }, gm ? { alert: horrorOf(s).alert } : {})
   };
   if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = (s.draw || []).filter((line) => gm || (line.sceneId || s.table.scene) === s.table.scene);
   if (gm) {
@@ -242,7 +242,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
+const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -438,16 +438,38 @@ const sayDying = (card) => (card.dying.dead ? card.name + ' has died.' : card.dy
 
 /* ---------- the Rising Horror ---------- */
 /* The meter, made on first use for a table saved before it existed. `alert` is the highest threshold passed that the GM has not yet dealt with (0 for none). */
-const horrorOf = (s) => (s.horror = s.horror && typeof s.horror === 'object' ? s.horror : { cur: 0, alert: 0 });
+/* `fired` lists the thresholds this adventure has fired (each fires once an adventure); `hunted` is set once 14 has fired: every foe met from then on has more HP. */
+const horrorOf = (s) => { const h = s.horror = s.horror && typeof s.horror === 'object' ? s.horror : { cur: 0, alert: 0 }; if (!Array.isArray(h.fired)) h.fired = []; return h; };
+const arrived = (s) => horrorOf(s).fired.includes(R.HORROR.dread.arrived);
 /* Move the meter by d, and say so: one line for the move (with an Undo for the GM), then one line for each threshold passed. `say(applied, now)` writes the line. */
 function moveHorror(s, a, ctx, d, say, dice) {
-  const h = horrorOf(s), m = R.horrorMove(h.cur, d); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
+  const h = horrorOf(s), m = R.horrorMove(h.cur, d, h.fired); h.cur = m.to; const R0 = recapOf(s, ctx); R0.horrorPeak = Math.max(R0.horrorPeak || 0, h.cur);
   if (m.crossed.length) h.alert = Math.max(h.alert || 0, m.crossed[m.crossed.length - 1]);
   if (h.alert && h.cur < h.alert) h.alert = 0;
-  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects: m.applied ? [{ t: 'horror', d: m.applied }] : [], dice });
-  m.crossed.forEach((t) => L(s, { role: 'gm', name: 'GM' }, ctx, R.HORROR.lines[t], { kind: 'alert' }));
+  /* the thresholds this move fires, and what they do, belong to the move: undoing it un-fires them */
+  /** @type {any[]} */ const effects = m.applied ? [{ t: 'horror', d: m.applied }] : [];
+  m.crossed.forEach((t) => effects.push(dread(s, t)));
+  const e = L(s, a, ctx, say(m.applied, m.to), { kind: 'horror', effects, dice });
+  m.crossed.forEach((t) => L(s, { role: 'gm', name: 'GM' }, ctx, R.HORROR.lines[t] + ' ' + R.HORROR.effects[t], { kind: 'alert' }));
   return { cur: h.cur, applied: m.applied, crossed: m.crossed, arrived: m.arrived, log: e.id };
 }
+/* A threshold fires (once an adventure): 7 shakes every hero (their next roll is Hard), 14 hunts (foes met from now on have more HP), 21 ends rest until a new adventure.
+   Returns the effect that records it, for Undo. */
+function dread(s, t) {
+  const h = horrorOf(s), D = R.HORROR.dread, fx = { t: 'threshold', at: t, shaken: [] };
+  h.fired.push(t); h.fired.sort((x, y) => x - y);
+  if (t === D.shaken) Object.values(s.chars).forEach((ch) => { if (!ch.shaken) { ch.shaken = true; fx.shaken.push(ch.id); } });
+  if (t === D.hunted) h.hunted = true;
+  return fx;
+}
+/* A foe the heroes meet once the Horror hunts them: more HP, once. Returns the words for the line that says so, or ''. */
+function hunt(s, card) {
+  if (!horrorOf(s).hunted || !card || card.kind === 'pc' || card.charId || !card.hp || card.hunted) return '';
+  const n = R.HORROR.dread.huntedHp; card.hp.max = Math.min(999, card.hp.max + n); card.hp.cur = Math.min(card.hp.max, card.hp.cur + n); card.hunted = true;
+  return card.name + ' has ' + n + ' more HP: the Horror hunts the heroes.';
+}
+/* A shaken hero's next roll is Hard (Easy becomes normal). Returns the roll's difficulty and the words that say why. */
+function takeShaken(ch, adj) { if (!ch.shaken) return { adj, text: '' }; ch.shaken = false; return { adj: adj === 'easy' ? 'normal' : 'hard', text: ' (shaken: Hard)' }; }
 /* A hero has used something that tempts the Horror: its amount (fixed, or rolled now with the table's dice) goes on the meter, whatever the check did. No amount, no line. */
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
@@ -456,15 +478,15 @@ function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
 }
 
-/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes a d4 of that hero's HP instead, on a line of its own (only the GM can undo it). */
+/* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes 1 HP from that hero instead (the owner's rule after the
+   playtest of 2026-11-09; it was a d4), on a line of its own (only the GM can undo it). */
 function bleed(s, ctx, ch, lost, privateUse = false) {
   const card = ch && s.cards[ch.cardId]; if (!(lost > 0) || !card || !card.hp || card.hp.cur <= 0) return null;
-  const rolls = []; for (let i = 0; i < lost; i++) rolls.push(d(ctx, R.HORROR.bloodDie));
-  const total = rolls.reduce((x, y) => x + y, 0), was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
-  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + lost + 'd' + R.HORROR.bloodDie + ' shows ' + rolls.join(' + ') + ', ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
-    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card), dice: rolls.map((n) => ({ die: R.HORROR.bloodDie, n })) });
+  const total = lost * R.HORROR.blood, was = card.hp.cur, applied = adjustField(s, card, 'hp', -total);
+  const e = L(s, GM_VOICE, ctx, ch.name + ' pays in blood: ' + (-applied) + ' HP (now ' + card.hp.cur + '/' + card.hp.max + ').',
+    { kind: 'apply', effects: [delta(card.id, 'hp', applied)], private: privateUse || !isPublic(s, card) || numbersHidden(card) });
   settleHero(s, card, was, e, ctx);
-  return { lost, rolls, hp: -applied, log: e.id };
+  return { lost, hp: -applied, log: e.id };
 }
 
 /* An item's listed effects that fall on its user (sheet-core effectsOf, read the same way by the solo game): the Penitent's Chain takes a die of HP that nothing reduces
@@ -570,7 +592,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
   let chk = null, roll = null;
   if (u.stat) {
     const manual = c.d20 != null && c.d20 !== '', n = manual ? int(c.d20, 0) : d(ctx, 20);
-    const tb = takeBonus(ch); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: tending ? 'easy' : c.adj, settings: s.settings });
+    const tb = takeBonus(ch), sh = takeShaken(ch, tending ? 'easy' : c.adj); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
     roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual,
       targetCardId: target.id, effort: null, applied: null, void: false, at: ctx.now, item: u.name, nonDamage: true, isAttack: false,
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
@@ -650,7 +672,8 @@ const HANDLERS = {
 
   cardCreate(s, c, a, ctx) {
     const card = newCard(s, c.card || {}, a); if (c.addToOrder) joinSceneOrder(s, card);
-    L(s, a, ctx, 'Added ' + card.name + '.', vis(s, card)); return { id: card.id };
+    const hunted = card.sceneId === s.table.scene ? hunt(s, card) : '';
+    L(s, a, ctx, 'Added ' + card.name + '.' + (hunted ? ' ' + hunted : ''), Object.assign(vis(s, card), hunted && numbersHidden(card) ? { gmText: 'Added ' + card.name + '. ' + hunted } : {})); return { id: card.id };
   },
   cardUpdate(s, c, a, ctx) {
     const card = cardOf(s, c.id), p = c.patch || {}, wasPublic = isPublic(s, card);
@@ -677,7 +700,8 @@ const HANDLERS = {
   cardDuplicate(s, c, a, ctx) {
     const src = cardOf(s, c.id), l = s.layout[src.id] || { x: 40, y: 40 };
     const copy = newCard(s, { kind: src.kind === 'pc' ? 'token' : src.kind, name: src.name + ' 2', img: src.img, desc: src.desc, gmNotes: src.gmNotes, visible: src.visible, hideNumbers: src.hideNumbers, sceneId: src.sceneId, attack: src.attack, loot: src.loot && clone(src.loot), hp: src.hp, progress: src.progress, timer: src.timer && Object.assign({}, src.timer, { fired: false }), x: l.x + 3, y: l.y + 3, w: l.w, h: l.h }, a);
-    L(s, a, ctx, 'Duplicated ' + src.name + '.', vis(s, copy)); return { id: copy.id };
+    const hunted = copy.sceneId === s.table.scene ? hunt(s, copy) : '';
+    L(s, a, ctx, 'Duplicated ' + src.name + '.' + (hunted ? ' ' + hunted : ''), vis(s, copy)); return { id: copy.id };
   },
   cardDelete(s, c, a, ctx) {
     const card = cardOf(s, c.id), open = isPublic(s, card); dropCard(s, card);
@@ -781,7 +805,9 @@ const HANDLERS = {
       s.table.order = turns.order.slice(); s.table.idx = turns.idx;
       Object.values(s.chars).forEach(ch => { ch.pushPending = false; });
     }
-    s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.'); return {};
+    s.table.scene = sc.id; drew(s); s.pv = (s.pv || 0) + 1; listAdd(recapOf(s, ctx).scenes, sc.name); L(s, a, ctx, 'The scene: ' + sc.name + '.');
+    Object.values(s.cards).filter((card) => card.sceneId === sc.id).forEach((card) => { const said = hunt(s, card); if (said) L(s, GM_VOICE, ctx, said, { private: !isPublic(s, card) || numbersHidden(card) }); });
+    return {};
   },
 
   orderSet(s, c) {
@@ -845,7 +871,7 @@ const HANDLERS = {
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
-    const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj, settings: s.settings });
+    const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
     const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
@@ -879,7 +905,7 @@ const HANDLERS = {
     if (!u.stat) ch.pushPending = false;   /* a pushed second action with no roll is still the second action */
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
-      const tb = takeBonus(ch), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj, settings: s.settings });
+      const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
       const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
@@ -926,6 +952,13 @@ const HANDLERS = {
     return { cur: r.cur, applied: r.applied, crossed: r.crossed };
   },
   horrorAck(s) { horrorOf(s).alert = 0; return {}; },
+  newAdventure(s, c, a, ctx) { /* a new adventure begins: each threshold may fire again, the hunt ends and no hero is still shaken. The meter itself stays where it is. One Undo. */
+    const h = horrorOf(s), shaken = Object.values(s.chars).filter((ch) => ch.shaken).map((ch) => ch.id);
+    const fx = { t: 'adventure', fired: h.fired.slice(), hunted: !!h.hunted, alert: h.alert || 0, shaken };
+    h.fired = []; h.hunted = false; h.alert = 0; shaken.forEach((id) => { s.chars[id].shaken = false; });
+    const e = L(s, a, ctx, 'A new adventure begins. The Horror stays at ' + h.cur + ' of ' + R.HORROR.max + '; 7, 14 and 21 can each fire again.', { kind: 'horror', effects: [fx] });
+    return { log: e.id };
+  },
   nextSession(s, c, a, ctx) { /* the GM's date for the next game, shown to everyone at the table in their own time; null clears it */
     if (c.at == null || c.at === '') { s.next = null; L(s, a, ctx, 'The next session is not set.'); return {}; }
     const at = +c.at; if (!Number.isFinite(at) || at < 1e12 || at > 1e13) fail('invalid', 'Choose a date and time.');
@@ -1011,9 +1044,10 @@ const HANDLERS = {
     } else fail('invalid', 'Choose stable, hurt or round.');
     return { dying: card.dying };
   },
-  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by a d10 for every two of them. One line, one Undo. */
+  rest(s, c, a, ctx) { /* the party rests in a safe place: every living hero recovers a Heart (standing up anyone down), and the Horror falls by one d6. One line, one Undo. */
     const heroes = Object.values(s.cards).filter((card) => isHero(card) && !(card.dying && card.dying.dead));
     if (!heroes.length) fail('invalid', 'There is no living hero to rest.');
+    if (arrived(s)) fail('invalid', 'The Horror has arrived: there is no more rest this adventure. Start a new adventure in the Table tab when this one ends.');
     const effects = [], parts = [];
     Object.values(s.cards).filter(card => card.hp && Object.keys(card.healingUses || {}).length).forEach(card => {
       const before = clone(card.healingUses || {}), epoch = card.healEpoch || 0;
@@ -1029,7 +1063,7 @@ const HANDLERS = {
     const h = horrorOf(s), n = h.cur > 0 ? R.restDice(heroes.length) : 0, rolled = []; for (let i = 0; i < n; i++) rolled.push(d(ctx, R.REST.horrorDie));
     const total = rolled.reduce((x, y) => x + y, 0), m = R.horrorMove(h.cur, -total); h.cur = m.to; if (h.alert && h.cur < h.alert) h.alert = 0;
     if (m.applied) effects.push({ t: 'horror', d: m.applied });
-    const horror = n ? 'Horror ' + n + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ' of ' + R.HORROR.max + ').' : 'The Horror is at 0.';
+    const horror = n ? 'Horror ' + (n > 1 ? n : '') + 'd' + R.REST.horrorDie + ': ' + rolled.join(' + ') + (n > 1 ? ' = ' + total : '') + '. The Horror falls by ' + Math.abs(m.applied) + (Math.abs(m.applied) === total ? '' : ' of ' + total) + ' (now ' + m.to + ' of ' + R.HORROR.max + ').' : 'The Horror is at 0.';
     recapOf(s, ctx).rests += 1;
     const e = L(s, a, ctx, 'The party rests. ' + healed + ' ' + horror, { kind: 'horror', effects, dice: rolled.map((x) => ({ die: R.REST.horrorDie, n: x })) });
     return { log: e.id, horror: h.cur };
@@ -1115,7 +1149,7 @@ const HANDLERS = {
     if (e.undone) fail('conflict', 'That has already been undone.');
     if (!e.effects.length) fail('invalid', 'That cannot be undone.');
     if (!isGM(a) && e.by !== a.pid) fail('forbidden', 'You can only undo your own actions.');
-    if (!isGM(a) && e.effects.some((fx) => fx.t === 'horror')) fail('forbidden', 'Only the GM can lower the Horror.');
+    if (!isGM(a) && e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'adventure')) fail('forbidden', 'Only the GM can lower the Horror.');
     if (!isGM(a) && e.effects.some((fx) => fx.t === 'turn')) fail('forbidden', 'Only the GM can take a turn back.');   /* a new round also ticks timers and countdowns for everyone */
     if ((e.private || e.only) && !isGM(a) && !e.only) fail('not_found', 'That entry is no longer there.');
     for (const fx of e.effects) {
@@ -1147,6 +1181,8 @@ const HANDLERS = {
       else if (fx.t === 'healingReset') { const card = s.cards[fx.card]; card.healingUses = clone(fx.before); card.healEpoch = fx.epoch; }
       else if (fx.t === 'healingCharge') s.chars[fx.char].gear.find(g => g.key === fx.key).uses = fx.before;
       else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
+      else if (fx.t === 'threshold') { const h = horrorOf(s); h.fired = h.fired.filter((t) => t !== fx.at); if (fx.at === R.HORROR.dread.hunted) h.hunted = false; (fx.shaken || []).forEach((id) => { if (s.chars[id]) s.chars[id].shaken = false; }); }
+      else if (fx.t === 'adventure') { const h = horrorOf(s); h.fired = fx.fired.slice(); h.hunted = fx.hunted; h.alert = fx.alert; fx.shaken.forEach((id) => { if (s.chars[id]) s.chars[id].shaken = true; }); }
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */
     e.effects.forEach((fx) => { const card = (fx.t === 'delta' || fx.t === 'dying') && s.cards[fx.card]; if (isHero(card) && card.hp.cur > 0) card.dying = null; });

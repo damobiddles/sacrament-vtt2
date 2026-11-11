@@ -61,14 +61,15 @@ test('a plain check\'s natural 1 costs no Horror', () => {
   assert.match(s.log.map((l) => l.t).join('\n'), /Target 12\. Miss/);
 });
 
-test('past the top of the meter the Horror is paid in blood, a d4 of HP per point', () => {
+test('past the top of the meter the Horror is paid in blood, 1 HP per point', () => {
   const s = S.start(T.generate('fighter', seeded(6)), A, fixed([1]));
   s.horror = R.HORROR.max; const hp = s.hp.cur;
   S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
   const attack = S.choices(s, A).find((c) => c.kind === 'attack');
-  S.act(s, A, attack.cmd, fixed([1, 3, 1]));          // natural 1 on an attack: 1 Horror that cannot go on the meter, paid with d4 = 3
+  S.act(s, A, attack.cmd, fixed([1, 3, 1]));          // natural 1 on an attack: 1 Horror that cannot go on the meter, paid with 1 HP
   assert.equal(s.horror, R.HORROR.max);
-  assert.ok(s.hp.cur <= hp - 3);
+  assert.match(s.log.map((l) => l.t).join('\n'), /You pay in blood: 1 HP\./);
+  assert.ok(s.hp.cur <= hp - 1);
 });
 
 test('the offering box rolls on the real d100 loot table and the find goes to this copy of the hero', () => {

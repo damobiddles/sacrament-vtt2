@@ -262,25 +262,25 @@
   function roomOf(api, id) { return api._adv.rooms[id] || null; }
 
   /* ---------- Horror ---------- */
-  /* Raise the meter. A cost that cannot go on a full meter is paid in blood: one d4 of HP for each point (the owner's rule, 2026-11-01). */
+  /* Raise the meter. A cost that cannot go on a full meter is paid in blood: R.HORROR.blood HP for each point (the owner's rule, 2026-11-01; 1 HP since 2026-11-09).
+     Each threshold fires once a road, as once an adventure at the table: s.fired lists those already fired. */
   function raiseHorror(api, n, why, o) {
     var s = api.s; n = int(n, 0); if (n <= 0) return;
-    var mv = R.horrorMove(s.horror, n); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
+    s.fired = s.fired || []; var mv = R.horrorMove(s.horror, n, s.fired); s.horror = mv.to; if (s.run) s.run.peak = Math.max(s.run.peak || 0, s.horror);
     if (mv.applied) api.say((why ? why + ' ' : '') + 'The Horror rises ' + mv.applied + ' (now ' + s.horror + ' of ' + R.HORROR.max + ').', 'horror');
-    mv.crossed.forEach(function (t) { api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
+    mv.crossed.forEach(function (t) { s.fired.push(t); api.say(R.HORROR.lines[t], 'horror'); var h = api._adv.horror && api._adv.horror[t]; if (h) api.say(typeof h === 'function' ? h(api) : h, 'horror'); dread(api, t); });
     var left = n - mv.applied;
     if (left > 0 && s.hp.cur > 0 && !(o && o.gm)) {   /* as at the table (vtt-core bleed): a hero already at 0 HP pays no blood, nor does the GM's own raise */
-      var rolls = []; for (var i = 0; i < left; i++) rolls.push(api.die(R.HORROR.bloodDie));
-      var total = rolls.reduce(function (a, b) { return a + b; }, 0);
+      var total = left * R.HORROR.blood;
       if (!mv.applied && why) api.say(why, 'horror');
-      api.say('The Horror can rise no further. You pay in blood: ' + diceSay(rolls.length, R.HORROR.bloodDie, rolls) + '.', 'horror', { dice: rolls.slice(0, 2).map(function (x) { return { die: R.HORROR.bloodDie, n: x }; }) });
+      api.say('The Horror can rise no further. You pay in blood: ' + total + ' HP.', 'horror');
       hurt(api, total, 'The price');
     }
   }
 
-  /* What each threshold does in the solo game. These are the solo game's own GM calls (the owner's, 2026-11-06), not rules: the rules leave a threshold's
-     consequence to the GM. 7: shaken, the next check or attack is Hard. 14: hunted, every foe met from then on has 2 more HP. 21: the rules' pay-in-blood, and no more rest. */
-  var DREAD = { shaken: 7, hunted: 14, arrived: 21, huntedHp: 2 };
+  /* What each threshold does: the shared rules (R.HORROR.dread, the owner's decision 2026-11-11: what solo did first is now every table's default).
+     7: shaken, the next check or attack is Hard. 14: hunted, every foe met from then on has 2 more HP. 21: pay in blood, and no more rest. A road's own lines come first. */
+  var DREAD = R.HORROR.dread;
   function dread(api, t) {
     var s = api.s;
     if (t === DREAD.shaken) { s.shaken = true; api.say('You are shaken. Your next check or attack is Hard.', 'note'); }
@@ -522,7 +522,7 @@
     return ((s.run && s.run.found) || []).filter(function (id) { return have[id]-- > 0; });
   }
 
-  /* ---------- the hero's own rest ---------- */
+  /* ---------- the hero's own rest: one d6 off the Horror (R.REST) ---------- */
   function rest(api) {
     var s = api.s; s.rested = true; s.healed = {};
     var dice = []; for (var i = 0; i < R.restDice(1); i++) dice.push(api.die(R.REST.horrorDie));
