@@ -91,6 +91,12 @@
   /* Guns (the owner's decision, 2026-11-11): rare and unreliable. On a natural 1 to 3 the powder fails and the shot misses; reloading takes a Move (the GM's call). */
   var GUNS = { misfire: 3 };
   function misfireOf(it) { return it && it.kind === 'weapon' && it.cat === 'guns' ? GUNS.misfire : 0; }
+  /* Ways through an obstacle (the owner's decision, 2026-11-11). Roll only when something presses; use an Effort bar only for a race (a timer or a foe).
+     How a hero tackles it sets the Effort die and the price: bare hands or wits Basic (slow: the timer is the danger), a weapon or tool that fits Weapons
+     (only if carried), a gun Guns (loud: in solo it ticks the obstacle's clock once), a spell that fits Magic (the roll risks Horror like any spell), and a good
+     idea is Easy and fills half of what is left, once (the GM's call). */
+  var OBSTACLE = { hands: 'basic', tool: 'weapons', gun: 'guns', spell: 'magic', idea: { adj: 'easy', share: 0.5, once: true }, gunLoud: 1 };
+  function obstacleCat(way) { return OBSTACLE[way] && typeof OBSTACLE[way] === 'string' ? OBSTACLE[way] : 'basic'; }
   /* Break away (the Rules page, 2026-11-07): on your turn, instead of acting, a check with this stat against the Target. Success: clear, the foe does not attack
      you as you go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call. */
   var BREAK_AWAY = { stat: 'DEX' };
@@ -206,6 +212,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, BONUS_CATS: BONUS_CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, GUNS: GUNS, misfireOf: misfireOf, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, GUNS: GUNS, misfireOf: misfireOf, OBSTACLE: OBSTACLE, obstacleCat: obstacleCat, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

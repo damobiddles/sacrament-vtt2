@@ -400,29 +400,53 @@ test('finds from the road: only what was found and is still carried can come hom
 
 // Obstacles (the owner's ask, 2026-11-06): several ways through, each with a trade-off, and a clock that makes dawdling cost.
 const ADVS = globalThis.SacramentSoloAdventures;
-test('every obstacle offers a bold way and a trick besides the steady one, with real scores', () => {
+test('every obstacle is a race: a good idea besides the steady way, real scores, a clock in its room, and tools that are real gear', () => {
+  const ids = new Set([...G.items, ...G.found, ...G.relics].map((x) => x.id));
   for (const adv of Object.values(ADVS)) for (const [id, ob] of Object.entries(adv.obstacles || {})) {
-    const kinds = (ob.ways || []).map((w) => w.kind).sort();
-    assert.deepEqual(kinds, ['bold', 'trick'], adv.id + ' ' + id + ' has a bold way and a trick');
+    const kinds = (ob.ways || []).map((w) => w.kind);
+    assert.deepEqual(kinds, ['trick'], adv.id + ' ' + id + ' has one good idea and no bold way that hurts');
     for (const w of ob.ways) assert.ok(R.STATS.includes(w.stat), adv.id + ' ' + id + ' ' + w.id + ' rolls a real score');
     if (ob.clock) assert.ok(adv.timers[ob.clock] && adv.timers[ob.clock].tick === 'fail', adv.id + ' ' + id + ' has a clock that runs on failed tries');
+    else assert.ok(Object.values(adv.timers || {}).some((t) => !t.room || t.room === ob.room), adv.id + ' ' + id + ' has a timer in its room: nothing to roll against otherwise');
+    for (const t of (ob.tool && ob.tool.items) || []) assert.ok(ids.has(t), adv.id + ' ' + id + ': ' + t + ' is in the gear list');
   }
+  assert.deepEqual([R.obstacleCat('hands'), R.obstacleCat('tool'), R.obstacleCat('gun'), R.obstacleCat('spell')], ['basic', 'weapons', 'guns', 'magic']);
 });
 
-test('the bold way rolls Weapons Effort and a failure hurts; the trick works once and fills half of what is left', () => {
+test('a tool that fits rolls Weapons Effort and only shows if carried; a failure costs time, never HP; the good idea is Easy, once, half of what is left', () => {
   const cart = ADVS.cart, hero = T.generate('fighter', seeded(3));
+  hero.gear = hero.gear.filter((g) => g.id !== 'crowbar');
   let s = S.start(hero, cart, fixed([1]));
-  assert.ok(S.choices(s, cart).some((c) => c.cmd === 'way wheel lift'));
-  S.act(s, cart, 'way wheel lift', fixed([20, 6]));                 // natural 20 succeeds; Weapons Effort d6 shows 6
+  assert.ok(!S.choices(s, cart).some((c) => c.cmd === 'tool wheel'), 'no crowbar, no tool way');
+  hero.gear.push({ id: 'crowbar', eq: false });
+  s = S.start(hero, cart, fixed([1]));
+  const tool = S.choices(s, cart).find((c) => c.cmd === 'tool wheel');
+  assert.ok(tool && /Crowbar/.test(tool.label) && /Weapons d6/.test(tool.hint), 'the crowbar is offered with its die');
+  S.act(s, cart, 'tool wheel', fixed([20, 6]));
   assert.ok(s.bars.wheel >= 6, 'a d6 went in: ' + s.bars.wheel);
   s = S.start(hero, cart, fixed([1]));
-  const hp = s.hp.cur;
-  S.act(s, cart, 'way wheel lift', fixed([2, 3]));                  // a miss; the strain costs d4 3
-  assert.equal(s.hp.cur, hp - 3);
+  const hp = s.hp.cur, rain = s.timers.rain.cur;
+  S.act(s, cart, 'tool wheel', fixed([2, 3]));
+  assert.equal(s.hp.cur, hp, 'a failure does not hurt'); assert.equal(s.timers.rain.cur, rain - 1, 'it costs time');
   s = S.start(hero, cart, fixed([1]));
-  S.act(s, cart, 'way wheel pack', fixed([20]));
-  assert.equal(s.bars.wheel, 3, 'half of 6');
-  assert.ok(!S.choices(s, cart).some((c) => c.cmd === 'way wheel pack'), 'the trick is used up');
+  S.act(s, cart, 'way wheel pack', fixed([9]));
+  const roll = s.log.filter((l) => l.outcome).at(-1).outcome;
+  assert.match(roll.note, /Easy/); assert.equal(s.bars.wheel, 3, 'half of 6');
+  assert.ok(!S.choices(s, cart).some((c) => c.cmd === 'way wheel pack'), 'the good idea is used up');
+  const ford = ADVS.ford, f = S.start(T.generate('fighter', seeded(3)), ford, fixed([1]));
+  assert.ok(!S.choices(f, ford).some((c) => /^tool /.test(c.cmd) && !f.hero.gear.some((g) => ['rope', 'hemprope'].includes(g.id))), 'a sword does not help you wade');
+});
+
+test('a gun that fits rolls Guns Effort, can misfire, and is loud: the clock moves once even on a hit', () => {
+  const hero = T.generate('fighter', seeded(3)); hero.gear.push({ id: 'wheellock', eq: false });
+  const s = S.start(hero, A, fixed([1])); S.act(s, A, 'go north', fixed([10]));
+  const gun = S.choices(s, A).find((c) => c.cmd === 'gun door');
+  assert.ok(gun && /Guns d8/.test(gun.hint), 'the gun is offered with its die');
+  S.act(s, A, 'gun door', fixed([20, 5]));
+  assert.ok(s.bars.door >= 5, 'a d8 (5) went in: ' + s.bars.door);
+  assert.ok(s.fight && s.fight.foe === 'eater', 'the shot is loud: the noise brings the Candle-Eater up the stair, though it hit');
+  const m = S.start(hero, A, fixed([1])); S.act(m, A, 'go north', fixed([10])); S.act(m, A, 'gun door', fixed([3]));
+  assert.ok(m.log.some((l) => /Misfire/.test(l.t)), 'a natural 3 misfires');
 });
 
 test('a clock: each failed try at the wheel brings the rain, and once it comes every try is Hard', () => {
@@ -440,7 +464,7 @@ test('the salt line: when its clock runs out, the Salt Hag comes with the line s
   for (let i = 0; i < 4 && !s.fight; i++) S.act(s, shrine, 'do salt', fixed([2]));
   assert.ok(s.fight && s.fight.foe === 'hag' && !s.flags.mended);
   const b = S.start(T.generate('fighter', seeded(3)), A, fixed([1]));
-  S.act(b, A, 'go north', fixed([1])); S.act(b, A, 'way door kick', fixed([2, 2]));
+  S.act(b, A, 'go north', fixed([1])); S.act(b, A, 'do force', fixed([2, 2]));
   assert.ok(b.fight && b.fight.foe === 'eater', 'the noise brings it up the stair');
 });
 
@@ -458,14 +482,14 @@ test('every story spell and story item carries tags from the shared list, except
   assert.match(CORE.tagText(G.spells.find((x) => x.id === 'pillarash')), /Hide\. In a fight: .*rolls 3 less\. Out of a fight: /);
 });
 
-test('Pillar of Ash (hide): in a fight the foe\'s next attack rolls 3 less; at the ford it hides the crossing, half of what is left, once', () => {
+test('Pillar of Ash (hide): in a fight the foe\'s next attack rolls 3 less; at the ford it hides the crossing, Magic Effort into the bar', () => {
   let { s, die } = withBook('embers'); S.act(s, A, 'go north', die); S.act(s, A, 'go down', die);
   const ash = cast(s, 'Pillar of Ash'); assert.ok(ash && !ash.idle); S.act(s, A, ash.cmd, die); assert.equal(s.fight.dim, 3);
   const ford = ADVS.ford, hero = T.generate('scholar', seeded(4)); hero.gear = [{ id: 'embers', eq: true }];
   const f = S.start(hero, ford, fixed([10])); assert.equal(f.room, 'bank');
   const c = S.choices(f, ford).find((x) => x.label.includes('Pillar of Ash')); assert.ok(c && !c.idle, 'it has a use at the ford');
-  S.act(f, ford, c.cmd, fixed([10])); assert.equal(f.bars.ford, 3, 'half of 6');
-  assert.equal(f.flags.tag_ford_hide, true, 'once per obstacle');
+  S.act(f, ford, c.cmd, fixed([1])); assert.equal(f.bars.ford, 1 + (f.hero.effort.magic || 0), 'Magic d10 (1) plus the Magic bonus into the bar');
+  assert.equal(f.flags.tag_ford_hide, true);
   assert.ok(f.fight && f.fight.foe === 'acolyte', 'halfway over, the thing in the water comes, as the ford says');
 });
 
@@ -500,7 +524,7 @@ test('three new middle scenes join the road, and each gives the spell tags somet
   const beam = cast(s, 'Held Beam'); assert.ok(beam && beam.idle, 'no spell gets you past him either');
   S.act(s, bridge, 'do answer', fixed([20])); assert.equal(s.flags.passed, true);
   assert.ok(S.choices(s, bridge).some((c) => c.cmd === 'way span sound'));
-  S.act(s, bridge, cast(s, 'Held Beam').cmd, fixed([20])); assert.equal(s.bars.span, 3, 'the bridge holds still: half of what is left');
+  S.act(s, bridge, cast(s, 'Held Beam').cmd, fixed([20, 1])); assert.equal(s.bars.span, 1 + (s.hero.effort.magic || 0), 'the bridge holds still: Magic d10 (1) plus the Magic bonus into the bar');
 });
 
 test('a third reason to be on the road: the Inquisitor\'s warrant opens it, the barrow ends it, and the road talks about the deacon', () => {
@@ -746,7 +770,7 @@ test('a natural 1 says on the dice card whether it raised the Horror, in the Rul
   const atk = s.log.filter((l) => l.outcome).at(-1).outcome;
   assert.match(atk.note, /Natural 1 on an ordinary attack: no Horror/);
   const cart = ADVS.cart, c = S.start(T.generate('fighter', seeded(3)), cart, fixed([1]));
-  S.act(c, cart, 'way wheel lift', fixed([1]));
+  S.act(c, cart, 'do wheel', fixed([1]));
   const plain = c.log.filter((l) => l.outcome).at(-1).outcome;
   assert.match(plain.note, /Natural 1 on a plain check: no Horror/);
   assert.equal(c.horror, 0);

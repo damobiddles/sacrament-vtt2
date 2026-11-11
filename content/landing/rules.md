@@ -26,6 +26,16 @@ Tell the GM what you do and agree whether a check is needed. Movement, action co
 
 Select an enemy or obstacle, then use a weapon or spell. Choose a target when asked. On success, roll damage or Effort; the VTT applies it to the named target automatically. Damage against HP reduces health; Effort against an obstacle fills its progress. Looking at a different card does not change the attack’s recorded target. Only the GM advances turns. Passing the last entry starts a new round and ticks running timers and dying countdowns once.
 
+**Obstacles.** Roll only when something presses. If nothing is lost by failing, or a hero's plan simply makes sense, it just happens. An obstacle gets an Effort bar only when the heroes are racing something, a timer or a foe; otherwise one check settles it. How a hero tackles it sets the Effort die and the price:
+
+- **Bare hands or wits:** Basic d4. Slow, so the timer is the danger.
+- **A weapon or tool that fits:** Weapons d6, only if you carry one.
+- **A gun:** Guns d8, and loud: the GM may move a timer or bring a foe.
+- **A spell that fits:** Magic d10. Magic is forbidden: the spell costs its usual Horror.
+- **A good idea:** the roll is Easy and fills half of what is left, once, as the GM judges.
+
+Several heroes can work on the same bar in a round, adding their Effort together.
+
 **Push.** Any failed roll can be pushed: an attack, a spell, a check. Push adds 1 Horror and makes the next action the second action; that action cannot itself be pushed. Players can Push only during their own active turn, once. For an explicit exception, the GM selects the hero and presses **Allow this Push (+1 Horror)** beside their latest failed roll. This grants the extra action and charges Horror once; the extra action cannot be pushed. Without turn order, only this GM exception can grant a Push. A fresh round begins a new exchange; the VTT does not count all narrative Moves and Actions.
 
 **Break away.** On your turn, instead of acting, make a DEX check against the Target. On a success you get clear: the foe does not attack you as you go. On a failure you stay put and the foe attacks as usual. Where you can run to is the GM's call. Breaking away is a plain check, so its natural 1 adds no Horror, and it cannot be pushed.
@@ -48,7 +58,7 @@ Grimoires take **three slots** and each contains **three spells**. Read the spel
 
 Many spells and relics have no damage die: their words describe what happens, and the GM decides the rest (Pillar of Ash fills the room with ash; Hush takes a voice). Each one now carries one or two **tags** saying what it is good for, and each tag has a default effect. **The spell's or item's own words always come first.** Use the tag when the words leave it open and you want a quick answer. The solo game always uses it. Costs do not change: the same Horror, and the same check where the words ask for one.
 
-In a fight, a tag gives one of two results: **Hinder**, the foe's next attack rolls 3 less, or **Stop**, it loses its next attack. (Learn makes your next attack Easy instead, and Guard gives you +2 Defence.) Out of a fight, a tag says what kind of trouble the spell can answer: a fitting spell is one more way past an obstacle or a danger, as the GM judges (in the solo game it takes half of what is left on an obstacle's bar, or opens it outright where the words say so). A few spells say "needs a corpse close by" or "only against the undead". *The Last Verse* and *Its Real Name* have no tag: they stay the GM's call.
+In a fight, a tag gives one of two results: **Hinder**, the foe's next attack rolls 3 less, or **Stop**, it loses its next attack. (Learn makes your next attack Easy instead, and Guard gives you +2 Defence.) Out of a fight, a tag says what kind of trouble the spell can answer: a fitting spell is one more way past an obstacle or a danger, as the GM judges: against an obstacle's bar it rolls Magic d10 (the solo game does this, or opens the obstacle outright where the words say so). A few spells say "needs a corpse close by" or "only against the undead". *The Last Verse* and *Its Real Name* have no tag: they stay the GM's call.
 
 {{TAGS}}
 

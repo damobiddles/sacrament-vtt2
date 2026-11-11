@@ -84,10 +84,10 @@ test('SOLO: a natural 1 on an ordinary attack adds no Horror', () => {
 
 test('SOLO: a failed roll outside a fight can be pushed once: +1 Horror and another try', () => {
   const F = globalThis.SacramentSoloAdventures.ford, s = S.start(T.generate('scout', seeded(4)), F, fixed([2]));
-  S.act(s, F, 'way ford leap', fixed([2]));
+  S.act(s, F, 'do wade', fixed([2]));
   const pushable = S.choices(s, F).find((c) => c.cmd === 'repush');
   assert.ok(pushable, 'a failed check offers a push'); assert.equal(pushable.horror, R.HORROR.push);
   const before = s.horror; S.act(s, F, 'repush', fixed([2])); assert.equal(s.horror, before + R.HORROR.push);
-  assert.equal((s.log.map((l) => l.t).join('\n').match(/Leaping the stones/g) || []).length, 2, 'tried again');
+  assert.equal((s.log.map((l) => l.t).join('\n').match(/Wading/g) || []).length, 2, 'tried again');
   assert.ok(!S.choices(s, F).some((c) => c.cmd === 'repush'), 'the pushed roll cannot be pushed');
 });

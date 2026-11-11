@@ -75,11 +75,10 @@
     intro: function (api) { api.say('The road goes into Wulfram\'s Wood, where the charcoal burners work. Smoke lies under the trees like water.'); },
     fall: function () { return 'The charcoal burners find what the boar left, and bury it under a clamp, which is a warm grave, they say, and an honest one.'; },
     obstacles: {
-      briars: { name: 'The briars', room: 'wood', max: 6, stat: 'STR', cat: 'basic', clock: 'smoke',
+      briars: { name: 'The briars', room: 'wood', max: 6, stat: 'STR', cat: 'basic', tool: { weapons: true }, clock: 'smoke',
         answers: { move: 'The briars lean away from you, one by one, as if you were someone they knew. A long stretch of the road opens.', hide: 'Whatever is moving in the smoke loses you, and you work a long stretch of the road without it near.', beast: 'A hind steps out of the smoke, looks at you, and goes off along a path you had not seen. You follow her a long way.' },
-        text: 'The road is lost under a wall of briars. Cut a way through (STR, Basic Effort), force through the thorns (STR, Weapons Effort, but a failure tears you open), or find the deer path (WIS, once: half of what is left). Each failed try fills the wood with more smoke, and something in it is coming closer.',
+        text: 'The road is lost under a wall of briars. Cut a way through (STR, Basic Effort), or find the deer path (WIS, once, Easy: half of what is left). Each failed try fills the wood with more smoke, and something in it is coming closer.',
         ways: [
-          { id: 'force', kind: 'bold', label: 'Force through the thorns', stat: 'STR', say: 'You put your arms over your face and go at the briars with your whole weight.', what: 'Forcing the briars', failSay: 'The thorns open your arms to the elbow' },
           { id: 'deer', kind: 'trick', label: 'Look for the deer path', stat: 'WIS', say: 'You stop, and look low, where the deer go.', what: 'Finding the deer path', failSay: 'Every gap you find closes after a few yards.' }
         ],
         isDone: function (api) { return !!api.flag('through'); },
@@ -129,13 +128,12 @@
     intro: function (api) { api.say('At Crane\'s Holt the road crosses a gorge on a bridge of rope and plank. There has been a toll here as long as there has been a bridge.'); },
     fall: function () { return 'The gorge keeps you. In spring the river brings what is left down to the villages, and the reeve writes it up as a fall.'; },
     obstacles: {
-      span: { name: 'The rotten bridge', room: 'bridge', max: 6, stat: 'DEX', cat: 'basic', clock: 'ropes',
+      span: { name: 'The rotten bridge', room: 'bridge', max: 6, stat: 'DEX', cat: 'basic', tool: { items: ['rope', 'hemprope'] }, clock: 'ropes',
         blocked: function (api) { return !api.flag('passed') && !api.flag('beat_tollman'); },
         answers: { bind: 'The bridge stops swaying and holds as still as stone while you cross a long stretch of it.', move: 'You step into the shadow of the near post and out of the shadow of a post halfway over.' },
-        text: 'Forty yards of rope and grey planks over the gorge, half of them rotten. Cross plank by plank (DEX, Basic Effort), run for the far side (DEX, Weapons Effort, but a failure means a fall), or find the sound planks first (INT, once: half of what is left). Each failed try loosens the old ropes.',
+        text: 'Forty yards of rope and grey planks over the gorge, half of them rotten. Cross plank by plank (DEX, Basic Effort), or find the sound planks first (INT, once, Easy: half of what is left). Each failed try loosens the old ropes.',
         hard: function (api) { return !!api.flag('sagging'); },
         ways: [
-          { id: 'run', kind: 'bold', label: 'Run for the far side', stat: 'DEX', say: 'You take a breath and run.', what: 'Running the bridge', failSay: 'A plank goes under you and you catch a rope with one hand, and hang there, and climb back', when: function (api) { return api.flag('passed') || api.flag('beat_tollman'); } },
           { id: 'sound', kind: 'trick', label: 'Find the sound planks', stat: 'INT', say: 'You look at the planks the way the man who laid them did, and see which were laid last.', what: 'Finding the sound planks', failSay: 'Every plank looks as grey as every other.', when: function (api) { return api.flag('passed') || api.flag('beat_tollman'); } }
         ],
         isDone: function (api) { return !!api.flag('crossed'); },

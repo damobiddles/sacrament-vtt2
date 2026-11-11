@@ -20,11 +20,10 @@
     intro: function (api) { api.say('Thornwick, a day out from Hollowmere Priory. At dusk the road passes the wayside chapel of Saint Hildreth, and its door is barred from the inside. Someone in there is praying, badly, between his teeth.'); },
     fall: function () { return 'Brother Lucan prays over you until his voice gives out. In the morning the hound has gone, and so has the lead box.'; },
     obstacles: {
-      ladder: { name: 'The loft ladder', room: 'chapel', max: 5, stat: 'STR', cat: 'basic', answers: { move: 'You are up among the beams without touching a rung.', bind: 'The ladder stops shaking and holds as if it were nailed to the wall.' },
-        text: 'A ladder to the bell-loft with half its rungs gone. Climb what is left (STR, Basic Effort; Easy with a rope or climbing line thrown over a beam), go up it fast (DEX, Weapons Effort, but a fall hurts), or work out which rungs still hold (INT, once: half of what is left). Each failed try is loud, and something outside is listening.',
+      ladder: { name: 'The loft ladder', room: 'chapel', max: 5, stat: 'STR', cat: 'basic', tool: { items: ['rope', 'hemprope'] }, answers: { move: 'You are up among the beams without touching a rung.', bind: 'The ladder stops shaking and holds as if it were nailed to the wall.' },
+        text: 'A ladder to the bell-loft with half its rungs gone. Climb what is left (STR, Basic Effort; Easy with a rope or climbing line thrown over a beam), or work out which rungs still hold (INT, once, Easy: half of what is left). Each failed try is loud, and something outside is listening.',
         clock: 'prowl',
         ways: [
-          { id: 'scramble', kind: 'bold', label: 'Go up the ladder fast', stat: 'DEX', say: 'You take the ladder at a run, two rungs at a time.', what: 'Going up fast', failSay: 'A rung snaps and you come down on the flagstones' },
           { id: 'rungs', kind: 'trick', label: 'Work out which rungs still hold', stat: 'INT', say: 'You test each rung with your hand before you trust it with your weight.', what: 'Testing the rungs', failSay: 'They all look as rotten as each other.' }
         ],
         isDone: function (api) { return !!api.flag('climbed'); },
@@ -131,12 +130,11 @@
     intro: function (api) { api.say('Vesperholt, the house of the Sisters of the Seventh Bell, an hour before Compline. The portress lets you in without a word, and locks the gate behind you.'); },
     fall: function () { return 'The sisters lay you out in the chapter house and ring the seventh bell for you, which is a great honour, and no use.'; },
     obstacles: {
-      cell: { name: 'Sister Ignatia\'s door', room: 'dorter', max: 5, stat: 'STR', cat: 'basic', open: true, opened: 'The bolt draws back on its own, slowly, as if someone on the other side had decided to let you in.',
+      cell: { name: 'Sister Ignatia\'s door', room: 'dorter', max: 5, stat: 'STR', cat: 'basic', tool: { weapons: true, items: ['crowbar'], gun: true }, open: true, opened: 'The bolt draws back on its own, slowly, as if someone on the other side had decided to let you in.',
         answers: { move: 'You are standing in the cell without having opened the door.', bind: 'The bolt stops trembling in its staples, and the next push nearly has it.' },
-        text: 'An oak door bolted from the inside, though the cell is empty. Force it (STR, Basic Effort; Easy with a crowbar), throw your weight at it (STR, Weapons Effort, but a failure hurts), or lift the bolt with a blade through the gap (DEX, once: half of what is left). Each failed try is loud in the quiet house; when the night bell rings, every try is Hard.',
+        text: 'An oak door bolted from the inside, though the cell is empty. Force it (STR, Basic Effort; Easy with a crowbar), or lift the bolt with a blade through the gap (DEX, once, Easy: half of what is left). Each failed try is loud in the quiet house; when the night bell rings, every try is Hard.',
         clock: 'compline', hard: function (api) { return !!api.flag('rung'); },
         ways: [
-          { id: 'shoulder', kind: 'bold', label: 'Throw your weight at the door', stat: 'STR', say: 'You put your shoulder into the door, hard.', what: 'Shouldering the door', failSay: 'The door does not care, and your shoulder does' },
           { id: 'blade', kind: 'trick', label: 'Lift the bolt with a blade through the gap', stat: 'DEX', say: 'You slide a blade into the gap by the bolt and feel for it.', what: 'Lifting the bolt', failSay: 'The blade slips off the bolt every time.' }
         ],
         isDone: function (api) { return !!api.flag('opened'); },
@@ -218,12 +216,11 @@
     intro: function (api) { api.say('Wexstead. Deacon Nikolas Brand lodged above the chandler\'s on Tallow Lane. The Inquisition has sealed his door, and Brother Valentin Crane, the Inquisitor\'s clerk, breaks the seal for you.'); },
     fall: function () { return 'Brother Valentin writes a careful account of what happened in the cellar, and Inquisitor Orme files it unread.'; },
     obstacles: {
-      chest: { name: 'The deacon\'s strongbox', room: 'study', max: 5, stat: 'STR', cat: 'basic', open: true, opened: 'The hasp lifts by itself, and the lid comes up.',
+      chest: { name: 'The deacon\'s strongbox', room: 'study', max: 5, stat: 'STR', cat: 'basic', tool: { weapons: true, items: ['crowbar'], gun: true }, open: true, opened: 'The hasp lifts by itself, and the lid comes up.',
         answers: { learn: 'You see where a careful man keeps a key he must never lose: in the hollow leg of his own chair. You are nearly in.' },
-        text: 'An iron-bound box under the bed, locked. Prise the lid (STR, Basic Effort; Easy with a crowbar), smash the hasp off (STR, Weapons Effort, but a failure hurts), or find where he hid the key (WIS, once: half of what is left). Each failed try is loud; at the third the chandler sends for the watch, and every try is Hard.',
+        text: 'An iron-bound box under the bed, locked. Prise the lid (STR, Basic Effort; Easy with a crowbar), or find where he hid the key (WIS, once, Easy: half of what is left). Each failed try is loud; at the third the chandler sends for the watch, and every try is Hard.',
         clock: 'chandler', hard: function (api) { return !!api.flag('watch'); },
         ways: [
-          { id: 'smash', kind: 'bold', label: 'Smash the hasp off', stat: 'STR', say: 'You take the poker to the hasp.', what: 'Smashing the hasp', failSay: 'The poker skids off the iron and into your hand' },
           { id: 'key', kind: 'trick', label: 'Look for where he hid the key', stat: 'WIS', say: 'You stand where he stood and think like a careful man.', what: 'Finding the key', failSay: 'He was more careful than you.' }
         ],
         isDone: function (api) { return !!api.flag('unlocked'); },
@@ -317,11 +314,10 @@
     intro: function (api) { api.say('Marrowby has shut its gate against the plague, and the pilgrim road runs through Marrowby, and nowhere else.'); },
     fall: function () { return 'They bring you in through the gate at last, on the cart, with the others.'; },
     obstacles: {
-      wall: { name: 'The town wall', room: 'gate', max: 6, stat: 'STR', cat: 'basic', answers: { move: 'You are on the wall walk without having climbed it.', bind: 'The loose stones lock together under your hands.', hide: 'The watch on the gatehouse looks straight at you, and through you. You climb a good way unseen.' },
-        text: 'Twenty feet of old stone, with ivy. Climb it (STR, Basic Effort; Easy with a rope or climbing line), go up the ivy fast (DEX, Weapons Effort, but a fall hurts), or pick the stretch the watch cannot see (WIS, once: half of what is left). Each failed try draws the watch; when they see you, every try is Hard.',
+      wall: { name: 'The town wall', room: 'gate', max: 6, stat: 'STR', cat: 'basic', tool: { items: ['rope', 'hemprope', 'spikes', 'spikesmallet'] }, answers: { move: 'You are on the wall walk without having climbed it.', bind: 'The loose stones lock together under your hands.', hide: 'The watch on the gatehouse looks straight at you, and through you. You climb a good way unseen.' },
+        text: 'Twenty feet of old stone, with ivy. Climb it (STR, Basic Effort; Easy with a rope or climbing line), or pick the stretch the watch cannot see (WIS, once, Easy: half of what is left). Each failed try draws the watch; when they see you, every try is Hard.',
         clock: 'watch', hard: function (api) { return !!api.flag('seen'); },
         ways: [
-          { id: 'ivy', kind: 'bold', label: 'Go up the ivy fast', stat: 'DEX', say: 'You take the ivy at a run.', what: 'Climbing fast', failSay: 'The ivy comes away from the wall in your hands' },
           { id: 'blind', kind: 'trick', label: 'Pick the stretch the watch cannot see', stat: 'WIS', say: 'You watch the gatehouse lantern go along the wall walk, and back, and count.', what: 'Watching the watch', failSay: 'Every stretch of the wall is in plain view of somebody.' }
         ],
         isDone: function (api) { return !!api.flag('in'); },
@@ -424,11 +420,10 @@
     fall: function () { return 'They find you in the ash with a book held to your chest, which is something. The abbot has it rebound.'; },
     obstacles: {
       fire: { name: 'The fire', room: 'scriptorium', max: 6, stat: 'CON', cat: 'basic', answers: { snuff: 'The flames on the nearest desks lie down and go out: ordinary fire, after all.', shelter: 'The heat parts around you like water round a stone, and you work in the middle of it.', bind: 'The burning beam over the door stops in its fall and hangs there while you work under it.' },
-        text: 'The book-room is burning from the far end. Carry water and fight it (CON, Basic Effort; Easy with water skins or a ladle and pot), beat it out with your coat (STR, Weapons Effort, but the heat hurts), or shut the shutters to starve it (INT, once: half of what is left). Each failed try lets it climb; when the roof catches, every try is Hard.',
+        text: 'The book-room is burning from the far end. Carry water and fight it (CON, Basic Effort; Easy with water skins or a ladle and pot), or shut the shutters to starve it (INT, once, Easy: half of what is left). Each failed try lets it climb; when the roof catches, every try is Hard.',
         clock: 'roof', hard: function (api) { return !!api.flag('roof'); },
         progress: function (api) { if (api.bar('fire') >= 3 && !api.flag('beat_copyist') && !api.s.fight) { api.say('At the far end, in the heart of the fire, someone is still sitting at a desk, writing.', 'foe'); api.fight('copyist'); } },
         ways: [
-          { id: 'beat', kind: 'bold', label: 'Beat the flames out with your coat', stat: 'STR', say: 'You pull off your coat and go at the fire with it.', what: 'Beating out the fire', failSay: 'The fire comes up your sleeve' },
           { id: 'shutters', kind: 'trick', label: 'Shut the shutters to starve it', stat: 'INT', say: 'You go along the wall closing every shutter the fire has not reached.', what: 'Starving the fire', failSay: 'The shutters are swollen with the rain and will not close.' }
         ],
         isDone: function (api) { return !!api.flag('out'); },
@@ -496,9 +491,8 @@
     fall: function () { return 'Jorun Holloway buries you by the fold wall, deep, with stones on top, as she buries the ewes.'; },
     obstacles: {
       gap: { name: 'The gap in the fold wall', room: 'fold', max: 5, stat: 'STR', cat: 'basic', answers: { move: 'A stone the size of a calf rolls into the gap and stops there, and you never touched it.', bind: 'The loose stones lock into each other and hold.', beast: 'The sheep stop crying and press together in the far corner, out of your way. You work faster.' },
-        text: 'Where the wolf has pulled the wall down. Pile the stones back (STR, Basic Effort), heave the big capstone in (STR, Weapons Effort, but it can fall on you), or wedge the gap with the hurdles (INT, once: half of what is left). It must be mended before full dark, or she walks straight in.',
+        text: 'Where the wolf has pulled the wall down. Pile the stones back (STR, Basic Effort), or wedge the gap with the hurdles (INT, once, Easy: half of what is left). It must be mended before full dark, or she walks straight in.',
         ways: [
-          { id: 'capstone', kind: 'bold', label: 'Heave the big capstone into the gap', stat: 'STR', say: 'You get your arms round the capstone and lift.', what: 'Heaving the capstone', failSay: 'It rolls back onto your foot' },
           { id: 'hurdles', kind: 'trick', label: 'Wedge the gap with the hurdles', stat: 'INT', say: 'You lash the shepherd\'s hurdles across the gap and pile stones against them.', what: 'Wedging the gap', failSay: 'The hurdles will not stand.' }
         ],
         isDone: function (api) { return !!api.flag('mended'); },

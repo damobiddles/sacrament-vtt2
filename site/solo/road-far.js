@@ -150,9 +150,8 @@
     obstacles: {
       fill: { name: 'The open pit', room: 'pit', max: 6, stat: 'STR', cat: 'basic', clock: 'stirring',
         answers: { shelter: 'You say the burial office over the pit as you work. The dead lie easier, and the earth goes in faster.', bind: 'The loose earth at the edge of the pit holds together and goes down in one slab.', move: 'The spoil heap shifts by itself and slides into the pit.' },
-        text: 'A long pit half full of the plague dead, white with lime. Shovel the earth in (STR, Basic Effort), bring the spoil heap down in one go (STR, Weapons Effort, but a failure buries you to the waist and hurts), or ask the sexton where the ground is soft (WIS, once: half of what is left). Each failed try gives what is down there more time.',
+        text: 'A long pit half full of the plague dead, white with lime. Shovel the earth in (STR, Basic Effort), or ask the sexton where the ground is soft (WIS, once, Easy: half of what is left). Each failed try gives what is down there more time.',
         ways: [
-          { id: 'heap', kind: 'bold', label: 'Bring the spoil heap down in one go', stat: 'STR', say: 'You dig out the foot of the spoil heap and let it come.', what: 'Bringing the heap down', failSay: 'The heap comes down on you instead' },
           { id: 'soft', kind: 'trick', label: 'Ask the sexton where the ground is soft', stat: 'WIS', say: 'You ask Wulf where to dig. He tells you, though he does not like to.', what: 'Asking the sexton', failSay: 'He only shakes his head and digs.' }
         ],
         isDone: function (api) { return !!api.flag('filled'); },
@@ -280,9 +279,8 @@
     obstacles: {
       field: { name: 'The field of the dead', room: 'field', max: 6, stat: 'DEX', cat: 'basic', clock: 'eye',
         answers: { hide: 'The knight\'s helm turns past you as if you were not there, and you cross a long stretch of the field under it.', move: 'You step into the shadow of a dead tree and out of the shadow of the far hedge, halfway over.', beast: 'The crows lift all at once and wheel off to the left, and show you the dry way across.' },
-        text: 'Half a mile of broken ground, old pits and older bones, and the knight in the middle of it. Pick a way across (DEX, Basic Effort), run for the far hedge (DEX, Weapons Effort, but a failure puts your foot through a ribcage and hurts), or follow the old cart track the armies used (INT, once: half of what is left). Each failed try draws the knight\'s eye.',
+        text: 'Half a mile of broken ground, old pits and older bones, and the knight in the middle of it. Pick a way across (DEX, Basic Effort), or follow the old cart track the armies used (INT, once, Easy: half of what is left). Each failed try draws the knight\'s eye.',
         ways: [
-          { id: 'run', kind: 'bold', label: 'Run for the far hedge', stat: 'DEX', say: 'You keep low and run.', what: 'Running the field', failSay: 'Your foot goes through an old ribcage and you go down' },
           { id: 'track', kind: 'trick', label: 'Follow the armies\' old cart track', stat: 'INT', say: 'You look for where the ground was flattened a hundred years ago by wheels.', what: 'Finding the old track', failSay: 'The grass has had it. Every way looks the same.' }
         ],
         isDone: function (api) { return !!api.flag('crossed'); },

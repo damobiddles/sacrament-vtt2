@@ -149,11 +149,11 @@
 
   /* ---------- obstacles and timers ---------- */
   /* One try at an obstacle: a check, and on a success Effort into its bar. A failed try moves the obstacle's clock, if it has one: dawdling costs.
-     o.stat and o.cat change the check and the Effort die (a bold way); o.half puts half of what is left into the bar at once (a trick). */
+     o.stat and o.cat change the check and the Effort die (a tool, a gun: the rules' R.OBSTACLE); o.half puts half of what is left into the bar at once (a good idea). */
   function work(api, id, o) {
     var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {};
     var adj = o.adj || 'normal'; if (ob.hard && ob.hard(api)) adj = adj === 'easy' ? 'normal' : 'hard';
-    var c = api.check(o.stat || ob.stat, { adj: adj, what: o.what || ob.name, ignoreDark: true });   /* an obstacle's own hard() says what the dark does to it */
+    var c = api.check(o.stat || ob.stat, { adj: adj, what: o.what || ob.name, ignoreDark: true, item: o.item, misfire: o.misfire || 0 });   /* an obstacle's own hard() says what the dark does to it */
     if (!c.success) { if (ob.clock) clockTick(api, ob.clock); return c; }
     var have = int(s.bars[id], 0), add, dice = null, words;
     if (o.half) { add = Math.ceil((ob.max - have) / 2); words = 'you find the way of it: half of what is left, ' + add + '.'; }
@@ -164,20 +164,40 @@
     else if (ob.progress) ob.progress(api);
     return c;
   }
-  /* The other ways through an obstacle, beside the scene's own steady one: bold (a harder Effort die, and a failure costs), and a trick (once only: a
-     success puts half of what is left into the bar). The solo game's GM calls (the owner's, 2026-11-06), not rules. */
+  /* The ways through an obstacle (the rules' R.OBSTACLE, the owner's decision 2026-11-11): the scene's own steady one is bare hands or wits (Basic); a weapon
+     or tool that fits (Weapons, only if carried: the obstacle's "tool" says what fits); a gun (Guns, and loud: the clock ticks once, whatever the roll); a
+     spell that answers it (Magic, see spellUse); and the scene's good idea, a trick (once, Easy: half of what is left). No way hurts the hero for failing:
+     a failed try costs time, as the clock says. */
   function wayOf(api, id, wid) { var ob = api._adv.obstacles[id]; return ob && (ob.ways || []).filter(function (w) { return w.id === wid; })[0] || null; }
   function wayOpen(api, id, w) { return obstacleOpen(api, id) && !(w.kind === 'trick' && api.s.flags['trick_' + id]) && (!w.when || w.when(api)); }
   function useWay(api, id, w) {
     var s = api.s; if (w.say) api.say(w.say);
     if (w.kind === 'trick') s.flags['trick_' + id] = true;
-    var c = work(api, id, { stat: w.stat, cat: w.kind === 'bold' ? 'weapons' : null, half: w.kind === 'trick', adj: w.adj ? w.adj(api) : 'normal', what: w.what || w.label });
-    if (c.success || s.over) return;
-    if (w.kind === 'bold') {
-      if (w.failHorror) raiseHorror(api, w.failHorror, w.failSay || 'It goes wrong.');
-      else { var n = api.die(4); hurt(api, n, (w.failSay || 'It goes wrong and you are hurt') + ' (d4 ' + n + ')'); }
-    } else if (w.failSay) api.say(w.failSay);
+    var idea = R.OBSTACLE.idea, c = work(api, id, { stat: w.stat, half: w.kind === 'trick', adj: w.adj ? w.adj(api) : w.kind === 'trick' ? idea.adj : 'normal', what: w.what || w.label });
+    if (!c.success && !s.over && w.failSay) api.say(w.failSay);
   }
+  /* What the hero carries that fits this obstacle: a tool the obstacle names, else a close weapon if it says a weapon fits; and a gun, if it says a gun fits. */
+  function toolFor(s, ob) {
+    var t = ob && ob.tool; if (!t) return null;
+    var items = itemsCarried(s);
+    return items.filter(function (it) { return (t.items || []).indexOf(it.id) >= 0; })[0] ||
+      (t.weapons ? items.filter(function (it) { return it.kind === 'weapon' && it.cat === 'weapons' && it.band === 'close'; })[0] : null) || null;
+  }
+  function gunFor(s, ob) { return ob && ob.tool && ob.tool.gun ? itemsCarried(s).filter(function (it) { return it.kind === 'weapon' && it.cat === 'guns'; })[0] || null : null; }
+  /* The obstacle's own clock, or else the timer running in its room: what a loud try brings closer. */
+  function clockOf(api, id) {
+    var ob = api._adv.obstacles[id], s = api.s; if (ob.clock) return ob.clock;
+    return Object.keys(s.timers || {}).filter(function (t) { var d = (api._adv.timers || {})[t]; return s.timers[t].on && d && (!d.room || d.room === ob.room); })[0] || null;
+  }
+  function useTool(api, id, gun) {
+    var s = api.s, ob = api._adv.obstacles[id], it = gun ? gunFor(s, ob) : toolFor(s, ob); if (!it) { api.say('You carry nothing that fits.', 'note'); return; }
+    api.say(gun ? 'You level ' + yours(it.name) + ' at ' + lower(ob.name) + ' and fire.' : 'You put ' + yours(it.name) + ' to ' + lower(ob.name) + '.', 'act');
+    putToUse(s, it.name);
+    var c = work(api, id, { stat: gun ? it.roll || 'DEX' : ob.stat, cat: R.obstacleCat(gun ? 'gun' : 'tool'), item: it.name, misfire: gun ? R.misfireOf(it) : 0, what: it.name });
+    if (gun && !s.over) { api.say('The shot is loud.', 'horror'); var tid = clockOf(api, id); if (tid) clockTick(api, tid); }
+    return c;
+  }
+  function lower(t) { return t.replace(/^The /, 'the '); }
   function clockTick(api, tid) {
     var s = api.s, t = (s.timers || {})[tid], def = (api._adv.timers || {})[tid]; if (!t || !t.on || !def) return;
     t.cur = Math.max(0, t.cur - 1);
@@ -209,7 +229,8 @@
   /* ---------- story spells and items: their tags in the gear list (site/sheet/gear.js, "When in doubt" on the Rules page) ---------- */
   /* What a spell or item with no damage die does here, or null when nothing in this scene answers it. Nothing here changes the game: it returns { run }.
      The tag's default is the shared rule; the scene says where it applies: a dark room (light), a secret (learn), a foe that burns, casts, is undead or an animal,
-     and each obstacle's "answers" (tag: words), which take half of what is left off its bar, once per tag (an "open" obstacle simply opens). */
+     and each obstacle's "answers" (tag: words), which roll Magic Effort into its bar (again and again, each cast risking the Horror; a thing that costs no
+     Horror answers it once), and an "open" obstacle simply opens. */
   function spellUse(api, src) {
     var s = api.s, adv = api._adv, f = s.fight, room = adv.rooms[s.room], foe = f && adv.foes[f.foe];
     var own = adv.spells && adv.spells[src.id], mine = own && own(api); if (mine) return mine;
@@ -231,7 +252,7 @@
       if (k === 'open' && ob && ob.def.open) return { run: function () { clearObstacle(api, ob.id, ob.def.opened || ob.def.name + ' gives way.'); } };
       if (k === 'learn' && src.needs !== 'obstacle' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
-      if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
+      if (ans && (src.horror || src.temptsHorror || !s.flags['tag_' + ob.id + '_' + k])) return { obstacle: ob.id, run: function () { if (!s.flags['tag_' + ob.id + '_' + k]) api.say(typeof ans === 'function' ? ans(api) : ans); s.flags['tag_' + ob.id + '_' + k] = true; magicBar(api, ob.id); } };
       if (k === 'learn' && src.needs !== 'obstacle' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
@@ -261,11 +282,13 @@
       default: return true;
     }
   }
-  /* Half of what is left on an obstacle's bar, as a trick gives. */
-  function halfBar(api, id) {
-    var s = api.s, ob = api._adv.obstacles[id]; s.bars = s.bars || {};
-    var have = int(s.bars[id], 0), add = Math.ceil((ob.max - have) / 2); s.bars[id] = Math.min(ob.max, have + add);
-    api.say(ob.name + ': half of what is left, ' + add + '. Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll');
+  /* A spell that answers an obstacle (the rules' R.OBSTACLE: a spell that fits rolls Magic Effort into the bar, the fastest way and the forbidden one:
+     casting it already risked the Horror). It may be cast again while the obstacle stands. */
+  function magicBar(api, id) {
+    var s = api.s, ob = api._adv.obstacles[id], cat = R.obstacleCat('spell'); s.bars = s.bars || {};
+    var e = R.effort({ cat: cat, bonus: s.hero.effort[cat] || 0, rolled: api.die(R.DEFAULT_DICE[cat]) }), have = int(s.bars[id], 0);
+    s.bars[id] = Math.min(ob.max, have + e.total);
+    api.say(ob.name + ': ' + R.sayEffort(e, 'Effort') + ' Now ' + s.bars[id] + ' of ' + ob.max + '.', 'roll', { dice: [{ die: e.die, n: e.rolled }], by: 'hero', tally: [effortTally(e, 'Effort')] });
     if (s.bars[id] >= ob.max) clearObstacle(api, id); else if (ob.progress) ob.progress(api);
   }
   function obstacleHere(api) {
@@ -459,7 +482,7 @@
     var ok = !chk || chk.success;
     if (!isDamage) {
       if (ok) { if (story) { story.run(api); putToUse(s, u.spell ? u.spell.name : u.item.name); } else if (fx.any) applyFx(api, fx, u.item.name); else { var hook = api._adv.onUse && api._adv.onUse(api, src, u); if (!hook) api.say(src.does ? firstSentence(src.does) : 'It is done.', 'note'); } if (LIT_BY_USE.indexOf(src.id) >= 0) s.flags.lit = true; }
-      else if (story || fx.foe) api.say('It does not take.', 'miss');
+      else if (story || fx.foe) { api.say('It does not take.', 'miss'); if (story && story.obstacle && !fight) { var oc = api._adv.obstacles[story.obstacle].clock; if (oc) clockTick(api, oc); } }
       if (fight && chk && !ok && !pushed) { fight.phase = 'push'; api.say('It fails. You may push for a second action (costs ' + R.HORROR.push + ' Horror), or end your turn.', 'note'); s.failed = false; return; }
       if (fight && !(fx.any && fx.free)) fight.phase = 'foe';   /* a Free use does not take the turn */
       return;
@@ -605,7 +628,13 @@
     if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
     else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
     (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push(Object.assign({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }, x.item ? { useful: true, item: (api.has(x.item) || {}).name || '' } : null)); });
-    Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
+    Object.keys(adv.obstacles || {}).forEach(function (id) {
+      var ob = adv.obstacles[id]; if (ob.room !== s.room || !obstacleOpen(api, id) || (ob.blocked && ob.blocked(api))) return;
+      var tool = toolFor(s, ob), gun = gunFor(s, ob), die = function (way) { var c = R.obstacleCat(way); return R.CAT_NAMES[c] + ' d' + R.DEFAULT_DICE[c]; };
+      if (tool) out.push({ label: 'Use ' + yours(tool.name) + ' on ' + lower(ob.name), cmd: 'tool ' + id, kind: 'do', way: 'tool', useful: true, hint: die('tool') + ' into the bar' });
+      if (gun) out.push({ label: 'Shoot ' + lower(ob.name) + ' with ' + yours(gun.name), cmd: 'gun ' + id, kind: 'do', way: 'gun', useful: true, hint: die('gun') + ', and loud: the clock moves' });
+      (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: 'Once, Easy: half of what is left' }); });
+    });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
     /* the last roll failed: push it (the rules: any failed roll, once) while the same thing can still be tried */
@@ -827,6 +856,7 @@
       if (x && x.id === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
       else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else { var held = x.item && api.has(x.item); x.run(api); if (held) putToUse(s, held.name); }
     }
+    else if ((p[0] === 'tool' || p[0] === 'gun') && adv.obstacles && adv.obstacles[p[1]]) { if (s.fight || adv.obstacles[p[1]].room !== s.room || !obstacleOpen(api, p[1]) || (adv.obstacles[p[1]].blocked && adv.obstacles[p[1]].blocked(api))) api.say('That does nothing now.', 'note'); else useTool(api, p[1], p[0] === 'gun'); }
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
     else api.say('That does nothing here. ' + HELP, 'note');

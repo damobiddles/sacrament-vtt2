@@ -137,11 +137,10 @@
     intro: function (api) { api.say('Grimsby Fold, where the pilgrim road meets the drove road. Dusk, with rain coming.'); },
     fall: function () { return 'You lie in the ditch by the cart until the rain stops. Hob Sallow is gone. So is the road.'; },
     obstacles: {
-      wheel: { name: 'The sunken wheel', room: 'crossroads', max: 6, stat: 'STR', cat: 'basic', answers: { shelter: 'The rain bends away from the ditch, and the mud firms under the wheel.', bind: 'The cart stops sliding and stays where it is held. The wheel comes up out of the ditch more easily.', move: 'The stones under the axle shift, and you never touch them. The wheel sits higher.' },
-        text: 'One wheel of the cart sunk to the hub in the ditch. Heave (STR, Basic Effort), lift it on your back (STR, Weapons Effort, but a failure hurts), or pack the ditch first (INT, once: half of what is left). Each failed try brings the rain closer; once it comes, every try is Hard.',
+      wheel: { name: 'The sunken wheel', room: 'crossroads', max: 6, stat: 'STR', cat: 'basic', tool: { items: ['crowbar'] }, answers: { shelter: 'The rain bends away from the ditch, and the mud firms under the wheel.', bind: 'The cart stops sliding and stays where it is held. The wheel comes up out of the ditch more easily.', move: 'The stones under the axle shift, and you never touch them. The wheel sits higher.' },
+        text: 'One wheel of the cart sunk to the hub in the ditch. Heave (STR, Basic Effort), or pack the ditch first (INT, once, Easy: half of what is left). Each failed try brings the rain closer; once it comes, every try is Hard.',
         clock: 'rain', hard: function (api) { return !!api.flag('rain'); },
         ways: [
-          { id: 'lift', kind: 'bold', label: 'Lift the axle on your back', stat: 'STR', say: 'You crouch under the axle and stand up into it.', what: 'Lifting the axle', failSay: 'Something in your back gives before the wheel does' },
           { id: 'pack', kind: 'trick', label: 'Pack the ditch with stones first', stat: 'INT', say: 'You fill the rut in front of the wheel with stones from the wall.', what: 'Packing the ditch', failSay: 'The stones sink in the mud as fast as you lay them.' }
         ],
         isDone: function (api) { return !!api.flag('freed'); },
@@ -204,12 +203,11 @@
     intro: function (api) { api.say('The road comes down to the river Tarn, and the river has come up to meet it.'); },
     fall: function () { return 'The river takes you, gently, the way it takes everything. Downstream they will find the lead box, or a pair of boots.'; },
     obstacles: {
-      ford: { name: 'The ford', room: 'bank', max: 6, stat: 'STR', cat: 'basic', answers: { bind: 'The water over the next stones slows and holds. You cross a stretch of it as if it were a floor.', move: 'You step out of the shade on this bank into the shade under the alders, halfway over.', hide: 'Whatever watches from the brown water loses sight of you, and you cross the deep stretch unseen.' },
-        text: 'Forty yards of stepping stones under fast brown water. Wade (STR, Basic Effort; Easy with a rope, and a failure knocks you down unless you have one), leap from stone to stone (DEX, Weapons Effort, but a failure hurts), or read the current for the shallows (WIS, once: half of what is left). Once the river is over the stones, every try is Hard.',
+      ford: { name: 'The ford', room: 'bank', max: 6, stat: 'STR', cat: 'basic', tool: { items: ['rope', 'hemprope'] }, answers: { bind: 'The water over the next stones slows and holds. You cross a stretch of it as if it were a floor.', move: 'You step out of the shade on this bank into the shade under the alders, halfway over.', hide: 'Whatever watches from the brown water loses sight of you, and you cross the deep stretch unseen.' },
+        text: 'Forty yards of stepping stones under fast brown water. Wade (STR, Basic Effort; Easy with a rope, and a failure knocks you down unless you have one), or read the current for the shallows (WIS, once, Easy: half of what is left). Once the river is over the stones, every try is Hard.',
         hard: function (api) { return !!api.flag('flood'); },
         progress: function (api) { if (api.bar('ford') >= 3 && !api.flag('beat_acolyte') && !api.s.fight) api.fight('acolyte'); },
         ways: [
-          { id: 'leap', kind: 'bold', label: 'Leap from stone to stone', stat: 'DEX', say: 'You go across the stones at a run.', what: 'Leaping the stones', failSay: 'A stone rolls under your foot and you go down hard in the shallows' },
           { id: 'read', kind: 'trick', label: 'Read the current for the shallows', stat: 'WIS', say: 'You watch the water for a long moment, where it runs smooth and where it breaks.', what: 'Reading the current', failSay: 'The water tells you nothing you can use.' }
         ],
         isDone: function (api) { return !!api.flag('crossed'); },
@@ -298,10 +296,9 @@
     intro: function (api) { api.say('At Holloway Cross the reeve hangs thieves where the roads meet, so every road can see them.'); },
     fall: function () { return 'The reeve\'s men find you under the gibbet in the morning, and take you for another thief.'; },
     obstacles: {
-      cage: { name: 'The gibbet cage', room: 'gibbet', max: 5, stat: 'DEX', cat: 'basic', open: true, opened: 'The lock turns over by itself and the cage door swings wide.', answers: { bind: 'The swinging cage stops dead on its chain, and the lock is easier to work.' },
-        text: 'An iron cage on a tall post, locked. Pick the lock (DEX, Basic Effort), wrench the door (STR, Weapons Effort, but a failure cuts you on the rusted iron), or work out the lock (INT, once: half of what is left). Fill the bar and it gives. The light is going while you work.',
+      cage: { name: 'The gibbet cage', room: 'gibbet', max: 5, stat: 'DEX', cat: 'basic', tool: { weapons: true, items: ['crowbar', 'picks'], gun: true }, open: true, opened: 'The lock turns over by itself and the cage door swings wide.', answers: { bind: 'The swinging cage stops dead on its chain, and the lock is easier to work.' },
+        text: 'An iron cage on a tall post, locked. Pick the lock (DEX, Basic Effort), or work out the lock (INT, once, Easy: half of what is left). Fill the bar and it gives. The light is going while you work.',
         ways: [
-          { id: 'wrench', kind: 'bold', label: 'Wrench the cage door', stat: 'STR', say: 'You brace your feet on the post and haul on the bars.', what: 'Wrenching the door', failSay: 'The rusted iron opens your palm' },
           { id: 'study', kind: 'trick', label: 'Work out how the lock was made', stat: 'INT', say: 'You look at the lock the way its smith did.', what: 'Working out the lock', failSay: 'It is no make of lock you know.' }
         ],
         isDone: function (api) { return !!api.flag('cage'); },
@@ -348,11 +345,10 @@
     intro: function (api) { api.say('Mourne Abbey burned a hundred years ago. Its bone-house did not. The road goes past its door, and the rain makes you go in.'); },
     fall: function () { return 'You lie down among the bones, and the bone-house counts one more.'; },
     obstacles: {
-      grille: { name: 'The iron grille', room: 'ossuary', max: 6, stat: 'STR', cat: 'basic', open: true, answers: { silence: 'The grille stops ringing when you strike it. Nothing in the walls hears you work.', shelter: 'You say the short burial office over the shelves. The bones settle, and you work faster for not watching them.', hide: 'The dead in the walls cannot see you clearly. You work the grille without their eyes on you.' },
-        text: 'An iron grille closes off the inner chapel. Force it (STR, Basic Effort), throw yourself at it (STR, Weapons Effort, but a failure hurts), or find where the mortar is rotten (INT, once: half of what is left). Each failed try wakes the bones a little more.',
+      grille: { name: 'The iron grille', room: 'ossuary', max: 6, stat: 'STR', cat: 'basic', tool: { weapons: true, items: ['crowbar'], gun: true }, open: true, answers: { silence: 'The grille stops ringing when you strike it. Nothing in the walls hears you work.', shelter: 'You say the short burial office over the shelves. The bones settle, and you work faster for not watching them.', hide: 'The dead in the walls cannot see you clearly. You work the grille without their eyes on you.' },
+        text: 'An iron grille closes off the inner chapel. Force it (STR, Basic Effort), or find where the mortar is rotten (INT, once, Easy: half of what is left). Each failed try wakes the bones a little more.',
         clock: 'bones',
         ways: [
-          { id: 'throw', kind: 'bold', label: 'Throw yourself at the grille', stat: 'STR', say: 'You take a run at it across the bone-strewn floor.', what: 'Throwing yourself at it', failSay: 'The grille throws you back onto the bones' },
           { id: 'mortar', kind: 'trick', label: 'Find where the mortar is rotten', stat: 'INT', say: 'You run your fingers along the stone where the bars are set.', what: 'Finding the rot', failSay: 'The mortar is as good as the day it was laid.' }
         ],
         opened: 'The grille groans and comes away from the stone.',
@@ -401,10 +397,9 @@
     fall: function () { return 'The salt is scraped from the last stone by morning. The niche stays empty, and the lead box is never found.'; },
     obstacles: {
       salt: { name: 'The broken salt line', room: 'stones', max: 6, stat: 'WIS', cat: 'basic', answers: { shelter: 'The old words go into the salt as you lay it. The line holds better than salt alone.', hide: 'Whatever watches from the hill loses you. You lay a long stretch of the line unwatched.', learn: 'You see where the line used to run, stone by stone. The gaps are easier to close.' },
-        text: 'The salt line between the boundary stones, scraped away in long gaps. Walk it praying (WIS, Basic Effort; Easy with a salt pouch), pour it thick and fast (WIS, Weapons Effort, but a failure costs 1 Horror), or follow the old line by the saints\' marks (INT, once: half of what is left). Each failed try draws what scraped it closer; when it comes, you fight it with the line still broken.',
+        text: 'The salt line between the boundary stones, scraped away in long gaps. Walk it praying (WIS, Basic Effort; Easy with a salt pouch), or follow the old line by the saints\' marks (INT, once, Easy: half of what is left). Each failed try draws what scraped it closer; when it comes, you fight it with the line still broken.',
         clock: 'hag',
         ways: [
-          { id: 'pour', kind: 'bold', label: 'Pour the salt thick and fast', stat: 'WIS', say: 'You pour it in a hurry, gap after gap.', what: 'Pouring the line', failHorror: 1, failSay: 'The salt blows away in the dark, and the gaps seem wider than before.' },
           { id: 'marks', kind: 'trick', label: 'Follow the old line by the saints\' marks', stat: 'INT', say: 'Each stone\'s saint looks along the line to the next. You follow their eyes.', what: 'Following the marks', failSay: 'The marks are worn past reading.' }
         ],
         isDone: function (api) { return !!api.flag('mended'); },
