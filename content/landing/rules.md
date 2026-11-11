@@ -56,7 +56,7 @@ In a fight, a tag gives one of two results: **Hinder**, the foe's next attack ro
 
 Healing spells have no casting Horror cost. Their natural 1 can still add the separate natural-1 point. Healing relics use their own listed cost. Healing never exceeds maximum HP and cannot raise a dead hero.
 
-Supported healing is automatic. Most sources work once per recipient and source per rest, across copies and casters; a recipient at 0 HP may receive that source again. A full-health or ineligible target spends no charge. A failed check can spend a consumable charge without using the recipient's healing allowance.
+**Each healing spell or item can heal a hero once between rests; a hero at 0 HP can always be healed.** The table counts this for you; the [GM guide](/gm-guide/) has the finer points (copies, charges and failed checks).
 
 Bandages require Close contact. On an injured target they check WIS and heal d6; on a dying target they make an Easy WIS Tend check, stopping the countdown on success. A natural 20 on Tend also heals d4. Mend checks WIS and heals d8. Ordinary healing on a natural 20 adds d12 when Ultimate is enabled; it does not use Effort bonuses.
 

@@ -8,11 +8,13 @@ A **path** is the kind of life your hero has led: Knight or Cutpurse, Scholar or
 
 ## What a path does
 
-A path does **one thing**. **Every relic belongs to a path**: magic things that people of that path have made, carried or stolen. Any hero can carry and use any relic, but they are hungry things. Each use costs **at least 2 Horror**, whether it works or not, and **1 less for a hero of its own path**. A path gives no scores, no Effort and no gear. Your calling and vow still say who your hero is in your own words; the path is the part the rules know about.
+A path does **two things**. **Once a scene, a check that fits your path is Easy**: a Knight's feat of arms, a Scholar's reading, a Cutpurse's light fingers. At the table you press **Fits my path** before you roll and the GM judges whether it fits; it is never an attack. In the solo game each path names one score for this, shown in the list below, and the first check on that score in a scene is Easy.
+
+And **every relic belongs to a path**: magic things that people of that path have made, carried or stolen. Any hero can carry and use any relic, but they are hungry things. Each use costs **at least 2 Horror**, whether it works or not, and **1 less for a hero of its own path**. A path gives no extra scores, no Effort and no gear. Your calling and vow still say who your hero is in your own words; the path is the part the rules know about.
 
 ## Path relics and the Horror
 
-Every relic is forbidden magic, even in the hands of a Diplomat or a Knight. Using one tempts the Horror. A natural 1 adds Horror only when the relic is used to attack or as a pushed second action, as for any other item, and past 21 each point of Horror that cannot go on the meter costs the hero d4 HP. Many relics have only a few uses, counted on the sheet: when the last is spent they break, dry up or burn out.
+Every relic is forbidden magic, even in the hands of a Diplomat or a Knight. Using one tempts the Horror. A natural 1 on a relic adds 1 more Horror, as on any magic, and past 21 each point of Horror that cannot go on the meter costs the hero 1 HP. Many relics have only a few uses, counted on the sheet: when the last is spent they break, dry up or burn out.
 
 The Church holds that magic tempts the Horror, and it does not forgive those who use it. The Inquisition keeps lists. A hero who draws on relics too often, or brings the Horror down on a village, may find a summons waiting. That is the GM's story to tell, not a rule.
 

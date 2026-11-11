@@ -33,8 +33,8 @@
     if (C.rangeText(it)) b.push(C.rangeText(it));
     if (it.defence) b.push('Defence ' + sgn(it.defence));
     if (it.weaponStyle) b.push(C.weaponHands(it) === 2 ? 'Two hands' : 'One hand');
-    if (C.attackBonus(it)) b.push('+2 crossbow accuracy');
-    if (C.damageBonus(it)) b.push('+2 heavy damage');
+    if (C.damageBonus(it)) b.push('+2 damage, two hands');
+    if (R.misfireOf(it)) b.push('Misfires on 1 to 3');
     if (it.armourPart) b.push(it.armourPart === 'body' ? 'Body armour' : it.armourPart === 'head' ? 'Helmet' : 'Shield');
     if (it.hearts) b.push('+' + plural(it.hearts, 'Heart', 'Hearts'));
     if (it.effort && it.kind !== 'grimoire') b.push('Effort d' + it.effort);   /* a grimoire is used through its spells, which say their own */

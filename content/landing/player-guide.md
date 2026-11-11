@@ -39,7 +39,7 @@ The GM sets the **Target**, the number to meet or beat. Roll **d20 + the relevan
 
 Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A successful conversation or a simple lock may need no further roll. The GM describes the result.
 
-**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses. It adds 1 Horror on an attack, a spell (healing spells too) or a pushed second action, but not on other checks. Using bandages or another item that deals no damage is a plain check. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds an extra Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option. Normal and Ultimate bonuses count once each; an ability already using Ultimate counts that bonus only once. Heavy damage adds +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
+**Hero natural rolls:** a natural 1 is a 1 on the die before bonuses. It adds 1 Horror only on magic (a spell, healing spells too, or a relic or other item that costs Horror) or on a pushed second action. A natural 1 on an ordinary weapon attack, a plain check or bandages adds nothing. A gun misfires on a natural 1 to 3: the shot misses whatever the total. The current VTT judges a hero's success by the total; a natural 1 or 20 does not override that comparison. A successful natural 20 adds one plain Ultimate die (normally d12) to the normal Effort roll if the GM has enabled that option; nothing is added to that die. A two-handed weapon adds its +2 only once. Monster attacks have different natural-roll rules, explained in the GM guide.
 
 ## Attacks: target, roll, damage
 
@@ -51,9 +51,11 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 
 The damage target stays attached to that attack. Looking at another card does not redirect it. Choose the correct target before attacking. To correct a mistaken hit, Undo its damage in Activity first; the recorded result can then be deliberately reassigned using **Change target**.
 
-**Effort dice:** Basic d4 for basic work or bare hands; Weapons d6 for ordinary weapons, including bows, crossbows and slings; Guns d8 for guns and gunpowder; Magic d10 for magical damage; Ultimate d12 when an effect or the table's critical option grants it. Add the bonus in the matching category. The GM can change table dice, so read the labels at your table. Heavy ordinary melee weapons add +2 damage, including a critical; crossbows add +2 to their attack checks but keep Weapons d6 and a Move to reload; reach weapons keep normal damage and their described reach or control.
+**Effort dice:** Basic d4 for basic work or bare hands; Weapons d6 for ordinary weapons, including bows, crossbows and slings; Guns d8 for guns; Magic d10 for magical damage. Add the bonus in the matching category. Ultimate d12 is a die, not a bonus: you add it on a successful natural 20, and a few great powers roll it, with nothing added. The GM can change table dice, so read the labels at your table. **Every two-handed weapon adds +2 damage**, including on a critical: heavy melee, reach weapons, bows, crossbows and long guns. Crossbows and guns cost a Move to reload; reach weapons also keep their described reach or control. Guns are rare: the first time you find one, you may move Effort points into Guns on your sheet.
 
-**Push:** only a failed attack offers a Push. Taking it adds 1 Horror and grants an immediate second action: repeat the attempt or try something else. You can Push once during your own active turn; the pushed action cannot be pushed again. Outside that turn, ask the GM to use the explicit **Allow this Push** control on your failed attack. Failed ordinary checks do not offer it.
+**Push:** any failed roll offers a Push: an attack, a spell, a check. Taking it adds 1 Horror and grants an immediate second action: repeat the attempt or try something else. You can Push once during your own active turn; the pushed action cannot be pushed again. Outside that turn, ask the GM to use the explicit **Allow this Push** control on your failed roll.
+
+**Your path:** once a scene, a check that fits your path is Easy. Press **Fits my path** before you roll and tell the GM why it fits; the GM has the last word. It never applies to an attack.
 
 ## Equipment and magic
 
@@ -75,15 +77,15 @@ Catalogue healing is automated: the table changes HP, spends charges and tracks 
 - **Mend:** WIS check, d8 healing, no casting Horror. A natural 20 adds d12 when the table's Ultimate option is enabled.
 - **Healing relics:** follow their listed healing and Horror cost. The table handles supported catalogue healing; custom items written only as text may need manual HP changes.
 
-At **0 HP**, your hero gets a d4 dying countdown. It loses one at each new round and the hero dies when it reaches zero. Being hit while down can shorten it. Successful Tend makes you **Stable**, stopping the countdown. Healing of at least 1 HP puts a living downed hero back on their feet.
+At **0 HP**, your hero is dying for **3 rounds**. One comes off at each new round and the hero dies when they reach zero. On your turn you may **crawl away** (a CON check, which costs nothing) or **pay 1 Horror to act anyway**: strike, cast, heal yourself. Being hit while down takes a round off. Successful Tend makes you **Stable**, stopping the countdown. Healing of at least 1 HP puts a living downed hero back on their feet.
 
-The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowances and reduces Horror by one d10 per two living heroes, rounding up. The GM decides whether the place and time allow a rest. It does not bring dead heroes back.
+The GM's **Party rest** heals each living hero 10 HP, refreshes healing allowances and lowers the Horror by one d6. The GM decides whether the place and time allow a rest. It does not bring dead heroes back, and once the Horror has reached 21 there is no more rest that adventure.
 
 ## The shared Horror
 
-The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, and a hero's natural 1 on an attack, a spell or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you d4 HP. That can bring you to 0 HP and start your dying countdown.
+The whole table shares a meter from **0 to 21**. It rises for non-healing spells, listed item costs, a Push, a dying hero acting anyway, and a hero's natural 1 on magic or a pushed action. Those are separate costs: a non-healing spell that rolls a natural 1 adds 2 in total. Once the meter is full at 21, you pay in blood instead: each point you would have added costs you 1 HP. That can bring you to 0 HP and start your dying countdown.
 
-At **7, 14 and 21**, the VTT alerts the GM. The GM decides what happens in the story. Apart from paying in blood at 21, the table does not apply aftershock tables or other consequences by itself. Tell your group before accepting a dangerous cost.
+At **7, 14 and 21** the Horror strikes, **once an adventure** each. Unless the adventure says otherwise: at 7 every hero is **shaken** (their next roll is Hard), at 14 every foe met from then on has **2 more HP**, and at 21 there is **no more rest** this adventure. The GM decides anything more that happens in the story. Tell your group before accepting a dangerous cost.
 
 ## Staying connected and getting help
 

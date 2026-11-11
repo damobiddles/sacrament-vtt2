@@ -23,12 +23,38 @@ Corrections to text we published. These pages were written before the Horror cha
 
 Questions the current text left open. The rules have not changed; these say how the table already works.
 
-- **Which natural 1s add Horror.** An *attack* is a roll with a weapon or a damaging item against something with HP, or **Attack without an item**. *Every spell* counts, healing spells included. *Any roll made as a pushed second action* counts, even a plain check. Everything else is a plain check and its natural 1 adds nothing: ordinary checks, items that do not deal damage (bandages, most relic powers), and a weapon or damaging item used to make progress on an obstacle.
-- **Paying in blood can drop a hero.** The d4s come off HP like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A hero already at 0 cannot act, so cannot pay.
-- **Who sees the blood.** The cost has its own line in Activity, with the dice shown. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
+- **Which natural 1s add Horror (until 11 November 2026; see that entry).** An *attack* was a roll with a weapon or a damaging item against something with HP, or **Attack without an item**. *Every spell* counts, healing spells included. *Any roll made as a pushed second action* counts, even a plain check. Everything else is a plain check and its natural 1 adds nothing: ordinary checks, items that do not deal damage (bandages, most relic powers), and a weapon or damaging item used to make progress on an obstacle.
+- **Paying in blood can drop a hero.** The HP comes off like any other harm. A hero brought to 0 this way falls and starts their dying countdown as usual. A dying hero has no HP left to pay with, so when they pay 1 Horror to act anyway with the meter full, no blood is taken.
+- **Who sees the blood.** The cost has its own line in Activity. Only the GM can undo it. If the magic was used privately, the line stays private to the GM.
 - **Seven relics now name their check (8 November 2026).** The Bone Bell (CHA), Censer of Ash (WIS), Widow's Listening Veil (WIS), Ward Medal of Saint Ursel (WIS), Vigil Coal (INT), Rod of the Ash Procession (INT) and Mourning Nail (WIS) always rolled that check at the table and in the solo game, but their words did not say which. They now read "make a … check. On a success…", like every other relic. Nothing about how they play has changed.
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
+
+## 11 November 2026: the Horror at the heart
+
+**What changed.** A review of the rules for simplicity and fun, after the 9 November playtest. The aim: every hard choice in the game is a choice about tempting the Horror. The same rules apply at the table, around a real table and in the solo game.
+
+**The Horror**
+- **Paying in blood costs 1 HP a point** past 21, not d4.
+- **7, 14 and 21 strike once an adventure.** If the meter falls and climbs past a threshold again, nothing new happens. The GM presses **New adventure** in the Table tab to start again. An adventure's own Horror lines come first; otherwise: at **7** every hero is shaken (their next roll is Hard), at **14** every foe met from then on has 2 more HP, and at **21** there is no more rest this adventure.
+- **Party rest lowers the Horror by one d6**, whatever the size of the party (it was a d10 for every two heroes).
+
+**Choices that tempt it**
+- **Push after any failed roll,** not only a failed attack: once, on your turn, for 1 Horror. Breaking away and crawling away still cannot be pushed.
+- **A natural 1 adds Horror only on magic or a push.** A spell (healing spells too), a relic or another item that costs Horror, or a pushed action. A natural 1 on an ordinary weapon attack now adds nothing.
+- **Dying lasts 3 rounds,** with no die. On their turn a dying hero may **crawl away** (a CON check, free) or **pay 1 Horror to act anyway**. The dead cannot act. Playing alone works the same, so the solo game's own falling rule has gone.
+
+**Paths and words**
+- **Once a scene, a check that fits your path is Easy.** At the table, press **Fits my path** and the GM judges whether it fits; never on an attack. In the solo game each path names one score (listed on the [Paths](/rules/paths/) page).
+- **Tags in a fight now read Hinder or Stop:** Hinder, the foe's next attack rolls 3 less; Stop, it loses its next attack. The effects are the same as before.
+- **Healing limits** are one sentence on the Rules page; the finer points moved to the GM guide.
+
+**Effort and arms**
+- **Ultimate is a die, not a bonus.** A successful natural 20 still adds a d12, but nothing is added to it, and no hero puts Effort points in Ultimate. A hero who had points there gets them back to spend: the sheet shows them as points left.
+- **Every two-handed weapon adds +2 damage:** heavy melee, reach weapons, bows, crossbows and long guns. The crossbow's +2 to hit is gone.
+- **Three rare guns** are on the Arms table, 5 in 100: the Garrison Hand Cannon and the Watch Arquebus (two hands) and the Inquisitor's Wheellock (one hand). They roll Guns d8, **misfire on a natural 1 to 3**, take a Move to reload, and are loud. The Arms table's numbers moved to make room; nothing was removed.
+- *If you have printed something older:* cross out "d4" for dying and blood (3 rounds; 1 HP), "a failed attack" for Push (any failed roll), "on an attack" for natural 1s, the Ultimate Effort box, and the crossbow's +2 to hit. The downloads have been replaced.
+- *Prompted by:* the 9 November playtest and a rules review; the designer's decision.
 
 ## 8 November 2026, last: plain finds work like their twins
 

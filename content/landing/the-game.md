@@ -10,9 +10,9 @@ The world is a dark age of stone churches, plague carts and printing presses. Th
 ## What happens at the table
 The GM describes a problem. A player says what their hero tries. When the outcome is uncertain, roll a twenty-sided die and add the relevant score to meet the **Target**. If the amount matters, a smaller **Effort** die measures damage or progress. A simple success may need no further roll.
 
-Ordinary weapons, including bows and crossbows, use **Weapons d6**. Guns and gunpowder use **Guns d8**. A **Heart** is ten hit points. Healing, equipment and the shared **Horror** give the group decisions beyond simply attacking again.
+Ordinary weapons, including bows and crossbows, use **Weapons d6**. The rare, unreliable guns use **Guns d8**. Every two-handed weapon adds +2 damage. A **Heart** is ten hit points. Healing, equipment and the shared **Horror** give the group decisions beyond simply attacking again.
 
-Healing spells have no casting Horror cost; other spells add 1. A Push is offered only after a failed attack on your turn; the GM can explicitly allow an exception. A successful natural 20 adds an extra Ultimate die to normal Effort when enabled. Crossbows gain +2 accuracy but need a Move to reload. The [player guide](/player-guide/) and [GM guide](/gm-guide/) explain the current VTT rules in full.
+Healing spells have no casting Horror cost; other spells add 1. Any failed roll can be pushed on your turn for 1 Horror; a dying hero can pay 1 Horror to act anyway. The Horror strikes at 7, 14 and 21, once an adventure each. A successful natural 20 adds a plain Ultimate d12 to normal Effort when enabled. Crossbows and guns need a Move to reload. The [player guide](/player-guide/) and [GM guide](/gm-guide/) explain the current VTT rules in full.
 
 ## How the virtual table helps
 The Sacrament RPG Table puts heroes, enemies, obstacles and scenes in one shared browser session. Players use their character sheets; the GM prepares scenes and keeps private notes. Rolls and supported item effects are shared and saved by the table.
