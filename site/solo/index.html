@@ -53,6 +53,10 @@
     <div id="record" class="record"></div>
     <h3 class="deeds-title">Deeds <span id="deedCount"></span></h3>
     <ul id="deeds" class="deeds"></ul>
+    <div id="graves" hidden>
+      <h3 class="deeds-title">The graveyard</h3>
+      <ol id="graveList" class="graves"></ol>
+    </div>
     <h3 class="deeds-title">Past roads</h3>
     <ol id="chronicleList"></ol>
     <p class="fine">Your past roads, kept in this browser on this device.</p>
@@ -117,6 +121,15 @@
 <dialog id="end" class="sheet end" aria-labelledby="endTitle">
   <div class="sheet-in">
     <h2 id="endTitle" class="vh">The end of the road</h2>
+    <section id="grave" class="grave" hidden aria-labelledby="graveTitle">
+      <h3 id="graveTitle">At the graveside</h3>
+      <label for="lastWords">Last words</label>
+      <input id="lastWords" type="text" maxlength="120" autocomplete="off" placeholder="Optional">
+      <label for="leave">Leave one thing for the next hero</label>
+      <select id="leave"></select>
+      <button type="button" class="btn" id="layToRest">Lay them to rest</button>
+      <p id="graveSaid" class="fine" hidden></p>
+    </section>
     <div id="endCard" class="endcard" role="img"></div>
     <p id="endSaved" class="fine" hidden></p>
     <div class="end-btns">

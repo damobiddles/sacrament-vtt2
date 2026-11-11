@@ -36,4 +36,5 @@ The solo game is your GM. It uses the same rules and makes the GM's calls itself
 - **Falling alone.** You are dying as at the table: 3 rounds; crawl away free, or pay 1 Horror to act anyway. A crawl that succeeds leaves the scene at 1 HP and leaves behind what you found in it; a failed crawl costs a round. Bandages cannot tend yourself.
 - **Paths.** Each path names one score (a Knight's STR, a Scholar's INT). The first check on it in a scene is Easy.
 - **Marks.** A road won is an adventure lived through: a hero from My heroes who comes home gets its mark ticked for them.
+- **Graves.** A hero who falls is laid to rest at the end of the road: give their last words, and choose one thing they carried to leave. The next hero to take the road carries it from the start. Graves are kept in this browser, in the Chronicle.
 - Spells and items that protect **an ally**, such as Ward, have no use alone.

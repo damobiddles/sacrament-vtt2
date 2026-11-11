@@ -28,8 +28,8 @@
   /* a run that has just ended goes into the Chronicle, once */
   function remember() {
     if (!state || !state.over || !state.run || state.run.logged) return;
-    var sum = S.summary(state); state.run.logged = today() || true;
-    var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
+    var sum = S.summary(state); state.run.logged = today() || true; state.run.key = state.run.key || String(Date.now());
+    var l = chronicle(); l.unshift({ key: state.run.key, fell: sum.end === 'dead' ? sum.places[sum.places.length - 1] || '' : undefined, hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
       places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard, ending: sum.ending });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
@@ -69,9 +69,52 @@
     });
   }
   var HOW = { won: 'came home', dead: 'fell', fled: 'got away' };
+  /* ---------- graves and bequests (rules.js BEQUEST, 2026-11-11) ----------
+     A hero who falls gets a grave in the Chronicle, with last words if the player gives some, and may leave one thing they carried. The next road's hero
+     carries it, once. The words stay in this browser and are never counted or sent anywhere. */
+  function writeChronicle(l) { try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); return true; } catch { return false; } }
+  function graveOf(key) { var l = chronicle(); return { l: l, e: l.filter(function (e) { return key && e.key === key; })[0] || null }; }
+  /* the oldest bequest no hero has taken yet */
+  function waitingBequest() { return chronicle().filter(function (e) { return e.end === 'dead' && e.left && !e.taken; }).pop() || null; }
+  function claimBequest() {
+    var b = waitingBequest(), it = b && C.item(b.left); if (!it) return;
+    var r = C.edit(state.hero, { op: 'add', id: it.id }, { gm: true }, state.hp);
+    if (!r.ok) { state.log.push({ t: b.hero + ' left you ' + it.name + ', but you cannot carry it: ' + r.why + ' It waits on the grave.', k: 'note' }); return; }
+    var g = graveOf(b.key); if (g.e) { g.e.taken = state.hero.name; writeChronicle(g.l); }
+    state.log.push({ t: 'Taken from the grave of ' + b.hero + ': ' + it.name + '.' + (b.words ? ' “' + b.words + '”' : ''), k: 'loot' });
+  }
+  function showGrave() {
+    var dead = state && state.over === 'dead' && state.run && state.run.key, box = $('grave'); box.hidden = !dead; if (!dead) return;
+    var e = graveOf(state.run.key).e || {}, sel = $('leave'); sel.textContent = '';
+    var none = document.createElement('option'); none.value = ''; none.textContent = 'Nothing'; sel.appendChild(none);
+    var seen = {};
+    (state.hero.gear || []).forEach(function (g) { var it = C.itemOf(g); if (!it || seen[it.id]) return; seen[it.id] = true; var o = document.createElement('option'); o.value = it.id; o.textContent = it.name; sel.appendChild(o); });
+    sel.value = e.left || ''; $('lastWords').value = e.words || '';
+    var done = !!e.laid; $('lastWords').disabled = done; sel.disabled = done; $('layToRest').hidden = done;
+    $('graveSaid').hidden = !done; $('graveSaid').textContent = done ? (e.left ? 'Laid to rest. The next hero on the road will carry ' + (C.item(e.left) || { name: 'it' }).name + '.' : 'Laid to rest.') : '';
+  }
+  function layToRest() {
+    var g = graveOf(state.run.key); if (!g.e || g.e.laid) return;
+    var words = $('lastWords').value.replace(/\s+/g, ' ').trim().slice(0, 120), left = $('leave').value;
+    g.e.laid = true; if (words) g.e.words = words; if (left && C.item(left)) { g.e.left = left; g.e.leftName = C.item(left).name; }
+    if (!writeChronicle(g.l)) { $('graveSaid').textContent = 'The grave could not be kept in this browser.'; $('graveSaid').hidden = false; return; }
+    showEnd(); $('graveSaid').setAttribute('tabindex', '-1'); $('graveSaid').focus();
+  }
+  function showGraves(l) {
+    var graves = l.filter(function (e) { return e.end === 'dead' && e.laid; }), box = $('graveList'); box.textContent = ''; $('graves').hidden = !graves.length;
+    graves.slice(0, 8).forEach(function (e) {
+      var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span');
+      b.textContent = e.hero; w.className = 'where'; w.textContent = ' fell' + (e.fell ? ' at ' + e.fell : '') + (e.date ? ', ' + e.date : '') + '.';
+      li.append(b, w);
+      if (e.words) { var q = document.createElement('q'); q.textContent = e.words; li.appendChild(q); }
+      if (e.left) { var s = document.createElement('small'); s.textContent = 'Left ' + (e.leftName || (C.item(e.left) || { name: 'something' }).name) + (e.taken ? ', taken up by ' + e.taken + '.' : ' for the next hero.'); li.appendChild(s); }
+      box.appendChild(li);
+    });
+  }
   function showChronicle() {
     var l = chronicle(), box = $('chronicleList'); box.textContent = ''; $('chronicle').hidden = !l.length;
     if (l.length) showDeeds(l);
+    showGraves(l);
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
@@ -135,7 +178,7 @@
   $('takeHero').addEventListener('click', function () { begin(T.generate($('pathPick').value)); });
 
   function begin(hero) {
-    D.clear(); tallyClear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save();
+    D.clear(); tallyClear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); claimBequest(); save();
     count('solo-start', { path: hero.path || '', hard: !!state.run.hard, scene: state.adventure });
     showGame(true);
   }
@@ -465,10 +508,11 @@
   function showEnd() {
     if (!state || !state.over || !state.run) return;
     var sum = S.summary(state); sum.deeds = (state.run.deeds || []).map(function (id) { var d = DEEDS.byId(id); return d ? d.name : ''; }).filter(Boolean);
+    var grave = graveOf(state.run.key).e; if (grave && grave.laid) { sum.words = grave.words || ''; sum.left = grave.leftName || ''; }
     var svg = ART.endCard(sum, state, state.run.logged === true ? '' : state.run.logged);
     $('endCard').innerHTML = svg;
     $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
-    $('endSaved').hidden = true;
+    $('endSaved').hidden = true; showGrave();
     var d = $('end'); clearOverlays(); if (!d.open) d.showModal();
     squeeze($('endCard').querySelector('svg'));
   }
@@ -503,6 +547,7 @@
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(el));
   }
   $('endSave').addEventListener('click', saveCard);
+  $('layToRest').addEventListener('click', layToRest);
 
   /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */
   function roll(fresh) {
@@ -607,6 +652,6 @@
   $('restartBtn').addEventListener('click', function () { $('menu').close(); begin(state.origin); });
   $('newHeroBtn').addEventListener('click', function () { $('menu').close(); forget(); showStart(); });
 
-  window.__solo = { state: function () { return state; }, run: run, render: function () { render(); }, victory: function () { victory(); }, end: function () { showEnd(); } };
+  window.__solo = { state: function () { return state; }, run: run, remember: function () { remember(); save(); }, render: function () { render(); }, victory: function () { victory(); }, end: function () { showEnd(); } };
   showStart();
 })();

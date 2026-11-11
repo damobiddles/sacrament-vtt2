@@ -68,6 +68,8 @@ Bandages need Close contact. On a wounded hero, a WIS check heals d6. On a dying
 
 A hero at 0 HP is **dying for 3 rounds**: each new round takes one off, and at zero they are dead. On their turn a dying hero may **crawl away** (a CON check, which costs nothing) or **pay 1 Horror to act anyway**. The dead cannot act. A hit on a dying hero takes away a round. A hero whose countdown was stopped is **stable**; another hit starts the 3 rounds again. Healing of 1 HP or more puts a fallen hero back on their feet.
 
+**Graves and bequests.** A hero who dies may say their last words, and may leave **one thing they carried** to the next hero who joins the party. The GM hands it over when that hero arrives. In the solo game, the next road's hero carries it, and the fallen hero gets a grave in the Chronicle.
+
 **Party rest**, when the GM agrees the place and time allow it, heals every living hero 10 HP, lets each healing spell and item heal again, and lowers the Horror as shown above. It does not bring back spent supplies or the dead.
 
 ## The Horror
