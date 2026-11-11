@@ -18,25 +18,27 @@ const untag = ({ tags, needs, ...rest }) => rest;
 const route = (tab) => tab.on ? [...route(G.tables.find(t => t.id === tab.on)), tab.loot[0]] : [tab.loot[0]];
 
 test('the expansion doubles each item category with stable catalogue definitions and every spell', () => {
+  // Owner decision 2026-11-11: three rare guns (hand cannon, arquebus, wheellock) on the Arms table.
   // Owner decision 2026-11-01: six more grimoires (two each for Energy, Druidic and Necromancy) were added after the expansion.
-  assert.equal(C.items.length, 184 + pathRelics.length);
+  assert.equal(C.items.length, 187 + pathRelics.length);
   assert.equal(pathRelics.length, 100);
   assert.equal(added.length, 95);
   // Owner decision 2026-11-08 (decision card): look-alike finds match their twins, so the found Gravedigger's spade is a weapon like the Sexton's Spade
   // (one original supply became a weapon; the expansion's own counts are unchanged).
-  for (const [kind, [total, fromExpansion]] of Object.entries({ weapon: [29, 14], armour: [14, 7], supply: [91, 46], relic: [28, 14] })) {
+  for (const [kind, [total, fromExpansion]] of Object.entries({ weapon: [32, 14], armour: [14, 7], supply: [91, 46], relic: [28, 14] })) {
     assert.equal(C.items.filter(i => i.kind === kind && i.table !== 'pathrelics').length, total, kind);
     assert.equal(added.filter(i => i.kind === kind).length, fromExpansion, kind);
   }
   assert.equal(C.items.filter(i => i.kind === 'grimoire').length, 22);
   // The reviewed power definitions, area/scene limits and crossbow accuracy are included.
   // Approved equipment updates changed book costs, armour roles and ordinary weapons to Weapons d6.
+  // Owner decision 2026-11-11: crossbows lose their +2 to hit, and every two-handed weapon's words say it adds +2 damage.
   // Audit corrections: sling ranges and Black Candle detection now match their existing text.
   // Owner decision 2026-11-08: every relic belongs to a path; the older relics cost 1 more Horror, 1 less on their own path.
   // Owner decision 2026-11-08 (decision card): the original plain finds that look like starting gear now work like their twins.
   // Audit 2026-11-08: flavour lines added to the six older relics that had none, and the Bone Bell's words name its CHA check (words only).
   // This fingerprint locks the reviewed definitions, including the owner-approved Close/Near/Far/Very Far ranges; playtest-approved healing targets, Horror costs and explanations are included.
-  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '188ce5f66407ec840ff634c1adde4636a19d4041a00fa10992f582be88457ef3');
+  assert.equal(hash(original.map(i => { const copy = untag(i); delete copy.loot; delete copy.table; return copy; })), '28d7a1061cb35f09d85f627f051a87f3b08bcc5191dfd207702a628797b38c9e');
   // The original 23 spell mechanics are unchanged; the owner approved 20 new themed spells.
   // Owner decision 2026-11-01: every spell's wording was rewritten; the rest of each original spell is still locked.
   assert.equal(hash(G.spells.slice(0,23).map(untag).map(({ does, ...rules }) => rules)), '76303b6f6000a06080cbf471efbccd15b95b425a65900201220632491ada8ec7');
@@ -54,7 +56,7 @@ test('every new find is reachable at both range boundaries, visible in the publi
       seen.add(result.item.id);
     }
   }
-  assert.equal(seen.size, 250); // The binding seal is the 251st find, awarded directly on 100.
+  assert.equal(seen.size, 253); // Three guns since 2026-11-11. The binding seal is the last find, awarded directly on 100.
   for (const item of added) {
     assert.ok(seen.has(item.id), item.id);
     assert.ok(html.includes('id="item-' + item.id + '"'), item.id);

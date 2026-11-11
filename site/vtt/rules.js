@@ -10,6 +10,9 @@
   var CATS = ['basic', 'weapons', 'guns', 'magic', 'ultimate'];
   var CAT_NAMES = { basic: 'Basic', weapons: 'Weapons', guns: 'Guns', magic: 'Magic', ultimate: 'Ultimate' };
   var DEFAULT_DICE = { basic: 4, weapons: 6, guns: 8, magic: 10, ultimate: 12 };
+  /* The kinds a hero puts Effort points in. Ultimate is a die, not a bonus (the owner's decision, 2026-11-11): a successful natural 20 adds one plain d12,
+     and the few great powers that roll it add no bonus. The stored key stays, at 0, so old heroes still load. */
+  var BONUS_CATS = ['basic', 'weapons', 'guns', 'magic'];
   var RANGES = { close: { name: 'Close', description: "Within sword’s reach: melee distance." }, near: { name: 'Near', description: 'Beyond melee reach, up to 30 feet: throwing distance.' }, far: { name: 'Far', description: 'Ordinary ranged distance beyond 30 feet: bows, crossbows and guns.' }, veryfar: { name: 'Very Far', description: 'Longer shots requiring a longbow, rifle or an ability that explicitly reaches this far. The GM judges distance and line of sight.' } };
   function rangeBand(v) { return v === 'engaged' ? 'close' : Object.prototype.hasOwnProperty.call(RANGES, v) || v === 'self' || v === 'special' ? v : ''; }
   function rangeText(src) {
@@ -85,6 +88,9 @@
      each path one score (in the gear list) and offers it on that score's checks. Not on attacks. */
   var PATH = { easy: 'scene' };
   function easier(adj) { return adj === 'hard' ? 'normal' : 'easy'; }
+  /* Guns (the owner's decision, 2026-11-11): rare and unreliable. On a natural 1 to 3 the powder fails and the shot misses; reloading takes a Move (the GM's call). */
+  var GUNS = { misfire: 3 };
+  function misfireOf(it) { return it && it.kind === 'weapon' && it.cat === 'guns' ? GUNS.misfire : 0; }
   /* Break away (the Rules page, 2026-11-07): on your turn, instead of acting, a check with this stat against the Target. Success: clear, the foe does not attack
      you as you go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call. */
   var BREAK_AWAY = { stat: 'DEX' };
@@ -127,8 +133,9 @@
     var cfg = settingsOf(o.settings), mod = clamp(int(o.stat) + int(o.bonus), -MAX_BONUS, MAX_BONUS), target = targetFor(o.target, o.adj), d = int(o.d20);
     if (d < 1 || d > 20) throw new Error('A d20 shows 1 to 20.');
     var total = d + mod, nat20 = d === 20, nat1 = d === 1;
-    var success = total >= target;
-    return { d20: d, mod: mod, total: total, target: target, baseTarget: int(o.target), adj: ADJ[o.adj] === undefined ? 'normal' : o.adj, success: success, nat20: nat20, nat1: nat1, offerUltimate: nat20 && cfg.nat20Ultimate };
+    var misfire = d <= int(o.misfire), success = total >= target && !misfire;   /* a gun's powder fails on a low die, whatever the total */
+    var out = { d20: d, mod: mod, total: total, target: target, baseTarget: int(o.target), adj: ADJ[o.adj] === undefined ? 'normal' : o.adj, success: success, nat20: nat20, nat1: nat1, offerUltimate: nat20 && cfg.nat20Ultimate };
+    if (misfire) out.misfire = true; return out;
   }
 
   /* An Effort roll: the die for its kind plus the hero's bonus in that kind. `rolled` is the die (typed in or random). */
@@ -139,10 +146,9 @@
     return { cat: cat, die: size, rolled: r, bonus: bonus, total: r + bonus };
   }
 
-  /* A successful natural 20 adds one Ultimate die. Its bonus is applied once,
-     even when the original ability already uses Ultimate. */
+  /* A successful natural 20 adds one plain Ultimate die (d12): no bonus is added to it (2026-11-11). */
   function criticalEffort(o) {
-    var size = settingsOf(o.settings).dice.ultimate, n = int(o.rolled), bonus = o.base.cat === 'ultimate' ? 0 : clamp(int(o.bonus), 0, MAX_BONUS);
+    var size = settingsOf(o.settings).dice.ultimate, n = int(o.rolled), bonus = 0;
     if (n < 1 || n > size) throw new Error('A d' + size + ' shows 1 to ' + size + '.');
     return Object.assign({}, o.base, { total: o.base.total + n + bonus, critical: { die: size, rolled: n, bonus: bonus } });
   }
@@ -163,9 +169,9 @@
   function sayCheck(c, statName) {
     var sign = c.mod < 0 ? ' - ' + Math.abs(c.mod) : ' + ' + c.mod;
     var t = c.adj !== 'normal' ? 'Target ' + c.target + ' (' + c.adj.toUpperCase() + ', from ' + c.baseTarget + ')' : 'Target ' + c.target;
-    return c.d20 + sign + ' ' + (statName || '') + ' = ' + c.total + ' against ' + t + (c.success ? '. Success.' : '. Miss.');
+    return c.d20 + sign + ' ' + (statName || '') + ' = ' + c.total + ' against ' + t + (c.success ? '. Success.' : c.misfire ? '. Misfire: the powder fails.' : '. Miss.');
   }
-  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + (e.weaponBonus ? ' + ' + e.weaponBonus + ' heavy weapon' : '') + (e.critical ? ' + d' + e.critical.die + ' ' + e.critical.rolled + (e.critical.bonus ? ' + ' + e.critical.bonus + ' Ultimate' : '') + ' critical' : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
+  function sayEffort(e, word) { return 'd' + e.die + ' ' + e.rolled + (e.bonus ? ' + ' + e.bonus + ' ' + CAT_NAMES[e.cat] : '') + (e.weaponBonus ? ' + ' + e.weaponBonus + ' two hands' : '') + (e.critical ? ' + d' + e.critical.die + ' ' + e.critical.rolled + (e.critical.bonus ? ' + ' + e.critical.bonus + ' Ultimate' : '') + ' critical' : '') + ' = ' + e.total + ' ' + (word || 'Effort') + '.'; }   /* word: "damage" when it comes off HP */
 
   /* Hit points and task progress. Both count in points, ten to a Heart. A change is clamped to the tracker, and the amount that really changed is returned. */
   function hearts(points) { return Math.ceil(Math.max(0, int(points)) / HEART); }
@@ -199,7 +205,7 @@
     return out;
   }
 
-  return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+  return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, BONUS_CATS: BONUS_CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, GUNS: GUNS, misfireOf: misfireOf, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

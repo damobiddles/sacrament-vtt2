@@ -37,6 +37,7 @@ test('a fallen hero acts only by crawling away (free) or by paying 1 Horror; the
 // Reviewed power and equipment updates intentionally supersede the range-only snapshot.
 // The separate stable-catalogue fingerprint in powers-release protects IDs, odds, slots and spell assignments.
 test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
+ // Owner decision 2026-11-11 (the Horror at the heart, choice 3): three rare guns on a re-divided Arms table; crossbows lose +2 to hit.
  // Owner decision 2026-11-11 (the Horror at the heart, choices 2 and 5): each path names one score for the solo game's once-a-scene Easy; the tags' fight words
  // name one of two results, Hinder (next attack rolls 3 less) or Stop (loses its next attack), with the same effects.
  // Owner-approved themed editions; original books and spells are independently protected by themed-grimoires.test.
@@ -52,5 +53,5 @@ test('reviewed catalogue mechanics and loot probabilities stay fixed',async()=>{
  // Owner-approved 2026-11-01: four distinct editions and six new Energy, Druidic and Necromancy books; grimoire loot odds re-divided over 22 books.
  const {createHash}=await import('node:crypto');
  const data=Object.fromEntries(Object.entries(G).map(([k,a])=>[k,a.map(x=>Object.fromEntries(Object.entries(x).filter(([key])=>!['band','thrownBand','rangeNote','does'].includes(key))))]));
- assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'f2aec4bda26069315ebe4b2341c045dd3db4c98f01a6b514eec76d30d463d314');
+ assert.equal(createHash('sha256').update(JSON.stringify(data)).digest('hex'),'c7f5403eb29739e5774c2b192be98ca2493f05ef2c43d44ef037f325b85d7669');
 });

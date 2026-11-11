@@ -57,7 +57,7 @@
         if (onPath) { s.pathRoom = s.room; adj = R.easier(adj); }
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
-        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj });
+        var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj, misfire: o.misfire || 0 });
         api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o),
           tally: [sum(c.mod, [[s.hero.stats[stat] || 0, stat], [o.bonus || 0, o.item || 'bonus'], [boost, from]], c.total, 'against Target ' + c.target, c.success)] });
         if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
@@ -110,7 +110,7 @@
     return { parts: parts, total: total, word: word, good: !!good };
   }
   function effortTally(e, word) {
-    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'heavy weapon' }];
+    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'two hands' }];
     if (e.critical) parts.push({ n: e.critical.rolled, t: 'critical d' + e.critical.die }, { n: e.critical.bonus, t: 'Ultimate' });
     return { parts: parts.filter(function (x) { return x.n; }), total: e.total, word: word, good: true };
   }
@@ -421,7 +421,7 @@
     var chk = null;
     if (u.stat) {
       var adj = fight && fight.easy > 0 ? 'easy' : 'normal'; if (fight && fight.easy > 0 && isDamage) fight.easy--;
-      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
+      chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, misfire: isDamage && !u.spell ? R.misfireOf(u.item) : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
       if (chk.nat1 && R.nat1Tempts({ magic: magicOf(u), pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
     if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
@@ -449,7 +449,7 @@
     var size = stepped(s, f, p.cat), dice0 = {}; dice0[p.cat] = size;
     var e = R.effort({ cat: p.cat, bonus: s.hero.effort[p.cat] || 0, rolled: api.die(size), settings: { dice: dice0 } }), dice = [{ die: e.die, n: e.rolled }];
     if (p.damageBonus) e = Object.assign({}, e, { total: e.total + p.damageBonus, weaponBonus: p.damageBonus });
-    if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: s.hero.effort.ultimate || 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
+    if (p.critical) { e = R.criticalEffort({ base: e, rolled: api.die(R.DEFAULT_DICE.ultimate), bonus: 0 }); dice.push({ die: e.critical.die, n: e.critical.rolled }); }
     f.pending = null;
     api.say((p.nat20 ? 'A natural 20. ' : '') + p.item + ': ' + R.sayEffort(e, 'damage'), 'win', { dice: dice, damage: e.total, by: 'hero', tally: [effortTally(e, 'damage')] });
     damageFoe(api, e.total);

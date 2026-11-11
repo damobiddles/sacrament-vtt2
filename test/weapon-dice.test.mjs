@@ -9,18 +9,19 @@ import {table,charNamed} from './vtt-helpers.mjs';
 import {memoryStore} from '../netlify/functions/_shared/vtt-service.mjs';
 const C=globalThis.SacramentSheetCore,R=globalThis.SacramentRules;
 
-test('every ordinary catalogue weapon, including slings and weapon tools, uses Weapons d6',()=>{
-  for(const it of C.items.filter(i=>i.kind==='weapon'&&!i.temptsHorror)) {
+test('every ordinary catalogue weapon, including slings and weapon tools, uses Weapons d6; the three guns use Guns d8',()=>{
+  for(const it of C.items.filter(i=>i.kind==='weapon'&&!i.temptsHorror&&i.cat!=='guns')) {
     assert.equal(it.cat,'weapons',it.id);assert.equal(it.effort,6,it.id);
   }
   assert.equal(R.DEFAULT_DICE.weapons,6);assert.equal(R.DEFAULT_DICE.guns,8);
+  assert.deepEqual(C.items.filter(i=>i.cat==='guns').map(i=>[i.id,i.effort,i.slots]),[['handcannon',8,2],['arquebus',8,2],['wheellock',8,1]]);
 });
 
 test('custom bows cannot use Guns; explicit firearms retain d8 and two-handed requirements',()=>{
   const bow=C.makeCustom({category:'Weapon',weaponStyle:'ranged',cat:'guns',roll:'DEX'});
   assert.equal(bow.cat,'weapons');assert.equal(C.weaponHands(bow),2);
   const gun=C.makeCustom({category:'Weapon',weaponStyle:'firearm',cat:'weapons',roll:'DEX'});
-  assert.equal(gun.cat,'guns');assert.equal(C.weaponHands(gun),2);assert.equal(C.damageBonus(gun),0);
+  assert.equal(gun.cat,'guns');assert.equal(C.weaponHands(gun),2);assert.equal(C.damageBonus(gun),2,'two hands: +2 damage (2026-11-11)');
   assert.equal(C.makeCustom({category:'Weapon',weaponStyle:'single',cat:'guns',roll:'DEX'}).cat,'guns','one-handed gun');
 });
 
@@ -31,7 +32,7 @@ test('server uses Weapons bonus and d6 for a bow even when a client requests Gun
   const rollId=hit.body.result.rollId;
   assert.equal((await t.gm.cmd({type:'effort',rollId,cat:'guns',rolled:7})).status,400,'a physical 7 is invalid for a d6');
   const result=await t.gm.cmd({type:'effort',rollId,cat:'guns',rolled:6});assert.equal(result.status,200);
-  const roll=result.body.state.rolls.find(r=>r.id===rollId);assert.equal(roll.effort.die,6);assert.equal(roll.effort.cat,'weapons');assert.equal(roll.effort.total,6+ch.effort.weapons);
+  const roll=result.body.state.rolls.find(r=>r.id===rollId);assert.equal(roll.effort.die,6);assert.equal(roll.effort.cat,'weapons');assert.equal(roll.effort.total,6+ch.effort.weapons+2,'a bow takes two hands: +2');
 });
 
 test('server keeps custom firearm d8 and Guns bonus',async()=>{
@@ -41,7 +42,7 @@ test('server keeps custom firearm d8 and Guns bonus',async()=>{
   await t.gm.cmd({type:'sheet',charId:ch.id,op:{op:'add',def:{category:'Weapon',name:'Gunpowder test',weaponStyle:'firearm',cat:'guns',roll:'DEX'}}});
   const hit=await t.gm.cmd({type:'useItem',charId:ch.id,index:0,d20:15});assert.equal(hit.status,200);
   const result=await t.gm.cmd({type:'effort',rollId:hit.body.result.rollId,rolled:8});assert.equal(result.status,200);
-  const roll=result.body.state.rolls.find(r=>r.id===hit.body.result.rollId);assert.equal(roll.effort.die,8);assert.equal(roll.effort.total,11);
+  const roll=result.body.state.rolls.find(r=>r.id===hit.body.result.rollId);assert.equal(roll.effort.die,8);assert.equal(roll.effort.total,13,'8 + 3 Guns + 2 for two hands');
 });
 
 test('old pending bow attacks show and roll d6; completed history is left intact',async()=>{

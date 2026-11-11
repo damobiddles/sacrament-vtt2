@@ -88,7 +88,7 @@
     out += '</div>';
     if (edit && m >= A.marks) {
       var opts = R.STATS.filter(function (k) { return (h.stats[k] || 0) < A.scoreMax; }).map(function (k) { return '<option value="stat:' + k + '">' + k + ' +1 (now ' + sgn(h.stats[k]) + ')</option>'; }).join('') +
-        R.CATS.filter(function (k) { return (h.effort[k] || 0) < A.effortMax; }).map(function (k) { return '<option value="cat:' + k + '">' + esc(R.CAT_NAMES[k]) + ' Effort +1 (now ' + sgn(h.effort[k]) + ')</option>'; }).join('');
+        R.BONUS_CATS.filter(function (k) { return (h.effort[k] || 0) < A.effortMax; }).map(function (k) { return '<option value="cat:' + k + '">' + esc(R.CAT_NAMES[k]) + ' Effort +1 (now ' + sgn(h.effort[k]) + ')</option>'; }).join('');
       out += opts ? '<div class="sh-row sh-add"><label class="sh-f">Take the advance<select id="shAdv">' + opts + '</select></label><button type="button" class="sh-b go" data-sh="advance">Advance</button></div>' : '<p class="sh-note">Every score and Effort bonus is already as high as it goes.</p>';
     }
     if (edit) out += '<p class="sh-note">Tick a mark each time ' + esc(h.name) + ' lives through an adventure to its end' + (d.live ? '' : ' (a won solo road ticks one for you)') + '. At ' + A.marks + ' marks, take one advance: +1 to a score (up to ' + A.scoreMax + ') or to an Effort bonus (up to +' + A.effortMax + '). The marks then start again.</p>';
@@ -112,7 +112,7 @@
       '<span class="sh-def">Defence <b>' + C.defence(h) + '</b></span></div><p class="sh-note">Defence is 10 + CON + armour (armour counts for at most +5). A monster must roll it or more to hit you.</p></section>';
     left1 += '<section class="sh-sec"><h3>Scores <span class="sh-note">(' + left + ' of ' + C.scorePoints(h) + ' points left)</span></h3><div class="sh-row">' + R.STATS.map(function (k) { return edit ? stepper('score', k, h.stats[k], k) : '<span class="sh-stat"><b>' + sgn(h.stats[k]) + '</b><small>' + k + '</small></span>'; }).join('') + '</div>' +
       (edit ? '<p class="sh-note">' + C.scorePoints(h) + ' points to share, no more than ' + B.scoreMax + ' in one score.</p>' : '') + '</section>';
-    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + C.effortPoints(h) + ' points left)</span></h3><div class="sh-row">' + R.CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
+    left1 += '<section class="sh-sec"><h3>Effort <span class="sh-note">(' + eleft + ' of ' + C.effortPoints(h) + ' points left)</span></h3><div class="sh-row">' + R.BONUS_CATS.map(function (k) { var lab = R.CAT_NAMES[k] + ' d' + ((d.dice && d.dice[k]) || R.DEFAULT_DICE[k]); return edit ? stepper('effort', k, h.effort[k], lab) : '<span class="sh-stat"><b>' + sgn(h.effort[k]) + '</b><small>' + esc(lab) + '</small></span>'; }).join('') + '</div></section>';
     left1 += marksSection(h, edit, d);
     if (C.weaponEffortNote(h)) left1 += '<p class="sh-note" role="note">' + esc(C.weaponEffortNote(h)) + '</p>';
     var eq = [], pk = []; h.gear.forEach(function (g, i) { (g.eq && C.canEquip(C.itemOf(g)) ? eq : pk).push(gearItem(g, i, edit, d.live ? [] : acts, d.dice, d.live)); });

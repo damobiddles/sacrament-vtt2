@@ -230,7 +230,7 @@ export function addCharacter(s, p) {
   if (Object.keys(s.chars).length >= LIMITS.chars) fail('limit', 'That is as many characters as a table can hold.');
   const stats = {}, effort = {};
   R.STATS.forEach((k) => { stats[k] = clamp(int(p.stats && p.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
-  R.CATS.forEach((k) => { effort[k] = clamp(int(p.effort && p.effort[k], 0), 0, R.MAX_BONUS); });
+  R.CATS.forEach((k) => { effort[k] = R.BONUS_CATS.includes(k) ? clamp(int(p.effort && p.effort[k], 0), 0, R.MAX_BONUS) : 0; });
   const id = nid(s, 'h');
   const card = newCard(s, { kind: 'pc', name: p.name || 'Unnamed Pilgrim', img: p.img, desc: p.desc, hp: { cur: R.HEART, max: R.HEART }, charId: id, x: p.x, y: p.y }, { role: 'gm' });
   s.chars[id] = { id, name: str(p.name, LIMITS.name, 'Unnamed Pilgrim') || 'Unnamed Pilgrim', owner: null, cardId: card.id, stats, effort, armour: clamp(int(p.armour, 0), 0, R.MAX_BONUS),
@@ -274,6 +274,7 @@ export function apply(s, cmd, a, ctx) {
   Object.values(s.chars).forEach(gearKeys);
   migrateAnnotations(s);
   fixSupplies(s, ctx);
+  fixUltimate(s, ctx);
   if (cmd.type !== 'point') fixArmour(s, ctx);
   const H = HANDLERS[cmd.type]; if (!H) fail('invalid', 'Unknown command: ' + str(cmd.type, 30));
   a = Object.assign({}, a, { name: isGM(a) ? 'GM' : (s.players[a.pid] || {}).name || 'Player' });
@@ -290,6 +291,12 @@ export function apply(s, cmd, a, ctx) {
 
 /* A table saved before supplies were kept to the pack may have a hero with one marked as equipped. The first command after this rule puts every such hero right, once, and tells the GM
    (only the GM) which heroes and which items were moved. */
+/* Ultimate is a die, not a bonus (the owner's decision, 2026-11-11). A hero saved with points in it gets them back to spend on another kind; the GM is told who, once. */
+function fixUltimate(s, ctx) {
+  const freed = [];
+  for (const ch of Object.values(s.chars)) { const n = int(ch.effort && ch.effort.ultimate, 0); if (n > 0) { ch.effort.ultimate = 0; freed.push(ch.name + ' ' + n); } }
+  if (freed.length) addLog(s, { role: 'gm' }, 'The Ultimate Effort bonus is gone (a natural 20 adds a plain d12), so these Effort points are free to spend again on the sheet: ' + freed.join(', ') + '.', { now: ctx.now, private: true, kind: 'info' });
+}
 function fixSupplies(s, ctx) {
   if (s.supplyFix === 1) return; s.supplyFix = 1;
   const moved = [];
@@ -848,7 +855,7 @@ const HANDLERS = {
     const ch = charOf(s, c.id), p = c.patch || {};
     if (own(p, 'name')) { ch.name = str(p.name, LIMITS.name, ch.name) || ch.name; const card = s.cards[ch.cardId]; if (card) card.name = ch.name; }
     if (p.stats) R.STATS.forEach((k) => { if (own(p.stats, k)) ch.stats[k] = clamp(int(p.stats[k], 0), -R.MAX_BONUS, R.MAX_BONUS); });
-    if (p.effort) R.CATS.forEach((k) => { if (own(p.effort, k)) ch.effort[k] = clamp(int(p.effort[k], 0), 0, R.MAX_BONUS); });
+    if (p.effort) R.BONUS_CATS.forEach((k) => { if (own(p.effort, k)) ch.effort[k] = clamp(int(p.effort[k], 0), 0, R.MAX_BONUS); });
     if (own(p, 'armour')) ch.armour = clamp(int(p.armour, 0), 0, R.MAX_BONUS); return {};
   },
   sheet(s, c, a, ctx) { /* a change on the character sheet: the hero's player, or the GM. The rules are the sheet's own (sheet-core.js), so what the screen allowed is what is allowed here. */
@@ -927,7 +934,7 @@ const HANDLERS = {
     if (!u.stat) ch.pushPending = false;   /* a pushed second action with no roll is still the second action */
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
-      const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
+      const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj: sh.adj, settings: s.settings, misfire: u.spell ? 0 : R.misfireOf(u.item) }); tb.text += sh.text;
       const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
@@ -1107,7 +1114,7 @@ const HANDLERS = {
     if (!(isGM(a) && c.force)) standingHero(s, a, ctx, ch, true);   /* the Effort of an action already paid for */
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
-    e.weaponBonus = roll.weaponBonus === 2 && roll.cat === 'weapons' ? 2 : 0; e.total += e.weaponBonus;
+    e.weaponBonus = roll.weaponBonus === 2 && (roll.cat === 'weapons' || roll.cat === 'guns') ? 2 : 0; e.total += e.weaponBonus;
     if (roll.criticalRule === 'extra' && roll.check.offerUltimate) { const size = R.settingsOf(s.settings).dice.ultimate, extra = c.criticalRolled != null ? int(c.criticalRolled, 0) : d(ctx, size); try { e = R.criticalEffort({ base: e, rolled: extra, bonus: ch.effort.ultimate, settings: s.settings }); } catch (err) { fail('invalid', err.message); } }
     e.manual = manual; roll.effort = e; const tc = roll.targetCardId && s.cards[roll.targetCardId];
     L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled).concat(e.critical ? diceOf(c.criticalRolled != null, e.critical.die, e.critical.rolled) : []) });

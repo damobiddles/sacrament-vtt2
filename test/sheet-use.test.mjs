@@ -48,7 +48,8 @@ test('the loot table: 1-35, 36-58, 59-80 and 81-95 lead to sub-tables; 96-99 lea
   assert.equal(C.lootItem(0), null); assert.equal(C.lootItem(101), null);
   const on = (n, t) => C.lootEntry(n, t).item.id;
   assert.deepEqual([on(1, 'supplies'), on(2, 'supplies'), on(29, 'supplies'), on(31, 'supplies'), on(34, 'supplies')], ['stubs', 'stubs', 'lampoil', 'knuckrosary', 'purse']);
-  assert.deepEqual([on(1, 'arms'), on(4, 'arms'), on(7, 'arms'), on(34, 'arms')], ['sword', 'watchbill', 'jerkin', 'silverdagger']);
+  assert.deepEqual([on(1, 'arms'), on(4, 'arms'), on(7, 'arms'), on(31, 'arms')], ['sword', 'watchbill', 'jerkin', 'silverdagger']);   /* the Arms table re-divided for the guns, 2026-11-11 */
+  assert.deepEqual([on(96, 'arms'), on(97, 'arms'), on(98, 'arms'), on(99, 'arms'), on(100, 'arms')], ['handcannon', 'handcannon', 'arquebus', 'arquebus', 'wheellock'], 'guns are rare: 5 in 100 on the Arms table');
   assert.deepEqual([on(1, 'valuables'), on(13, 'valuables'), on(44, 'valuables')], ['holywater', 'fingerbone', 'prebindcoin']);
 });
 

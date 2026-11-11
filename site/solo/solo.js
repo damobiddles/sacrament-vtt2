@@ -580,7 +580,7 @@
     var nums = $('sheetNums'); nums.textContent = '';
     [['HP', state.hp.cur + ' of ' + state.hp.max], ['Defence', C.defence(h)], ['Horror', state.horror + ' of ' + R.HORROR.max], ['Target here', S.sceneInfo(state, ADV()).target]].forEach(function (x) { nums.appendChild(stat(x[0], x[1])); });
     var st = $('sheetStats'); st.textContent = ''; R.STATS.forEach(function (k) { st.appendChild(stat(k, '+' + (h.stats[k] || 0))); });
-    var ef = $('sheetEffort'); ef.textContent = ''; R.CATS.forEach(function (k) { ef.appendChild(stat(R.CAT_NAMES[k], 'd' + R.DEFAULT_DICE[k] + ' +' + (h.effort[k] || 0))); });
+    var ef = $('sheetEffort'); ef.textContent = ''; R.BONUS_CATS.forEach(function (k) { ef.appendChild(stat(R.CAT_NAMES[k], 'd' + R.DEFAULT_DICE[k] + ' +' + (h.effort[k] || 0))); });
     gearList($('sheetEq'), true); gearList($('sheetPack'), false);
     $('sheet').showModal();
   });
