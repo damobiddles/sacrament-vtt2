@@ -10,10 +10,11 @@ Sacrament was first played on the Sacrament RPG Table, in a browser. The rules w
 
 - **One GM and three to five players.** The GM describes the world and plays everyone in it; each player plays one hero.
 - **Dice for each player:** a d20 for checks, plus a d4, d6, d8, d10 and d12 for Effort.
-- **Dice for the GM:** two d10s for d100 loot rolls, and enough d10s for a Party rest (one for every two heroes).
+- **Dice for the GM:** two d10s for d100 loot rolls, and a d6 for a Party rest.
 - **A hero sheet for each hero,** and pencils with erasers. HP, charges and Horror go up and down all evening.
 - **The print-and-play kit** (below): the quick reference, the Horror track, the Target sign, foe cards, turn slips, countdowns and a healing log.
 - **A coin** to mark the Horror, and another to mark the round.
+- **Three candles** (optional, and worth it). Light them before the first scene, and keep a lamp to read by. Snuff one when the Horror reaches 7, the second at 14 and the last at 21. The room gets darker as the Horror gets closer. Never leave a flame alone.
 - **A map and pieces.** A printed map or a wipe-clean mat, and miniatures, tokens or coins. No grid is needed: distances are Close, Near, Far and Very Far.
 - **A GM screen** or a folder, to hide private rolls, notes and the adventure.
 - **About two hours** for The Rib of Saint Hussey, or **about four** for The Guest at Greave, in one long session or two shorter ones.
