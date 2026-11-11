@@ -2,6 +2,8 @@
 title: See the table in play
 date: 2026-11-10
 summary: A short video: what Sacrament is, and a walk around the Sacrament RPG Table, from making a table to the first rolls.
+image: /art/news/paladin-smites-skeleton.jpg
+image_alt: A paladin in battered plate brings a warhammer down on a skeleton in a dark cave, sparks of gold light flying from the blow.
 ---
 Reading about a game only goes so far. This video shows Sacrament the way it plays: what the game is, and then a walk around the online table, the GM's side and the players'.
 
