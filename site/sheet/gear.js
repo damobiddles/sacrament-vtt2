@@ -19,6 +19,7 @@
    (or, with "on": "<another table's id>", on that table; no more than three tables deep). Every number on every table belongs to exactly one thing.
    path       on a path relic: the path it belongs to, one of the names under "paths". Any hero may carry and use it; a hero who follows that path pays 1 less Horror for each use (never below 1).
    paths      the hero paths a player can choose on the sheet (a hero may have none): a name and one line about it. Never rename one in use: heroes keep their path by its name.
+              "score": the one score whose checks fit the path in the solo game (once a scene such a check is Easy; at the table the GM judges what fits).
    flavour    the line printed under the name.   category   Mundane, Weapon, Armour, Tool, Consumable, Valuable, Curio, Relic or Grimoire (what it is called, not how it plays).
    cat / roll   WHEN A HERO USES AN ITEM: if it has a "cat" (an Effort kind) the table makes a check with the stat in "roll", and on a success rolls that Effort's die for them,
                 plus their bonus in that kind. No "cat" means the item never rolls. A grimoire is used through its spells (each spell has its own cat and roll).
@@ -399,39 +400,39 @@
   ],
   "tags": [
     {"id":"light","name":"Light","fight":"","out":"Lights a dark place: a WIS check to search or notice there is no longer Hard."},
-    {"id":"snuff","name":"Snuff","fight":"A foe made of fire, or carrying it, loses its next attack.","out":"Puts out ordinary flames."},
+    {"id":"snuff","name":"Snuff","fight":"Stop: a foe made of fire, or carrying it, loses its next attack.","out":"Puts out ordinary flames."},
     {"id":"open","name":"Open","fight":"","out":"Opens or brings down a lock, door, seal, chain, cage or wall."},
     {"id":"learn","name":"Learn","fight":"You learn how to meet the foe: your next attack against it is Easy.","out":"Learns one true thing: a place's secret, a clue or the way on."},
-    {"id":"hide","name":"Hide","fight":"The foe cannot see you well: its next attack rolls 3 less.","out":"Slips past a watcher or a sleeper unseen."},
-    {"id":"silence","name":"Silence","fight":"A foe that casts or calls out loses its next attack. Other foes are not hindered.","out":"Stops a cry, a bell or an alarm."},
-    {"id":"bind","name":"Bind","fight":"The foe is held: it loses its next attack. Only when the spell or item has a check, and the check succeeds.","out":"Holds something falling, closing or charging, or freezes or tangles a crossing."},
-    {"id":"daze","name":"Daze","fight":"The foe is Dazed: its next attack rolls 3 less.","out":""},
+    {"id":"hide","name":"Hide","fight":"Hinder: the foe cannot see you well, and its next attack rolls 3 less.","out":"Slips past a watcher or a sleeper unseen."},
+    {"id":"silence","name":"Silence","fight":"Stop: a foe that casts or calls out loses its next attack. Other foes are not stopped.","out":"Stops a cry, a bell or an alarm."},
+    {"id":"bind","name":"Bind","fight":"Stop: the foe is held and loses its next attack. Only when the spell or item has a check, and the check succeeds.","out":"Holds something falling, closing or charging, or freezes or tangles a crossing."},
+    {"id":"daze","name":"Daze","fight":"Hinder: the foe is Dazed, and its next attack rolls 3 less.","out":""},
     {"id":"guard","name":"Guard","fight":"+2 Defence until your next turn.","out":""},
-    {"id":"beast","name":"Beast","fight":"Against an animal: its next attack rolls 3 less.","out":"Calms, asks or borrows the senses of an animal."},
+    {"id":"beast","name":"Beast","fight":"Hinder: against an animal, its next attack rolls 3 less.","out":"Calms, asks or borrows the senses of an animal."},
     {"id":"move","name":"Move","fight":"","out":"Gets past a gap, a wall or brambles without crossing them."},
     {"id":"shelter","name":"Shelter","fight":"","out":"Keeps off bitter cold, foul water, hunger, or the dead rising in a cursed place."}
   ],
   "paths": [
-    {"name":"Druid","about":"A keeper of the old groves and the beasts, who knows the weather and the seasons."},
-    {"name":"Necromancer","about":"A student of the dead, who asks the graves what they know."},
-    {"name":"Hunter","about":"A tracker of beasts, and sometimes of people, in the wild beyond the boundary stones."},
-    {"name":"Assassin","about":"A killer for hire, quiet and patient."},
-    {"name":"Mercenary","about":"A sword sold to whoever pays, with a company or alone."},
-    {"name":"Priest","about":"A cleric of the Church, or one who once was."},
-    {"name":"Witch","about":"A worker of charms, cures and curses, in a hut at the edge of the village."},
-    {"name":"Penitent","about":"One who walks the roads in sackcloth to pay for a sin."},
-    {"name":"Barber-surgeon","about":"A cutter of hair and flesh, a setter of bones and a bleeder of fevers."},
-    {"name":"Witch-finder","about":"A hunter of witches, paid by the head."},
-    {"name":"Scholar","about":"A reader of forbidden and forgotten books."},
-    {"name":"Diplomat","about":"An envoy who speaks for a lord, a city or a great house."},
-    {"name":"Knight","about":"A sworn warrior of noble blood, with land or without it."},
-    {"name":"Merchant","about":"A trader in goods, debts and news."},
-    {"name":"Pilgrim","about":"A traveller on the long roads to the shrines."},
-    {"name":"Cutpurse","about":"A thief of the crowds and the markets."},
-    {"name":"Minstrel","about":"A singer of songs and a carrier of tales from town to town."},
-    {"name":"Gravedigger","about":"A digger and keeper of graves, who knows the dead by name."},
-    {"name":"Alchemist","about":"A seeker after the secrets of metals, salts and fire."},
-    {"name":"Sailor","about":"A hand on the ships that work the cold coasts."}
+    {"name":"Druid","score":"WIS","about":"A keeper of the old groves and the beasts, who knows the weather and the seasons."},
+    {"name":"Necromancer","score":"INT","about":"A student of the dead, who asks the graves what they know."},
+    {"name":"Hunter","score":"DEX","about":"A tracker of beasts, and sometimes of people, in the wild beyond the boundary stones."},
+    {"name":"Assassin","score":"DEX","about":"A killer for hire, quiet and patient."},
+    {"name":"Mercenary","score":"STR","about":"A sword sold to whoever pays, with a company or alone."},
+    {"name":"Priest","score":"WIS","about":"A cleric of the Church, or one who once was."},
+    {"name":"Witch","score":"INT","about":"A worker of charms, cures and curses, in a hut at the edge of the village."},
+    {"name":"Penitent","score":"CON","about":"One who walks the roads in sackcloth to pay for a sin."},
+    {"name":"Barber-surgeon","score":"WIS","about":"A cutter of hair and flesh, a setter of bones and a bleeder of fevers."},
+    {"name":"Witch-finder","score":"WIS","about":"A hunter of witches, paid by the head."},
+    {"name":"Scholar","score":"INT","about":"A reader of forbidden and forgotten books."},
+    {"name":"Diplomat","score":"CHA","about":"An envoy who speaks for a lord, a city or a great house."},
+    {"name":"Knight","score":"STR","about":"A sworn warrior of noble blood, with land or without it."},
+    {"name":"Merchant","score":"CHA","about":"A trader in goods, debts and news."},
+    {"name":"Pilgrim","score":"CON","about":"A traveller on the long roads to the shrines."},
+    {"name":"Cutpurse","score":"DEX","about":"A thief of the crowds and the markets."},
+    {"name":"Minstrel","score":"CHA","about":"A singer of songs and a carrier of tales from town to town."},
+    {"name":"Gravedigger","score":"CON","about":"A digger and keeper of graves, who knows the dead by name."},
+    {"name":"Alchemist","score":"INT","about":"A seeker after the secrets of metals, salts and fire."},
+    {"name":"Sailor","score":"STR","about":"A hand on the ships that work the cold coasts."}
   ],
   "grimoireThemes": ["Fire","Cold","Energy","Necromancy","Nature","Druidic","Demonic","Healing and protection","Silence and deception","Doors and passage"],
   "retiredGrimoires": [

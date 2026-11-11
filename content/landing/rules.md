@@ -40,13 +40,13 @@ Each item lists its slots. Only equipped weapons, armour, relics and grimoires w
 
 Grimoires take **three slots** and each contains **three spells**. Read the spell's own range, effect and Horror cost. A book has no single range shared by all its spells. A hero may choose one starting grimoire; found books and relics are awarded by the GM. The current VTT limits carried Horror-tempting items to three, including relics, grimoires and supernatural curios. Packed items count too. This is broader than the older wording “three relics and grimoires”.
 
-**Paths.** A hero may follow one of 20 **paths**, such as Knight, Scholar, Cutpurse or Witch, or none. Choose it on the character sheet. A path does one thing: **every relic belongs to a path**, and a relic of **your own path costs 1 less Horror** each time you use it. Any hero can use any relic. See [Paths](/rules/paths/) for the full list.
+**Paths.** A hero may follow one of 20 **paths**, such as Knight, Scholar, Cutpurse or Witch, or none. Choose it on the character sheet. A path does two things. **Once a scene, a check that fits your path is Easy**: say so as you roll (the **Fits my path** button at the table), and the GM judges whether it fits; it is never an attack. In the solo game each path names one score for this (a Knight's STR, a Scholar's INT), and the first check on it in a scene is Easy. And **every relic belongs to a path**: a relic of **your own path costs 1 less Horror** each time you use it. Any hero can use any relic. See [Paths](/rules/paths/) for the full list.
 
 ## Story spells and items: when in doubt
 
 Many spells and relics have no damage die: their words describe what happens, and the GM decides the rest (Pillar of Ash fills the room with ash; Hush takes a voice). Each one now carries one or two **tags** saying what it is good for, and each tag has a default effect. **The spell's or item's own words always come first.** Use the tag when the words leave it open and you want a quick answer. The solo game always uses it. Costs do not change: the same Horror, and the same check where the words ask for one.
 
-Out of a fight, a tag says what kind of trouble the spell can answer: a fitting spell is one more way past an obstacle or a danger, as the GM judges (in the solo game it takes half of what is left on an obstacle's bar, or opens it outright where the words say so). A few spells say "needs a corpse close by" or "only against the undead". *The Last Verse* and *Its Real Name* have no tag: they stay the GM's call.
+In a fight, a tag gives one of two results: **Hinder**, the foe's next attack rolls 3 less, or **Stop**, it loses its next attack. (Learn makes your next attack Easy instead, and Guard gives you +2 Defence.) Out of a fight, a tag says what kind of trouble the spell can answer: a fitting spell is one more way past an obstacle or a danger, as the GM judges (in the solo game it takes half of what is left on an obstacle's bar, or opens it outright where the words say so). A few spells say "needs a corpse close by" or "only against the undead". *The Last Verse* and *Its Real Name* have no tag: they stay the GM's call.
 
 {{TAGS}}
 

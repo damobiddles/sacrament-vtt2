@@ -469,6 +469,17 @@ function hunt(s, card) {
   return card.name + ' has ' + n + ' more HP: the Horror hunts the heroes.';
 }
 /* A shaken hero's next roll is Hard (Easy becomes normal). Returns the roll's difficulty and the words that say why. */
+/* Once a scene, a check that fits the hero's path is Easy (the owner's decision, 2026-11-11). The player says so with the roll; the GM judges whether it fits, and
+   can refresh scene abilities for a new encounter. Not on attacks. It is kept with the scene's other once-a-scene uses. */
+function pathEasy(s, ch, c, adj) {
+  if (c.path !== true) return { adj, text: '' };
+  const path = SC.pathOf(ch); if (!path) fail('invalid', ch.name + ' follows no path.');
+  if (c.attack === true) fail('invalid', 'A path makes a check Easy, not an attack.');
+  const scene = s.scenes[s.table.scene] || fail('conflict', 'There is no live scene.'); scene.powers = scene.powers || {};
+  const uses = scene.powers[ch.id] || (scene.powers[ch.id] = {}); if (uses[PATH_KEY]) fail('invalid', ch.name + '\'s path has made a check Easy in this scene already.');
+  uses[PATH_KEY] = nid(s, 'u'); return { adj: R.easier(adj), text: ' (path, ' + path + ': Easy)' };
+}
+const PATH_KEY = 'path:easy';
 function takeShaken(ch, adj) { if (!ch.shaken) return { adj, text: '' }; ch.shaken = false; return { adj: adj === 'easy' ? 'normal' : 'hard', text: ' (shaken: Hard)' }; }
 /* A hero has used something that tempts the Horror: its amount (fixed, or rolled now with the table's dice) goes on the meter, whatever the check did. No amount, no line. */
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
@@ -881,7 +892,7 @@ const HANDLERS = {
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
-    const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
+    const pe = pathEasy(s, ch, c, adj), tb = takeBonus(ch), sh = takeShaken(ch, pe.adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += pe.text + sh.text;
     const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);

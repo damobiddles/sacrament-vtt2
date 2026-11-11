@@ -81,6 +81,10 @@
      A hero at 0 HP who is not dead may still act on their turn: a `crawl` check to crawl away costs nothing; anything else costs `actHorror` Horror.
      The state is { left, stable, dead }, or null for a hero who is not down. */
   var DYING = { start: 3, maxLeft: 9, actHorror: 1, crawl: 'CON' };
+  /* Paths (the owner's decision, 2026-11-11): once a scene, a check that fits the hero's path is Easy. At the table the GM judges what fits; the solo game gives
+     each path one score (in the gear list) and offers it on that score's checks. Not on attacks. */
+  var PATH = { easy: 'scene' };
+  function easier(adj) { return adj === 'hard' ? 'normal' : 'easy'; }
   /* Break away (the Rules page, 2026-11-07): on your turn, instead of acting, a check with this stat against the Target. Success: clear, the foe does not attack
      you as you go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call. */
   var BREAK_AWAY = { stat: 'DEX' };
@@ -196,6 +200,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

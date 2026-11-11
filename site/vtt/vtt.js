@@ -946,7 +946,7 @@
       '<details data-detail="playerActions"' + (!ready && !currentRoll() ? ' open' : '') + '><summary data-detail="playerActions">Weapons, spells and items</summary><div class="action-options">' + itemButtons(window.SacramentSheetCore.actions(heroOf(ch))) + '</div></details>' +
       '<div class="row"><button class="chip" data-do="ordinaryCheck">Ordinary check</button>' + (foe ? '<button class="chip" data-do="basicAttack" data-card="' + foe.id + '">Attack without an item</button>' : '') + '<button class="chip" data-do="standaloneEffort">Standalone Effort</button></div>' +
       (UI.basicAttack ? '<label>Attack using<select id="basicStat">' + R.STATS.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><button class="btn" data-do="prepareBasic">Prepare attack</button>' : '') +
-      '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div><details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
+      '<div class="seg" role="group" aria-label="Next roll difficulty">' + ['easy', 'normal', 'hard'].map(function (a) { return '<button data-do="adj" data-adj="' + a + '" aria-pressed="' + (UI.adj === a) + '">' + a + (a === 'easy' ? ' −3' : a === 'hard' ? ' +3' : '') + '</button>'; }).join('') + '</div>' + pathToggle(ch) + '<details data-detail="playerDice"><summary data-detail="playerDice">Dice and sound</summary>' + diceSwitch() + '</details></section>';
   }
   function putStrip(el, h, context) {
     var active = document.activeElement, sameSession = el.dataset.session === String(sessionVersion), keep = sameSession && el.dataset.context === context;
@@ -997,6 +997,12 @@
   function physVal(id) { var i = $(id); var v = i && i.value.trim(); if (i) i.value = ''; return v ? +v : undefined; }
   /* Read the field that the person can actually see. Browser restoration/autofill
      need not fire input, so the cached UI value alone is not authoritative. */
+  /* Once a scene, a check that fits the hero's path is Easy; the GM judges what fits. Not on attacks. */
+  function pathToggle(ch) {
+    if (!ch.path) return '';
+    var used = !!(ch.usedPowers && ch.usedPowers['path:easy']); if (used) UI.pathEasy = false;
+    return '<div class="row"><button class="chip" data-do="pathEasy" aria-pressed="' + !!UI.pathEasy + '"' + (used ? ' disabled' : '') + ' title="Once a scene, a check that fits your path is Easy. The GM says whether it fits. Not on attacks.">' + (used ? 'Path used this scene' : 'Fits my path (' + esc(ch.path) + '): Easy') + '</button></div>';
+  }
   function takeD20() {
     var input = document.querySelector('#strip input[data-phys]'), value = input ? input.value : UI.phys;
     UI.phys = ''; if (input) input.value = '';
@@ -1007,7 +1013,8 @@
     UI.rolling = 'Rolling ' + stat; var d20 = takeD20();
     var sel = UI.sel && S.cards[UI.sel], target = sel && sel.kind !== 'pc' && onTable(sel) ? sel.id : undefined;
     render();
-    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
+    var path = !!UI.pathEasy && attack !== true; if (path) UI.pathEasy = false;
+    send({ type: 'roll', charId: ch.id, stat: stat, attack: attack === true, adj: UI.adj, path: path || undefined, d20: d20, targetCardId: chosenTarget || target }, function (b) { UI.rolling = false; if (b) { UI.roll = b.result.rollId; UI.adj = 'normal'; UI.hintSeen = true; try { localStorage.setItem(KEY + 'hint', '1'); } catch {} } render(); });
   }
   /* a hero as the sheet's rules see it (what the table knows of a hero that is yours, or any hero for the GM) */
   function heroOf(ch) { return { name: ch.name, calling: ch.calling || '', path: ch.path || '', vow: ch.vow || '', appearance: ch.appearance || '', background: ch.background || '', notes: ch.notes || '', usedPowers: ch.usedPowers || {}, stats: ch.stats, effort: ch.effort, armour: ch.armour || 0, gear: ch.gear || [], marks: ch.marks || 0, advances: ch.advances || { stats: 0, effort: 0 } }; }
@@ -1085,6 +1092,7 @@
       case 'deselect': UI.sel = null; render(); break;
       case 'tool': if (d.tool === 'draw' && !gm()) break; UI.tool = d.tool; render(); break;
       case 'adj': UI.adj = d.adj; render(); break;
+      case 'pathEasy': UI.pathEasy = !UI.pathEasy; render(); break;
       case 'toggle': UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)] = !UI['opt' + d.key.charAt(0).toUpperCase() + d.key.slice(1)]; renderStrip(); break;
       case 'hideNumbers': send({ type: 'cardUpdate', id: d.id, patch: { hideNumbers: !c.hideNumbers } }); break;
       case 'leave': UI.sceneRename = null; leaveTable(); break;

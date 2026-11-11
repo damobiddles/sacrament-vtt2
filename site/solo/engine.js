@@ -52,12 +52,16 @@
       check: function (stat, o) {
         o = o || {}; var adj = o.adj || 'normal';
         if (api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item) adj = adj === 'easy' ? 'normal' : 'hard';
+        /* the hero's path: once a scene, a check on its score is Easy (not an attack, a spell, an item, a crawl or a break away; the Rules page, 2026-11-11) */
+        var onPath = !o.attack && !o.item && !o.noPush && !o.pushed && C.pathScore(s.hero) === stat && s.pathRoom !== s.room;
+        if (onPath) { s.pathRoom = s.room; adj = R.easier(adj); }
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
         var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj });
         api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o),
           tally: [sum(c.mod, [[s.hero.stats[stat] || 0, stat], [o.bonus || 0, o.item || 'bonus'], [boost, from]], c.total, 'against Target ' + c.target, c.success)] });
         if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
+        if (onPath) api.say('Your path (' + C.pathOf(s.hero) + ') fits that check: it was Easy, once this scene.', 'note');
         if (shaken) api.say('You were shaken: that roll was Hard.', 'note');
         if (!c.success && !o.noPush && !o.pushed && !s.pushing) s.failed = true;   /* a failed roll can be pushed (the rules: any failed roll, once); see act */
         if (s.pushing && !o.pushed && c.nat1) raiseHorror(api, R.HORROR.nat1, 'A natural 1 on a pushed roll.');   /* useAction counts its own */
