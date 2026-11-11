@@ -33,7 +33,7 @@ test('area targeting rejects hidden targets and later projections reveal no newl
  const hidden=await t.gm.cmd({type:'cardCreate',card:{name:'PRIVATE AREA ENEMY',kind:'token',visible:false,hp:{cur:17,max:17}}});const ghost=hidden.body.result.id,a=find(await t.state(),'Pit Ghoul');
  assert.equal((await p.cmd({type:'useItem',charId:h.id,index:0,spellId:'rend',d20:15,targetCardIds:[a.id,ghost]})).status,404);
  assert.equal((await t.state()).horror.cur,0);const r=await p.cmd({type:'useItem',charId:h.id,index:0,spellId:'rend',d20:15,targetCardIds:[a.id]});assert.equal(r.status,200);
- await t.gm.cmd({type:'cardUpdate',id:a.id,patch:{visible:false}});const raw=JSON.stringify((await p.get()).body);assert.ok(!raw.includes(a.id));assert.ok(!raw.includes('PRIVATE AREA ENEMY'));
+ await t.gm.cmd({type:'cardUpdate',id:a.id,patch:{visible:false}});const raw=JSON.stringify((await p.get()).body);assert.ok(!raw.includes(JSON.stringify(a.id)),'the hidden card\'s id, as a whole string (a short id like "c7" can turn up inside a random action id)');assert.ok(!raw.includes('PRIVATE AREA ENEMY'));
 });
 
 test('critical damage adds to the normal roll and never counts heavy or Ultimate bonuses twice',async()=>{

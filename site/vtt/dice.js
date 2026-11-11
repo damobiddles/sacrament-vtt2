@@ -37,7 +37,7 @@
       el.className = 'die d' + size; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<svg viewBox="0 0 100 100">' + (SHAPES[size] || SHAPES[20]) + '</svg>';
       face.textContent = String(1 + Math.floor(Math.random() * size)); el.appendChild(face); g.appendChild(el);
       var t = setInterval(function () { face.textContent = String(1 + Math.floor(Math.random() * size)); }, 70); intervals.add(t);
-      later(function () { clearInterval(t); intervals.delete(t); face.textContent = String(n); el.classList.add('landed'); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
+      later(function () { clearInterval(t); intervals.delete(t); face.textContent = String(n); el.classList.add('landed'); if (api.onDie) api.onDie(size, n); if (size === 20 && n === 20) el.classList.add('top'); if (size === 20 && n === 1) el.classList.add('low'); }, SPIN);
     });
     h.appendChild(g); air++; if (own) mine++;
     later(function () { land(own); if (!persistent) later(function () { g.classList.add('gone'); later(function () { g.remove(); }, FADE); }, HOLD); }, SPIN + 150);
@@ -73,9 +73,12 @@
     result.button = textEl('button', 'btn main reveal-action', '', card); result.button.type = 'button';
     action(null);
   }
-  function action(next) {
+  /* `alt`, when given, is a second button on a missed roll of your own: { label, run } (Push, the owner's choice of 2026-11-11). It goes when it no longer applies. */
+  function action(next, alt) {
     if (!result) return;
     var r = result, button = r.button;
+    if (alt && !r.alt) { r.alt = document.createElement('button'); r.alt.type = 'button'; r.alt.className = 'btn reveal-alt'; r.card.insertBefore(r.alt, button); }
+    if (r.alt) { if (alt) { r.alt.textContent = alt.label; r.alt.onclick = function () { if (r.alt.disabled) return; r.alt.disabled = true; alt.run(); }; } else { r.alt.remove(); r.alt = null; } }
     if (r.own && r.pendingDamage) {
       button.textContent = next ? next.label : 'Waiting for damage controls…'; button.disabled = !next;
       button.onclick = next ? function () { if (button.disabled) return; button.disabled = true; next.run(); } : null;
@@ -92,7 +95,7 @@
     show: show, clear: clear, action: action, sync: sync, resultId: function () { return result && result.rollId; },
     busy: function () { return mine > 0; },
     rolling: function () { return air > 0; },
-    onLand: null,
+    onLand: null, onDie: null,
     off: off, setOff: setOff
   };
 })();

@@ -146,7 +146,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   const D = await mk('dee'); await D.goto(base + '/vtt/?room=' + code2); await D.fill('#joinName', 'Dee');
   await D.evaluate(() => { const b = document.querySelector('#joinForm button[type=submit]'); b.click(); b.click(); b.click(); }); await D.waitForSelector('#app:not([hidden])'); await T(1200);
   check('pressing Join three times makes one player', (await st(gm2)).players.filter((p) => p.name === 'Dee').length === 1, JSON.stringify((await st(gm2)).players));
-  check('a new player is told what to do: heroes are described, with stats, and one button to play each', (await D.$$('#panel .hero')).length >= 1 && /Play /i.test(await txt(D, '#panel')) && /STR|DEX|INT/.test(await txt(D, '#panel .hero')) && /Choose your hero in Play/i.test(await txt(D, "#strip")), await txt(D, '#panel'));
+  check('a new player is told what to do: heroes are described, with stats, and one button to play each', (await D.$$('#panel .hero')).length >= 1 && /Play /i.test(await txt(D, '#panel')) && /STR|DEX|INT/.test(await txt(D, '#panel .hero')) && /Choose your hero on the right/i.test(await txt(D, "#strip")), await txt(D, '#panel'));
   await D.reload(); await D.waitForSelector('#app:not([hidden])'); await T(900);
   check('and after a reload still one Dee', (await st(gm2)).players.filter((p) => p.name === 'Dee').length === 1);
 

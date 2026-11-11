@@ -103,10 +103,10 @@ function pendingWeaponCat(s, roll) {
   const it = SC.itemOf(g);
   return it && it.kind === 'weapon' && it.cat === 'weapons' ? 'weapons' : roll.cat;
 }
-/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, path, appearance); only the hero's player and the GM get the vow, background, notes and gear. */
+/* What a viewer is sent of a hero. Everyone gets what is plain at the table (name, scores, Defence, calling, path, appearance, shaken by the Horror); only the hero's player and the GM get the vow, background, notes and gear. */
 function charView(c, whole, uses) {
   gearKeys(c);
-  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '' };
+  const o = { id: c.id, name: c.name, owner: c.owner, cardId: c.cardId, stats: c.stats, effort: c.effort, armour: c.armour, defence: SC.defence(c), calling: c.calling || '', path: SC.pathOf(c), appearance: c.appearance || '', shaken: !!c.shaken };
   /* what anyone is sent shows a supply in the pack, whatever an old save says (see fixSupplies) */
   if (whole) Object.assign(o, { usedPowers: uses || {}, vow: c.vow || '', background: c.background || '', notes: c.notes || '', marks: SC.marksOf(c), advances: SC.advancesOf(c), checkBonus: int(c.checkBonus, 0), checkBonusFrom: c.checkBonusFrom || '', gear: (c.gear || []).map((g) => Object.assign({}, g, { eq: g.eq === true && SC.canEquip(SC.itemOf(g)) })) });
   return o;
@@ -177,7 +177,7 @@ export function project(s, a, opt = {}) {
   });
   const out = {
     v: s.v, code: s.code, you: { role: a.role, pid: a.pid || null, name: gm ? 'GM' : (s.players[a.pid] || {}).name || '' },
-    table: { target: s.table.target, round: s.table.round, idx: s.table.idx, order, scene: { id: scene.id, name: scene.name, bg: scene.bg } },
+    table: { target: s.table.target, round: s.table.round, idx: s.table.idx, order, scene: { id: scene.id, name: scene.name, bg: scene.bg }, done: s.table.done === turnKey(s) },
     settings: s.settings, cards, layout,
     chars: Object.fromEntries(Object.entries(s.chars).map(([id, c]) => [id, charView(c, gm || (!!a.pid && c.owner === a.pid), scenePowers(s)[id])])),
     players: Object.values(s.players).map((p) => ({ id: p.id, name: p.name })),
@@ -246,7 +246,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
+const GM_ONLY = new Set(['goodIdea', 'setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -855,6 +855,26 @@ const HANDLERS = {
     return advance(s, a, ctx, false);
   },
   nextRound(s, c, a, ctx) { expectTurn(s, c); return advance(s, a, ctx, true); },
+  /* A player says their turn is over (the owner's choice, 2026-11-11). Only the GM moves the turn on: this lights the GM's Next turn and writes one line.
+     Only the player whose hero has the turn; once a turn; nothing to undo (the GM's Next turn is what counts). */
+  turnDone(s, c, a, ctx) {
+    if (isGM(a)) fail('invalid', 'The GM moves the turn on with Next turn.');
+    const card = s.cards[s.table.order[s.table.idx]], ch = card && card.charId && s.chars[card.charId];
+    if (!ch || ch.owner !== a.pid) fail('invalid', 'It is not your turn.');
+    if (s.table.done === turnKey(s)) return { done: true };
+    s.table.done = turnKey(s); L(s, a, ctx, ch.name + ' is done. Over to the GM.', { kind: 'turn' }); return { done: true };
+  },
+  /* A good idea through an obstacle (the owner's decision, 2026-11-11, R.OBSTACLE.idea): the GM's call. It fills half of what is left of the Effort bar, once a card.
+     One Undo. */
+  goodIdea(s, c, a, ctx) {
+    const card = s.cards[c.id] || fail('not_found', 'That card is gone.'), p = card.progress || fail('invalid', card.name + ' has no Effort bar.');
+    if (p.idea && R.OBSTACLE.idea.once) fail('invalid', 'A good idea has already helped with ' + card.name + '.');
+    const left = int(p.max, 0) - int(p.cur, 0); if (left <= 0) fail('invalid', card.name + ' is already done.');
+    const n = Math.ceil(left * R.OBSTACLE.idea.share), got = adjustField(s, card, 'progress', n); p.idea = true;
+    const said = 'A good idea: ' + card.name + ' +' + got + ' Effort (now ' + card.progress.cur + ' of ' + card.progress.max + ').';
+    L(s, a, ctx, numbersHidden(card) ? 'A good idea helps with ' + card.name + '.' : said, Object.assign({ kind: 'info', gmText: numbersHidden(card) ? said : '', effects: [delta(card.id, 'progress', got), { t: 'idea', card: card.id }] }, vis(s, card)));
+    return { applied: got };
+  },
 
   charCreate(s, c, a, ctx) { const ch = addCharacter(s, Object.assign({ name: 'Unnamed Pilgrim' }, c.char || {})); L(s, a, ctx, 'Added ' + ch.name + '.'); return { id: ch.id }; },
   charUpdate(s, c) {
@@ -1218,6 +1238,7 @@ const HANDLERS = {
       else if (fx.t === 'healingCharge') s.chars[fx.char].gear.find(g => g.key === fx.key).uses = fx.before;
       else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
       else if (fx.t === 'threshold') { const h = horrorOf(s); h.fired = h.fired.filter((t) => t !== fx.at); if (fx.at === R.HORROR.dread.hunted) h.hunted = false; (fx.shaken || []).forEach((id) => { if (s.chars[id]) s.chars[id].shaken = false; }); }
+      else if (fx.t === 'idea') { const card = s.cards[fx.card]; if (card && card.progress) delete card.progress.idea; }
       else if (fx.t === 'adventure') { const h = horrorOf(s); h.fired = fx.fired.slice(); h.hunted = fx.hunted; h.alert = fx.alert; fx.shaken.forEach((id) => { if (s.chars[id]) s.chars[id].shaken = true; }); }
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */

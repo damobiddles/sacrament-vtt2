@@ -20,6 +20,7 @@ test('TABLE: a check that fits your path is Easy once a scene; the GM can refres
   const t = await table({ dice: [d20(10), d20(10), d20(10), d20(10)] }), ann = await t.join('Ann'), thorne = charNamed(await t.state(), 'Thorne');
   assert.equal((await ann.cmd({ type: 'claim', charId: thorne.id })).status, 200);
   const ghoul = find(await t.state(), 'Pit Ghoul').id;
+  assert.equal(thorne.path, 'Mercenary', 'the sample heroes follow paths'); assert.equal((await ann.cmd({ type: 'sheet', charId: thorne.id, op: { op: 'path', value: '' } })).status, 200);
   const none = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', path: true }); assert.equal(none.status, 400); assert.match(none.body.error.message, /no path/);
   assert.equal((await ann.cmd({ type: 'sheet', charId: thorne.id, op: { op: 'path', value: 'Knight' } })).status, 200);
   const atk = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', attack: true, targetCardId: ghoul, path: true }); assert.equal(atk.status, 400, 'not on an attack');
