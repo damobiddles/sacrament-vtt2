@@ -74,6 +74,7 @@
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
       var blows = S ? hpMoves(S, st) : [], hz = S && S.horror && st.horror ? st.horror.cur - S.horror.cur : 0;
+      var gutter = hz > 0 && st.horror.thresholds.some(function (t) { return S.horror.cur < t && st.horror.cur >= t; });
       S = st; UI.dirty = false; spin(st.log); var fresh = UI.freshLog || [];
       if (gm() && UI.view && !S.scenes.some(function (sc) { return sc.id === UI.view; })) { UI.view = null; UI.sel = null; UI.sceneRename = null; UI.sceneDelete = null; }
       if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
@@ -85,6 +86,7 @@
       render();
       if (blows.length) floatBlows(blows);
       if (hz) horrorMoved(hz);
+      if (gutter && window.SacramentDread) window.SacramentDread.gutter($('table'));   /* a threshold passed: the candles at the map's edges gutter (dread.js, shared with solo) */
     }
   }
   /* What this browser keeps of a table for the Your tables list: who you are there, the scene last seen and when. Saved only when it changes. */
@@ -408,6 +410,8 @@
     var h = '<span class="lbl">Horror</span><span class="hz-meter' + (H.cur >= H.max ? ' arrived' : '') + '" role="meter" aria-valuemin="0" aria-valuemax="' + H.max + '" aria-valuenow="' + H.cur + '" aria-label="The Rising Horror: ' + H.cur + ' of ' + H.max + '" title="The Rising Horror. Healing spells cost 0; other spells +1; items state their own costs. Marks at ' + H.thresholds.join(', ') + '.">' + ticks + '</span><span class="hz-n"><b>' + H.cur + '</b>/' + H.max + '</span>';
     if (gm()) h = '<button type="button" class="hz-open" data-do="horrorOpen" title="Adjust the Horror (Table tab)">' + h + '</button>';
     if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; }
+    /* the Horror you can feel (the owner's go-ahead, 2026-11-11): the map darkens at its edges as the meter climbs, under the cards and the ink (dread.js) */
+    if (window.SacramentDread) window.SacramentDread.set($('table'), H.cur, H.max);
   }
   /* The meter has moved: it pulses and the change rises beside it (+1, −4) on every screen, once the dice have landed, with the low sound when sounds are on. */
   function horrorMoved(d) {
