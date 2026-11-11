@@ -391,16 +391,16 @@ function applyEffort(s, roll, card, field, a, ctx) {
   if (field === 'hp') settleHero(s, card, was, e, ctx);
   return hide && !isGM(a) ? {} : { applied };
 }
-/* A monster's blow that gets through on a hero at 0: no damage is rolled. A dying hero loses a round (at 0, dead); a stable one is dying again with a new d4;
+/* A monster's blow that gets through on a hero at 0: no damage is rolled. A dying hero loses a round (at 0, dead); a stable one is dying again, from the start;
    one at 0 with no countdown yet falls now. */
 function blow(s, roll, hero, a, ctx) {
   if (hero.dying && hero.dying.dead) fail('invalid', hero.name + ' is dead.');
-  const who = attackerNames(s, roll), before = hero.dying && clone(hero.dying); let after, dice = [];
-  if (!before || before.stable) { const n = d(ctx, R.DYING.die); hero.dying = R.dyingFall(n); dice = diceOf(false, R.DYING.die, n); after = hero.name + ' is dying' + (before ? ' again' : '') + ': d' + R.DYING.die + ' shows ' + n + ', ' + rounds(n) + ' left.'; }
+  const who = attackerNames(s, roll), before = hero.dying && clone(hero.dying); let after;
+  if (!before || before.stable) { hero.dying = R.dyingFall(); after = hero.name + ' is dying' + (before ? ' again' : '') + ': ' + rounds(hero.dying.left) + ' left.'; }
   else { hero.dying = R.dyingTick(before); after = hero.dying.dead ? hero.name + ' has died.' : hero.name + ' loses a round: ' + rounds(hero.dying.left) + ' left.'; }
   roll.blow = true; recapDeath(s, ctx, hero);
   const line = (n) => n + ' strikes ' + hero.name + ', who is down. ' + after;
-  const e = L(s, a, ctx, line(who.pub), { kind: hero.dying.dead ? 'alert' : 'apply', effects: [dyingFx(hero, before), { t: 'roll', roll: roll.id }], private: !isPublic(s, hero), gmText: who.pub !== who.gm ? line(who.gm) : '', dice });
+  const e = L(s, a, ctx, line(who.pub), { kind: hero.dying.dead ? 'alert' : 'apply', effects: [dyingFx(hero, before), { t: 'roll', roll: roll.id }], private: !isPublic(s, hero), gmText: who.pub !== who.gm ? line(who.gm) : '' });
   roll.applied = { cardId: hero.id, field: 'hp', applied: 0, log: e.id };
   return { dying: hero.dying };
 }
@@ -418,10 +418,10 @@ const isHero = (card) => !!card && card.kind === 'pc' && !!card.hp;
 const dyingFx = (card, before) => ({ t: 'dying', card: card.id, before: before ? clone(before) : null });
 const rounds = (n) => n + (n === 1 ? ' round' : ' rounds');
 const GM_VOICE = { role: 'gm', name: 'GM' };   /* lines the table writes itself: only the GM can undo them */
-/* A hero falls: the d4 is rolled where everyone sees it, on a line of its own. */
+/* A hero falls: dying, with R.DYING.start rounds left (no die: the owner's decision, 2026-11-11), on a line of its own. */
 function fall(s, card, ctx, how, before) {
-  const n = d(ctx, R.DYING.die); card.dying = R.dyingFall(n); listAdd(recapOf(s, ctx).fell, card.name);
-  L(s, GM_VOICE, ctx, card.name + ' ' + (how || 'falls') + ' and is dying: d' + R.DYING.die + ' shows ' + n + ', ' + rounds(n) + ' left.', { kind: 'alert', effects: [dyingFx(card, before || null)], private: !isPublic(s, card), dice: diceOf(false, R.DYING.die, n) });
+  card.dying = R.dyingFall(); listAdd(recapOf(s, ctx).fell, card.name);
+  L(s, GM_VOICE, ctx, card.name + ' ' + (how || 'falls') + ' and is dying: ' + rounds(card.dying.left) + ' left.', { kind: 'alert', effects: [dyingFx(card, before || null)], private: !isPublic(s, card) });
 }
 /* After a hero's HP has moved from `was` and line `e` has said so: rising above 0 stands a dying or stable hero up (said on that line, and undone with it); falling to 0 starts the countdown. */
 function settleHero(s, card, was, e, ctx) {
@@ -508,9 +508,10 @@ function selfEffects(s, a, ctx, ch, u, fx, priv) {
 /* The bonus waiting for a hero's next check (the Penitent's Chain), taken by that check. */
 function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0, text: '' }; const from = ch.checkBonusFrom || ''; ch.checkBonus = 0; ch.checkBonusFrom = ''; return { n, text: ' (+' + n + (from ? ' from ' + from : '') + ')' }; }
 
-/* A hero's d20 showing a natural 1 raises the Horror by itself on an attack, a spell, or a pushed second action of any kind; not on a plain check (the owner's rule, 2026-11-01). */
-function natOne(s, a, ctx, ch, chk, roll, spell) {
-  if (!chk.nat1 || !R.nat1Tempts({ attack: !!(roll && roll.isAttack), spell: !!spell, pushed: !!(roll && roll.fromPush) })) return null;
+/* A hero's d20 showing a natural 1 raises the Horror by itself on magic (a spell, or an item that tempts the Horror) or a pushed second action of any kind;
+   not on any other roll, an ordinary weapon's included (the owner's rules, 2026-11-01 and 2026-11-11). */
+function natOne(s, a, ctx, ch, chk, roll, magic) {
+  if (!chk.nat1 || !R.nat1Tempts({ magic: !!magic, pushed: !!(roll && roll.fromPush) })) return null;
   const hr = moveHorror(s, a, ctx, R.HORROR.nat1, (applied, now) => ch.name + ' rolled a natural 1.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
   bleed(s, ctx, ch, R.HORROR.nat1 - hr.applied); return hr;
 }
@@ -556,18 +557,27 @@ function automaticEffortTarget(s, roll, a) {
   return { id: card.id, field };
 }
 
-function standingHero(s, ch) { const card = s.cards[ch.cardId]; if (card && card.hp && card.hp.cur === 0) fail('invalid', 'A fallen hero at 0 HP cannot act. Ask someone else to tend or heal them.'); }
-/* Why a roll cannot be pushed now, or '' when it can. A push follows a failed attack: the hero's latest roll, not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
+/* Magic, for a natural 1: a spell, or an item that tempts the Horror (a relic, a grimoire, a supernatural curio). */
+const isMagic = (u) => !!(u && (u.spell || (u.source || u.item || {}).temptsHorror || (u.item && u.item.temptsHorror)));
+/* A hero at 0 HP who is not dead may still act (the owner's decision, 2026-11-11): crawling away, a CON check, costs nothing; anything else costs R.DYING.actHorror,
+   on its own line before the roll. The dead cannot act. */
+function standingHero(s, a, ctx, ch, crawl) {
+  const card = s.cards[ch.cardId]; if (!card || !card.hp || card.hp.cur > 0) return;
+  if (card.dying && card.dying.dead) fail('invalid', ch.name + ' is dead.');
+  if (crawl) return;
+  moveHorror(s, a, ctx, R.DYING.actHorror, (applied, now) => ch.name + ' is ' + (card.dying && card.dying.stable ? 'down' : 'dying') + ' and acts anyway.' + (applied > 0 ? ' The Horror rises ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
+}
+/* Why a roll cannot be pushed now, or '' when it can. A push follows any failed roll (the owner's decision, 2026-11-11; it was attacks only): the hero's latest roll,
+   not itself a pushed second action, and not pushed already; on the hero's own turn, once a turn. */
 function pushBlock(s, r, override = false) {
   if (!r || !r.check || r.attack || r.void) return 'There is nothing to push.';
-  if (!r.isAttack) return 'Only a failed attack can be pushed.';
   if (r.check.success) return 'That roll succeeded.';
-  if (r.pushContext && r.pushContext !== turnKey(s)) return 'That exchange has ended. Make a new attack before pushing.';
+  if (r.pushContext && r.pushContext !== turnKey(s)) return 'That exchange has ended. Make a new roll before pushing.';
   if (r.pushed) return 'That roll has been pushed already.';
   if (r.fromPush) return 'A pushed action cannot be pushed again.';
   if (s.rollOrder.slice(s.rollOrder.indexOf(r.id) + 1).some((id) => s.rolls[id] && s.rolls[id].charId === r.charId)) return 'Only the latest roll can be pushed.';
   const ch = s.chars[r.charId]; if (!ch) return 'That hero is no longer at the table.';
-  if (s.cards[ch.cardId] && s.cards[ch.cardId].hp && s.cards[ch.cardId].hp.cur === 0) return 'A fallen hero at 0 HP cannot act.';
+  if (s.cards[ch.cardId] && s.cards[ch.cardId].dying && s.cards[ch.cardId].dying.dead) return ch.name + ' is dead.';
   if (!override && (!s.table.order.length || s.table.order[s.table.idx] !== ch.cardId)) return 'Push is available on your turn. Ask the GM for an exception.';
   if (ch.pushTurn && (ch.pushTurn === turnKey(s) || ch.pushTurn === s.table.round + ':' + s.table.idx)) return 'You have pushed once this turn already.';
   return '';
@@ -581,7 +591,6 @@ function takeAction(ch, roll) { if (ch.pushPending) { roll.fromPush = true; ch.p
    Usage belongs to the recipient and source, so changing caster or carrying duplicate books cannot bypass a rest limit. */
 function useHealing(s, c, a, ctx, ch, u, selected) {
   const h = u.healing, actor = s.cards[ch.cardId];
-  if (actor && actor.hp && actor.hp.cur === 0) fail('invalid', 'A fallen hero cannot use healing. Ask someone else to tend or heal them.');
   const target = h.self ? actor : selected || actor;
   if (!target || !target.hp) fail('invalid', 'Choose a target with HP to heal.');
   noRaisingTheDead(target, 1);
@@ -599,7 +608,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
     L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text, { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
-    natOne(s, a, ctx, ch, chk, roll, u.spell);
+    natOne(s, a, ctx, ch, chk, roll, isMagic(u));
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
   const effects = [], dice = [];
@@ -865,8 +874,9 @@ const HANDLERS = {
   },
 
   roll(s, c, a, ctx) {
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
     if (!R.STATS.includes(c.stat)) fail('invalid', 'Choose a stat.');
+    standingHero(s, a, ctx, ch, c.stat === R.DYING.crawl && c.attack !== true);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal'; const manual = c.d20 != null && c.d20 !== '';
     const d20 = manual ? int(c.d20, 0) : d(ctx, 20); if (d20 < 1 || d20 > 20) fail('invalid', 'A d20 shows 1 to 20.');
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
@@ -882,7 +892,7 @@ const HANDLERS = {
   },
   useItem(s, c, a, ctx) { /* a hero uses an item: a check with the item's stat; on a success the player then rolls the item's own Effort die (see `effort`), plus their bonus in that kind. No Effort kind, no Effort roll;
      no stat either (a spell said without a check), no roll at all. Whatever it is, if it tempts the Horror the meter rises by its amount. */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.');
     const index = gearIndex(ch, c.gearKey);
     let u = SC.useOf(powerHero(s, ch), index, c.spellId, c.mode); if (!u.ok) fail('invalid', u.why);
     const adj = ['easy', 'normal', 'hard'].includes(c.adj) ? c.adj : 'normal', manual = c.d20 != null && c.d20 !== '';
@@ -899,6 +909,7 @@ const HANDLERS = {
     if (selfFx && fx.nextCheck && int(ch.checkBonus, 0)) fail('invalid', 'The +' + ch.checkBonus + ' from ' + (ch.checkBonusFrom || 'it') + ' is still waiting for ' + ch.name + '\'s next roll.');
     const area = u.area ? areaTargets(s, c.targetCardIds || (target ? [target] : []), a) : null;
     if (area) target = area[0].id;
+    standingHero(s, a, ctx, ch, false);
     const sceneFx = powerSpend(s, ch, u);
     if (u.healing) return Object.assign(out, useHealing(s, Object.assign({}, c, { index, adj }), a, ctx, ch, u, tc));
     const tempts = (u.spell || u.item).temptsHorror ? ' It tempts the Horror.' : ''; let nat = null;
@@ -915,14 +926,14 @@ const HANDLERS = {
       L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
-      nat = natOne(s, a, ctx, ch, chk, roll, u.spell);
+      nat = natOne(s, a, ctx, ch, chk, roll, isMagic(u));
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [] });
     if (selfFx) selfEffects(s, a, ctx, ch, u, fx, priv);
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
     const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
-  push(s, c, a, ctx) { /* after a failed attack the hero may push for a second action: the Horror rises, and their next roll is that action */
+  push(s, c, a, ctx) { /* after any failed roll the hero may push for a second action: the Horror rises, and their next roll is that action */
     const r = s.rolls[c.rollId] || fail('not_found', 'That roll is no longer at the table.'), ch = charOf(s, r.charId);
     if (!ownsChar(ch, a) || r.by !== (isGM(a) ? 'gm' : a.pid)) fail('forbidden', 'That is not your roll.');
     const why = pushBlock(s, r); if (why) fail('invalid', why);
@@ -1082,7 +1093,7 @@ const HANDLERS = {
     const ult = roll.criticalRule !== 'extra' && c.cat === 'ultimate' && roll.check.offerUltimate;
     if (roll.criticalRule === 'extra' && !roll.cat && c.cat === 'ultimate') fail('invalid', 'Choose the normal Effort type. Critical damage is added automatically.');
     const ch = charOf(s, roll.charId), cat = roll.cat && !ult ? roll.cat : R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
-    if (!(isGM(a) && c.force)) standingHero(s, ch);
+    if (!(isGM(a) && c.force)) standingHero(s, a, ctx, ch, true);   /* the Effort of an action already paid for */
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }
     e.weaponBonus = roll.weaponBonus === 2 && roll.cat === 'weapons' ? 2 : 0; e.total += e.weaponBonus;
@@ -1097,7 +1108,7 @@ const HANDLERS = {
     return { rollId: roll.id };
   },
   freeEffort(s, c, a, ctx) { /* Effort on its own, with no check before it: a standing blow, a physical roll, a task the GM has already allowed */
-    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, ch);
+    const ch = charOf(s, c.charId); if (!ownsChar(ch, a)) fail('forbidden', 'That is not your character.'); standingHero(s, a, ctx, ch, false);
     const cat = R.CATS.includes(c.cat) ? c.cat : fail('invalid', 'Choose a kind of Effort.');
     const size = R.settingsOf(s.settings).dice[cat], manual = c.rolled != null && c.rolled !== '', rolled = manual ? int(c.rolled, 0) : d(ctx, size);
     let e; try { e = R.effort({ cat, rolled, bonus: ch.effort[cat], settings: s.settings }); } catch (err) { fail('invalid', err.message); }

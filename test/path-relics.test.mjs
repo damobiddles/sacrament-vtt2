@@ -96,17 +96,17 @@ test('AT THE TABLE: a relic with uses spends one each time and adds its Horror; 
   assert.equal((await t.state()).horror.cur, 6, 'a spent relic adds nothing');
 });
 
-test('AT THE TABLE: a miss still spends a use and adds the Horror; a natural 1 on an attack adds 1 more, on a plain check it does not', async () => {
+test('AT THE TABLE: a miss still spends a use and adds the Horror; a natural 1 on any relic adds 1 more, since a relic is magic (2026-11-11)', async () => {
   { const { t, ann, thorne, at } = await setup([d20(5)], 'waxpoppet');
     const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: at }); assert.equal(r.status, 200);
     assert.equal(r.body.state.rolls.at(-1).check.success, false); assert.equal(r.body.state.horror.cur, 3);
     assert.equal((await gearOf(t, 'waxpoppet')).uses, 1); }
   { const { t, ann, thorne, at } = await setup([d20(1)], 'waxpoppet');
     const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: at }); assert.equal(r.status, 200);
-    assert.equal(r.body.state.horror.cur, 4, '3 for the poppet and 1 for a natural 1 on an attack'); void t; }
+    assert.equal(r.body.state.horror.cur, 4, '3 for the poppet and 1 for a natural 1 on magic'); void t; }
   { const { t, ann, thorne, at } = await setup([d20(1)], 'hangingacorns');
     const r = await ann.cmd({ type: 'useItem', charId: thorne.id, index: at }); assert.equal(r.status, 200);
-    assert.equal(r.body.state.horror.cur, 2, 'the acorns are a plain check: a natural 1 adds no Horror of its own');
+    assert.equal(r.body.state.horror.cur, 3, 'the acorns are a relic: a natural 1 on magic adds 1 of its own');
     assert.equal((await gearOf(t, 'hangingacorns')).uses, 2); }
 });
 

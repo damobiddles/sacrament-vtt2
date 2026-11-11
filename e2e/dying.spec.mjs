@@ -16,7 +16,7 @@ async function attack(gm, damage) {
   if (damage) { await gm.locator('[data-do=monCat][data-cat=ultimate]').click(); await gm.locator('#physE').fill(String(damage)); await gm.locator('[data-do=monsterEffort][data-cat=ultimate]').click(); }
 }
 
-test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blow while stable starts a new d4; a Party rest stands them up', async ({ browser }) => {
+test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blow while stable starts the 3 rounds again; a Party rest stands them up', async ({ browser }) => {
   test.setTimeout(90000);
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
@@ -27,7 +27,7 @@ test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blo
   const left = (await thorne(ann)).dying.left;
   await expect(ann.locator('#panel .atzero')).toHaveText('DYING ' + left);
   await expect(ann.locator('#cards .c.down')).toContainText('DYING ' + left);
-  await openFeed(ann); await expect(ann.locator('#feed')).toContainText('Thorne falls and is dying: d4 shows ' + left);
+  await openFeed(ann); await expect(ann.locator('#feed')).toContainText('Thorne falls and is dying: ' + left + ' rounds left.');
   if(await gm.locator('[data-do=dismissRoll]').count()) await gm.locator('[data-do=dismissRoll]').click();
   await shot(ann, '1-player-dying');
 
@@ -44,7 +44,7 @@ test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blo
   await gm.locator('[data-do=nextRound]').click(); await saved(gm);
   await expect(ann.locator('#panel .atzero')).toHaveText('STABLE');
 
-  /* a blow on a stable hero: no damage, a new d4 */
+  /* a blow on a stable hero: no damage, the 3 rounds start again */
   await gm.locator('[data-do=deselect]').first().click().catch(() => {});
   await attack(gm, 0);
   const hurt = gm.locator('[data-do=monsterEffort]'); await expect(hurt).toContainText('Resolve hit on downed hero');
@@ -63,7 +63,7 @@ test('a hero brought to 0 is dying for everyone; the GM marks them stable; a blo
   await rest.click(); await expect(rest).toHaveText('Sure? The party rests'); await rest.click(); await saved(gm);
   await expect.poll(async () => (await thorne(ann)).hp.cur).toBe(10);
   await expect(ann.locator('#panel .atzero')).toHaveCount(0);
-  await openFeed(gm); await expect(gm.locator('#feed')).toContainText('The party rests. Thorne +10 HP (now 10/10), back on their feet; the rest are already at full. Horror 2d10');
+  await openFeed(gm); await expect(gm.locator('#feed')).toContainText('The party rests. Thorne +10 HP (now 10/10), back on their feet; the rest are already at full. Horror d6');
   await expect.poll(async () => (await state(ann)).horror.cur).toBeLessThan(12);
   await shot(gm, '5-gm-after-rest');
   expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);

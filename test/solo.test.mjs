@@ -66,10 +66,13 @@ test('past the top of the meter the Horror is paid in blood, 1 HP per point', ()
   s.horror = R.HORROR.max; const hp = s.hp.cur;
   S.act(s, A, 'go north', fixed([1])); S.act(s, A, 'go down', fixed([1]));
   const attack = S.choices(s, A).find((c) => c.kind === 'attack');
-  S.act(s, A, attack.cmd, fixed([1, 3, 1]));          // natural 1 on an attack: 1 Horror that cannot go on the meter, paid with 1 HP
+  S.act(s, A, attack.cmd, fixed([2]));               // a miss, and an ordinary attack's roll costs nothing
+  assert.equal(s.hp.cur, hp, 'no blood for a plain miss');
+  const push = S.choices(s, A).find((c) => c.kind === 'push' && /^push /.test(c.cmd));
+  S.act(s, A, push.cmd, fixed([15, 3]));              // the push: 1 Horror that cannot go on the meter, paid with 1 HP
   assert.equal(s.horror, R.HORROR.max);
   assert.match(s.log.map((l) => l.t).join('\n'), /You pay in blood: 1 HP\./);
-  assert.ok(s.hp.cur <= hp - 1);
+  assert.equal(s.hp.cur, hp - 1);
 });
 
 test('the offering box rolls on the real d100 loot table and the find goes to this copy of the hero', () => {
@@ -368,10 +371,10 @@ test('a dying hero whose rounds run out is dead; a blow on a dying hero takes a 
   const s = cryptFight();
   s.hp.cur = 1;
   S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([5, 1]));
-  S.act(s, A, 'foe', fixed([20, 6, 2]));                 // falls with 2 rounds, one passes: 1 left
-  assert.equal(s.dying.left, 1);
+  S.act(s, A, 'foe', fixed([20, 6]));                    // falls: 3 rounds, no die; one passes: 2 left
+  assert.equal(s.dying.left, 2);
   S.act(s, A, 'crawl', fixed([2]));                       // the crawl fails: the turn passes to the foe
-  S.act(s, A, 'foe', fixed([20, 6]));                    // a blow gets through: the last round
+  S.act(s, A, 'foe', fixed([20, 6]));                    // a blow gets through: a round off, and one passes: none left
   assert.equal(s.over, 'dead');
 });
 
@@ -741,7 +744,7 @@ test('a natural 1 says on the dice card whether it raised the Horror, in the Rul
   const s = cryptFight();
   S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([1]));
   const atk = s.log.filter((l) => l.outcome).at(-1).outcome;
-  assert.match(atk.note, new RegExp('Natural 1 on an attack: \\+' + R.HORROR.nat1 + ' Horror'));
+  assert.match(atk.note, /Natural 1 on an ordinary attack: no Horror/);
   const cart = ADVS.cart, c = S.start(T.generate('fighter', seeded(3)), cart, fixed([1]));
   S.act(c, cart, 'way wheel lift', fixed([1]));
   const plain = c.log.filter((l) => l.outcome).at(-1).outcome;

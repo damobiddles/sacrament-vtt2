@@ -1,5 +1,5 @@
-// Pushing and natural 1s (the owner's rule, 2026-10-20): after a failed attack a hero may push for a second action, which raises the Rising Horror by 1;
-// a hero's d20 that shows a natural 1 raises it by 1 by itself. Monsters' rolls do not count.
+// Pushing and natural 1s (the owner's rule, 2026-10-20; widened 2026-11-11): after any failed roll a hero may push for a second action, which raises the Horror by 1;
+// a hero's d20 that shows a natural 1 raises it by 1 by itself only on magic or a pushed action. Monsters' rolls do not count.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { table, d20, find, charNamed } from './vtt-helpers.mjs';
@@ -13,17 +13,20 @@ const push = (who, rollId) => who.cmd({ type: 'push', rollId });
 /* Thorne (STR +3) against the sample's Target 12: a 2 fails, a 15 succeeds. Thorne is first in the turn order. */
 async function setup(dice) { const t = await table({ dice }), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne'); return { t, ann, thorne }; }
 
-test('PUSH: a natural 1 on a hero\'s d20 raises the Horror by 1, and the feed says so', async () => {
-  const { ann, thorne } = await setup([d20(1)]);
-  const r = await roll(ann, thorne); assert.equal(r.status, 200);
-  assert.equal(r.body.state.horror.cur, 1); assert.deepEqual(r.body.result.horror, { cur: 1, applied: 1, crossed: [] });
-  assert.match(feed(r.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 1 of 21\)\./);
+test('PUSH: a natural 1 on a pushed second action raises the Horror by 1 beside the push, and the feed says so', async () => {
+  const { ann, thorne } = await setup([d20(2), d20(1)]);
+  const r = await roll(ann, thorne); assert.equal(r.status, 200); assert.equal(r.body.state.horror.cur, 0);
+  assert.equal((await push(ann, last(r).id)).status, 200);
+  const again = await roll(ann, thorne); assert.equal(again.status, 200);
+  assert.equal(again.body.state.horror.cur, 2, '1 for the push, 1 for its natural 1'); assert.deepEqual(again.body.result.horror, { cur: 2, applied: 1, crossed: [] });
+  assert.match(feed(again.body.state), /Thorne rolled a natural 1\. The Horror rises 1 \(now 2 of 21\)\./);
 });
 
-test('PUSH: a natural 1 typed in from a physical die counts too; any other failure adds nothing by itself', async () => {
-  const { ann, thorne } = await setup([d20(2)]);
+test('PUSH: a natural 1 on an ordinary attack adds nothing (the owner\'s decision, 2026-11-11), typed in or rolled; nor does any other failure', async () => {
+  const { ann, thorne } = await setup([d20(1), d20(2)]);
+  assert.equal((await roll(ann, thorne)).body.state.horror.cur, 0, 'a natural 1 on a sword stroke costs nothing');
   assert.equal((await roll(ann, thorne)).body.state.horror.cur, 0, 'a plain failure costs nothing');
-  assert.equal((await roll(ann, thorne, { d20: 1 })).body.state.horror.cur, 1);
+  assert.equal((await roll(ann, thorne, { d20: 1 })).body.state.horror.cur, 0, 'typed in from a physical die, the same');
 });
 
 test('PUSH: a natural 1 on an item\'s check adds its own point beside the item\'s Horror', async () => {

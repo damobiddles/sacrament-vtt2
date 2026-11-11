@@ -31,10 +31,10 @@ test('downed targets can receive the same healing again, but dead heroes cannot 
  const dead=await t.gm.cmd({type:'useItem',charId:other.id,index:0,spellId:'mend',d20:15,targetCardId:ch.cardId});assert.equal(dead.status,400);assert.match(dead.body.error.message,/dead/);
 });
 test('Undo cannot overwrite healing performed after a rest; undoing in order restores the earlier allowance',async()=>{
- const {t,p,ch}=await setup();await mend(p,ch);const rest=await t.gm.cmd({type:'rest'});await t.gm.cmd({type:'adjust',cardId:ch.cardId,field:'hp',delta:-7});const heal=await mend(p,ch);assert.equal(heal.status,200);
+ const {t,p,ch}=await setup();await mend(p,ch);const rest=await t.gm.cmd({type:'rest'});await t.gm.cmd({type:'adjust',cardId:ch.cardId,field:'hp',delta:-5});const heal=await mend(p,ch);assert.equal(heal.status,200);
  assert.equal((await t.gm.cmd({type:'undo',logId:rest.body.result.log})).status,409);
  assert.equal((await t.gm.cmd({type:'undo',logId:heal.body.result.healing.log})).status,200);assert.equal((await t.gm.cmd({type:'undo',logId:rest.body.result.log})).status,200);
- assert.equal((await mend(p,ch)).status,400,'the pre-rest healing allowance remains spent');
+ assert.ok((await t.state()).cards[ch.cardId].hp.cur>0,'still standing, so the allowance applies');assert.equal((await mend(p,ch)).status,400,'the pre-rest healing allowance remains spent');
 });
 
 test('a healing relic awarded through the loot designer retains its automated mechanics and listed Horror',async()=>{

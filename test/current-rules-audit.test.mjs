@@ -16,18 +16,22 @@ test('a custom range survives library, card and hero-copy conversion',()=>{
  const d=C.makeCustom(raw);assert.equal(d.band,'veryfar');assert.equal(C.makeCustom(C.designOf(d)).band,'veryfar');assert.equal(C.rangeText(d),'Range: Very Far');
  assert.equal(C.makeCustom({...raw,band:'invalid'}).band,'');assert.equal(C.makeCustom({...raw,band:'engaged'}).band,'close');
 });
-test('a fallen hero cannot start attacks, checks, item actions, Effort or Push; recovery restores actions',async()=>{
+test('a fallen hero acts only by crawling away (free) or by paying 1 Horror; the dead cannot act; recovery restores free actions',async()=>{
  const t=await table({gear:true}),p=await t.join('Ann');let st=await t.state();const h=charNamed(st,'Thorne'),foe=find(st,'Pit Ghoul');await p.cmd({type:'claim',charId:h.id});
  const successful=await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15,attack:true,targetCardId:foe.id});
- const failed=await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:2,attack:true,targetCardId:foe.id});assert.equal(failed.status,200);
  await t.gm.cmd({type:'adjust',cardId:h.cardId,field:'hp',delta:-10});
- const before=await t.state();
- for(const cmd of [{type:'roll',charId:h.id,stat:'STR',d20:15},{type:'useItem',charId:h.id,index:0,targetCardId:foe.id},{type:'freeEffort',charId:h.id,cat:'weapons'},{type:'effort',rollId:successful.body.result.rollId,cat:'weapons'},{type:'push',rollId:failed.body.result.rollId}]){
-  const r=await p.cmd(cmd);assert.equal(r.status,400,cmd.type);assert.match(r.body.error.message,/fallen|0 HP/i);
+ const horror=async()=>(await t.state()).horror.cur;
+ assert.equal((await p.cmd({type:'roll',charId:h.id,stat:'CON',d20:15})).status,200);assert.equal(await horror(),0,'crawling away is free');
+ assert.equal((await p.cmd({type:'effort',rollId:successful.body.result.rollId,cat:'weapons'})).status,200);assert.equal(await horror(),0,'the damage of a blow already struck is free');
+ let n=0;for(const cmd of [{type:'roll',charId:h.id,stat:'STR',d20:15},{type:'useItem',charId:h.id,index:0,targetCardId:foe.id},{type:'freeEffort',charId:h.id,cat:'weapons'}]){
+  const r=await p.cmd(cmd);assert.equal(r.status,200,cmd.type);n++;assert.ok(await horror()>=n,cmd.type+' costs 1 Horror');
  }
- assert.equal((await t.state()).horror.cur,before.horror.cur);assert.deepEqual((await t.state()).chars[h.id].gear,before.chars[h.id].gear);
- assert.equal((await t.gm.cmd({type:'gmDice',sides:6,count:1})).status,200);
- await t.gm.cmd({type:'rest'});assert.equal((await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15})).status,200);
+ const card=find(await t.state(),'Thorne');for(let i=0;i<4;i++)await t.gm.cmd({type:'dying',cardId:card.id,op:'round',d:-1});
+ const before=await t.state();assert.equal(before.cards[card.id].dying.dead,true);
+ for(const cmd of [{type:'roll',charId:h.id,stat:'CON',d20:15},{type:'useItem',charId:h.id,index:0,targetCardId:foe.id},{type:'freeEffort',charId:h.id,cat:'weapons'}]){
+  const r=await p.cmd(cmd);assert.equal(r.status,400,cmd.type);assert.match(r.body.error.message,/dead/i);
+ }
+ assert.equal((await t.state()).horror.cur,before.horror.cur);
 });
 
 // Reviewed power and equipment updates intentionally supersede the range-only snapshot.

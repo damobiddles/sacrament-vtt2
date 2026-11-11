@@ -49,7 +49,7 @@ test('a grimoire read by the die casts the same spell at the table and in the so
 
 test('a natural 1 costs the same Horror at the table and in the solo game: attack, damage spell, healing spell, item check', async () => {
   const cases = [
-    { gear: ['hatchet'], solo: /^Attack: Gravedigger's Hatchet/, table: { index: 0 }, foe: true, expect: R.HORROR.nat1 },
+    { gear: ['hatchet'], solo: /^Attack: Gravedigger's Hatchet/, table: { index: 0 }, foe: true, expect: 0 },
     { gear: ['brokenbell'], solo: /^Cast Unmake/, table: { index: 0, spellId: 'unmake' }, foe: true, expect: 1 + R.HORROR.nat1 },
     { gear: ['seventhpenance'], solo: /^Cast Mend/, table: { index: 0, spellId: 'mend' }, hurt: true, expect: R.HORROR.nat1 },
     { gear: ['bandages'], solo: /^Use Linen Bandages/, table: { index: 0 }, hurt: true, expect: 0 }
@@ -157,10 +157,11 @@ test('Ward protects an ally: alone it has no use, in its own words and on the Ru
 
 test('falling alone is written on the Rules page, and the solo game does exactly that', () => {
   assert.match(RULES, /## Playing alone/);
-  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*d4 rounds[^\n]*use healing on themselves[^\n]*bandages cannot tend yourself[^\n]*crawl away with a CON check[^\n]*1 HP/);
+  assert.match(RULES, /\*\*Falling alone\.\*\*[^\n]*3 rounds; crawl away free, or pay 1 Horror to act anyway[^\n]*1 HP[^\n]*Bandages cannot tend yourself/);
+  assert.match(RULES, /dying for 3 rounds[^\n]*crawl away[^\n]*CON check, which costs nothing[^\n]*pay 1 Horror to act anyway/);
   const { s, adv } = dyingGame(['seventhpenance']);
-  const labels = S.choices(s, adv).map((c) => c.label);
-  assert.ok(labels.includes('Crawl away') && labels.some((l) => /Mend/.test(l)));
+  const ch = S.choices(s, adv), labels = ch.map((c) => c.label);
+  assert.ok(labels.some((l) => /^Crawl away/.test(l)), 'a free crawl'); assert.ok(ch.some((c) => /Mend/.test(c.label) && c.horror >= 1), 'healing for 1 Horror');
   S.act(s, adv, 'crawl', fixed([20])); assert.equal(s.hp.cur, 1); assert.equal(s.dying, null);
 });
 

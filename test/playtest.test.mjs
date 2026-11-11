@@ -14,16 +14,17 @@ test('playtest: healing spells remain usable without Horror and other spells cos
  for(const it of [...C.items,...G.spells].filter(i=>i.temptsHorror))assert.ok(C.horrorText(it).length>20,it.id);
 });
 
-test('playtest: healing checks never offer damage or Push and casting adds no Horror',async()=>{
+test('playtest: healing checks never offer damage, casting adds no Horror, and only a failed one offers a Push',async()=>{
  const t=await table(),p=await t.join('Healer'),ch=charNamed(await t.state(),'Thorne');await p.cmd({type:'claim',charId:ch.id});
  await t.gm.cmd({type:'sheet',charId:ch.id,op:{op:'add',id:'litany'}});
  await t.gm.cmd({type:'adjust',cardId:ch.cardId,field:'hp',delta:-9});
- for(const n of [2,15]){const r=await p.cmd({type:'useItem',charId:ch.id,index:0,spellId:'mend',d20:n,targetCardId:ch.cardId});assert.equal(r.status,200);const roll=r.body.state.rolls.at(-1);assert.equal(r.body.state.horror.cur,0);assert.ok(!roll.cat);assert.ok(!roll.canPush);assert.equal((await p.cmd({type:'push',rollId:roll.id})).status,400);}
+ for(const n of [2,15]){const r=await p.cmd({type:'useItem',charId:ch.id,index:0,spellId:'mend',d20:n,targetCardId:ch.cardId});assert.equal(r.status,200);const roll=r.body.state.rolls.at(-1);assert.equal(r.body.state.horror.cur,0);assert.ok(!roll.cat);assert.equal(!!roll.canPush,n===2,'only the failed one can be pushed (2026-11-11: any failed roll)');if(n===15)assert.equal((await p.cmd({type:'push',rollId:roll.id})).status,400);}
 });
 
-test('playtest: only failed attacks can Push, including unarmed attacks with an explicit target',async()=>{
+test('playtest: any failed roll can Push (owner, 2026-11-11), a plain check as well as an unarmed attack with an explicit target',async()=>{
  const t=await table(),p=await t.join('Player'),st=await t.state(),ch=charNamed(st,'Thorne'),target=find(st,'Pit Ghoul').id;await p.cmd({type:'claim',charId:ch.id});
- const check=await p.cmd({type:'roll',charId:ch.id,stat:'STR',d20:2});assert.equal(check.body.state.rolls.at(-1).canPush,false);assert.equal((await p.cmd({type:'push',rollId:check.body.result.rollId})).status,400);
+ const check=await p.cmd({type:'roll',charId:ch.id,stat:'STR',d20:2});assert.equal(check.body.state.rolls.at(-1).canPush,true);assert.equal((await p.cmd({type:'push',rollId:check.body.result.rollId})).status,200);
+ await p.cmd({type:'roll',charId:ch.id,stat:'STR',d20:15});await t.gm.cmd({type:'nextRound'});await t.gm.cmd({type:'turnSet',idx:(await t.state()).table.order.indexOf(ch.cardId)});   /* the pushed second action, then a new turn */
  const attack=await p.cmd({type:'roll',charId:ch.id,stat:'STR',d20:2,attack:true,targetCardId:target});assert.equal(attack.status,200);assert.equal(attack.body.state.rolls.at(-1).canPush,true);assert.equal((await p.cmd({type:'push',rollId:attack.body.result.rollId})).status,200);
 });
 

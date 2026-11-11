@@ -36,8 +36,9 @@
      whether or not the check succeeds (using it is what tempts the Horror). An amount is a whole number ("horror": 2) or dice rolled at the moment of use ("horror": "d4+2").
      An amount of 0 does nothing. Passing a threshold announces it in the feed and alerts the GM; the GM decides what it means, and the table applies no effect itself.
      At the maximum the Horror has arrived: everyone is told, and the meter stays there. It never falls by itself: only the GM lowers it, by hand or by undoing a rise.
-     A push (a second action taken after a failed attack) costs `push`; a hero's d20 showing a natural 1 costs `nat1`, by itself (the owner's rule, 2026-10-20),
-     but only on an attack, a spell, or a pushed second action of any kind; a plain check's natural 1 costs nothing (the owner's rule, 2026-11-01).
+     A push (a second action taken after any failed roll, once on your turn: the owner's decision, 2026-11-11) costs `push`; a hero's d20 showing a natural 1
+     costs `nat1`, by itself (the owner's rule, 2026-10-20), but only on magic (a spell or a relic) or a pushed second action of any kind; any other natural 1,
+     an ordinary weapon's included, costs nothing (the owner's rules, 2026-11-01 and 2026-11-11).
      Paying in blood (the owner's rule, 2026-11-01; 1 HP a point since the playtest of 2026-11-09): a hero's Horror cost that cannot go on a full meter (a push, a natural 1, a spell or item)
      costs that hero `blood` HP for each point instead.
      Each threshold fires once an adventure (the owner's rule after the playtest of 2026-11-09): a meter that falls and climbs again does not fire it twice, until the GM starts a new adventure.
@@ -66,22 +67,24 @@
     return { amount: amount, rolled: rolled, text: amount + ' (' + sayHorrorAmount(v) + ': ' + rolled.join(' + ') + (h.plus ? ' + ' + h.plus : '') + ')' };
   }
   /* Move the meter by `d` (up or down), kept from 0 to the maximum. `crossed` is every threshold passed on the way up, lowest first; going down crosses none. */
-  /* Whether a hero's natural 1 tempts the Horror: { attack, spell, pushed } describe the roll. */
-  function nat1Tempts(o) { o = o || {}; return !!(o.attack || o.spell || o.pushed); }
+  /* Whether a hero's natural 1 tempts the Horror: { magic, pushed } describe the roll (magic: a spell, or an item that tempts the Horror, such as a relic). */
+  function nat1Tempts(o) { o = o || {}; return !!(o.magic || o.spell || o.pushed); }
   /* `fired` lists the thresholds this adventure has already fired: those are passed again in silence. */
   function horrorMove(cur, d, fired) {
     cur = clamp(int(cur, 0), 0, HORROR.max); var to = clamp(cur + int(d, 0), 0, HORROR.max), done = Array.isArray(fired) ? fired : [];
     return { from: cur, to: to, applied: to - cur, crossed: HORROR.thresholds.filter(function (t) { return cur < t && to >= t && done.indexOf(t) < 0; }), arrived: to >= HORROR.max };
   }
 
-  /* Dying, as the Rules page has it (the owner asked for it on the table, 2026-10-21). A hero who falls to 0 is dying and rolls a d4: the rounds left. Each new round takes one off;
-     at 0 the hero is dead. A blow that gets through on a dying hero takes a round off instead of damage. A stable hero's countdown stops; hurt again, they are dying again
-     with a new d4. Any healing stands a dying or stable hero up. The state is { left, stable, dead }, or null for a hero who is not down. */
-  var DYING = { die: 4, maxLeft: 9 };
+  /* Dying, as the Rules page has it (the owner asked for it on the table, 2026-10-21). A hero who falls to 0 is dying with `start` rounds left (always 3: the owner's
+     decision, 2026-11-11; it was a d4). Each new round takes one off; at 0 the hero is dead. A blow that gets through on a dying hero takes a round off instead of damage.
+     A stable hero's countdown stops; hurt again, they are dying again, from the start. Any healing stands a dying or stable hero up.
+     A hero at 0 HP who is not dead may still act on their turn: a `crawl` check to crawl away costs nothing; anything else costs `actHorror` Horror.
+     The state is { left, stable, dead }, or null for a hero who is not down. */
+  var DYING = { start: 3, maxLeft: 9, actHorror: 1, crawl: 'CON' };
   /* Break away (the Rules page, 2026-11-07): on your turn, instead of acting, a check with this stat against the Target. Success: clear, the foe does not attack
      you as you go. Failure: you stay put and the foe attacks as usual. Where you can run to is the GM's call. */
   var BREAK_AWAY = { stat: 'DEX' };
-  function dyingFall(rolled) { return { left: clamp(int(rolled, 1), 1, DYING.die), stable: false, dead: false }; }
+  function dyingFall() { return { left: DYING.start, stable: false, dead: false }; }
   /* A round (or a blow) takes one off a dying hero's countdown. A stable or dead hero does not move. Returns the new state (a copy). */
   function dyingTick(st) {
     if (!st || st.stable || st.dead) return st;
