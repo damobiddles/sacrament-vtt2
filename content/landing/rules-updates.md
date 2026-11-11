@@ -39,6 +39,7 @@ Questions the current text left open. The rules have not changed; these say how 
 - **An Effort bar only for a race** against a timer or a foe. Otherwise one check settles it.
 - **The method sets the die:** bare hands or wits Basic d4, a weapon or tool that fits Weapons d6 (only if carried), a gun Guns d8 (loud), a fitting spell Magic d10 (its usual Horror). A good idea is Easy and fills half of what is left, once.
 - **In the solo game** each obstacle offers these as its buttons: bare hands, your tool or weapon if one fits, your gun if one fits, any spell that answers it, and the scene's good idea. A gun always moves the clock once. The bold ways that hurt you on a failure are gone: a failed try costs time. A fitting spell now rolls Magic d10 into the bar and may be cast again (each cast costs its Horror); before, it took half of what was left, once.
+- *If you have printed something older:* the rules cheat sheet and the print-and-play kit now carry these lines; the downloads have been replaced.
 - *Prompted by:* playing the solo game and a real table, where choices with the same odds differed only in what a failure cost, and players talked their way past bars; the designer's decision.
 
 ## 11 November 2026: the Horror at the heart
