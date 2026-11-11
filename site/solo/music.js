@@ -127,7 +127,7 @@
   }
   function setOn(v) {
     on = !!v; try { if (on) localStorage.setItem(KEY, '1'); else localStorage.removeItem(KEY); } catch { /* the choice is just not kept */ }
-    if (on) { mediaMode(true); if (!setup()) { on = false; return false; } if (ctx.state !== 'running') ctx.resume(); stop(); if (current) start(current); }
+    if (on) { mediaMode(true); if (!setup()) { on = false; return false; } if (ctx.state !== 'running') ctx.resume(); stop(); if (current) start(current); droneApply(); }
     else { stop(); mediaMode(false); if (ctx && ctx.state === 'running') ctx.suspend(); }
     return on;
   }
@@ -152,5 +152,22 @@
     e.n.forEach(function (n) { tone(n[0], freq(n[1]), at + n[2] * e.step, n[3] * e.step); });
     e.x.forEach(function (x) { hit(x[0], at + x[1] * e.step); });
   }
-  root.SacramentSoloMusic = { sfx: sfx, SFX: SFX, play: play, setOn: setOn, isOn: function () { return on; }, wanted: readOn, wake: wake, tunes: Object.keys(TUNES), TUNES: TUNES, parse: parse, freq: freq };
+  /* The Horror's drone (2026-11-11): a low hum under the music that grows with the meter, from silence at 0 to a beating moan at 21.
+     `level` runs from 0 to 1. Nothing sounds while the music is off; turning it on brings the drone back at the last level. */
+  var droneAt = 0, droneNodes = null;
+  function droneApply() {
+    if (!on || !ctx || droneAt <= 0) { if (droneNodes) { var g0 = droneNodes.g; g0.gain.setTargetAtTime(0, ctx.currentTime, 0.4); } return; }
+    if (!droneNodes) {
+      var g = ctx.createGain(), f = ctx.createBiquadFilter(), a = ctx.createOscillator(), b = ctx.createOscillator();
+      g.gain.value = 0; f.type = 'lowpass'; f.frequency.value = 320; a.type = 'triangle'; b.type = 'sawtooth'; a.frequency.value = freq('D2'); b.frequency.value = freq('D2');
+      a.connect(f); b.connect(f); f.connect(g); g.connect(master); a.start(); b.start();
+      droneNodes = { g: g, b: b, f: f };
+    }
+    var t = ctx.currentTime, d = droneAt;
+    droneNodes.g.gain.setTargetAtTime(0.06 + d * 0.32, t, 0.8);
+    droneNodes.b.frequency.setTargetAtTime(freq('D2') * (1 + d * 0.03), t, 1.5);   /* the two voices drift apart, and beat, as the Horror nears */
+    droneNodes.f.frequency.setTargetAtTime(220 + d * 500, t, 1);
+  }
+  function drone(level) { droneAt = Math.max(0, Math.min(1, Number(level) || 0)); droneApply(); }
+  root.SacramentSoloMusic = { sfx: sfx, drone: drone, SFX: SFX, play: play, setOn: setOn, isOn: function () { return on; }, wanted: readOn, wake: wake, tunes: Object.keys(TUNES), TUNES: TUNES, parse: parse, freq: freq };
 })(typeof window !== 'undefined' ? window : globalThis);

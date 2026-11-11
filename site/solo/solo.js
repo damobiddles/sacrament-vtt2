@@ -197,6 +197,9 @@
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
     /* the Horror darkens the picture a little at each threshold passed */
     document.querySelector('.frame').dataset.dread = String(R.HORROR.thresholds.filter(function (n) { return state.horror >= n; }).length);
+    /* and the candles at its edges gutter as the meter climbs (shared with the table: /vtt/dread.js); the low drone grows with it when the music is on */
+    if (window.SacramentDread) window.SacramentDread.set(document.querySelector('.frame'), state.horror, R.HORROR.max);
+    if (M && M.drone) M.drone(state.over ? 0 : state.horror / R.HORROR.max);
     var r = ADV().rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
   function heartRow(box, cur, max) {
@@ -381,7 +384,7 @@
     if (state.horror > o.horror) {
       setTimeout(function () { sfx('horror'); }, 250);
       var pips = $('pips'); pips.classList.remove('pulse'); void pips.offsetWidth; pips.classList.add('pulse');
-      if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) buzz([40, 60, 40]);
+      if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) { buzz([40, 60, 40]); if (window.SacramentDread) window.SacramentDread.gutter(document.querySelector('.frame')); }
     } else if (state.horror >= 14 && !state.over) setTimeout(function () { sfx('heart'); }, 400);
     if (o.fresh.some(function (l) { return l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; }); })) setTimeout(function () { sfx('friend'); }, 150);
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
