@@ -68,6 +68,8 @@ Bandages need Close contact. On a wounded hero, a WIS check heals d6. On a dying
 
 A hero at 0 HP is **dying for 3 rounds**: each new round takes one off, and at zero they are dead. On their turn a dying hero may **crawl away** (a CON check, which costs nothing) or **pay 1 Horror to act anyway**. The dead cannot act. A hit on a dying hero takes away a round. A hero whose countdown was stopped is **stable**; another hit starts the 3 rounds again. Healing of 1 HP or more puts a fallen hero back on their feet.
 
+**Graves and bequests.** A hero who dies may say their last words, and may leave **one thing they carried** to the next hero who joins the party. The GM hands it over when that hero arrives. In the solo game, the next road's hero carries it, and the fallen hero gets a grave in the Chronicle.
+
 **Party rest**, when the GM agrees the place and time allow it, heals every living hero 10 HP, lets each healing spell and item heal again, and lowers the Horror as shown above. It does not bring back spent supplies or the dead.
 
 ## The Horror
@@ -81,6 +83,17 @@ The whole party shares one Horror meter, from 0 to 21. Every spell except a heal
 - **21: arrived.** There is no more rest this adventure.
 
 At 21 the meter is full, and **a hero pays in blood** instead: each point of their Horror cost that cannot go on the meter costs them **1 HP**. That can bring a hero down. Horror the GM adds by hand costs no blood.
+
+**The Stranger (an optional rule for a table of three or more players).** The Horror wears a familiar face. Agree before the game whether you play with it. The first time the Horror reaches **14** in an adventure, every player secretly draws a slip: one says **You are the Stranger**, the rest say **You are yourself**. The Stranger plays their hero as usual, but rolls a d6 in secret for one thing they want to come true before the adventure ends:
+
+1. The Horror reaches 21.
+2. You keep one relic or grimoire the party finds, and tell no one.
+3. Another hero is left alone, out of sight of the rest, for a whole scene.
+4. A foe the party could have finished off gets away.
+5. The party takes the longer or darker way, once, because you said so.
+6. Another hero spends Horror they did not need to.
+
+**Naming the Stranger.** Once an adventure, the living players may name a hero together, out loud. If they are right, the Stranger is themselves again and the Horror falls by **one d6**. If they are wrong, the Horror rises by **2**. A Stranger who is never named, and whose want came true, earns **one extra mark** at the end, and tells the table what they did.
 
 ## Growing stronger
 

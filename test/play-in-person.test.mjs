@@ -32,7 +32,7 @@ test('every download linked from Play in person and the latest news post exists,
       '/downloads/adventures/before-the-snow-A4.pdf', '/downloads/adventures/the-guest-at-greave-players-map-A4.pdf',
       '/adventures/the-guest-at-greave/', '/character/', '/loot/',
       '/downloads/adventures/the-rib-of-saint-hussey-gm-pack.zip', '/downloads/adventures/the-rib-of-saint-hussey-A4.pdf', '/downloads/adventures/the-rib-of-saint-hussey-Letter.pdf',
-      '/adventures/the-rib-of-saint-hussey/']) assert.ok(html.includes('href="' + href + '"'), 'offers ' + href);
+      '/adventures/the-rib-of-saint-hussey/', '/downloads/print-kit/sacrament-the-stranger-A4.pdf', '/downloads/print-kit/sacrament-the-stranger-Letter.pdf']) assert.ok(html.includes('href="' + href + '"'), 'offers ' + href);
     assert.match(html, /for the GM only/i, 'the adventure is marked GM-only');
     assert.ok(!html.includes('{{'), 'no placeholder is left in the page');
   } finally { b.cleanup(); }
