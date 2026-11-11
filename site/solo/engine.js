@@ -65,6 +65,9 @@
       hurt: function (n, why) { hurt(api, n, why); },
       heal: function (n, why) { var ch = R.change(s.hp.cur, s.hp.max, n); s.hp.cur = ch.cur; if (ch.applied) api.say((why || 'You recover') + ': +' + ch.applied + ' HP (' + s.hp.cur + ' of ' + s.hp.max + ').', 'heal'); return ch.applied; },
       give: function (id, why) { return give(api, id, why); },
+      /* Hand over or use up one carried thing (an item id or a list of them): it leaves the pack, and the end card counts it as put to use. */
+      spend: function (test, why) { return spend(api, test, why); },
+      used: function (name) { putToUse(s, name); },
       loot: function (why) { return loot(api, why); },
       fight: function (foeId) { startFight(api, foeId); },
       /* An obstacle, as at the table: a card with an Effort bar. A try is a check; a success rolls Effort into the bar; a full bar clears it. */
@@ -77,8 +80,10 @@
       foeHeal: function (n, why) { var f = s.fight; if (!f) return; var ch = R.change(f.hp.cur, f.hp.max, int(n, 0)); f.hp.cur = ch.cur; if (ch.applied) api.say((why || f.name + ' recovers') + ': +' + ch.applied + ' HP.', 'foe'); },
       rest: function () { rest(api); },
       /* The end of a scene. In a run of scenes, winning one leads on to the next; falling, or winning the last, ends the run. */
-      end: function (kind, text) {
+      /* ending: on the last scene, which of its endings this was (the finale's "endings" names them, for the end card and the Chronicle) */
+      end: function (kind, text, ending) {
         s.fight = null; if (text) api.say(text, kind === 'won' ? 'end' : 'hurt');
+        if (ending && s.run && s.run.at >= s.run.order.length - 1) s.run.ending = ending;
         if (kind === 'won' && s.run && s.run.at < s.run.order.length - 1) { s.done = true; api.say('Scene ' + (s.run.at + 1) + ' of ' + s.run.order.length + ' is done.', 'note'); return; }
         s.over = kind;
       },
@@ -211,25 +216,42 @@
   var FIGHT_TAGS = ['daze', 'guard', 'hide', 'snuff', 'learn', 'silence', 'bind', 'beast'];
   function ruling(api, k, src, f, room, foe) {
     var s = api.s, dark = isDark(s, api._adv), dead = typeof room.dead === 'function' ? room.dead(api) : room.dead;
-    if (src.needs === 'corpse' && !dead) return null;
+    if (!needsMet(api, src.needs, f, room, foe, dead)) return null;
     if (k === 'light' && dark) return { run: function () { s.flags.lit = true; api.say('Light gathers where you need it. The dark steps back from you.', 'note'); } };
     if (!f) {
       var ob = obstacleHere(api);
       if (k === 'open' && ob && ob.def.open) return { run: function () { clearObstacle(api, ob.id, ob.def.opened || ob.def.name + ' gives way.'); } };
-      if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
+      if (k === 'learn' && src.needs !== 'obstacle' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
       if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
-      if (k === 'learn' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
+      if (k === 'learn' && src.needs !== 'obstacle' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
-    if (src.needs === 'undead' && !foe.undead) return null;
     var checked = !!src.roll;
     if ((k === 'daze' || k === 'hide' || (k === 'beast' && foe.beast)) && !f.dim) return { run: function () { f.dim = 3; api.say(k === 'hide' ? f.name + ' cannot see you well: its next attack rolls 3 less.' : k === 'beast' ? f.name + ' shies from you: its next attack rolls 3 less.' : f.name + ' is Dazed: its next attack rolls 3 less.', 'win'); } };
     if (k === 'guard' && /\ban ally\b|\bone ally\b/i.test(src.does || '')) return null;   /* Ward and the Ward Medal protect an ally: alone there is none (their own words; owner, 2026-11-07) */
     if (k === 'guard' && !f.guard) return { run: function () { f.guard = 2; api.say('You have +2 Defence until your next turn.', 'win'); } };
     if (!f.skip && ((k === 'snuff' && foe.flame) || (k === 'silence' && foe.caster) || (k === 'bind' && checked))) return { run: function () { f.skip = 1; api.say(k === 'snuff' ? foe.snuffed || f.name + '\'s flame goes out. It does not attack this turn.' : k === 'silence' ? f.name + ' cannot get the words out. It does not attack this turn.' : f.name + ' is held fast. It does not attack this turn.', 'win'); } };
-    if (k === 'learn' && foe.weakness && !f.learned) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
+    if (k === 'learn' && foe.weakness && !f.learned && (src.needs || /\bin a fight\b|\bcreature\b|\bfoe\b/i.test(src.does || ''))) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
     return null;
+  }
+  /* What a spell or item needs before it can do anything (gear.js "needs", from its own words). A place says what is there:
+     dead (corpses), animals, people (someone to speak to or watch), writing, wild (outdoors among growing things). In a fight the foe counts too. */
+  function needsMet(api, need, f, room, foe, dead) {
+    if (!need) return true;
+    function has(k) { var v = room[k]; return !!(typeof v === 'function' ? v(api) : v); }
+    switch (need) {
+      case 'corpse': return !!dead;
+      case 'undead': return !f || !!foe.undead;
+      case 'animal': return f ? !!foe.beast : has('animals');
+      case 'person': return f ? !!foe.person : has('people');
+      case 'body': return f ? true : !!dead || has('people');
+      case 'writing': return !f && has('writing');
+      case 'wild': return has('wild');
+      case 'obstacle': return !f && !!obstacleHere(api);
+      case 'ally': return false;   /* playing alone there is no willing companion, as with Ward (owner, 2026-11-07) */
+      default: return true;
+    }
   }
   /* Half of what is left on an obstacle's bar, as a trick gives. */
   function halfBar(api, id) {
@@ -361,6 +383,13 @@
     if (!r.ok) { api.say('You find ' + it.name + ', but you have to leave it: ' + r.why, 'note'); return null; }
     api.say((why || 'You take') + ': ' + it.name + '.' + (it.flavour ? ' ' + it.flavour : ''), 'loot');
     (s.found = s.found || []).push(it.id); if (s.run) (s.run.found = s.run.found || []).push(it.id);
+    return it;
+  }
+  function spend(api, test, why) {
+    var s = api.s, i = (s.hero.gear || []).findIndex(function (g) { var it = C.itemOf(g); return it && (Array.isArray(test) ? test.indexOf(it.id) >= 0 : it.id === test); });
+    if (i < 0) return null;
+    var it = C.itemOf(s.hero.gear[i]), r = C.edit(s.hero, { op: 'remove', index: i }, { gm: true }, s.hp); if (!r.ok) return null;
+    api.say((why || 'You give up') + ': ' + it.name + '.', 'note'); putToUse(s, it.name);
     return it;
   }
   function loot(api, why) {
@@ -564,7 +593,7 @@
     var asked = who && s.flags['riddle_' + who.id];
     if (asked) asked.order.forEach(function (n, k) { out.push({ label: who.riddles[asked.i].a[n], cmd: 'meet ' + who.id + ' ' + (k + 1), kind: 'do', riddle: who.riddles[asked.i].q, by: who.name }); });
     else if (who && (!who.when || who.when(api))) out.push({ label: who.label, cmd: 'meet ' + who.id, kind: 'do' });
-    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }); });
+    (r.actions || []).forEach(function (x) { if (actionOpen(api, x)) out.push(Object.assign({ label: typeof x.label === 'function' ? x.label(api) : x.label, cmd: 'do ' + x.id, kind: 'do' }, x.item ? { useful: true, item: (api.has(x.item) || {}).name || '' } : null)); });
     Object.keys(adv.obstacles || {}).forEach(function (id) { var ob = adv.obstacles[id]; if (ob.room !== s.room) return; (ob.ways || []).forEach(function (w) { if (wayOpen(api, id, w)) out.push({ label: w.label, cmd: 'way ' + id + ' ' + w.id, kind: 'do', way: w.kind, hint: w.kind === 'trick' ? 'Once: half the bar' : 'Weapons Effort' }); }); });
     Object.keys(r.exits || {}).forEach(function (d) { var e = exitOf(api, r, d); if (e && !e.hidden) out.push({ label: 'Go ' + d + ': ' + adv.rooms[e.to].short, cmd: 'go ' + d, kind: 'go' }); });
     heroActions(s).filter(function (a) { return a.ok && (a.healing ? s.hp.cur < s.hp.max : isStorySpell(a.u) || litByUse(a) || hasFx(a, false)); }).forEach(function (a) { out.push(markIdle(api, a, { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a) })); });
@@ -764,7 +793,7 @@
     else if (p[0] === 'do') {
       var x = (adv.rooms[s.room].actions || []).filter(function (y) { return y.id === p[1]; })[0];
       if (x && x.id === 'rest' && s.arrived) api.say('There is no more rest for you on this road.', 'note');
-      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else x.run(api);
+      else if (!x || !actionOpen(api, x)) api.say('That does nothing now.', 'note'); else { var held = x.item && api.has(x.item); x.run(api); if (held) putToUse(s, held.name); }
     }
     else if (p[0] === 'way') { var ow = wayOf(api, p[1], p[2]); if (!ow || adv.obstacles[p[1]].room !== s.room || !wayOpen(api, p[1], ow)) api.say('That does nothing now.', 'note'); else useWay(api, p[1], ow); }
     else if (p[0] === 'use') { var b = findAction(s, p); if (b) useAction(api, b, false); else api.say('You cannot use that now.', 'note'); }
@@ -888,7 +917,8 @@
       hero: s.hero.name, calling: s.hero.calling || '', road: (run.title || '') + (run.hard ? ': the Hard Road' : ''), hard: !!run.hard, to: last ? last.title : '', end: end, total: run.order.length,
       places: walked.map(function (id) { var x = scenes()[id]; return x ? x.title : id; }), placeIds: walked.slice(), met: (run.met || []).slice(), escapes: int(run.escapes, 0),
       beaten: (run.beaten || []).slice(), finds: runFinds(s).map(function (id) { var it = C.item(id); return it ? it.name : id; }), used: (run.used || []).slice(),
-      peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : ''
+      peak: Math.max(int(run.peak, 0), s.horror), horrorMax: R.HORROR.max, line: lines.length ? lines[pick % lines.length] : '',
+      ending: end === 'won' && run.ending && last && last.endings && last.endings[run.ending] ? last.endings[run.ending] : '', endingId: end === 'won' && run.ending ? run.ending : ''
     };
   }
 

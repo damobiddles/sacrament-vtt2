@@ -48,6 +48,7 @@ You play one hero alone through short written adventures in the world of Sacrame
 | `site/solo/road.js` | The Pilgrim Road: the run's other eight scenes and the five friends on the road. |
 | `site/solo/road-wilds.js` | More middle scenes for the road: the Hospice at Dray, the Charcoal Wood, the Toll Bridge at Crane's Holt. |
 | `site/solo/road-far.js` | A third reason to be on the road (the Inquisitor's Warrant, answered at the Barrow at Ulm Vethra) and three more middle scenes: the Plague Pit at Pellstead, the Players at Tarnby, the Field at Fallowby. |
+| `site/solo/road-wide.js` | A wider road (owner, 2026-11-10): a second opening for each charge (the Courier's Chapel for the relic, the House of the Seventh Bell for the missing sister, the Deacon's Lodging for the warrant) and three more middle scenes: the Plague Gate at Marrowby, the Burning Scriptorium, the Fold at Upper Greave. |
 | `site/solo/art.js` | The pictures, as illuminated miniatures (SVG). |
 | `site/solo/music.js` | The 8-bit soundtrack (Web Audio, no files). |
 | `site/solo/solo.js`, `solo.css`, `index.html` | The screen. Saves the game in the browser under `sacrament-solo-v1`. |
@@ -91,3 +92,13 @@ Every obstacle offers at least two ways through instead of one button to press a
 New obstacles only need data: `ways`, `clock` (a timer with `tick: 'fail'`), and optional `hard(api)` / `progress(api)`. No rules changed: these are the solo game's own GM calls.
 
 **The Hard Road (owner's tick, 2026-11-07):** opens after three roads come home (counted from the Chronicle). A switch on the start screen turns it on: the same road with one more middle scene, every Target 1 higher and every foe 2 more HP (the GM's numbers, so no rule changes; `SacramentSolo.HARD`). The Chronicle, the end card and a deed ("The Hard Road home") mark it.
+
+## A wider road (owner, 2026-11-10)
+
+Damien asked for "more opening scenes ... more outcomes and more beginnings, and more opportunities to use some of the loot".
+
+* **Six openings, two for each charge** (`road-wide.js`): the same story wherever it starts (Saint Dunstan's Rib for the robbed shrine, Sister Ignatia Vesper walking in her sleep, Deacon Nikolas Brand and the Unsealed Canticles), so the middle scenes' lines still fit. The mere's "home alone" line names Vesperholt when the road began at the convent (story flag `convent`).
+* **Fifteen middle scenes**, three drawn per road (four on the Hard Road): the Plague Gate at Marrowby (early), the Burning Scriptorium (anywhere), the Fold at Upper Greave (late).
+* **Endings.** Each finale lists its `endings` (id: name) and passes the id as the third argument of `api.end('won', text, id)`. The end card shows "Ending: ...", the Chronicle keeps it, the start screen counts "Endings found: n of 10", and a deed ("Many ends") asks for five different ones. The Salt Shrine: the boundary made whole, the Rib in the niche with the line still broken, or the Salt Hag fed and gone (leave your salt pouch for her, a CHA check). The Mere: Ignatia led home, pulled from the water (go in after her, one STR check, Easy on a rope), or home alone. The Barrow: the book burned, carried back, or its last page read (Horror 3), or the deacon brought in.
+* **Loot that opens choices.** A room action can carry `item: id` (or a list): it shows only when the hero carries one, is marked "Uses your ..." with the useful glow, and counts on the end card's "Put to use". `api.spend(id)` hands an item over or uses it up (bandages for the hurt courier, a purse for the gatewarden, wolfsbane on the fold gate, the salt pouch for the hag). The new scenes answer: rope or climbing line, crowbar, hospice key ring, chalk, aqua vitae, bandages, papers (safe passage, signet, warrant, guild seal, land charter), a plague mask, coin and trinkets, fire (tinder, flint, lantern, candles), water skins or a ladle and pot, oilcloth or a cloak, wolfsbane, plus the tags (open, move, bind, hide, learn, snuff, shelter, beast, silence) and holy water or oil against the undead foes.
+* These are the solo game's GM calls (Easy, Hard, a foe that starts hurt, a check to talk past someone), as in the other scenes. No rule, number or stored key changed.
