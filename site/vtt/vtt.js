@@ -660,7 +660,9 @@
     if (UI.cardEdit && UI.cardEdit !== UI.sel) UI.cardEdit = null; if (UI.atk && UI.atk !== UI.sel) UI.atk = null;
     if (gm()) h = gmTable(h + (c ? gmCard(c) : gmTabBody()), !!c); else h += (c && (!myChar() || c.id !== myChar().cardId) ? playerCard(c) : '') + playerTable();
     /* On a phone the panel can be put away, so that the scene and the controls under it stay in reach. It opens again by itself when something new is selected or rolled. */
+    var typing = $('lastWords'), kept = typing ? { v: typing.value, f: document.activeElement === typing } : null;   /* last words being typed survive a redraw */
     P.innerHTML = h; P.classList.toggle('empty', !h.trim());
+    if (kept && $('lastWords')) { $('lastWords').value = kept.v; if (kept.f) $('lastWords').focus({ preventScroll: true }); }
     P.querySelectorAll('details[data-detail]').forEach(function (el) { if (Object.prototype.hasOwnProperty.call(details, el.dataset.detail)) el.open = details[el.dataset.detail]; });
     if (keepFocus) {
       var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab], button[data-do=renameScene], summary[data-detail]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
@@ -707,7 +709,8 @@
   /* What a fallen hero's player can do, in the Rules page's words */
   function downHelp(c) {
     if (!downMark(c)) return '';
-    var st = c.dying, t = !st ? '<b>You are at 0 HP.</b> The GM starts your countdown.' : st.dead ? '<b>' + esc(c.name) + ' has died.</b>' :
+    var st = c.dying, t = !st ? '<b>You are at 0 HP.</b> The GM starts your countdown.' : st.dead ? '<b>' + esc(c.name) + ' has died.</b>' + (c.lastWords ? ' Their last words: “' + esc(c.lastWords) + '”' :
+        '</p><p><label for="lastWords">Their last words, for the table</label><input id="lastWords" type="text" maxlength="120" autocomplete="off"><button class="btn small" data-do="lastWords" data-id="' + esc(c.charId || '') + '">Say them</button></p><p class="note">' + esc(c.name) + ' may leave one thing they carried to the next hero who joins. Tell the GM what.') :
       st.stable ? '<b>You are stable.</b> The countdown has stopped. Any healing puts you back on your feet.' :
       '<b>You are dying: ' + st.left + (st.left === 1 ? ' round' : ' rounds') + ' left.</b> One comes off at each new round. On your turn you may crawl away (a CON check, free) or pay ' + R.DYING.actHorror + ' Horror to act anyway. An ally in reach can Tend you (a WIS check), and then the GM marks you stable. Any healing puts you back on your feet.';
     return '<div class="down-help" role="status"><p>' + t + '</p></div>';
@@ -720,7 +723,9 @@
         free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + (c.path ? '<p class="note">Path: ' + esc(c.path) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
     }
     var cur = turnCardId() && S.cards[turnCardId()];
-    return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
+    /* the Stranger's own slip, kept in view for that player alone (the server sends it to nobody else) */
+    var slip = S.stranger && S.stranger.want && !S.stranger.found ? '<div class="sec stranger-slip"><h3>You are the Stranger</h3><p>Your want: ' + esc(S.stranger.want) + '</p><p class="note">Play your hero as usual. Tell no one.</p></div>' : '';
+    return slip + '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
       (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> ' + (S.table.done ? 'The GM moves the turn on.' : 'Press I’m done in the bottom strip when you are finished.') + '</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon under Choose an action and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action on the right, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Press I’m done when you are finished; the GM moves to the next turn.</li></ol><p class="note">Keys: 1 to 6 roll STR to CHA, R rolls what is ready, D says you are done, Esc puts a selection away.</p><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec gear"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
@@ -929,7 +934,18 @@
     var H = S.horror, fired = (H && H.fired) || [];
     return '<h3>New adventure</h3><p class="hint">7: every hero\'s next roll is Hard. 14: foes met from now on have ' + R.HORROR.dread.huntedHp + ' more HP. 21: no more rest. Each fires once an adventure' +
       (fired.length ? ' (fired so far: ' + fired.join(', ') + ')' : '') + '. An adventure\'s own Horror lines come first.</p>' +
-      '<div class="row"><button class="btn small' + (UI.advAsk ? ' danger' : '') + '" data-do="newAdventure">' + (UI.advAsk ? 'Sure? Start a new adventure' : 'New adventure') + '</button></div>';
+      '<div class="row"><button class="btn small' + (UI.advAsk ? ' danger' : '') + '" data-do="newAdventure">' + (UI.advAsk ? 'Sure? Start a new adventure' : 'New adventure') + '</button></div>' + strangerControls();
+  }
+  /* The Stranger (an optional rule, rules.js STRANGER): the GM deals the slips when the Horror first reaches 14, and enters the name the players agree on. */
+  function strangerControls() {
+    var X = S.stranger, heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (c) { return c.owner; }), St = R.STRANGER;
+    var h = '<h3>The Stranger <span class="note">(optional)</span></h3>';
+    if (!X) return h + '<p class="hint">For ' + St.minPlayers + ' or more players. The first time the Horror reaches ' + St.at + ', deal the slips: one player, in secret, becomes the Stranger with a want. Only they and you are told.</p>' +
+      '<div class="row"><button class="btn small" data-do="strangerDeal"' + (heroes.length < St.minPlayers ? ' disabled title="Needs ' + St.minPlayers + ' players with heroes"' : '') + '>Deal the slips</button></div>';
+    h += '<p>The Stranger is <b>' + esc(X.name) + '</b>. Their want: ' + esc(X.want) + '</p>';
+    if (X.named) { var n = S.chars[X.named.charId]; return h + '<p class="note">The table named ' + esc(n ? n.name : 'a hero') + ': ' + (X.named.right ? 'right.' : 'wrong.') + ' A Stranger never named whose want came true earns ' + St.mark + ' extra mark.</p>'; }
+    return h + '<p class="hint">Once an adventure the players may name a hero together, out loud. Right: the Horror falls by d' + St.rightDie + '. Wrong: it rises by ' + St.wrong + '.</p>' +
+      '<div class="row"><label>They name <select id="strangerPick">' + heroes.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select></label><button class="btn small" data-do="strangerName">Name them</button></div>';
   }
   /* The next session: the GM sets it in the Play tab; everyone reads it in their own time, with links to put it in a calendar (three hours, by default). */
   function sayWhen(ms) { return new Date(ms).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -1281,6 +1297,9 @@
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
       case 'horrorSet': { var hv = $('hzSet') && $('hzSet').value.trim(); if (!/^[0-9]+$/.test(hv || '')) { toast('Type a number from 0 to ' + S.horror.max + '.'); break; } send({ type: 'horror', mode: 'set', value: +hv }); break; }
       case 'horrorRoll': send({ type: 'horror', mode: 'lowerRoll' }); break;
+      case 'lastWords': { var lw = $('lastWords'), said = lw && lw.value.trim(); if (!said) { toast('Type their last words first.'); break; } send({ type: 'lastWords', charId: d.id, text: said }); break; }
+      case 'strangerDeal': send({ type: 'stranger', op: 'deal' }); break;
+      case 'strangerName': { var sp = $('strangerPick'); if (sp && sp.value) send({ type: 'stranger', op: 'name', charId: sp.value }); break; }
       case 'newAdventure': {   /* asked twice, like Reset */
         clearTimeout(UI.advTimer);
         if (!UI.advAsk) { UI.advAsk = true; renderPanel(); UI.advTimer = setTimeout(function () { UI.advAsk = false; if (S) renderPanel(); }, 5000); break; }
@@ -1585,5 +1604,5 @@
   window.addEventListener('storage', function (e) { if (window.SacramentHeroes && (e.key === window.SacramentHeroes.KEY || e.key === null)) refreshLocalHeroes(); });
   window.addEventListener('focus', refreshLocalHeroes);
   window.addEventListener('online', function () { poll(true); });
-  window.__vtt = { state: function () { return S; }, ui: UI, net: function () { return UI.netlog.slice(); } };
+  window.__vtt = { state: function () { return S; }, ui: UI, net: function () { return UI.netlog.slice(); }, send: function (cmd) { return send(cmd); } };   /* for tests and the console: the same queue the buttons use, with this browser's own key */
 })();
