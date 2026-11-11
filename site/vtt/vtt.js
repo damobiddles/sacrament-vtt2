@@ -337,7 +337,8 @@
     var r = S.rolls.filter(function (x) { return x.id === id; })[0];
     if (r && !resumableRoll(r)) { D.clear(); return; }
     var button = Array.prototype.find.call(document.querySelectorAll('#stripControls [data-do=effort], #panel [data-do=monsterEffort], #panel [data-do=effort]'), function (b) { return b.dataset.roll === id && !b.disabled; });
-    D.action(button ? {label: 'Roll damage', run: function () { button.click(); }} : null);
+    var push = !button && document.querySelector('#panel [data-do=push][data-roll="' + id + '"]:not([disabled])');
+    D.action(button ? {label: 'Roll damage', run: function () { button.click(); }} : null, push ? { label: 'Push: act again' + (S.horror && S.horror.cur < S.horror.max ? ' (+1 Horror)' : ''), run: function () { push.click(); } } : null);
   }
   /* ---------- the character sheet: a full-screen panel over the table. The table keeps running and stays connected underneath; closing the sheet returns straight to play. ---------- */
   var sheetView = null;
@@ -712,11 +713,11 @@
     if (!ch) {
       var free = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (c) { return !c.owner; });
       return '<div class="sec"><h3>Choose your hero</h3>' + (free.length ? '<p class="hint">Pick a hero to play.</p>' : Object.keys(S.chars).length ? '<p>Every hero already has a player. Bring your own hero below or ask the GM to add another. You can watch the table meanwhile.</p>' : '<p>There are no heroes yet. Bring one from My heroes below, or ask the GM to add one. You can watch the table meanwhile.</p>') +
-        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
+        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + (c.path ? '<p class="note">Path: ' + esc(c.path) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
     }
     var cur = turnCardId() && S.cards[turnCardId()];
     return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
-      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Tell the GM when you are finished.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon under Choose an action and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action on the right, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Tell the GM when you are finished; the GM moves to the next turn.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
+      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> ' + (S.table.done ? 'The GM moves the turn on.' : 'Press I’m done in the bottom strip when you are finished.') + '</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon under Choose an action and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action on the right, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Press I’m done when you are finished; the GM moves to the next turn.</li></ol><p class="note">Keys: 1 to 6 roll STR to CHA, R rolls what is ready, D says you are done, Esc puts a selection away.</p><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec gear"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
   /* HP as hearts: each Heart is 10 points, filled one after another from the first. A last Heart that holds fewer than 10 is drawn smaller, so no capacity is implied that is not
@@ -742,9 +743,16 @@
     var id = c.id, h = '';
     if (c.hp) h += '<div class="row">' + heartsHtml(shownHp(c), c.hp.max, 'md' + (hpQueued(c.id) ? ' pend' : '')) + queuedBadge(c) + '</div>' + stepper('HP', id, 'hp', c.hp, '', compact);
     if (c.progress) h += stepper('Effort', id, 'progress', c.progress, '', compact);
+    if (c.progress && compact && !c.hp) h += ideaButton(c);
     if (c.timer && compact) h += '<p class="hint">' + esc(c.timer.label || 'Timer') + ': ' + c.timer.cur + '/' + c.timer.max + (c.timer.paused ? ' · paused' : c.timer.auto ? ' · every table round, including hidden scenes' : ' · manual') + '. Change it in Edit card.</p>';
     if (c.timer && !compact) h += stepper('Timer', id, 'timer', c.timer, '<label class="check"><input type="checkbox" data-tflag="auto" data-id="' + id + '"' + (c.timer.auto ? ' checked' : '') + '> every table round, even in hidden scenes</label><label class="check"><input type="checkbox" data-tflag="paused" data-id="' + id + '"' + (c.timer.paused ? ' checked' : '') + '> paused</label>', compact);
     return h;
+  }
+  /* A good idea through an obstacle (R.OBSTACLE.idea): the GM's call, half of what is left of the bar, once a card. */
+  function ideaButton(c) {
+    var p = c.progress, left = p.max - p.cur, n = Math.ceil(left * R.OBSTACLE.idea.share);
+    if (p.idea) return '<p class="hint">A good idea has already helped here.</p>';
+    return left > 0 ? '<div class="row"><button class="btn small" data-do="goodIdea" data-id="' + c.id + '" title="Your call: a clever way through fills half of what is left, once for this card">Good idea: +' + n + ' Effort</button></div>' : '';
   }
   function gmCard(c) {
     if (UI.cardEdit === c.id) return gmCardEdit(c);
@@ -823,7 +831,7 @@
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main' + (S.table.done ? ' ready' : '') + '" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
@@ -1008,7 +1016,13 @@
   function gmDiceView() {
     var out = '<div class="gm-dice open"><strong class="gm-dice-title">GM dice</strong>';
     out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span class="note">No card values change.</span>';
-    return out + '</div>';
+    return out + gmNextTurn() + '</div>';
+  }
+  /* Next turn in the GM's footer too, so it is there whatever tab or card is open (the owner's choice, 2026-11-11). It lights up when the player says they are done. */
+  function gmNextTurn() {
+    var t = S.table; if (!t.order.length) return '';
+    var cur = turnCardId() && S.cards[turnCardId()];
+    return '<div class="gm-next">' + (t.done && cur ? '<span class="note done-note">' + esc(cur.name) + ' is done.</span>' : '') + '<button class="btn' + (t.done ? ' main ready' : '') + '" data-do="endTurn" title="Advance the live turn order (key N)">Next turn</button></div>';
   }
   function playerHealth(ch) {
     var card = S.cards[ch.cardId], hp = card && card.hp; if (!hp) return '';
@@ -1061,6 +1075,7 @@
     else h += '<div class="stats" role="group" aria-label="Roll an ordinary check">' + R.STATS.map(function (k) { return '<button class="stat" data-do="check" data-stat="' + k + '"' + (waiting ? ' disabled' : '') + ' aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
     if (!UI.attackChoice && (!flow.dice || (currentRoll() && currentRoll().pushed)) && !UI.optEffort) h += '<label class="phys">Own d20 (optional)<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="Roll digitally" value="' + esc(UI.phys || '') + '"></label>';
     if (!flow.dice && !UI.optEffort) h += rollWarning(ch);
+    if (myTurn()) h += S.table.done ? '<span class="note done-note">Done. The GM moves the turn on.</span>' : '<button class="btn done-btn" data-do="turnDone"' + (UI.working === 'turnDone' ? ' disabled' : '') + ' title="Tell the GM your turn is over (key D)">I’m done</button>';
     var context = ch.id + ':' + (ready ? ready.kind + ':' + (ready.gearKey || ready.stat) + ':' + ready.target : UI.roll || 'check');
     putStrip(el, h, context);
     var pi = el.querySelector('input[data-phys]'); if (pi) pi.oninput = function () { UI.phys = pi.value; };
@@ -1256,6 +1271,8 @@
       case 'copyKey': { if (!gm()) break; var kl = location.origin + '/vtt/?room=' + S.code + '#key=' + sess.token; if (navigator.clipboard) navigator.clipboard.writeText(kl).then(function () { toast('Your GM link is copied. Keep it private.'); }, function () { UI.recoveryOpen = true; renderRecovery(); }); else { UI.recoveryOpen = true; renderRecovery(); } break; }
       case 'horrorAck': send({ type: 'horrorAck' }); break;
       case 'arrivalSeen': UI.arrivalSeen = true; renderFeed(); break;
+      case 'turnDone': if (!UI.working) { UI.working = 'turnDone'; renderStrip(); send({ type: 'turnDone' }, function () { UI.working = null; render(); }); } break;
+      case 'goodIdea': send({ type: 'goodIdea', id: d.id }); break;
       case 'horrorOpen': UI.tab = 'table'; UI.sub = null; UI.editOrder = false; UI.sel = null; UI.cardEdit = null; UI.atk = null; UI.powerResetAsk = false; render(); setTimeout(function () { var hzEl = document.querySelector('#panel .hz-gm'); if (hzEl) { hzEl.scrollIntoView({ block: 'center' }); var first = hzEl.querySelector('button:not([disabled])'); if (first) first.focus({ preventScroll: true }); } }, 60); break;
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
       case 'horrorSet': { var hv = $('hzSet') && $('hzSet').value.trim(); if (!/^[0-9]+$/.test(hv || '')) { toast('Type a number from 0 to ' + S.horror.max + '.'); break; } send({ type: 'horror', mode: 'set', value: +hv }); break; }
@@ -1396,7 +1413,20 @@
       clearTimeout(UI.nudge); var id = cEl.dataset.id; UI.nudge = setTimeout(function () { send({ type: 'move', id: id, x: l.x, y: l.y }); }, 350);
     }
     if (e.key === 'Escape') { UI.sel = null; render(); }
+    shortcut(e);
   });
+  /* Keys for the common jobs (the owner's choice, 2026-11-11). Players: 1 to 6 roll STR to CHA, R rolls what is ready in the bottom strip, D says the turn is done.
+     The GM: N for Next turn. Never while typing, with a modifier held, or with the sheet or the loot designer open; a key only presses a button that is on screen. */
+  function writing(el) { return !!el && (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit)$/i.test(el.type))); }
+  var KEYS = { '1': 'STR', '2': 'DEX', '3': 'CON', '4': 'INT', '5': 'WIS', '6': 'CHA' };
+  function shortcut(e) {
+    if (!S || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.repeat || writing(e.target)) return;
+    if (UI.sheet || ($('lootOverlay') && !$('lootOverlay').hidden) || $('app').hidden) return;
+    var k = e.key.toLowerCase(), sel = gm() ? (k === 'n' ? '#strip [data-do=endTurn]' : '') :
+      KEYS[k] ? '#strip [data-do=check][data-stat=' + KEYS[k] + ']' : k === 'r' ? '#strip .btn.main' : k === 'd' ? '#strip [data-do=turnDone]' : '';
+    var all = sel ? document.querySelectorAll(sel) : [], b = all.length === 1 && all[0]; if (!b || b.disabled) return;   /* R presses the one main button, never a guess among several */
+    e.preventDefault(); b.click();
+  }
 
   /* ---------- the table: selecting, dragging, pointing, drawing ---------- */
   function tablePoint(ev) { var r = $('table').getBoundingClientRect(); return [Math.max(0, Math.min(100, 100 * (ev.clientX - r.left) / r.width)), Math.max(0, Math.min(100, 100 * (ev.clientY - r.top) / r.height))]; }

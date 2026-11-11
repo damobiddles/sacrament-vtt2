@@ -19,6 +19,9 @@ export function addSample(s, ctx) {
   /* each hero carries what their description names, so the sample shows the item-first attack ("What are you using on …?") from the first click */
   const gear = { 'Thorne': [{ id: 'hatchet', eq: true }], 'Wisp': [{ id: 'embers', eq: true }, { id: 'chalk', eq: false }], 'Brother Anselm Vey': [{ id: 'cudgel', eq: true }, { id: 'beads', eq: false }], 'Tilda the Ratcatcher': [{ id: 'knife', eq: true }, { id: 'sling', eq: true }] };
   Object.values(s.chars).forEach((ch) => { if (gear[ch.name]) ch.gear = gear[ch.name]; });
+  /* each follows a path, so a new table shows the "Fits my path" button from the first turn (the owner's choice, 2026-11-11) */
+  const paths = { 'Thorne': 'Mercenary', 'Wisp': 'Scholar', 'Brother Anselm Vey': 'Priest', 'Tilda the Ratcatcher': 'Hunter' };
+  Object.values(s.chars).forEach((ch) => { if (paths[ch.name]) ch.path = paths[ch.name]; });
   const run = (cmd) => apply(s, Object.assign({ actionId: 'sample.' + (++n) }, cmd), gm, ctx).result;
   const make = (card) => run({ type: 'cardCreate', card }).id;
   const gate = make({ name: 'The Sealed Gate', kind: 'card', x: 62, y: 30, w: 20, h: 26, desc: 'Iron-banded oak, three paces wide, sealed from the other side. Something heavy is wedged behind it.',

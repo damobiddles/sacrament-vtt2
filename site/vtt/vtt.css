@@ -520,3 +520,12 @@ label.phys{align-items:flex-start}
 /* The latest-activity line keeps one height (room for two lines, more scroll), so the map does not grow and shrink as lines come and go. */
 @media(min-width:901px){#feed .latest{height:calc(2 * 1.5em + 8px);max-height:none;box-sizing:border-box}
   #strip .phys input[data-phys]{width:9.5em}}
+/* Next turn in the GM's footer, at its right; it lights when the player has said they are done. The player's I'm done sits at the end of their strip. */
+.gm-next{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn.ready{box-shadow:0 0 0 2px #e0c48c,0 0 14px #b8955a;animation:readyGlow 1.6s ease-in-out 3}
+@keyframes readyGlow{50%{box-shadow:0 0 0 2px #e0c48c,0 0 22px #e0c48c}}
+@media (prefers-reduced-motion:reduce){.btn.ready{animation:none}}
+.done-note{color:var(--fg)}
+#strip .done-btn{margin-left:auto}
+/* Push on the missed result card, beside Continue */
+.reveal-alt{pointer-events:auto;flex-shrink:0;max-width:100%;white-space:normal}

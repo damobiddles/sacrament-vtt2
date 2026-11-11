@@ -2,6 +2,17 @@
 
 Moved here from `CLAUDE.md` (word for word) to keep that file short. These are the owner's dated decisions and the reasons behind how the table behaves. **Read the relevant entry before changing anything it mentions.** The hard rules that must never be broken are repeated in `CLAUDE.md` under "Standing rules from owner decisions".
 
+## Six follow-ups from the table audit (owner, 2026-11-11)
+
+After the audit (`docs/audits/vtt-audit-2026-11-11.md`) the owner said "all six are good ideas so lets do them". No rule, number or stored key name changed; the good idea uses the existing `R.OBSTACLE.idea` numbers.
+
+- **I'm done:** on their turn a player can press I'm done (key D). It writes one line and lights the GM's Next turn; only the GM moves the turn on (the 24 Oct decision stands). `turnDone` command, `table.done` while the turn is unchanged.
+- **Next turn from any GM tab:** a second Next turn in the GM's footer (key N), as well as the one beside the turn order in Play. This replaces the 25 Oct rule that Next turn lives only in Play; it is still not in the top bar.
+- **Sample heroes follow paths:** Thorne Mercenary, Wisp Scholar, Brother Anselm Priest, Tilda Hunter.
+- **Good idea:** on the GM's obstacle card (a card with an Effort bar and no HP), fills half of what is left, once a card (`progress.idea`), one Undo.
+- **Push on the MISS card** as well as in the panel (the reveal card may now carry two buttons).
+- **Keys for players:** 1 to 6 roll STR to CHA, R presses the one main button in the bottom strip, D says done; never while typing in a field.
+
 ## Rising numbers at the table, as in solo (owner, 2026-11-11)
 
 The owner asked for the solo game's floating modifiers and totals on the table too ("can we apply it to the VTT?"). Display only: no rule, number or stored key name changed.

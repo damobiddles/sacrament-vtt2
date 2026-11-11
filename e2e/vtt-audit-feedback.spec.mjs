@@ -67,3 +67,49 @@ test('table sounds are off unless switched on, and are remembered on this screen
   await expect(gm.locator('#panel input[data-cues]')).toBeChecked();
   expect(gm.errors).toEqual([]);
 });
+
+/* The six follow-ups the owner approved on 11 November 2026 ("all six are good ideas so lets do them"). */
+test('I\'m done lights the GM\'s Next turn, which is in the footer from any tab; keys roll, say done and move the turn', async ({ browser }) => {
+  test.setTimeout(60000);
+  const gm = await newPage(browser), ann = await newPage(browser);
+  const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
+  await gm.locator('[data-do=gmtab][data-t=loot]').click();
+  await expect(gm.locator('#strip [data-do=endTurn]')).toBeVisible();
+  await ann.locator('#tablewrap').click({ position: { x: 5, y: 200 } }); await ann.keyboard.press('1'); await saved(ann);
+  await expect(ann.locator('#feed')).toContainText('STR');
+  await ann.keyboard.press('d'); await saved(ann);
+  await expect(ann.locator('#strip')).toContainText('Done. The GM moves the turn on.');
+  await expect(gm.locator('#strip [data-do=endTurn]')).toHaveClass(/ready/); await expect(gm.locator('#strip')).toContainText('Thorne is done.');
+  await expect(gm.locator('#feed')).toContainText('Thorne is done. Over to the GM.');
+  await gm.locator('#tablewrap').click({ position: { x: 5, y: 200 } }); await gm.keyboard.press('n'); await saved(gm);
+  await expect(gm.locator('#tTurn')).toContainText('Wisp');
+  await expect(gm.locator('#strip [data-do=endTurn]')).not.toHaveClass(/ready/);
+  await expect(ann.locator('#strip [data-do=turnDone]')).toHaveCount(0);   /* not Ann's turn now */
+  expect(gm.errors.concat(ann.errors)).toEqual([]);
+});
+
+test('a typed die is not taken for a key: 2 in the own-d20 box stays there', async ({ browser }) => {
+  test.setTimeout(45000);
+  const gm = await newPage(browser), ann = await newPage(browser);
+  const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
+  await ann.locator('#strip input[data-phys]').click(); await ann.keyboard.press('2');
+  await expect(ann.locator('#strip input[data-phys]')).toHaveValue('2'); await expect(ann.locator('#feed')).not.toContainText('DEX');
+  expect(ann.errors).toEqual([]);
+});
+
+test('Push is on the MISS card; the sample heroes show their path; the GM\'s Good idea fills half an obstacle once', async ({ browser }) => {
+  test.setTimeout(60000);
+  const gm = await newPage(browser), ann = await newPage(browser);
+  const code = await makeTable(gm); await joinTable(ann, code, 'Ann');
+  await expect(ann.locator('#panel .hero', { hasText: 'Thorne' })).toContainText('Path: Mercenary');
+  await claimHero(ann, 'Thorne');
+  await expect(ann.locator('#panel [data-do=pathEasy]')).toContainText('Fits my path (Mercenary)');
+  await card(ann, 'Pit Ghoul').click(); await basicAttack(ann, 2);
+  await expect(ann.locator('#dice .reveal-alt')).toHaveText('Push: act again (+1 Horror)');
+  await ann.locator('#dice .reveal-alt').click(); await saved(ann);
+  await expect(ann.locator('#feed')).toContainText('pushes for a second action');
+  await card(gm, 'The Sealed Gate').click(); await gm.locator('#panel [data-do=goodIdea]').click(); await saved(gm);
+  await expect(gm.locator('#feed')).toContainText('A good idea: The Sealed Gate +10 Effort (now 10 of 20).');
+  await expect(gm.locator('#panel [data-do=goodIdea]')).toHaveCount(0); await expect(gm.locator('#panel')).toContainText('A good idea has already helped here.');
+  expect(gm.errors.concat(ann.errors)).toEqual([]);
+});
