@@ -203,25 +203,42 @@
   var FIGHT_TAGS = ['daze', 'guard', 'hide', 'snuff', 'learn', 'silence', 'bind', 'beast'];
   function ruling(api, k, src, f, room, foe) {
     var s = api.s, dark = isDark(s, api._adv), dead = typeof room.dead === 'function' ? room.dead(api) : room.dead;
-    if (src.needs === 'corpse' && !dead) return null;
+    if (!needsMet(api, src.needs, f, room, foe, dead)) return null;
     if (k === 'light' && dark) return { run: function () { s.flags.lit = true; api.say('Light gathers where you need it. The dark steps back from you.', 'note'); } };
     if (!f) {
       var ob = obstacleHere(api);
       if (k === 'open' && ob && ob.def.open) return { run: function () { clearObstacle(api, ob.id, ob.def.opened || ob.def.name + ' gives way.'); } };
-      if (k === 'learn' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
+      if (k === 'learn' && src.needs !== 'obstacle' && room.secret && !s.flags['secret_' + s.room]) return { run: function () { s.flags['secret_' + s.room] = true; api.say(typeof room.secret === 'function' ? room.secret(api) : room.secret, 'npc'); } };
       var ans = ob && ob.def.answers && !(ob.def.blocked && ob.def.blocked(api)) && ob.def.answers[k];
       if (ans && !s.flags['tag_' + ob.id + '_' + k]) return { run: function () { s.flags['tag_' + ob.id + '_' + k] = true; api.say(typeof ans === 'function' ? ans(api) : ans); halfBar(api, ob.id); } };
-      if (k === 'learn' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
+      if (k === 'learn' && src.needs !== 'obstacle' && darkRoom(s, room) && !lit(s) && !s.flags['mapped_' + s.room]) return { run: function () { s.flags['mapped_' + s.room] = true; api.say('You learn the shape of this place in the dark: searching it is no longer Hard.', 'note'); } };
       return null;
     }
-    if (src.needs === 'undead' && !foe.undead) return null;
     var checked = !!src.roll;
     if ((k === 'daze' || k === 'hide' || (k === 'beast' && foe.beast)) && !f.dim) return { run: function () { f.dim = 3; api.say(k === 'hide' ? f.name + ' cannot see you well: its next attack rolls 3 less.' : k === 'beast' ? f.name + ' shies from you: its next attack rolls 3 less.' : f.name + ' is Dazed: its next attack rolls 3 less.', 'win'); } };
     if (k === 'guard' && /\ban ally\b|\bone ally\b/i.test(src.does || '')) return null;   /* Ward and the Ward Medal protect an ally: alone there is none (their own words; owner, 2026-11-07) */
     if (k === 'guard' && !f.guard) return { run: function () { f.guard = 2; api.say('You have +2 Defence until your next turn.', 'win'); } };
     if (!f.skip && ((k === 'snuff' && foe.flame) || (k === 'silence' && foe.caster) || (k === 'bind' && checked))) return { run: function () { f.skip = 1; api.say(k === 'snuff' ? foe.snuffed || f.name + '\'s flame goes out. It does not attack this turn.' : k === 'silence' ? f.name + ' cannot get the words out. It does not attack this turn.' : f.name + ' is held fast. It does not attack this turn.', 'win'); } };
-    if (k === 'learn' && foe.weakness && !f.learned) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
+    if (k === 'learn' && foe.weakness && !f.learned && (src.needs || /\bin a fight\b|\bcreature\b|\bfoe\b/i.test(src.does || ''))) return { run: function () { f.learned = true; f.easy = (f.easy || 0) + 1; api.say(typeof foe.weakness === 'function' ? foe.weakness(api) : foe.weakness, 'npc'); api.say('Your next attack against it is Easy.', 'note'); } };
     return null;
+  }
+  /* What a spell or item needs before it can do anything (gear.js "needs", from its own words). A place says what is there:
+     dead (corpses), animals, people (someone to speak to or watch), writing, wild (outdoors among growing things). In a fight the foe counts too. */
+  function needsMet(api, need, f, room, foe, dead) {
+    if (!need) return true;
+    function has(k) { var v = room[k]; return !!(typeof v === 'function' ? v(api) : v); }
+    switch (need) {
+      case 'corpse': return !!dead;
+      case 'undead': return !f || !!foe.undead;
+      case 'animal': return f ? !!foe.beast : has('animals');
+      case 'person': return f ? !!foe.person : has('people');
+      case 'body': return f ? true : !!dead || has('people');
+      case 'writing': return !f && has('writing');
+      case 'wild': return has('wild');
+      case 'obstacle': return !f && !!obstacleHere(api);
+      case 'ally': return false;   /* playing alone there is no willing companion, as with Ward (owner, 2026-11-07) */
+      default: return true;
+    }
   }
   /* Half of what is left on an obstacle's bar, as a trick gives. */
   function halfBar(api, id) {

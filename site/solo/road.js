@@ -83,7 +83,7 @@
     fall: function () { return 'They find you in the morning among the barrels, and say a mass for you, and send someone else.'; },
     rooms: {
       cloister: {
-        name: 'The Cloister', short: 'the cloister', art: 'cloister',
+        name: 'The Cloister', people: true, short: 'the cloister', art: 'cloister',
         text: function (api) { return 'A square of wet grass under four walks of arches. A well in the middle.' + (api.flag('talked') ? ' The Prior has gone in.' : ' Prior Severin Ashby waits by the well with his hands in his sleeves.') + ' Steps lead down to the undercroft; the gatehouse is to the east.'; },
         secret: 'The well remembers every face that has looked into it. Tonight it remembers the Prior\'s, three times, and each time he was afraid.',
         exits: { down: 'undercroft', east: { to: 'gatehouse', when: function (api) { return api.flag('talked'); }, closed: 'The Prior is waiting to speak to you.' } },
@@ -101,7 +101,7 @@
         ]
       },
       undercroft: {
-        name: 'The Undercroft', short: 'the undercroft', art: 'undercroft', dark: true,
+        name: 'The Undercroft', animals: true, short: 'the undercroft', art: 'undercroft', dark: true,
         text: function (api) { return 'Barrels, sacks of grain, and the priory\'s winter candles in their boxes.' + (api.flag('beat_rats') ? ' The boxes are torn open and the floor is quiet.' : ' Something has been at the boxes. The sacks are moving.'); },
         exits: { up: 'cloister' },
         enter: function (api) { if (!api.flag('beat_rats') && !api.s.fight) api.fight('rats'); },
@@ -111,7 +111,7 @@
         ]
       },
       gatehouse: {
-        name: 'The Gatehouse', short: 'the gatehouse', art: 'cloister',
+        name: 'The Gatehouse', people: true, short: 'the gatehouse', art: 'cloister',
         text: 'The gate stands open on the pilgrim road. Brother Konrad Tarn, the porter, holds up a lantern to see you off.',
         exits: { west: 'cloister' },
         actions: [
@@ -159,7 +159,7 @@
     },
     rooms: {
       crossroads: {
-        name: 'The Crossroads', short: 'the crossroads', art: 'crossroads',
+        name: 'The Crossroads', people: true, wild: true, short: 'the crossroads', art: 'crossroads', animals: true,
         text: function (api) { return 'A plague cart stands ' + (api.flag('freed') ? 'on the road again, its wheel caked with mud.' : 'half in the ditch, one wheel sunk to the hub.') + ' The carter, Hob Sallow, sits on the shaft. The cart is empty. A wayshrine leans at the crossing.'; },
         secret: 'Under the wayshrine someone has scratched a name, fresh: IGNATIA. Under it, older, the same name again, in the same hand.',
         exits: { north: { to: 'lane', when: function (api) { return api.flag('freed'); }, closed: '"Help me or leave me," says Hob. He will not tell you which way she went until the cart is out of the ditch.' } },
@@ -180,7 +180,7 @@
         ]
       },
       lane: {
-        name: 'The Sunken Lane', short: 'the lane', art: 'lane',
+        name: 'The Sunken Lane', wild: true, short: 'the lane', art: 'lane',
         text: 'A sunken lane between black hedges. In the mud, the prints of bare feet, walking steady, toward the boundary.',
         exits: { south: 'crossroads' },
         actions: [
@@ -222,7 +222,7 @@
     },
     rooms: {
       bank: {
-        name: 'The Riverbank', short: 'the riverbank', art: 'ford',
+        name: 'The Riverbank', wild: true, short: 'the riverbank', art: 'ford',
         text: function (api) { return 'The ferryman\'s hut is empty and the ferry is gone. Beyond the reeds the ford\'s stepping stones show as a line of pale broken water.' + (api.flag('flood') ? ' They are under now.' : ' The river is rising.'); },
         secret: 'Every year the ford takes someone. Last spring it was an acolyte carrying a censer to a burial on the far bank. He never put it down.',
         enter: function (api, first) { if (first) api.timer('river', 'start'); },
@@ -255,7 +255,7 @@
     fall: function () { return 'In the morning the reeve finds two bodies in the Church\'s grain, and has to decide whose sin it was.'; },
     rooms: {
       barn: {
-        name: 'The Tithe Barn', short: 'the tithe barn', art: 'barn',
+        name: 'The Tithe Barn', people: true, short: 'the tithe barn', art: 'barn',
         text: function (api) {
           return 'A long hall of oak posts and stacked sheaves, the Church\'s tenth of the harvest. Rain on the roof.'
             + (api.flag('calm') ? ' Faustin sleeps against a post, his hands folded.' : api.flag('beat_penitent') ? ' The far end is empty now.' : ' At the far end, under the sheaves, a man in a hair shirt sits with his back to you, very thin, eating grain from his hand.');
@@ -284,7 +284,7 @@
       }
     },
     foes: {
-      penitent: { name: 'The Gaunt Penitent', art: 'penitent', hp: 10, attack: 1, damage: 4,
+      penitent: { name: 'The Gaunt Penitent', person: true, art: 'penitent', hp: 10, attack: 1, damage: 4,
         card: 'A man in a hair shirt, starved to rope and bone, with a scourge in his fist. He believes he is doing God\'s work.',
         appears: 'He comes at you with the scourge, weeping, saying your sins aloud as if he could read them off you.',
         hits: 'The scourge lays your arm open',
@@ -317,7 +317,7 @@
     },
     rooms: {
       gibbet: {
-        name: 'Holloway Cross', short: 'the crossing', art: 'gibbet', dead: true,
+        name: 'Holloway Cross', wild: true, animals: true, short: 'the crossing', art: 'gibbet', dead: true,
         text: function (api) { return 'An iron cage creaks on a tall post over the crossing. The man in it has been dead a week. Crows. ' + (api.flag('candle') ? 'The wayshrine\'s candle burns.' : 'A wayshrine stands by the road with its candle out.') + ' The light is going.'; },
         secret: function (api) { return api.charge() === 'warrant' ? 'The hanged man answers in a voice like a sack of gravel. "A deacon on a horse stopped under me to read by the wayshrine\'s candle. He read aloud. I wish he had not. He went on toward the boundary, and the candle went out behind him."' : relic(api) ? 'The hanged man answers in a voice like a sack of gravel. He did the theft they hanged him for: he took the relic from the shrine at Saint Aubrel\'s Cross, and sold it to an old woman who was scraping salt off the boundary stones. "She paid in salt," he says. "I should have known."' : 'The hanged man answers in a voice like a sack of gravel. "A sister in grey passed under me two nights back, walking in her sleep, toward the mere past the boundary. Someone was calling her, in a voice she knew. I knew it too. It was my mother\'s."'; },
         enter: function (api, first) { if (first) api.timer('dark', 'start'); },
@@ -417,7 +417,7 @@
     },
     rooms: {
       stones: {
-        name: 'The Boundary Stones', short: 'the boundary stones', art: 'stones',
+        name: 'The Boundary Stones', wild: true, short: 'the boundary stones', art: 'stones',
         text: function (api) { return 'A line of boundary stones runs over the hill, each with a saint\'s mark cut in it. Between them runs a salt line, white in the dusk' + (api.flag('mended') ? ', whole.' : ', broken in long gaps where something has scraped it away.') + ' Beyond the stones the land goes on, unblessed. Up the hill, the shrine.'; },
         secret: 'Three of the stones bear the same new marks: spoon-scrapes, small and patient, made over many nights.',
         exits: { up: 'shrine' },
@@ -453,7 +453,7 @@
       }
     },
     foes: {
-      hag: { name: 'The Salt Hag', art: 'hag', hp: 16, attack: 2, damage: 6,
+      hag: { name: 'The Salt Hag', person: true, art: 'hag', hp: 16, attack: 2, damage: 6,
         card: 'A very old woman with a horn spoon, who scrapes the salt from boundary stones and eats it. She is much stronger than she looks.',
         appears: function (api) {
           var f = api.s.fight, out = 'Behind the shrine an old woman is scraping salt from a boundary stone with a horn spoon, and eating it. She is very old, and she stands up quickly.';
@@ -479,7 +479,7 @@
     },
     rooms: {
       edge: {
-        name: 'Beyond the Stones', short: 'beyond the stones', art: 'stones',
+        name: 'Beyond the Stones', wild: true, short: 'beyond the stones', art: 'stones',
         text: 'The last boundary stone stands behind you. Ahead is moor, and on the moor a mere, black and flat, ringed with standing stones that no saint\'s mark was ever cut into. A figure in grey stands at the water\'s edge, very still.',
         secret: 'The moor remembers every pilgrim who walked out this way in their sleep. It has stopped counting.',
         exits: { north: 'mere' },
@@ -489,7 +489,7 @@
         ]
       },
       mere: {
-        name: 'The Mere', short: 'the mere', art: 'mere',
+        name: 'The Mere', wild: true, people: true, short: 'the mere', art: 'mere',
         text: function (api) { return 'Black water, flat as slate, in a ring of leaning stones.' + (api.flag('lost') ? ' There is no one at the water\'s edge now.' : api.flag('beat_widow') ? ' Sister Ignatia stands up to her knees in the water, shaking, awake.' : ' Sister Ignatia stands up to her knees in it, walking slowly out, answering someone softly.'); },
         secret: 'The stones remember the mere\'s other name, and it is the name of a woman.',
         exits: { south: 'edge' },

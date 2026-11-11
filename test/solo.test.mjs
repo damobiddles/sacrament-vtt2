@@ -449,7 +449,7 @@ test('every story spell and story item carries tags from the shared list, except
   for (const x of story) {
     if (untagged.includes(x.id)) { assert.ok(!x.tags, x.id); continue; }
     assert.ok(x.tags && x.tags.length, x.id + ' has tags'); for (const t of x.tags) assert.ok(ids.has(t), x.id + ': ' + t);
-    assert.ok(!x.needs || ['corpse', 'undead'].includes(x.needs), x.id);
+    assert.ok(!x.needs || ['corpse', 'undead', 'animal', 'person', 'body', 'writing', 'wild', 'obstacle', 'ally'].includes(x.needs), x.id);
   }
   assert.match(CORE.tagText(G.spells.find((x) => x.id === 'pillarash')), /Hide\. In a fight: .*rolls 3 less\. Out of a fight: /);
 });
@@ -1058,4 +1058,59 @@ test('a choice that uses a carried item is marked useful and counted as put to u
   const s = S.start(withGear('fighter', ['crowbar']), V, fixed([20]), run);
   S.act(s, V, 'do abbess', fixed([20])); S.act(s, V, 'go up', fixed([20])); S.act(s, V, 'do force', fixed([20, 6]));
   assert.ok(S.summary(s).used.includes('Wayshrine Crowbar'), S.summary(s).used.join(', '));
+});
+
+/* Damien, 2026-11-10: The Beast Tongue showed as "Useful here" in the Inquisitor's chapter-house, where there is no animal to ask. A spell that speaks to or
+   through an ordinary animal (needs: animal in the gear list, like needs: corpse) is useful only where the scene has animals, or against a beast. */
+test('a spell that needs an animal is no use where there is none: The Beast Tongue in the chapter-house; it is in the fold and against a beast', () => {
+  const sp = (id) => G.spells.find((x) => x.id === id);
+  assert.equal(sp('beasttongue').needs, 'animal'); assert.equal(sp('borrowedsenses').needs, 'animal');
+  assert.match(CORE.tagText(sp('beasttongue')), /needs an ordinary animal close by/);
+  const hero = (book) => { const h = T.generate('scholar', seeded(4)); h.gear = [{ id: book, eq: true }]; return h; };
+  const holder = [...G.grimoires, ...G.items, ...G.found].find((g) => (g.spells || []).includes('beasttongue'));
+  assert.ok(holder, 'a grimoire holds The Beast Tongue');
+  const spell = (s) => S.choices(s).find((c) => /Beast Tongue/.test(c.label));
+  let s = S.start(hero(holder.id), ADVS.warrant, fixed([20]));
+  assert.ok(spell(s) && spell(s).idle && !spell(s).useful, 'the chapter-house: no animal, no use');
+  s = S.start(hero(holder.id), ADVS.fold, fixed([20]));
+  assert.ok(spell(s) && !spell(s).idle && spell(s).useful, 'the fold has sheep to ask');
+  S.act(s, ADVS.fold, 'do jorun', fixed([20])); s.flags.mended = true; for (let i = 0; i < 8 && !s.fight; i++) S.act(s, ADVS.fold, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf'); assert.ok(spell(s) && !spell(s).idle, 'against the Grey Mother, a beast');
+  s = S.start(hero(holder.id), A, fixed([20])); S.act(s, A, 'go north', fixed([20])); S.act(s, A, 'go down', fixed([20]));
+  assert.ok(s.fight && spell(s).idle, 'against the Candle-Eater, no animal');
+});
+
+/* The wider issue behind that report: a spell or item was offered whenever one of its tags matched, even when what it works on is not there.
+   Each one's own words now say what it needs (gear.js "needs"), and each place and foe says what is there. */
+test('spells and items are offered only where what they work on is there', () => {
+  const all = [...G.spells, ...G.items, ...G.found];
+  const needs = (id) => all.find((x) => x.id === id).needs;
+  assert.deepEqual(['rootgrasp', 'frostseal', 'honeylozenges', 'burnedmargins', 'toadstone', 'pactmark'].map(needs), ['wild', 'obstacle', 'person', 'writing', 'body', 'ally']);
+  for (const x of all.filter((x) => x.needs)) assert.doesNotMatch(CORE.tagText(x), /\(undefined\)|\((?!needs|only|for)/, x.id + ' has words for what it needs');
+  const name = (id) => all.find((x) => x.id === id).name;
+  const offer = (s, n) => S.choices(s).find((c) => c.label.includes(n));
+  const start = (id, adv) => {   /* the first book or item holding it that a hero can carry today */
+    for (const g of [...G.found, ...G.grimoires, ...G.items].filter((g) => g.id === id || (g.spells || []).includes(id))) {
+      const h = T.generate('scholar', seeded(4)); h.gear = [{ id: g.id, eq: true }]; const s = S.start(h, adv, fixed([20])); if (offer(s, name(id))) return s;
+    }
+    assert.fail('no hero can carry ' + id);
+  };
+  const idle = (id, adv) => { const s = start(id, adv), c = offer(s, name(id)); assert.ok(c, name(id) + ' is on the list'); return !c.useful; };
+  assert.ok(idle('rootgrasp', ADVS.warrant), 'no growing roots in the chapter-house');
+  assert.ok(idle('readsky', ADVS.warrant), 'no sky to read indoors');
+  assert.ok(idle('twofacedmirror', ADVS.fold), 'nobody at the fold to catch in a mirror');
+  assert.ok(!idle('twofacedmirror', ADVS.warrant), 'the Inquisitor can be watched');
+  assert.ok(idle('truescales', ADVS.warrant), 'weighing an object tells nothing of the room');
+  assert.ok(!idle('burnedmargins', ADVS.warrant), 'the ledgers can be read');
+  assert.ok(!idle('readsky', ADVS.fold), 'the sky over the fold can be read');
+  // in a fight: no talking a she-wolf round, no freezing a door shut on her, no reading the room for her weakness
+  let s = start('honeylozenges', ADVS.fold); S.act(s, ADVS.fold, 'do jorun', fixed([20])); s.flags.mended = true;
+  for (let i = 0; i < 8 && !s.fight; i++) S.act(s, ADVS.fold, 'do wait', fixed([20]));
+  assert.equal(s.fight.foe, 'wolf');
+  assert.ok(!offer(s, name('honeylozenges')).useful, 'the Grey Mother does not understand you');
+  for (const id of ['frostseal', 'witnesslens']) {
+    const t = start(id, ADVS.fold); S.act(t, ADVS.fold, 'do jorun', fixed([20])); t.flags.mended = true;
+    for (let i = 0; i < 8 && !t.fight; i++) S.act(t, ADVS.fold, 'do wait', fixed([20]));
+    assert.ok(t.fight && !offer(t, name(id)).useful, name(id) + ' is no use against the Grey Mother');
+  }
 });

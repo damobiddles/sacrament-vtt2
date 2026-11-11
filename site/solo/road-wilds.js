@@ -20,7 +20,7 @@
     },
     rooms: {
       ward: {
-        name: 'The Hospice Ward', short: 'the ward', art: 'hospice', dead: true,
+        name: 'The Hospice Ward', people: true, short: 'the ward', art: 'hospice', dead: true,
         text: function (api) {
           return 'A long whitewashed room, twelve beds, a crucifix at each end. Sister Gisela Pell, the only sister here, moves between the sick with a basin.'
             + (api.flag('beat_sister') ? ' The ward is quiet now, and the sick are only sleeping.' : ' Three of the beds hold the dead, sheeted, waiting for the morning cart.');
@@ -55,7 +55,7 @@
       }
     },
     foes: {
-      sister: { name: 'The Lullaby Sister', art: 'sister', hp: 12, attack: 2, damage: 4, undead: true, caster: true,
+      sister: { name: 'The Lullaby Sister', person: true, art: 'sister', hp: 12, attack: 2, damage: 4, undead: true, caster: true,
         card: 'A sister in an old grey habit, grey all through, who walks the ward at night singing the sick to sleep. They do not wake.',
         appears: function (api) {
           var f = api.s.fight, out = 'She turns toward you without stopping her song. It is a lullaby. Your eyelids are very heavy.';
@@ -92,7 +92,7 @@
     },
     rooms: {
       wood: {
-        name: 'Wulfram\'s Wood', short: 'the wood', art: 'wood',
+        name: 'Wulfram\'s Wood', wild: true, short: 'the wood', art: 'wood',
         text: function (api) {
           return 'Oaks, and between the oaks the round turf clamps of the charcoal burners, smoking. A burners\' hut of bark and wattle. The burners themselves are gone.'
             + (api.flag('through') ? ' The way through the briars is open.' : ' Ahead the road is lost under briars taller than a man.');
@@ -148,7 +148,7 @@
     },
     rooms: {
       bridge: {
-        name: 'Crane\'s Holt', short: 'the bridge', art: 'bridge',
+        name: 'Crane\'s Holt', people: true, short: 'the bridge', art: 'bridge',
         text: function (api) {
           return 'A tollhouse of black stone at the near end of the bridge, its door open. The gorge is very deep; you can hear the river but not see it.'
             + (api.flag('passed') || api.flag('beat_tollman') ? ' Nobody stands in the road now.' : ' In the road before the bridge stands a tall man in a toll-keeper\'s coat, with his hand out. His hand is grey.');
@@ -173,7 +173,7 @@
       }
     },
     foes: {
-      tollman: { name: 'The Toll-Keeper', art: 'tollman', hp: 16, attack: 2, damage: 6, undead: true,
+      tollman: { name: 'The Toll-Keeper', person: true, art: 'tollman', hp: 16, attack: 2, damage: 6, undead: true,
         card: 'A tall dead man in a toll-keeper\'s coat, grey-handed, who still stands in the road before the bridge and asks for what is owed.',
         appears: 'He does not hurry. He holds out his grey hand as he comes, as if you might still pay.',
         hits: 'His grey hand closes on your wrist, cold as river water',

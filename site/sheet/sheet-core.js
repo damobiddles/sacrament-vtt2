@@ -19,7 +19,7 @@
   function onPath(h, it) { return !!(it && it.path && pathOf(h) === it.path); }
   /* What a story spell or item is good for when its words leave it to the GM: its tags from the gear list, each with its default in a fight and out of one. */
   function tagsOf(src) { return ((src && src.tags) || []).map(function (id) { return TAG[id]; }).filter(Boolean); }
-  var NEEDS = { corpse: 'needs a corpse close by', undead: 'only against the undead' };
+  var NEEDS = { corpse: 'needs a corpse close by', undead: 'only against the undead', animal: 'needs an ordinary animal close by', person: 'needs someone close by who can see, hear or answer you', body: 'needs a body, a wound or a sample close by', writing: 'needs writing, carving or a map close by', wild: 'only outdoors, among growing things', obstacle: 'for a door, a path or a watcher in the way, not a fight', ally: 'needs a willing companion' };
   function tagText(src) {
     var list = tagsOf(src); if (!list.length) return '';
     return 'When in doubt' + (src.needs ? ' (' + (NEEDS[src.needs] || src.needs) + ')' : '') + ': ' + list.map(function (t) {

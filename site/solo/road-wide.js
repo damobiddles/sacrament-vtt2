@@ -37,7 +37,7 @@
     },
     rooms: {
       chapel: {
-        name: 'Saint Hildreth\'s Chapel', short: 'the chapel', art: 'wayside',
+        name: 'Saint Hildreth\'s Chapel', people: true, short: 'the chapel', art: 'wayside',
         text: function (api) {
           return 'A chapel no bigger than a byre: four benches, a painted saint, a ladder to the bell-loft.'
             + (api.flag('talked') ? ' Brother Lucan Wick lies on the altar step with his leg' + (api.flag('tended') ? ' bound.' : ' torn open.') : ' On the altar step lies a young brother in the priory\'s black, his leg torn open, a candle in each fist.')
@@ -149,7 +149,7 @@
     },
     rooms: {
       garth: {
-        name: 'The Garth', short: 'the garth', art: 'cloister',
+        name: 'The Garth', people: true, short: 'the garth', art: 'cloister',
         text: function (api) { return 'A square of cut grass inside four cloister walks, and the bell tower over it with its seven bells.' + (api.flag('talked') ? ' Mother Cordula Marrow waits under the arches.' : ' An old nun in a black veil, Mother Cordula Marrow, the abbess, is waiting for you under the arches.') + ' A stair leads up to the dorter.'; },
         secret: 'The grass remembers the feet that crossed it three nights ago: bare, walking straight, never once on the path. Then the gate, which was locked, and was not.',
         exits: { up: { to: 'dorter', when: function (api) { return api.flag('talked'); }, closed: 'Mother Cordula is waiting for you.' } },
@@ -191,7 +191,7 @@
         ]
       },
       cell: {
-        name: 'Sister Ignatia\'s Cell', short: 'her cell', art: 'dorter', dark: true,
+        name: 'Sister Ignatia\'s Cell', writing: true, short: 'her cell', art: 'dorter', dark: true,
         text: function (api) { return 'A cot, a stool, a crucifix turned to face the wall. The shutter stands open on the night.' + (api.flag('letters') ? '' : ' On the cot lies a bundle of letters tied with grey thread.'); },
         secret: 'The crucifix was turned to the wall by her own hand, gently, so that it would not have to watch.',
         exits: { east: 'dorter' },
@@ -240,7 +240,7 @@
     },
     rooms: {
       study: {
-        name: 'The Deacon\'s Rooms', short: 'his rooms', art: 'study',
+        name: 'The Deacon\'s Rooms', people: true, writing: true, short: 'his rooms', art: 'study',
         text: function (api) {
           return 'Two rooms over the shop that smell of tallow from below: a narrow bed, a desk under the window, books stacked on the floor to the height of a man.'
             + (api.flag('talked') ? ' Brother Valentin waits by the door, writing in a small book.' : ' Brother Valentin Crane, a young clerk with ink on his cuffs, waits by the door.')
@@ -334,7 +334,7 @@
     },
     rooms: {
       gate: {
-        name: 'The Plague Gate', short: 'the gate', art: 'towngate',
+        name: 'The Plague Gate', people: true, short: 'the gate', art: 'towngate',
         text: function (api) { return 'A gatehouse with its portcullis down and a red cross daubed on the gate. Old Theodric, the gatewarden, leans on the parapet above with a pike he has not used in years.' + (api.flag('in') ? '' : ' "Nobody in," he calls down. "Nobody out. Not for the Pontiff himself."'); },
         secret: function (api) { return 'The gate remembers everyone it let through before it shut. ' + told(api, { relic: 'The last was a thief with a box of saint\'s bone, who paid in salt and went out by the other gate toward the boundary stones.', missing: 'The last was a sister in grey with her eyes shut, who walked through the portcullis bars as if they were not there.', warrant: 'The last was a deacon on a horse, who read a line to the portcullis, and it went up.' }); },
         actions: [
@@ -373,7 +373,7 @@
         ]
       },
       yard: {
-        name: 'The Physician\'s Yard', short: 'the yard', art: 'inn', dead: true,
+        name: 'The Physician\'s Yard', people: true, short: 'the yard', art: 'inn', dead: true,
         text: function (api) {
           return 'A yard behind the physician\'s house, full of the dead under sacking, waiting for the cart. Mistress Eulalia Dray, the town\'s physician, works at a trestle in a beaked mask.'
             + (api.flag('beat_king') || api.flag('burned') ? ' The heap by the wall is quiet now.' : ' Something under the heap of sacking by the wall is moving, and squeaking, in many voices at once.');
@@ -441,7 +441,7 @@
     },
     rooms: {
       scriptorium: {
-        name: 'The Scriptorium', short: 'the scriptorium', art: 'scriptorium',
+        name: 'The Scriptorium', people: true, writing: true, short: 'the scriptorium', art: 'scriptorium',
         text: function (api) {
           return 'A long room of desks under tall windows, the desks still covered with open books and pots of ink.'
             + (api.flag('out') ? ' It is black and wet and still now.' : ' The far end is a wall of fire, and it is coming down the room desk by desk.')
@@ -511,7 +511,7 @@
     },
     rooms: {
       fold: {
-        name: 'The High Fold', short: 'the fold', art: 'fold',
+        name: 'The High Fold', wild: true, short: 'the fold', art: 'fold', animals: true,
         text: function (api) {
           return 'A round fold of piled stone on a bare hill, forty ewes inside it, and a shepherd\'s hut of turf beside it. The moor goes up behind to the tops.'
             + (api.flag('beat_wolf') ? ' The sheep have stopped crying.' : api.flag('mended') ? ' The wall is whole.' : ' On the far side the wall is pulled down in a gap you could drive a cart through.');
