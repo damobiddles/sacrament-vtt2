@@ -84,6 +84,17 @@ The whole party shares one Horror meter, from 0 to 21. Every spell except a heal
 
 At 21 the meter is full, and **a hero pays in blood** instead: each point of their Horror cost that cannot go on the meter costs them **1 HP**. That can bring a hero down. Horror the GM adds by hand costs no blood.
 
+**The Stranger (an optional rule for a table of three or more players).** The Horror wears a familiar face. Agree before the game whether you play with it. The first time the Horror reaches **14** in an adventure, every player secretly draws a slip: one says **You are the Stranger**, the rest say **You are yourself**. The Stranger plays their hero as usual, but rolls a d6 in secret for one thing they want to come true before the adventure ends:
+
+1. The Horror reaches 21.
+2. You keep one relic or grimoire the party finds, and tell no one.
+3. Another hero is left alone, out of sight of the rest, for a whole scene.
+4. A foe the party could have finished off gets away.
+5. The party takes the longer or darker way, once, because you said so.
+6. Another hero spends Horror they did not need to.
+
+**Naming the Stranger.** Once an adventure, the living players may name a hero together, out loud. If they are right, the Stranger is themselves again and the Horror falls by **one d6**. If they are wrong, the Horror rises by **2**. A Stranger who is never named, and whose want came true, earns **one extra mark** at the end, and tells the table what they did.
+
 ## Growing stronger
 
 Each adventure a hero lives through to its end earns **1 mark**; tick it in the **Marks** box on the hero sheet. At **3 marks** the hero takes one advance: **+1 to one score**, up to 6, or **+1 to one Effort bonus**, up to +10. Then the marks start again.
