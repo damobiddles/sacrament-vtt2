@@ -81,15 +81,18 @@ The rules leave a threshold's consequence to the GM; in the solo game the game i
 * **Finds:** a hero from My heroes who finishes the road may press "Bring your finds home" once; each find still carried goes into the saved hero if there is room.
 * **The foe's next move** shows on its card with the real numbers (the roll it needs to hit you, the chance, its damage die). **Brace** spends the turn for +2 Defence until the hero's next turn, like the Guard ruling.
 
-## Obstacles: several ways through, and a clock (owner, 2026-11-06)
+## Obstacles: the method sets the die and the price (owner, 2026-11-11; first built 2026-11-06)
 
-Every obstacle offers at least two ways through instead of one button to press again and again:
+Every obstacle is a race against a clock, and its buttons are the shared rule's methods (`R.OBSTACLE` in `site/vtt/rules.js`):
 
-* **Bold** (a stat check, then Weapons Effort d6 off the bar). A failure costs something: d4 hurt, or Horror where it fits.
-* **Trick** (a different stat, once per obstacle). A success takes half of what is left off the bar.
-* Every failed try ticks the obstacle's **clock**. When it runs out something gets worse: the rain makes every try Hard (wheel), the flood rises (ford), bones wake (+2 Horror, grille), the Hag comes (salt), the Eater wakes (door).
+* **Bare hands or wits:** the scene's own action, Basic d4.
+* **A tool or weapon that fits:** "Use your ... on ...", Weapons d6, shown only if the hero carries one. The obstacle's `tool` says what fits: `items` (gear ids), `weapons: true` (any close Weapons weapon), `gun: true`.
+* **A gun:** "Shoot ... with ...", Guns d8 with the gun's misfire, and loud: the obstacle's clock (or the timer in its room) moves once, whatever the roll.
+* **A spell that answers it** (the obstacle's `answers`, by tag): Magic d10 plus the Magic bonus into the bar, again while the obstacle stands; each cast costs its Horror. A thing that costs no Horror answers it once. A failed cast moves the clock.
+* **The good idea** (`ways`, kind `trick`, once): Easy, and a success puts half of what is left into the bar.
+* Every failed try ticks the obstacle's **clock**. No way hurts the hero for failing; a scene's own story may (the ford's current without a rope).
 
-New obstacles only need data: `ways`, `clock` (a timer with `tick: 'fail'`), and optional `hard(api)` / `progress(api)`. No rules changed: these are the solo game's own GM calls.
+New obstacles only need data: `ways` (one trick), `tool`, `answers`, `clock` (a timer with `tick: 'fail'`), and optional `hard(api)` / `progress(api)`. `test/solo.test.mjs` checks every obstacle has a trick, a timer in its room and real gear ids.
 
 **The Hard Road (owner's tick, 2026-11-07):** opens after three roads come home (counted from the Chronicle). A switch on the start screen turns it on: the same road with one more middle scene, every Target 1 higher and every foe 2 more HP (the GM's numbers, so no rule changes; `SacramentSolo.HARD`). The Chronicle, the end card and a deed ("The Hard Road home") mark it.
 
