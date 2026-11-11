@@ -366,10 +366,7 @@
   function sfx(name) { if (M && M.sfx) M.sfx(name); }
   function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch { /* not on this device */ } }
   /* a number that rises from where the blow landed and fades: x and y in hundredths of the picture */
-  function float(text, x, y, cls) {
-    var f = document.createElement('span'); f.className = 'float ' + cls; f.textContent = text; f.style.left = x + '%'; f.style.top = y + '%';
-    document.querySelector('.frame').appendChild(f); setTimeout(function () { f.remove(); }, 1300);
-  }
+  function float(text, x, y, cls) { window.SacramentTally.float(text, x, y, cls, document.querySelector('.frame'), true); }
   function feel(o) {
     var frame = document.querySelector('.frame'), checks = o.fresh.filter(function (l) { return l.outcome; }), last = checks[checks.length - 1];
     frame.classList.remove('hit', 'good'); void frame.offsetWidth;
@@ -521,38 +518,11 @@
   /* The numbers that rise off the dice, as in a video game (the owner's ask, 2026-11-10): once a die lands, each modifier floats up from it in turn
      ("+3 STR", "+2 Crossbow"), then the total pops over the die ("15 against 13", "8 damage") and fades. Display only: the numbers are the ones the rules
      worked out, and the words are in the story too. Without moving dice (dice off, or reduced motion) the same numbers appear and fade where the dice would be. */
-  var TALLY_STEP = 420, TALLY_HOLD = 1500, tallyTimers = [], tallyEnd = 0;
-  function tallyClear() { tallyTimers.forEach(clearTimeout); tallyTimers = []; document.querySelectorAll('.frame .tally').forEach(function (t) { t.remove(); }); }
-  function tally(entry) {
-    tallyClear(); tallyEnd = 0;
-    var list = entry && entry.tally; if (!list || !list.length) return;
-    var frame = document.querySelector('.frame'); if (!frame) return;
-    var moving = !D.off() && !reduceMotion(), t = moving ? 950 : 0;
-    var later = function (fn, ms) { tallyTimers.push(setTimeout(fn, ms)); };
-    list.forEach(function (one) {
-      var at = t;
-      later(function () {
-        var box = frame.getBoundingClientRect(), dice = document.querySelectorAll('#dice .die'), die = dice[Math.min(one.at || 0, dice.length - 1)];
-        var r = die && die.offsetParent ? die.getBoundingClientRect() : (document.querySelector('#dice .reveal-result, #dice .dice-roll') || frame).getBoundingClientRect();
-        var x = r.left + r.width / 2 - box.left, y = die && die.offsetParent ? r.top + r.height / 2 - box.top : Math.min(r.top - box.top + 40, box.height / 2);
-        var t2 = document.createElement('div'); t2.className = 'tally'; t2.setAttribute('aria-hidden', 'true'); t2.style.left = x + 'px'; t2.style.top = y + 'px'; t2.style.setProperty('--half', (die && die.offsetParent ? r.width / 2 : 0) + 'px'); frame.appendChild(t2);
-        one.parts.forEach(function (p, k) {
-          later(function () { var c = document.createElement('span'); c.className = 'tally-part ' + (p.n < 0 ? 'minus' : 'plus'); c.textContent = (p.n < 0 ? '\u2212' + Math.abs(p.n) : '+' + p.n) + ' ' + p.t; c.style.setProperty('--k', k); t2.appendChild(c); }, k * TALLY_STEP);
-        });
-        later(function () {
-          var c = document.createElement('span'); c.className = 'tally-total ' + (one.good ? 'good' : 'bad');
-          var b = document.createElement('b'); b.textContent = one.total; c.appendChild(b);
-          if (one.word) { var w = document.createElement('small'); w.textContent = one.word; c.appendChild(w); }
-          t2.appendChild(c);
-        }, one.parts.length * TALLY_STEP);
-        later(function () { t2.classList.add('gone'); later(function () { t2.remove(); }, 400); }, one.parts.length * TALLY_STEP + TALLY_HOLD);
-      }, at);
-      t += one.parts.length * TALLY_STEP + (list.length > 1 ? TALLY_HOLD : 0);
-    });
-    tallyEnd = Date.now() + t + 200;
-  }
+  var TL = window.SacramentTally;   /* the drawing is shared with the table: /vtt/tally.js */
+  function tallyClear() { TL.clear(); }
+  function tally(entry) { TL.show(entry && entry.tally, document.querySelector('.frame'), document.getElementById('dice'), !D.off() && !reduceMotion()); }
   /* how long until the totals have shown, so the number over the foe or the hero waits for them */
-  function afterTally() { return Math.max(0, tallyEnd - Date.now()); }
+  function afterTally() { return TL.after(); }
 
   /* In solo the result card blocks nothing (the buttons below still work and the foe moves by itself), so its button only closes it, and it fades
      by itself once it has been read. It waits while the pointer is on it or its button has focus. */

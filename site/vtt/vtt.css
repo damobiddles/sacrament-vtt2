@@ -435,7 +435,7 @@ label.phys{align-items:flex-start}
 .recovery-warning button{min-height:42px;margin:6px 8px 0 0;background:var(--bg);color:var(--fg);border:1px solid var(--edge);padding:8px 12px}
 
 /* Fit the whole map within its available space without stretching coordinates. */
-#tablewrap{position:relative;display:block}
+#tablewrap{position:relative;display:block;--tally-z:5003;--float-z:5001}   /* the rising numbers (tally.css) sit over the dice; a blow's number over the tokens */
 #mapViewport{width:100%;height:100%;container-type:size;display:grid;place-items:center;overflow:hidden}
 .player-row{flex-wrap:wrap}
 .player-row .player-warning{flex:1 1 100%;margin:4px 0}
@@ -497,3 +497,5 @@ label.phys{align-items:flex-start}
 #strip label.phys{gap:2px}
 /* Desktop dice entry fits a single footer row without shrinking its label. */
 @media(min-width:901px){#strip label.phys{flex-direction:row;align-items:center;gap:8px}}
+/* a blow's number over a token sits on a dark plate, so it reads over any map (the solo game's floats are over its own dark pictures) */
+#tablewrap .float{padding:3px 10px 1px;border-radius:8px;background:#120f0be6;box-shadow:0 0 0 1px #b8955a99,0 4px 12px #000a;text-shadow:none;font-size:1.5rem}

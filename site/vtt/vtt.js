@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   /* The saved-table keys in this browser keep their original prefix: renaming it would make every table, GM key and hero already saved on a device vanish. It is built in two pieces so the old product name does not appear in the file. */
-  var KEY = 'ic' + 'rpg' + '-vtt-', R = window.SacramentRules, D = window.SacramentDice, API = '/.netlify/functions/vtt', $ = function (id) { return document.getElementById(id); };
+  var KEY = 'ic' + 'rpg' + '-vtt-', R = window.SacramentRules, D = window.SacramentDice, TL = window.SacramentTally, API = '/.netlify/functions/vtt', $ = function (id) { return document.getElementById(id); };
   var S = null;                                   /* the last state the server sent this person */
   var sessionVersion = 0;
   var sess = null;                                /* { code, token, role, pid } */
@@ -73,6 +73,7 @@
       if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { D.clear(); UI.roll = null; UI.readyAction = null; UI.attackChoice = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
+      var blows = S ? hpMoves(S, st) : [];
       S = st; UI.dirty = false; spin(st.log); var fresh = UI.freshLog || [];
       if (gm() && UI.view && !S.scenes.some(function (sc) { return sc.id === UI.view; })) { UI.view = null; UI.sel = null; UI.sceneRename = null; UI.sceneDelete = null; }
       if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
@@ -82,6 +83,7 @@
       }
       remember();
       render();
+      if (blows.length) floatBlows(blows);
     }
   }
   /* What this browser keeps of a table for the Your tables list: who you are there, the scene last seen and when. Saved only when it changes. */
@@ -97,8 +99,40 @@
     var fresh = UI.seenLog ? log.filter(function (e) { return !UI.seenLog[e.id]; }) : []; UI.freshLog = fresh;
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
     var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
-    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome); return; }
-    fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3).forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
+    if (checks.length) {
+      var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome);
+      if (D.resultId() === latest.outcome.rollId) tally(latest);   /* not when the roll was kept off this screen (your own hit is waiting for its damage) */
+      return;
+    }
+    var plain = fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3);
+    plain.forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
+    var counted = plain.filter(function (e) { return e.tally; }).pop(); if (counted) tally(counted);
+  }
+  /* The numbers that rise off the dice, as in the solo game (the owner's ask, 2026-11-11): each modifier floats up beside the die in turn, then the total pops
+     over it. They come from the server with the line, so every screen that is shown the dice is shown the same numbers, as the dice land. */
+  function tally(e) { TL.show(e.tally, $('tablewrap'), $('dice'), !D.off() && !TL.still()); }
+  /* A blow on a token: the HP it lost (or gained) rises from it and fades, on every screen that can see its HP, once the totals have been seen.
+     Only numbers this screen is already shown: a card with hidden HP never floats one. */
+  function hpMoves(was, now) {
+    if (!was.table || !now.table || was.table.scene.id !== now.table.scene.id) return [];
+    var out = [];
+    Object.keys(now.cards).forEach(function (id) {
+      var a = was.cards[id], b = now.cards[id];
+      if (!a || !b || !a.hp || !b.hp || a.hp.hidden || b.hp.hidden || a.hp.cur == null || b.hp.cur == null || a.hp.cur === b.hp.cur) return;
+      out.push({ id: id, d: b.hp.cur - a.hp.cur, hero: b.kind === 'pc' });
+    });
+    return out;
+  }
+  function floatBlows(blows) {
+    setTimeout(function () {
+      var frame = $('tablewrap'); if (!frame || document.hidden) return; var box = frame.getBoundingClientRect();
+      blows.forEach(function (b) {
+        var el = document.querySelector('#cards [data-id="' + b.id + '"]'); if (!el || !el.offsetParent) return;
+        var r = el.getBoundingClientRect(), x = r.left + r.width / 2 - box.left, y = Math.max(18, r.top - box.top - 6);   /* just above the token, so it never sits on its picture or letter */
+        if (x < 0 || y < 0 || x > box.width || y > box.height) return;   /* scrolled out of the view */
+        TL.float(b.d < 0 ? '\u2212' + Math.abs(b.d) : '+' + b.d, x, y, b.d > 0 ? 'heal' : b.hero ? 'hurt' : 'dmg', frame);
+      });
+    }, TL.after());
   }
   D.onLand = function () { if (S) render(); };
 
