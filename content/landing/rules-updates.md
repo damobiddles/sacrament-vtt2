@@ -31,6 +31,16 @@ Questions the current text left open. The rules have not changed; these say how 
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 11 November 2026, later: ways through an obstacle
+
+**What changed.** How a hero gets past an obstacle now sets the Effort die and the price, and the GM rolls only when something presses.
+
+- **Roll only when something presses.** With no timer, no foe and nothing lost by failing, it just happens. A plan that makes sense just works.
+- **An Effort bar only for a race** against a timer or a foe. Otherwise one check settles it.
+- **The method sets the die:** bare hands or wits Basic d4, a weapon or tool that fits Weapons d6 (only if carried), a gun Guns d8 (loud), a fitting spell Magic d10 (its usual Horror). A good idea is Easy and fills half of what is left, once.
+- **In the solo game** each obstacle offers these as its buttons: bare hands, your tool or weapon if one fits, your gun if one fits, any spell that answers it, and the scene's good idea. A gun always moves the clock once. The bold ways that hurt you on a failure are gone: a failed try costs time. A fitting spell now rolls Magic d10 into the bar and may be cast again (each cast costs its Horror); before, it took half of what was left, once.
+- *Prompted by:* playing the solo game and a real table, where choices with the same odds differed only in what a failure cost, and players talked their way past bars; the designer's decision.
+
 ## 11 November 2026: the Horror at the heart
 
 **What changed.** A review of the rules for simplicity and fun, after the 9 November playtest. The aim: every hard choice in the game is a choice about tempting the Horror. The same rules apply at the table, around a real table and in the solo game.
