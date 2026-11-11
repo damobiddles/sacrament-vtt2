@@ -2,6 +2,14 @@
 
 Moved here from `CLAUDE.md` (word for word) to keep that file short. These are the owner's dated decisions and the reasons behind how the table behaves. **Read the relevant entry before changing anything it mentions.** The hard rules that must never be broken are repeated in `CLAUDE.md` under "Standing rules from owner decisions".
 
+## Rising numbers at the table, as in solo (owner, 2026-11-11)
+
+The owner asked for the solo game's floating modifiers and totals on the table too ("can we apply it to the VTT?"). Display only: no rule, number or stored key name changed.
+
+- **One shared file:** `site/vtt/tally.js` and `site/vtt/tally.css` draw the numbers for both solo and the table. Change them there, not in `solo.js`/`solo.css`.
+- **The server builds the numbers** (`tally` on a log line, next to `dice`), so every screen shown the dice is shown the same parts and total as the dice land. Hero checks (stat, an item's accuracy, a waiting bonus), item and weapon attacks, Effort and damage (bonus, two hands, the critical die), monster attacks (attack bonus, scene danger, against Defence), monster damage, healing amounts and several GM dice. A monster with hidden numbers shows its tally to the GM only (the same rule as its dice).
+- **A blow on a token** floats its HP change (−5, +3) above the token on every screen that can see that HP, after the totals have shown. Cards with hidden HP never float a number.
+
 ## Keep or pull back the solo game's rules (owner, 2026-11-11)
 
 The owner felt the solo game had pushed crunch into the table and paper game. He approved the write-up "Keep or pull back: the solo game's rules" (https://claude.ai/artifact/RAXqhzQwBnJxWcFjEoeNud, "This looks good"). The principle: **one set of rules, and solo plays a smaller slice of it.** Step 1 (words only, no rule or number changes):

@@ -7,11 +7,13 @@
 // Rules arithmetic is in site/vtt/rules.js (the same file the browser uses to show a calculation), so the screen and the server cannot disagree.
 import { createHmac } from 'node:crypto';
 import '../../../site/vtt/rules.js';
+import '../../../site/vtt/tally.js';
 import '../../../site/sheet/gear.js';
 import '../../../site/sheet/sheet-core.js';
 import { capacity as sceneCapacity } from './vtt-scene-pack.mjs';
 import { LOOT_NOTES } from './loot-notes.mjs';
 const R = globalThis.SacramentRules;
+const TL = globalThis.SacramentTally;   /* the numbers that rise off the dice on every screen (display only; built from numbers the rules already worked out) */
 const SC = globalThis.SacramentSheetCore;   /* the character sheet's rules: the same file the sheet in the browser runs */
 
 export const LIMITS = { loot: 60, cards: 150, chars: 12, players: 12, scenes: 20, strokes: 120, points: 160, log: 200, rolls: 60, applied: 400, clients: 200, joins: 100, window: 64, name: 60, text: 2000, notes: 4000, url: 500 };
@@ -43,10 +45,12 @@ const nid = (s, p) => p + (s.seq++).toString(36);
 
 export function addLog(s, who, text, o = {}) {
   /* private: only the GM reads it. only: the GM and that one player. gmText: what the GM reads in place of `text` (the numbers, say).
-     dice: the dice the server rolled for it, [{ die: 20, n: 12 }], so every screen that reads the line can show them landing; diceGm: only the GM is shown them (the numbers are hidden from players). */
+     dice: the dice the server rolled for it, [{ die: 20, n: 12 }], so every screen that reads the line can show them landing; diceGm: only the GM is shown them (the numbers are hidden from players).
+     tally: what the roll adds up to ([{ parts: [{ n: 3, t: 'STR' }], total: 15, word: 'against Target 12', good: true }]), for the numbers that rise off the dice; shown to whoever is shown the dice. */
   const e = { id: nid(s, 'L'), at: o.now || 0, by: who.role === 'gm' ? 'gm' : who.pid, who: who.name || (who.role === 'gm' ? 'GM' : 'Player'), text: str(text, 400), gmText: o.gmText ? str(o.gmText, 400) : '', kind: o.kind || 'info', private: !!o.private, only: o.only || null, effects: o.effects || [], undone: false };
   if (o.rollId) { e.rollId = o.rollId; e.rollScene = s.table.scene; }
   if (o.dice && o.dice.length) { e.dice = o.dice; if (o.diceGm) e.diceGm = true; }
+  if (o.tally && o.tally.length) { e.tally = o.tally; if (o.diceGm) e.diceGm = true; }
   s.log.push(e); if (s.log.length > LIMITS.log) s.log.splice(0, s.log.length - LIMITS.log);
   return e;
 }
@@ -180,7 +184,7 @@ export function project(s, a, opt = {}) {
     drawV: s.drawV || 0, pv: s.pv || 0, pointers: projectPointers(s, a), rolls, nextSession: s.next || null,
     /* the viewer's own most recent actions the table has already applied, so a screen showing a change it is still waiting to hear about does not count it twice */
     done: s.appliedOrder.filter((id) => s.applied[id] && s.applied[id].by === (gm ? 'gm' : a.pid)).slice(-40),
-    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined })),
+    log: s.log.filter((e) => gm || (!e.private && (!e.only || e.only === a.pid))).slice(-80).map((e) => ({ id: e.id, at: e.at, who: e.who, text: gm && e.gmText ? e.gmText : e.text, kind: e.kind, undone: e.undone, outcome: rollOutcome(s, e, a), mine: e.by === (gm ? 'gm' : a.pid), undoable: !e.undone && e.effects.length > 0 && (gm || (e.by === a.pid && !e.effects.some((fx) => fx.t === 'horror' || fx.t === 'threshold' || fx.t === 'turn' || fx.t === 'sceneUse'))), dice: e.dice && (gm || !e.diceGm) ? e.dice : undefined, tally: e.tally && (gm || !e.diceGm) ? e.tally : undefined })),
     /* the Rising Horror is the whole table's, so everyone sees it; only the GM is told of a threshold still to deal with */
     horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds, fired: horrorOf(s).fired.slice() }, gm ? { alert: horrorOf(s).alert } : {})
   };
@@ -373,6 +377,8 @@ const d = (ctx, sides) => 1 + Math.floor(ctx.rng() * sides);
 const L = (s, a, ctx, text, o = {}) => addLog(s, a, text, Object.assign({ now: ctx.now }, o));
 /* The dice for a log line: none when the person typed in what their own die shows. */
 const diceOf = (manual, die, n) => (manual ? [] : [{ die, n }]);
+/* What a hero's check adds up to, for the numbers that rise off the die: the stat, an item's own accuracy, a bonus waiting from an item. */
+const checkTally = (chk, stat, statValue, more = []) => [TL.sum(chk.mod, [[statValue || 0, stat]].concat(more), chk.total, 'against Target ' + chk.target, chk.success)];
 /* A change to a number is recorded as how much it moved, so putting it back later moves it back by the same amount and leaves any other change alone. */
 const delta = (card, field, d) => ({ t: 'delta', card, field, d });
 /* Who reads a line about this card: nobody but the GM unless the card is on the players' table now. */
@@ -524,7 +530,7 @@ function selfEffects(s, a, ctx, ch, u, fx, priv) {
   if (was != null) settleHero(s, card, was, e, ctx);
 }
 /* The bonus waiting for a hero's next check (the Penitent's Chain), taken by that check. */
-function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0, text: '' }; const from = ch.checkBonusFrom || ''; ch.checkBonus = 0; ch.checkBonusFrom = ''; return { n, text: ' (+' + n + (from ? ' from ' + from : '') + ')' }; }
+function takeBonus(ch) { const n = int(ch.checkBonus, 0); if (!n) return { n: 0, text: '' }; const from = ch.checkBonusFrom || ''; ch.checkBonus = 0; ch.checkBonusFrom = ''; return { n, from, text: ' (+' + n + (from ? ' from ' + from : '') + ')' }; }
 
 /* A hero's d20 showing a natural 1 raises the Horror by itself on magic (a spell, or an item that tempts the Horror) or a pushed second action of any kind;
    not on any other roll, an ordinary weapon's included (the owner's rules, 2026-11-01 and 2026-11-11). */
@@ -625,7 +631,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk); out.rollId = roll.id;
-    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text, { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n) });
+    L(s, a, ctx, ch.name + ' uses ' + u.name + ' on ' + target.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text, { kind: 'roll', private: privateLine, rollId: roll.id, dice: diceOf(manual, 20, n), tally: checkTally(chk, u.stat, ch.stats[u.stat], [[tb.n, tb.from || 'bonus']]) });
     natOne(s, a, ctx, ch, chk, roll, isMagic(u));
   } else ch.pushPending = false;
   temptHorror(s, a, ctx, ch, u, privateLine);
@@ -647,7 +653,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
         target.healingUses = target.healingUses || {}; const beforeMark = target.healingUses[h.kind] || null, mark = nid(s, 'h'); target.healingUses[h.kind] = mark;
         effects.push({ t: 'healingUse', card: target.id, kind: h.kind, before: beforeMark, after: mark, epoch: target.healEpoch || 0 });
       }
-      const line = L(s, a, ctx, ch.name + ' heals ' + target.name + (hidden ? '.' : ': +' + applied + ' HP (' + dice.map(x => 'd' + x.die + ' ' + x.n).join(' + ') + ').'), { kind: 'heal', effects, private: privateLine, dice });
+      const line = L(s, a, ctx, ch.name + ' heals ' + target.name + (hidden ? '.' : ': +' + applied + ' HP (' + dice.map(x => 'd' + x.die + ' ' + x.n).join(' + ') + ').'), { kind: 'heal', effects, private: privateLine, dice, tally: hidden ? undefined : [TL.total(applied, 'HP back', true)] });
       settleHero(s, target, before, line, ctx);
       out.healing = { amount, log: line.id }; if (isGM(a) || !hidden) out.healing.applied = applied;
       if (roll) { roll.healing = { amount, dice }; roll.applied = { cardId: target.id, field: 'healing', applied, log: line.id }; }
@@ -904,7 +910,7 @@ const HANDLERS = {
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
-    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20) });
+    L(s, a, ctx, ch.name + ' · ' + R.sayCheck(chk, c.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), rollId: roll.id, dice: diceOf(manual, 20, d20), tally: checkTally(chk, c.stat, ch.stats[c.stat], [[tb.n, tb.from || 'bonus']]) });
     const out = { rollId: roll.id }, hr = natOne(s, a, ctx, ch, chk, roll, false); if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
@@ -941,7 +947,7 @@ const HANDLERS = {
       if (sceneFx) sceneFx.roll = roll.id;
       takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
       recapCheck(s, ctx, ch, chk);
-      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20) });
+      L(s, a, ctx, ch.name + ' uses ' + u.name + ' · ' + R.sayCheck(chk, u.stat) + tb.text + (tc ? ' (' + tc.name + ')' : '') + (u.onPath ? ' (own path: 1 less Horror)' : '') + (manual ? ' [physical die]' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [], rollId: roll.id, dice: diceOf(manual, 20, d20), tally: checkTally(chk, u.stat, ch.stats[u.stat], [[u.attackBonus || 0, u.name], [tb.n, tb.from || 'bonus']]) });
       if (u.cat) { roll.cat = u.cat; roll.weaponBonus = u.damageBonus || 0; }   /* the item's own kind of Effort: on a success the player rolls it as its own step ("Roll damage"), so the blow lands first and the damage after */
       out.rollId = roll.id;
       nat = natOne(s, a, ctx, ch, chk, roll, isMagic(u));
@@ -1026,7 +1032,7 @@ const HANDLERS = {
     if (![4, 6, 8, 10, 12, 20, 100].includes(sides) || !Number.isInteger(count) || count < 1 || count > 20) fail('invalid', 'Choose a standard die and 1 to 20 dice.');
     const dice = Array.from({ length: count }, () => ({ die: sides, n: d(ctx, sides) }));
     const total = dice.reduce((n, x) => n + x.n, 0);
-    const line = L(s, a, ctx, 'GM rolls ' + count + 'd' + sides + ': ' + dice.map(x => x.n).join(' + ') + ' = ' + total + '.', { kind: 'roll', private: c.private === true, dice });
+    const line = L(s, a, ctx, 'GM rolls ' + count + 'd' + sides + ': ' + dice.map(x => x.n).join(' + ') + ' = ' + total + '.', { kind: 'roll', private: c.private === true, dice, tally: count > 1 ? [TL.total(total, 'total', true)] : undefined });
     return { dice, total, logId: line.id };
   },
   monsterAttack(s, c, a, ctx) { /* the GM's: a monster rolls d20 + its attack bonus against a hero's Defence */
@@ -1039,7 +1045,8 @@ const HANDLERS = {
     const roll = { id: nid(s, 'r'), by: 'gm', charId: null, charName: att.name, stat: null, check: res, sceneId: s.table.scene, attack: { cardId: att.id, baseBonus: att.attack || 0, sceneBonus: s.settings.sceneDanger ? R.sceneDanger(s.table.target) : 0 }, manual, targetCardId: tgt.id, effort: null, applied: null, void: false, at: ctx.now };
     s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     const who = attackerNames(s, roll), hide = numbersHidden(att), line = (n) => n + ' attacks ' + tgt.name + (hide ? (res.hit ? ': hit.' : ': miss.') : ' · ' + R.sayAttack(res)) + (manual ? ' [physical die]' : '');
-    L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', rollId: roll.id, dice: diceOf(manual, 20, d20), diceGm: hide });
+    L(s, a, ctx, line(who.pub), { kind: 'roll', private: !isPublic(s, tgt), gmText: who.pub !== who.gm || hide ? line(who.gm).replace(/: (hit|miss)\.$/, ' · ' + R.sayAttack(res)) : '', rollId: roll.id, dice: diceOf(manual, 20, d20), diceGm: hide,
+      tally: [TL.sum(res.mod, [[roll.attack.baseBonus, 'attack'], [roll.attack.sceneBonus, 'scene danger']], res.total, 'against Defence ' + res.defence, !res.hit)] });
     return { rollId: roll.id };
   },
   monsterEffort(s, c, a, ctx) { /* on a hit: the monster's Effort is rolled and goes straight onto the hero's hit points */
@@ -1055,7 +1062,7 @@ const HANDLERS = {
     let e; try { e = R.effort({ cat, rolled, bonus: 0, settings: s.settings }); } catch (err) { fail('invalid', err.message); }
     e.manual = manual; roll.effort = e;
     const who = attackerNames(s, roll);
-    L(s, a, ctx, who.pub + ' · ' + R.sayEffort(e, 'damage') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !isPublic(s, hero), gmText: who.pub !== who.gm ? who.gm + ' · ' + R.sayEffort(e, 'damage') + (manual ? ' [physical die]' : '') : '', dice: diceOf(manual, e.die, e.rolled) });
+    L(s, a, ctx, who.pub + ' · ' + R.sayEffort(e, 'damage') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !isPublic(s, hero), gmText: who.pub !== who.gm ? who.gm + ' · ' + R.sayEffort(e, 'damage') + (manual ? ' [physical die]' : '') : '', dice: diceOf(manual, e.die, e.rolled), tally: [TL.effort(e, 'damage', { good: false })] });
     return applyEffort(s, roll, hero, 'hp', a, ctx);
   },
   dying(s, c, a, ctx) { /* the GM's hand on a hero's countdown: stable after a Tend, hurt again while stable, a round more or less, or the d4 for a hero at 0 who has none */
@@ -1117,7 +1124,7 @@ const HANDLERS = {
     e.weaponBonus = roll.weaponBonus === 2 && (roll.cat === 'weapons' || roll.cat === 'guns') ? 2 : 0; e.total += e.weaponBonus;
     if (roll.criticalRule === 'extra' && roll.check.offerUltimate) { const size = R.settingsOf(s.settings).dice.ultimate, extra = c.criticalRolled != null ? int(c.criticalRolled, 0) : d(ctx, size); try { e = R.criticalEffort({ base: e, rolled: extra, bonus: ch.effort.ultimate, settings: s.settings }); } catch (err) { fail('invalid', err.message); } }
     e.manual = manual; roll.effort = e; const tc = roll.targetCardId && s.cards[roll.targetCardId];
-    L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled).concat(e.critical ? diceOf(c.criticalRolled != null, e.critical.die, e.critical.rolled) : []) });
+    L(s, a, ctx, roll.charName + ' · ' + R.sayEffort(e, tc && tc.hp ? 'damage' : 'Effort') + (manual ? ' [physical die]' : ''), { kind: 'roll', private: !!(tc && !isPublic(s, tc)), dice: diceOf(manual, e.die, e.rolled).concat(e.critical ? diceOf(c.criticalRolled != null, e.critical.die, e.critical.rolled) : []), tally: [TL.effort(e, tc && tc.hp ? 'damage' : 'Effort')] });
     if (automatic) {
       if (roll.area) HANDLERS.applyArea(s, { rollId: roll.id, cardIds: automatic.ids }, a, ctx);
       else HANDLERS.apply(s, { rollId: roll.id, cardId: automatic.id, field: automatic.field }, a, ctx);
@@ -1133,7 +1140,7 @@ const HANDLERS = {
     e.manual = manual;
     const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: null, check: null, manual: false, targetCardId: null, effort: e, applied: null, void: false, at: ctx.now };
     s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
-    L(s, a, ctx, ch.name + ' · ' + R.sayEffort(e) + (manual ? ' [physical die]' : ''), { kind: 'roll', dice: diceOf(manual, e.die, e.rolled) }); return { rollId: roll.id };
+    L(s, a, ctx, ch.name + ' · ' + R.sayEffort(e) + (manual ? ' [physical die]' : ''), { kind: 'roll', dice: diceOf(manual, e.die, e.rolled), tally: [TL.effort(e, 'Effort')] }); return { rollId: roll.id };
   },
   apply(s, c, a, ctx) {
     const roll = s.rolls[c.rollId] || fail('not_found', 'That roll is gone.'); if (roll.void) fail('invalid', 'That roll was undone.');

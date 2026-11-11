@@ -7,7 +7,7 @@ import { table, charNamed, find } from './vtt-helpers.mjs';
 import { memoryStore } from '../netlify/functions/_shared/vtt-service.mjs';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'vtt/tally.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);
 const R = globalThis.SacramentRules, C = globalThis.SacramentSheetCore, S = globalThis.SacramentSolo;
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
 

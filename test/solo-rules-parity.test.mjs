@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import { table, charNamed, find, d20 as d20f, die as dief } from './vtt-helpers.mjs';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'vtt/tally.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);
 const S = globalThis.SacramentSolo, R = globalThis.SacramentRules, C = globalThis.SacramentSheetCore;
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };
 const ENGINE = fs.readFileSync(new URL('../site/solo/engine.js', import.meta.url), 'utf8');
