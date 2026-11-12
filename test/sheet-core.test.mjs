@@ -12,7 +12,7 @@ const hp = () => ({ cur: 10, max: 10 });
 const ids = (h) => h.gear.map((g) => g.id + (g.eq ? '+' : '-')).join(',');
 
 test('the numbers a hero is built with come from the rules settings: 6 points, no more than 6 in one score, 4 Effort points, ten slots in each set', () => {
-  assert.deepEqual([R.BUILD.points, R.BUILD.scoreMax, R.BUILD.effortPoints, R.BUILD.slots, R.BUILD.magicItems, R.BUILD.playerGrimoires], [6, 6, 4, 10, 3, 1]);
+  assert.deepEqual([R.BUILD.points, R.BUILD.scoreMax, R.BUILD.effortPoints, R.BUILD.slots, R.BUILD.playerGrimoires], [6, 6, 4, 10, 1]); assert.equal(R.BUILD.magicItems, undefined, 'no limit on relics and grimoires (owner, 2026-11-12)');
 });
 
 test('scores: points are limited, one score is limited, and a spent score can be taken back', () => {
@@ -90,13 +90,13 @@ test('a move that does not fit is refused with the numbers', () => {
   const r = C.edit(h, { op: 'move', index: 6, eq: true }, player, null); assert.equal(r.ok, false); assert.match(r.why, /equipped slots are full \(10 of 10/);
 });
 
-test('relics are the GM\'s to give; a player may pick one grimoire; a hero holds at most three magic items', () => {
+test('relics are the GM\'s to give; a player may pick one grimoire; a hero may hold any number of relics and grimoires (owner, 2026-11-12)', () => {
   const h = hero(); const add = (id, who) => C.edit(h, { op: 'add', id }, who, null);
   const relic = add('chain', player); assert.equal(relic.ok, false); assert.match(relic.why, /relic.*ask your GM/i);
   assert.equal(add('embers', player).ok, true);
   const second = add('litany', player); assert.equal(second.ok, false); assert.match(second.why, /one grimoire.*ask your GM/i);
   assert.equal(add('litany', gm).ok, true); assert.equal(add('chain', gm).ok, true);
-  const fourth = add('bell', gm); assert.equal(fourth.ok, false); assert.match(fourth.why, /no more than three/i);
+  assert.equal(add('bell', gm).ok, true, 'a fourth Horror-tempting item is allowed'); assert.equal(add('censer', gm).ok, true, 'and a fifth');
 });
 
 test('armour feeds Defence: 10 + CON + armour, armour counting for at most +5, and the GM\'s own armour number still counts', () => {
@@ -134,7 +134,7 @@ test('a whole hero can be checked: what is over a limit is listed in words, and 
   const bad = hero({ stats: { STR: 6, DEX: 6, CON: 0, INT: 0, WIS: 0, CHA: 0 }, gear: [{ id: 'chain', eq: true }, { id: 'nonsense', eq: true }] });
   const list = C.problems(bad, player); assert.ok(list.some((x) => /12 points/.test(x))); assert.ok(list.some((x) => /relic/i.test(x))); assert.ok(list.some((x) => /nonsense/.test(x)));
   assert.ok(!C.problems(hero({ gear: [{ id: 'chain', eq: true }] }), { gm: false, arriving: true }).some((x) => /relic/i.test(x)), 'a ready-made kit may arrive with a relic');
-  assert.ok(C.problems(hero({ gear: ['chain', 'bell', 'censer', 'candle'].map((id) => ({ id, eq: true })) }), { gm: false, arriving: true }).some((x) => /no more than three/.test(x)));
+  assert.ok(!C.problems(hero({ gear: ['chain', 'bell', 'censer', 'candle'].map((id) => ({ id, eq: true })) }), { gm: false, arriving: true }).some((x) => /no more than three|relics and grimoires/.test(x)), 'four relics may arrive: there is no limit (owner, 2026-11-12)');
   assert.deepEqual(C.problems(hero({ gear: [{ id: 'chain', eq: true }] }), gm), [], 'the GM may give a relic');
   const c = C.cleanHero({ name: '  Wren  ', stats: { STR: 99, DEX: 'x' }, effort: { basic: 2 }, gear: [{ id: 'sword', eq: 'yes' }, { id: 'bogus' }], armour: 99, notes: 5, extra: 'x' });
   assert.equal(c.name, 'Wren'); assert.equal(c.stats.STR, 10); assert.equal(c.stats.DEX, 0); assert.equal(c.effort.basic, 2); assert.equal(c.armour, 10);

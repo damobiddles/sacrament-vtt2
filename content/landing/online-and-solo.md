@@ -20,7 +20,7 @@ The [Rules](/rules/) are the whole game. This page is only about the software: w
 
 **The Horror.** Thresholds announce themselves. The GM's **New adventure** button in the Table tab lets each one fire again. Horror has its own Undo.
 
-**Limits the table keeps.** A single check bonus is capped at +10, and a two-handed weapon's +2 damage counts once. The table also counts the three Horror-tempting things a hero may carry, packed ones included.
+**Limits the table keeps.** A single check bonus is capped at +10, and a two-handed weapon's +2 damage counts once.
 
 **What the GM still decides.** Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, a weapon's listed manoeuvres, and anything a spell or relic does without a die. Item and spell notes say which steps the table takes for you.
 

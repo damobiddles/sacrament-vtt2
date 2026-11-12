@@ -31,6 +31,14 @@ Questions the current text left open. The rules have not changed; these say how 
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 12 November 2026: no limit on relics and grimoires
+
+**What changed.** A hero can now carry any number of relics, grimoires and other uncanny finds. The old limit of three Horror-tempting things, packed ones included, is gone everywhere: on the Sacrament RPG Table, on paper and in the solo game. Slots still limit what fits (a grimoire takes three), only equipped relics and grimoires work, and every use still costs its Horror.
+
+**Why.** The designer's decision. The limit was one more thing to count, and the Horror already makes carrying magic a risk.
+
+**If you printed something.** The cheat sheet, hero sheet and print-and-play kit said "at most 3 that tempt the Horror". Cross it out. The downloads have been replaced.
+
 ## 11 November 2026, last: shorter rules, and no tags to learn
 
 **Designer's decision.** The solo game had pushed some of its own machinery into the rules everyone learns. This tidies that up. **No rule or number changes.**

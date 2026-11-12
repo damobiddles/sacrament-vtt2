@@ -52,7 +52,7 @@ Each item lists its slots. Only equipped weapons, armour, relics and grimoires w
 
 **Guns** are rare and unreliable: the hand cannon, the arquebus and the wheellock pistol, 5 in 100 on the Arms table. They roll Guns d8. On a **natural 1 to 3 the powder fails** and the shot misses, whatever the total. Reloading takes a Move, and everything in earshot hears the shot. The first time a hero finds a gun, they may move Effort points into Guns.
 
-A **grimoire** takes three slots and holds three spells; each spell lists its own range, effect and Horror cost. A hero may start with one grimoire. A hero can carry at most **three Horror-tempting things**: relics, grimoires and other uncanny finds, packed ones included.
+A **grimoire** takes three slots and holds three spells; each spell lists its own range, effect and Horror cost. A hero may start with one grimoire.
 
 **Paths.** A hero may follow one of 20 [paths](/rules/paths/), such as Knight, Scholar, Cutpurse or Witch, or none. **Once a scene, a check that fits your path is Easy**; say so as you roll, and the GM judges whether it fits (never an attack). And **every relic belongs to a path**: a relic of your own path costs **1 less Horror** to use. Any hero can use any relic.
 
