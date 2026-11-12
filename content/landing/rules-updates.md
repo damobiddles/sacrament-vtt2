@@ -39,6 +39,15 @@ Questions the current text left open. The rules have not changed; these say how 
 
 **If you printed something.** The cheat sheet, hero sheet and print-and-play kit said "at most 3 that tempt the Horror". Cross it out. The downloads have been replaced.
 
+## 11 November 2026, at night: graves, bequests and the Stranger
+
+**Designer's decision.** Death should be a story, not only a loss, and the Horror should be able to sit at the table with you. **One small rule and one optional rule are added; no number changes.**
+
+- A hero who dies may say **last words**, and may leave **one thing they carried** to the next hero who joins the party. At the table, the GM hands it over. In the solo game, the next road's hero carries it, once, and the fallen hero gets a grave in the Chronicle, with their last words.
+- **For in-person play (optional):** light three candles before the first scene and snuff one when the Horror reaches 7, 14 and 21. The print-and-play kit's Horror sheet now suggests it. This is atmosphere, not a rule.
+- **The Stranger, an optional rule** for three or more players. The first time the Horror reaches 14, one player secretly becomes the Stranger, with a secret want. Name them together, once: right, the Horror falls by one d6; wrong, it rises by 2. A Stranger never named whose want came true earns an extra mark. The slips are a free printable on [Play in person](/play-in-person/). See [the Rules](/rules/#the-horror).
+- **Print-and-play kit (PDF), corrected.** Three lines still described older rules: a Party rest now uses one d6 (not a d10 for every two heroes), dying lasts 3 rounds (no d4 countdown), and paying in blood costs 1 HP a point (not d4). The download has been replaced.
+
 ## 11 November 2026, last: shorter rules, and no tags to learn
 
 **Designer's decision.** The solo game had pushed some of its own machinery into the rules everyone learns. This tidies that up. **No rule or number changes.**

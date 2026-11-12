@@ -125,7 +125,7 @@ test('a hero with nothing to use is not told to choose an item', async ({ browse
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Thorne');
   await card(ann, 'Pit Ghoul').click();
-  await expect(ann.locator('#panel')).toContainText('choose an action in Play');
+  await expect(ann.locator('#panel')).toContainText('choose an action below');
   await ann.locator('#panel [data-do=sheet]').click(); await ann.locator('[data-sh=remove]').first().click(); await ann.locator('[data-sh=close]').first().click(); await saved(ann);
   await card(ann, 'Pit Ghoul').click();
   await expect(ann.locator('#panel')).toContainText('tap a stat below to roll against it.');

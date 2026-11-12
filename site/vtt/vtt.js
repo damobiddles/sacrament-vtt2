@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   /* The saved-table keys in this browser keep their original prefix: renaming it would make every table, GM key and hero already saved on a device vanish. It is built in two pieces so the old product name does not appear in the file. */
-  var KEY = 'ic' + 'rpg' + '-vtt-', R = window.SacramentRules, D = window.SacramentDice, API = '/.netlify/functions/vtt', $ = function (id) { return document.getElementById(id); };
+  var KEY = 'ic' + 'rpg' + '-vtt-', R = window.SacramentRules, D = window.SacramentDice, TL = window.SacramentTally, API = '/.netlify/functions/vtt', $ = function (id) { return document.getElementById(id); };
   var S = null;                                   /* the last state the server sent this person */
   var sessionVersion = 0;
   var sess = null;                                /* { code, token, role, pid } */
@@ -73,6 +73,8 @@
       if (S && S.table && st.table && S.table.scene && st.table.scene && S.table.scene.id !== st.table.scene.id) { D.clear(); UI.roll = null; UI.readyAction = null; UI.attackChoice = null; UI.aim = {}; UI.working = null; if (UI.sel && !st.cards[UI.sel]) UI.sel = null; else if (!gm()) UI.sel = null; }
       var was = S && { mine: !gm() && myTurn(), round: S.table.round, idx: S.table.idx };
       if (!S || st.v !== S.v) UI.lastActive = Date.now();   /* the table has changed: ask again soon */
+      var blows = S ? hpMoves(S, st) : [], hz = S && S.horror && st.horror ? st.horror.cur - S.horror.cur : 0;
+      var gutter = hz > 0 && st.horror.thresholds.some(function (t) { return S.horror.cur < t && st.horror.cur >= t; });
       S = st; UI.dirty = false; spin(st.log); var fresh = UI.freshLog || [];
       if (gm() && UI.view && !S.scenes.some(function (sc) { return sc.id === UI.view; })) { UI.view = null; UI.sel = null; UI.sceneRename = null; UI.sceneDelete = null; }
       if (UI.sceneDelete === S.table.scene.id) UI.sceneDelete = null;
@@ -82,6 +84,9 @@
       }
       remember();
       render();
+      if (blows.length) floatBlows(blows);
+      if (hz) horrorMoved(hz);
+      if (gutter && window.SacramentDread) window.SacramentDread.gutter($('table'));   /* a threshold passed: the candles at the map's edges gutter (dread.js, shared with solo) */
     }
   }
   /* What this browser keeps of a table for the Your tables list: who you are there, the scene last seen and when. Saved only when it changes. */
@@ -97,8 +102,40 @@
     var fresh = UI.seenLog ? log.filter(function (e) { return !UI.seenLog[e.id]; }) : []; UI.freshLog = fresh;
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
     var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
-    if (checks.length) { var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome); return; }
-    fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3).forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
+    if (checks.length) {
+      var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome);
+      if (D.resultId() === latest.outcome.rollId) tally(latest);   /* not when the roll was kept off this screen (your own hit is waiting for its damage) */
+      return;
+    }
+    var plain = fresh.filter(function (e) { return e.dice && !e.undone; }).slice(-3);
+    plain.forEach(function (e) { D.show(e.dice, String(e.text).split(/ · |: /)[0].slice(0, 40), e.mine); });
+    var counted = plain.filter(function (e) { return e.tally; }).pop(); if (counted) tally(counted);
+  }
+  /* The numbers that rise off the dice, as in the solo game (the owner's ask, 2026-11-11): each modifier floats up beside the die in turn, then the total pops
+     over it. They come from the server with the line, so every screen that is shown the dice is shown the same numbers, as the dice land. */
+  function tally(e) { TL.show(e.tally, $('tablewrap'), $('dice'), !D.off() && !TL.still()); }
+  /* A blow on a token: the HP it lost (or gained) rises from it and fades, on every screen that can see its HP, once the totals have been seen.
+     Only numbers this screen is already shown: a card with hidden HP never floats one. */
+  function hpMoves(was, now) {
+    if (!was.table || !now.table || was.table.scene.id !== now.table.scene.id) return [];
+    var out = [];
+    Object.keys(now.cards).forEach(function (id) {
+      var a = was.cards[id], b = now.cards[id];
+      if (!a || !b || !a.hp || !b.hp || a.hp.hidden || b.hp.hidden || a.hp.cur == null || b.hp.cur == null || a.hp.cur === b.hp.cur) return;
+      out.push({ id: id, d: b.hp.cur - a.hp.cur, hero: b.kind === 'pc' });
+    });
+    return out;
+  }
+  function floatBlows(blows) {
+    setTimeout(function () {
+      var frame = $('tablewrap'); if (!frame || document.hidden) return; var box = frame.getBoundingClientRect();
+      blows.forEach(function (b) {
+        var el = document.querySelector('#cards [data-id="' + b.id + '"]'); if (!el || !el.offsetParent) return;
+        var r = el.getBoundingClientRect(), x = r.left + r.width / 2 - box.left, y = Math.max(18, r.top - box.top - 6);   /* just above the token, so it never sits on its picture or letter */
+        if (x < 0 || y < 0 || x > box.width || y > box.height) return;   /* scrolled out of the view */
+        TL.float(b.d < 0 ? '\u2212' + Math.abs(b.d) : '+' + b.d, x, y, b.d > 0 ? 'heal' : b.hero ? 'hurt' : 'dmg', frame);
+      });
+    }, TL.after());
   }
   D.onLand = function () { if (S) render(); };
 
@@ -115,22 +152,47 @@
       var m = String(e.text).match(/^(.*) → (.*): HP -(\d+) \(now (\d+)\/(\d+)\)/);
       if (m && m[2] === ch.name) notice('hit', (m[1] || 'Something') + ' hits you: −' + m[3] + ' HP (now ' + m[4] + ' of ' + m[5] + ').');
     });
+    /* A Horror threshold (7, 14, 21) changes the game for every hero: the player is told on the table, not only in the feed. (The GM has the alert with Dealt with.) */
+    fresh.filter(function (e) { return e.kind === 'alert' && !e.undone && /^The Horror /.test(String(e.text)); }).slice(-1).forEach(function (e) { notice('horror', String(e.text).replace('Every hero is shaken: their next roll', 'Every hero is shaken: your next roll')); });
   }
-  /* A notice on the table for a few seconds. It waits for the dice to land, so it never tells the number before the die shows it. */
+  /* A notice on the table for a few seconds (the "Your turn", "hits you" and Horror banners). It waits for the dice to land, so it never tells the number
+     before the die shows it, then goes by itself. */
   function notice(kind, text) {
-    chime(kind); flagTab(kind === 'turn' ? 'Your turn' : 'You are hit');
-  }   /* the result panel and the activity line waited for the dice; they can show the result now */
+    clearTimeout(UI.noticeTimer); UI.notice = null;
+    if (kind !== 'horror') chime(kind);
+    flagTab(kind === 'turn' ? 'Your turn' : kind === 'hit' ? 'You are hit' : 'The Horror rises');
+    UI.noticeTimer = setTimeout(function () {
+      UI.notice = { kind: kind, text: text }; if (S) renderTable();
+      UI.noticeTimer = setTimeout(function () { UI.notice = null; if (S) renderTable(); }, NOTICE_FOR);
+    }, kind === 'turn' ? 0 : TL.after());
+  }
+  var NOTICE_FOR = 6000;
 
   /* Reaching a player who is in another tab: the tab's title says what happened until they come back, and a soft chime sounds (it can be turned off under My dice).
      A browser lets a page make a sound only after a press on it, so the sound is readied on the first press. */
   var TITLE = document.title, audio = null;
   UI.soundOff = (function () { try { return localStorage.getItem(KEY + 'sound') === '0'; } catch { return false; } })();
+  UI.cuesOn = (function () { try { return localStorage.getItem(KEY + 'cues') === '1'; } catch { return false; } })();   /* table sounds: off unless switched on */
   function flagTab(what) { if (document.hidden) document.title = '● ' + what + ' · ' + TITLE; }
   document.addEventListener('visibilitychange', function () { if (!document.hidden) document.title = TITLE; });
   document.addEventListener('pointerdown', function () {
-    if (audio || UI.soundOff) return;
+    if (audio || (UI.soundOff && !UI.cuesOn)) return;
     try { var AC = window.AudioContext || window.webkitAudioContext; if (AC) { audio = new AC(); if (audio.resume) audio.resume(); } } catch { audio = null; }
   }, true);
+  /* Table sounds (dice landing, the Horror rising), only for a person who has switched them on: short and quiet, made here, no sound files. */
+  function cue(kind) {
+    if (!UI.cuesOn || !audio) return;
+    try {
+      var t = audio.currentTime + 0.01, spec = kind === 'horror' ? [[73.42, 1.2, 'triangle', 0.16], [77.78, 1.2, 'triangle', 0.12]] : kind === 'high' ? [[880, 0.18, 'sine', 0.08], [1318.5, 0.3, 'sine', 0.07]] : kind === 'low' ? [[110, 0.35, 'sawtooth', 0.05]] : [[1600, 0.05, 'square', 0.03]];
+      spec.forEach(function (n, i) {
+        var o = audio.createOscillator(), g = audio.createGain(), at = t + (kind === 'high' ? i * 0.09 : 0);
+        o.type = n[2]; o.frequency.value = n[0]; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(n[3], at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + n[1]);
+        o.connect(g); g.connect(audio.destination); o.start(at); o.stop(at + n[1] + 0.05);
+      });
+      UI.cued = (UI.cued || 0) + 1;
+    } catch {}
+  }
+  D.onDie = function (size, n) { cue(size === 20 && n === 20 ? 'high' : size === 20 && n === 1 ? 'low' : 'land'); };
   function chime(kind) {
     if (UI.soundOff || !audio) return;
     try {
@@ -277,7 +339,8 @@
     var r = S.rolls.filter(function (x) { return x.id === id; })[0];
     if (r && !resumableRoll(r)) { D.clear(); return; }
     var button = Array.prototype.find.call(document.querySelectorAll('#stripControls [data-do=effort], #panel [data-do=monsterEffort], #panel [data-do=effort]'), function (b) { return b.dataset.roll === id && !b.disabled; });
-    D.action(button ? {label: 'Roll damage', run: function () { button.click(); }} : null);
+    var push = !button && document.querySelector('#panel [data-do=push][data-roll="' + id + '"]:not([disabled])');
+    D.action(button ? {label: 'Roll damage', run: function () { button.click(); }} : null, push ? { label: 'Push: act again' + (S.horror && S.horror.cur < S.horror.max ? ' (+1 Horror)' : ''), run: function () { push.click(); } } : null);
   }
   /* ---------- the character sheet: a full-screen panel over the table. The table keeps running and stays connected underneath; closing the sheet returns straight to play. ---------- */
   var sheetView = null;
@@ -345,7 +408,21 @@
     var el = $('tHorror'), H = S.horror; if (!el || !H) return;
     var ticks = ''; for (var i = 1; i <= H.max; i++) ticks += '<i class="' + (i <= H.cur ? 'on' : '') + (H.thresholds.indexOf(i) >= 0 ? ' th' : '') + '"></i>';
     var h = '<span class="lbl">Horror</span><span class="hz-meter' + (H.cur >= H.max ? ' arrived' : '') + '" role="meter" aria-valuemin="0" aria-valuemax="' + H.max + '" aria-valuenow="' + H.cur + '" aria-label="The Rising Horror: ' + H.cur + ' of ' + H.max + '" title="The Rising Horror. Healing spells cost 0; other spells +1; items state their own costs. Marks at ' + H.thresholds.join(', ') + '.">' + ticks + '</span><span class="hz-n"><b>' + H.cur + '</b>/' + H.max + '</span>';
+    if (gm()) h = '<button type="button" class="hz-open" data-do="horrorOpen" title="Adjust the Horror (Table tab)">' + h + '</button>';
     if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; }
+    /* the Horror you can feel (the owner's go-ahead, 2026-11-11): the map darkens at its edges as the meter climbs, under the cards and the ink (dread.js) */
+    if (window.SacramentDread) window.SacramentDread.set($('table'), H.cur, H.max);
+  }
+  /* The meter has moved: it pulses and the change rises beside it (+1, −4) on every screen, once the dice have landed, with the low sound when sounds are on. */
+  function horrorMoved(d) {
+    setTimeout(function () {
+      var el = $('tHorror'); if (!el || document.hidden) return;
+      var x = document.createElement('span'); x.className = 'hz-delta ' + (d > 0 ? 'up' : 'down'); x.setAttribute('aria-hidden', 'true'); x.textContent = (d > 0 ? '+' : '\u2212') + Math.abs(d);
+      el.querySelectorAll('.hz-delta').forEach(function (o) { o.remove(); }); el.appendChild(x);
+      el.classList.remove('hz-pulse'); void el.offsetWidth; el.classList.add('hz-pulse');
+      setTimeout(function () { x.remove(); el.classList.remove('hz-pulse'); }, 2200);
+      if (d > 0) cue('horror');
+    }, TL.after());
   }
   /* What the Horror says on the table: the GM is alerted at each threshold until they mark it dealt with; at 21 everyone is told it has arrived (a player may put the notice away). */
   function horrorBanner() {
@@ -442,6 +519,7 @@
     var b = '';
 
     if (G && view !== S.table.scene.id) b += '<div class="preview">Preparing: players do not see this scene</div>';
+    if (UI.notice && !G) b += '<div class="notice ' + UI.notice.kind + '">' + esc(UI.notice.text) + '</div>';
     put($('banner'), b);
     renderPointers();
   }
@@ -511,6 +589,7 @@
     else h += '<label class="field">' + (pending.healing ? 'Healing target' : 'Attack target') + '<select id="attackTarget"><option value="">Choose a target…</option>' + targets.map(function (c) { return '<option value="' + c.id + '"' + (UI.attackTarget === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>';
     return h + (UI.targetError ? '<p class="hint" role="alert">' + esc(UI.targetError) + '</p>' : '') + '<div class="row"><button class="btn main" data-do="confirmAttack">' + (pending.prepareOnly ? 'Choose target' : pending.healing ? 'Heal selected target' : pending.area ? 'Cast at selected foes' : 'Attack selected target') + '</button><button class="btn" data-do="cancelAttack">Cancel</button></div><p class="note">' + (pending.prepareOnly ? 'Choose here, then roll in the bottom strip. Nothing has been used yet.' : 'Results appear in Activity. Damage keeps this target.') + '</p></div>';
   }
+  function dieName(k) { return R.CAT_NAMES[k] + ' d' + S.settings.dice[k]; }
   /* Pending decisions stay in Play; the player's roll buttons have one home in the footer. */
   function rollFlow() {
     var out = {tray: targetChoiceView(), dice: ''}, r = currentRoll();
@@ -529,6 +608,7 @@
         if (r.attack) h += '<div class="row"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== cat; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 two hands' : '') + '</button>'; }).join('') + '</div>';
         else if (cat && ch && ch.offerUltimate && r.criticalRule !== 'extra' && cat !== 'ultimate') h += '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + busy + '>Roll Ultimate instead</button>';
         h += physical('physE', 'Own die for ' + word) + criticalPrompt(r);
+        if (!cat && !r.attack && target && target.progress && !target.hp) out.tray += '<p class="hint ways">How you tackle it sets the die: bare hands or wits ' + dieName(R.obstacleCat('hands')) + ', a weapon or tool that fits and you carry ' + dieName(R.obstacleCat('tool')) + ', a gun ' + dieName(R.obstacleCat('gun')) + ' (loud), a spell that fits ' + dieName(R.obstacleCat('spell')) + '. A good idea may be Easy: the GM says.</p>';
       }
       h += '</div>';
       if (gm()) out.tray += h; else out.dice = h;
@@ -559,7 +639,7 @@
         '<button class="btn push-go" data-do="push" data-roll="' + r.id + '"' + (busy ? ' disabled aria-busy="true"' : '') + '>' + (busy ? 'Pushing…' : 'Push: act again <span>' + (full ? 'the Horror is at ' + S.horror.max : '+1 Horror') + '</span>') + '</button>' +
         '<p class="note">A second action, now: try again or do something else. Or let the failure stand.</p></div>';
     }
-    if (r.pushed && latest) return '<p class="hint">Roll the same action again below, or choose a different action in Play.</p>';
+    if (r.pushed && latest) return '<p class="hint">Roll the same action again in the bottom strip, or choose a different action under Choose an action.</p>';
     if (r.isAttack && r.check && !r.check.success && r.pushReason) return '<p class="hint">' + esc(r.pushReason) + '</p>';
     return '';
   }
@@ -580,7 +660,9 @@
     if (UI.cardEdit && UI.cardEdit !== UI.sel) UI.cardEdit = null; if (UI.atk && UI.atk !== UI.sel) UI.atk = null;
     if (gm()) h = gmTable(h + (c ? gmCard(c) : gmTabBody()), !!c); else h += (c && (!myChar() || c.id !== myChar().cardId) ? playerCard(c) : '') + playerTable();
     /* On a phone the panel can be put away, so that the scene and the controls under it stay in reach. It opens again by itself when something new is selected or rolled. */
+    var typing = $('lastWords'), kept = typing ? { v: typing.value, f: document.activeElement === typing } : null;   /* last words being typed survive a redraw */
     P.innerHTML = h; P.classList.toggle('empty', !h.trim());
+    if (kept && $('lastWords')) { $('lastWords').value = kept.v; if (kept.f) $('lastWords').focus({ preventScroll: true }); }
     P.querySelectorAll('details[data-detail]').forEach(function (el) { if (Object.prototype.hasOwnProperty.call(details, el.dataset.detail)) el.open = details[el.dataset.detail]; });
     if (keepFocus) {
       var replacement = Array.prototype.filter.call(P.querySelectorAll('input[type=checkbox], [role=tab], button[data-do=renameScene], summary[data-detail]'), function (el) { return el.id === keepFocus.id && el.tagName === keepFocus.tag && Object.keys(keepFocus.data).every(function (key) { return el.dataset[key] === keepFocus.data[key]; }); })[0];
@@ -615,7 +697,7 @@
   function playerCard(c) {
     var mine = c.owner === S.you.pid;
     return '<div class="row"><button type="button" class="link" data-do="deselect">Back</button></div><div class="sec"><h3>' + esc(c.name) + '</h3>' + (c.img ? '<div style="height:120px;background:' + bgUrl(c.img) + ' center/cover"></div>' : '') + (c.desc ? '<p>' + esc(c.desc) + '</p>' : '') + trackerView(c) +
-      (c.kind !== 'pc' && (c.hp || c.progress) && myChar() && !c.owner && !UI.hintSeen ? '<p class="note hint">' + (window.SacramentSheetCore.actions(heroOf(myChar())).length ? 'To attack or try this, choose an action in Play, then roll below.' : 'To attack or try this, tap a stat below to roll against it.') + '</p>' : '') +
+      (c.kind !== 'pc' && (c.hp || c.progress) && myChar() && !c.owner && !UI.hintSeen ? '<p class="note hint">' + (window.SacramentSheetCore.actions(heroOf(myChar())).length ? 'To attack or try this, choose an action below, then roll in the bottom strip.' : 'To attack or try this, tap a stat below to roll against it.') + '</p>' : '') +
       (mine ? '<p class="hint">Given to you by the GM.</p>' : '') + '</div>';
   }
   /* heroes built on the My heroes page in this browser can be brought to the table: the table checks them against the rules and makes them yours */
@@ -627,7 +709,8 @@
   /* What a fallen hero's player can do, in the Rules page's words */
   function downHelp(c) {
     if (!downMark(c)) return '';
-    var st = c.dying, t = !st ? '<b>You are at 0 HP.</b> The GM starts your countdown.' : st.dead ? '<b>' + esc(c.name) + ' has died.</b>' :
+    var st = c.dying, t = !st ? '<b>You are at 0 HP.</b> The GM starts your countdown.' : st.dead ? '<b>' + esc(c.name) + ' has died.</b>' + (c.lastWords ? ' Their last words: “' + esc(c.lastWords) + '”' :
+        '</p><p><label for="lastWords">Their last words, for the table</label><input id="lastWords" type="text" maxlength="120" autocomplete="off"><button class="btn small" data-do="lastWords" data-id="' + esc(c.charId || '') + '">Say them</button></p><p class="note">' + esc(c.name) + ' may leave one thing they carried to the next hero who joins. Tell the GM what.') :
       st.stable ? '<b>You are stable.</b> The countdown has stopped. Any healing puts you back on your feet.' :
       '<b>You are dying: ' + st.left + (st.left === 1 ? ' round' : ' rounds') + ' left.</b> One comes off at each new round. On your turn you may crawl away (a CON check, free) or pay ' + R.DYING.actHorror + ' Horror to act anyway. An ally in reach can Tend you (a WIS check), and then the GM marks you stable. Any healing puts you back on your feet.';
     return '<div class="down-help" role="status"><p>' + t + '</p></div>';
@@ -637,11 +720,13 @@
     if (!ch) {
       var free = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (c) { return !c.owner; });
       return '<div class="sec"><h3>Choose your hero</h3>' + (free.length ? '<p class="hint">Pick a hero to play.</p>' : Object.keys(S.chars).length ? '<p>Every hero already has a player. Bring your own hero below or ask the GM to add another. You can watch the table meanwhile.</p>' : '<p>There are no heroes yet. Bring one from My heroes below, or ask the GM to add one. You can watch the table meanwhile.</p>') +
-        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
+        free.map(function (c) { var card = S.cards[c.cardId]; return '<div class="hero"><b>' + esc(c.name) + '</b> ' + (card && card.hp && !card.hp.hidden ? heartsHtml(card.hp.cur, card.hp.max, 'md') : '') + (card && card.desc ? '<p>' + esc(card.desc) + '</p>' : '') + (c.path ? '<p class="note">Path: ' + esc(c.path) + '</p>' : '') + '<p class="note">' + R.STATS.filter(function (k) { return c.stats[k]; }).map(function (k) { return k + ' ' + sgn(c.stats[k]); }).join(' · ') + ' · Effort ' + R.CATS.filter(function (k) { return c.effort[k]; }).map(function (k) { return R.CAT_NAMES[k] + ' ' + sgn(c.effort[k]); }).join(', ') + '</p><button class="btn small main" data-do="claim" data-id="' + c.id + '">Play ' + esc(c.name) + '</button></div>'; }).join('') + bringBox() + '<p><a href="/player-guide/" target="_blank" rel="noopener">New player guide (new tab)</a></p></div>';
     }
     var cur = turnCardId() && S.cards[turnCardId()];
-    return '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
-      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> Tell the GM when you are finished.</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon in Play and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action in Play, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Tell the GM when you are finished; the GM moves to the next turn.</li></ol><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
+    /* the Stranger's own slip, kept in view for that player alone (the server sends it to nobody else) */
+    var slip = S.stranger && S.stranger.want && !S.stranger.found ? '<div class="sec stranger-slip"><h3>You are the Stranger</h3><p>Your want: ' + esc(S.stranger.want) + '</p><p class="note">Play your hero as usual. Tell no one.</p></div>' : '';
+    return slip + '<div class="sec"><h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>' + playerActions(ch) + downHelp(S.cards[ch.cardId]) +
+      (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> ' + (S.table.done ? 'The GM moves the turn on.' : 'Press I’m done in the bottom strip when you are finished.') + '</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon under Choose an action and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action on the right, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Press I’m done when you are finished; the GM moves to the next turn.</li></ol><p class="note">Keys: 1 to 6 roll STR to CHA, R rolls what is ready, D says you are done, Esc puts a selection away.</p><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec gear"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
   }
   /* HP as hearts: each Heart is 10 points, filled one after another from the first. A last Heart that holds fewer than 10 is drawn smaller, so no capacity is implied that is not
@@ -667,15 +752,22 @@
     var id = c.id, h = '';
     if (c.hp) h += '<div class="row">' + heartsHtml(shownHp(c), c.hp.max, 'md' + (hpQueued(c.id) ? ' pend' : '')) + queuedBadge(c) + '</div>' + stepper('HP', id, 'hp', c.hp, '', compact);
     if (c.progress) h += stepper('Effort', id, 'progress', c.progress, '', compact);
+    if (c.progress && compact && !c.hp) h += ideaButton(c);
     if (c.timer && compact) h += '<p class="hint">' + esc(c.timer.label || 'Timer') + ': ' + c.timer.cur + '/' + c.timer.max + (c.timer.paused ? ' · paused' : c.timer.auto ? ' · every table round, including hidden scenes' : ' · manual') + '. Change it in Edit card.</p>';
     if (c.timer && !compact) h += stepper('Timer', id, 'timer', c.timer, '<label class="check"><input type="checkbox" data-tflag="auto" data-id="' + id + '"' + (c.timer.auto ? ' checked' : '') + '> every table round, even in hidden scenes</label><label class="check"><input type="checkbox" data-tflag="paused" data-id="' + id + '"' + (c.timer.paused ? ' checked' : '') + '> paused</label>', compact);
     return h;
+  }
+  /* A good idea through an obstacle (R.OBSTACLE.idea): the GM's call, half of what is left of the bar, once a card. */
+  function ideaButton(c) {
+    var p = c.progress, left = p.max - p.cur, n = Math.ceil(left * R.OBSTACLE.idea.share);
+    if (p.idea) return '<p class="hint">A good idea has already helped here.</p>';
+    return left > 0 ? '<div class="row"><button class="btn small" data-do="goodIdea" data-id="' + c.id + '" title="Your call: a clever way through fills half of what is left, once for this card">Good idea: +' + n + ' Effort</button></div>' : '';
   }
   function gmCard(c) {
     if (UI.cardEdit === c.id) return gmCardEdit(c);
     var id = c.id, pc = c.kind === 'pc', current = S.table.order[S.table.idx], actor = current && S.cards[current.id], h = '<p class="hint turn-context">Live: ' + esc(S.table.scene.name) + ' · Turn: ' + esc(actor ? actor.name : 'No one') + '</p><div class="row between"><button type="button" class="link" data-do="deselect">Back</button><span class="pill">' + (c.visible ? 'Shown to players' : 'Hidden from players') + '</span></div>';
     h += '<h3 class="cardname">' + esc(c.name) + '</h3>' + (downMark(c) ? '<div class="sec down-gm"><p>' + downMark(c, true) + '</p>' + dyingControls(c) + '</div>' : '');
-    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span></div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed roll. Its extra action cannot be pushed again.</p>'; }
+    if (c.charId && S.chars[c.charId]) { var ch = S.chars[c.charId]; h += '<div class="row"><button class="btn small" data-do="sheet" data-id="' + ch.id + '">Open ' + esc(ch.name) + '’s sheet</button><span class="hint">Defence ' + ch.defence + '</span>' + heroFlags(ch) + '</div>'; var last = S.rolls.filter(function (r) { return r.charId === ch.id; }).slice(-1)[0]; if (last && last.canGrantPush) h += '<div class="row"><button class="btn small" data-do="allowPush" data-roll="' + last.id + '">Allow this Push (+1 Horror)</button></div><p class="hint">One explicit exception for this failed roll. Its extra action cannot be pushed again.</p>'; }
     var fights = !pc && (c.kind === 'enemy' || c.kind === 'obstacle' || !!c.hp || !!c.progress);   /* Hazards and obstacles can attack heroes as well as enemies. */
     var liveAttack = viewScene() === S.table.scene.id && (c.sceneId == null || c.sceneId === S.table.scene.id);
     if (fights && !liveAttack) h += '<p class="hint">Preparing this scene. Show it to players before attacking.</p>';
@@ -748,7 +840,7 @@
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main' + (S.table.done ? ' ready' : '') + '" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
@@ -824,7 +916,7 @@
     h += '<div class="row"><button class="btn small" data-do="leave">Back to my tables</button></div>';
     return h;
   }
-  function diceSwitch() { return '<label class="check"><input type="checkbox" data-diceanim' + (D.off() ? '' : ' checked') + '> Show dice tumbling on this screen</label>' + (gm() ? '' : '<label class="check"><input type="checkbox" data-sound' + (UI.soundOff ? '' : ' checked') + '> A chime when it is your turn or you are hit</label>'); }
+  function diceSwitch() { return '<label class="check"><input type="checkbox" data-diceanim' + (D.off() ? '' : ' checked') + '> Show dice tumbling on this screen</label>' + (gm() ? '' : '<label class="check"><input type="checkbox" data-sound' + (UI.soundOff ? '' : ' checked') + '> A chime when it is your turn or you are hit</label>') + '<label class="check"><input type="checkbox" data-cues' + (UI.cuesOn ? ' checked' : '') + '> Table sounds: dice landing and the Horror rising</label>'; }
   /* The GM's hand on the Rising Horror: down by a d6 (rolled where everyone sees it), up or down by one, set it to a number, or reset it to 0 (asked twice).
      Each change is in the feed with an Undo. */
   function horrorControls() {
@@ -842,7 +934,18 @@
     var H = S.horror, fired = (H && H.fired) || [];
     return '<h3>New adventure</h3><p class="hint">7: every hero\'s next roll is Hard. 14: foes met from now on have ' + R.HORROR.dread.huntedHp + ' more HP. 21: no more rest. Each fires once an adventure' +
       (fired.length ? ' (fired so far: ' + fired.join(', ') + ')' : '') + '. An adventure\'s own Horror lines come first.</p>' +
-      '<div class="row"><button class="btn small' + (UI.advAsk ? ' danger' : '') + '" data-do="newAdventure">' + (UI.advAsk ? 'Sure? Start a new adventure' : 'New adventure') + '</button></div>';
+      '<div class="row"><button class="btn small' + (UI.advAsk ? ' danger' : '') + '" data-do="newAdventure">' + (UI.advAsk ? 'Sure? Start a new adventure' : 'New adventure') + '</button></div>' + strangerControls();
+  }
+  /* The Stranger (an optional rule, rules.js STRANGER): the GM deals the slips when the Horror first reaches 14, and enters the name the players agree on. */
+  function strangerControls() {
+    var X = S.stranger, heroes = Object.keys(S.chars).map(function (k) { return S.chars[k]; }).filter(function (c) { return c.owner; }), St = R.STRANGER;
+    var h = '<h3>The Stranger <span class="note">(optional)</span></h3>';
+    if (!X) return h + '<p class="hint">For ' + St.minPlayers + ' or more players. The first time the Horror reaches ' + St.at + ', deal the slips: one player, in secret, becomes the Stranger with a want. Only they and you are told.</p>' +
+      '<div class="row"><button class="btn small" data-do="strangerDeal"' + (heroes.length < St.minPlayers ? ' disabled title="Needs ' + St.minPlayers + ' players with heroes"' : '') + '>Deal the slips</button></div>';
+    h += '<p>The Stranger is <b>' + esc(X.name) + '</b>. Their want: ' + esc(X.want) + '</p>';
+    if (X.named) { var n = S.chars[X.named.charId]; return h + '<p class="note">The table named ' + esc(n ? n.name : 'a hero') + ': ' + (X.named.right ? 'right.' : 'wrong.') + ' A Stranger never named whose want came true earns ' + St.mark + ' extra mark.</p>'; }
+    return h + '<p class="hint">Once an adventure the players may name a hero together, out loud. Right: the Horror falls by d' + St.rightDie + '. Wrong: it rises by ' + St.wrong + '.</p>' +
+      '<div class="row"><label>They name <select id="strangerPick">' + heroes.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') + '</select></label><button class="btn small" data-do="strangerName">Name them</button></div>';
   }
   /* The next session: the GM sets it in the Play tab; everyone reads it in their own time, with links to put it in a calendar (three hours, by default). */
   function sayWhen(ms) { return new Date(ms).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -933,11 +1036,22 @@
   function gmDiceView() {
     var out = '<div class="gm-dice open"><strong class="gm-dice-title">GM dice</strong>';
     out += '<label>Dice <select id="gmDie">' + [4,6,8,10,12,20,100].map(function (n) { return '<option value="' + n + '"' + (n === (UI.gmDie || 6) ? ' selected' : '') + '>d' + n + '</option>'; }).join('') + '</select></label><label>Number <input id="gmDiceCount" type="number" min="1" max="20" value="' + (UI.gmDiceCount || 1) + '"></label><label><input id="gmDicePrivate" type="checkbox"' + (UI.gmDicePrivate ? ' checked' : '') + '> GM only</label><button class="chip" data-do="gmDiceRoll"' + (UI.gmDiceBusy ? ' disabled' : '') + '>Roll GM dice</button><span class="note">No card values change.</span>';
-    return out + '</div>';
+    return out + gmNextTurn() + '</div>';
+  }
+  /* Next turn in the GM's footer too, so it is there whatever tab or card is open (the owner's choice, 2026-11-11). It lights up when the player says they are done. */
+  function gmNextTurn() {
+    var t = S.table; if (!t.order.length) return '';
+    var cur = turnCardId() && S.cards[turnCardId()];
+    return '<div class="gm-next">' + (t.done && cur ? '<span class="note done-note">' + esc(cur.name) + ' is done.</span>' : '') + '<button class="btn' + (t.done ? ' main ready' : '') + '" data-do="endTurn" title="Advance the live turn order (key N)">Next turn</button></div>';
   }
   function playerHealth(ch) {
     var card = S.cards[ch.cardId], hp = card && card.hp; if (!hp) return '';
-    return '<div class="hp row"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md', true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + downMark(card) + '<span>Defence ' + ch.defence + '</span>' + (ch.checkBonus ? '<span title="' + esc('From ' + (ch.checkBonusFrom || 'an item') + ': goes into the next check') + '">Next roll +' + ch.checkBonus + '</span>' : '') + '</div>';
+    return '<div class="hp row"><span class="stepper"><button data-do="hpAdj" data-id="' + card.id + '" data-d="-1" aria-label="Lose 1 HP">−</button>' + heartsHtml(shownHp(card), hp.max, 'md', true) + '<span class="v' + (hpQueued(card.id) ? ' pend' : '') + '">' + shownHp(card) + '/' + hp.max + '</span><button data-do="hpAdj" data-id="' + card.id + '" data-d="1" aria-label="Gain 1 HP">+</button></span>' + queuedBadge(card) + downMark(card) + '<span>Defence ' + ch.defence + '</span>' + heroFlags(ch) + '</div>';
+  }
+  /* What is waiting for a hero's next roll, said where the roll is made: shaken by the Horror (Hard), or a bonus from an item. */
+  function heroFlags(ch) {
+    return (ch.shaken ? '<span class="flag shaken" title="The Horror passed 7: this hero\'s next roll is Hard (Easy becomes normal).">Shaken: next roll Hard</span>' : '') +
+      (ch.checkBonus ? '<span class="flag" title="' + esc('From ' + (ch.checkBonusFrom || 'an item') + ': goes into the next check') + '">Next roll +' + ch.checkBonus + '</span>' : '');
   }
   function playerActions(ch) {
     var foe = aimFoe(), ready = UI.readyAction;
@@ -971,18 +1085,26 @@
     if (!G && ch && (el.dataset.session !== String(sessionVersion) || (el.dataset.context || '').split(':')[0] !== ch.id)) UI.phys = '';
     root.classList.toggle('myturn', !G && myTurn()); root.setAttribute('aria-label', G ? 'GM dice' : 'Roll dice');
     if (G) { putStrip(el, gmDiceView(), 'gm'); return; }
-    if (!ch) { putStrip(el, '<span class="note">Choose your hero in Play to roll.</span>', 'spectator'); return; }
+    if (!ch) { putStrip(el, '<span class="note">Choose your hero on the right to roll.</span>', 'spectator'); return; }
     var flow = rollFlow(), ready = UI.readyAction, waiting = UI.rolling || UI.working || D.busy();
     h = flow.dice ? '' : '<b>' + esc(ch.name) + '</b>';
     if (UI.attackChoice) h += '<span class="note">Choose the target in Play.</span>';
     else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>' + (ready.hasRoll === false ? 'Use ' : 'Roll ') + esc(ready.name) + '</button>';
     else if (flow.dice) h += flow.dice;
-    else if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Standalone Effort">' + physical('physF', 'Own Effort die') + R.CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '"' + (waiting ? ' disabled' : '') + '>' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
+    else if (UI.optEffort) h += '<div class="efs row2" role="group" aria-label="Standalone Effort">' + physical('physF', 'Own Effort die') + R.BONUS_CATS.map(function (k) { return '<button class="ef" data-do="freeEffort" data-cat="' + k + '"' + (waiting ? ' disabled' : '') + '>' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + ' <b>' + sgn(ch.effort[k]) + '</b></button>'; }).join('') + '</div>';
     else h += '<div class="stats" role="group" aria-label="Roll an ordinary check">' + R.STATS.map(function (k) { return '<button class="stat" data-do="check" data-stat="' + k + '"' + (waiting ? ' disabled' : '') + ' aria-label="Roll ' + k + ' ' + sgn(ch.stats[k]) + '">' + k + '<b>' + sgn(ch.stats[k]) + '</b></button>'; }).join('') + '</div>';
     if (!UI.attackChoice && (!flow.dice || (currentRoll() && currentRoll().pushed)) && !UI.optEffort) h += '<label class="phys">Own d20 (optional)<input data-phys type="number" min="1" max="20" inputmode="numeric" placeholder="Roll digitally" value="' + esc(UI.phys || '') + '"></label>';
+    if (!flow.dice && !UI.optEffort) h += rollWarning(ch);
+    if (myTurn()) h += S.table.done ? '<span class="note done-note">Done. The GM moves the turn on.</span>' : '<button class="btn done-btn" data-do="turnDone"' + (UI.working === 'turnDone' ? ' disabled' : '') + ' title="Tell the GM your turn is over (key D)">I’m done</button>';
     var context = ch.id + ':' + (ready ? ready.kind + ':' + (ready.gearKey || ready.stat) + ':' + ready.target : UI.roll || 'check');
     putStrip(el, h, context);
     var pi = el.querySelector('input[data-phys]'); if (pi) pi.oninput = function () { UI.phys = pi.value; };
+  }
+  /* Said beside the roll buttons before the roll, not after it: a dying hero's roll costs Horror unless it is the crawl, and a shaken hero's next roll is Hard. */
+  function rollWarning(ch) {
+    var card = S.cards[ch.cardId], st = card && card.dying;
+    if (card && card.hp && card.hp.cur === 0 && !(st && st.dead)) return '<span class="note warn">At 0 HP: ' + R.DYING.crawl + ' to crawl away is free; any other roll costs ' + R.DYING.actHorror + ' Horror.</span>';
+    return ch.shaken ? '<span class="note warn">Shaken: this roll is Hard.</span>' : '';
   }
   /* What pressing a Use button does, in words, for its hover text. */
   /* The aim of the hero's next roll: a selected card on the table that is not a hero and has HP or an Effort bar */
@@ -1107,7 +1229,7 @@
       case 'check': doRoll(d.stat, true, false); break;
       case 'freeEffort': { var ch = myChar(); if (ch && !UI.working) { var v = physVal('physF'); UI.working = 'freeEffort'; renderStrip(); send({ type: 'freeEffort', charId: ch.id, cat: d.cat, rolled: v }, function (bd) { UI.working = null; if (bd) UI.roll = bd.result.rollId; render(); }); } break; }
       case 'effort': { if (UI.working) break; var damageRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; var key = 'effort:' + d.roll, rolledE = physVal('physE'), criticalE = physVal('physCritical'); UI.working = key; render(); send({ type: 'effort', rollId: d.roll, cat: d.cat, rolled: rolledE, criticalRolled: criticalE, autoApply: automaticDamage(damageRoll) }, function () { UI.working = null; render(); }); break; }
-      case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function () { UI.working = null; render(); }); break; }
+      case 'push': { if (UI.working) break; UI.working = 'push:' + d.roll; renderPanel(); send({ type: 'push', rollId: d.roll }, function (pb) { UI.working = null; if (pb) D.clear(); render(); }); break; }
       case 'allowPush': if (!UI.working) { UI.working = 'push:' + d.roll; send({ type: 'pushOverride', rollId: d.roll }, function () { UI.working = null; render(); }); } break;
       case 'scenePowerReset': if (viewScene() !== S.table.scene.id || d.scene !== S.table.scene.id) { toast('Go back to the live scene to refresh its encounter.'); break; } if (UI.powerResetAsk !== S.table.scene.id) { UI.powerResetAsk = S.table.scene.id; renderPanel(); } else { UI.powerResetAsk = false; send({ type: 'scenePowerReset', id: S.table.scene.id }); } break;
       case 'applyArea': { if (UI.working) break; var areaRoll = S.rolls.filter(function (r) { return r.id === d.roll; })[0]; if (!areaRoll) break; UI.working = 'apply:' + d.roll; var ids = (areaRoll.targetCardIds || []).filter(function (id) { return S.cards[id] && S.cards[id].hp; }); send({ type: 'applyArea', rollId: d.roll, cardIds: ids }, function () { UI.working = null; render(); }); break; }
@@ -1169,9 +1291,15 @@
       case 'copyKey': { if (!gm()) break; var kl = location.origin + '/vtt/?room=' + S.code + '#key=' + sess.token; if (navigator.clipboard) navigator.clipboard.writeText(kl).then(function () { toast('Your GM link is copied. Keep it private.'); }, function () { UI.recoveryOpen = true; renderRecovery(); }); else { UI.recoveryOpen = true; renderRecovery(); } break; }
       case 'horrorAck': send({ type: 'horrorAck' }); break;
       case 'arrivalSeen': UI.arrivalSeen = true; renderFeed(); break;
+      case 'turnDone': if (!UI.working) { UI.working = 'turnDone'; renderStrip(); send({ type: 'turnDone' }, function () { UI.working = null; render(); }); } break;
+      case 'goodIdea': send({ type: 'goodIdea', id: d.id }); break;
+      case 'horrorOpen': UI.tab = 'table'; UI.sub = null; UI.editOrder = false; UI.sel = null; UI.cardEdit = null; UI.atk = null; UI.powerResetAsk = false; render(); setTimeout(function () { var hzEl = document.querySelector('#panel .hz-gm'); if (hzEl) { hzEl.scrollIntoView({ block: 'center' }); var first = hzEl.querySelector('button:not([disabled])'); if (first) first.focus({ preventScroll: true }); } }, 60); break;
       case 'horrorAdj': send({ type: 'horror', mode: 'delta', value: +d.d }); break;
       case 'horrorSet': { var hv = $('hzSet') && $('hzSet').value.trim(); if (!/^[0-9]+$/.test(hv || '')) { toast('Type a number from 0 to ' + S.horror.max + '.'); break; } send({ type: 'horror', mode: 'set', value: +hv }); break; }
       case 'horrorRoll': send({ type: 'horror', mode: 'lowerRoll' }); break;
+      case 'lastWords': { var lw = $('lastWords'), said = lw && lw.value.trim(); if (!said) { toast('Type their last words first.'); break; } send({ type: 'lastWords', charId: d.id, text: said }); break; }
+      case 'strangerDeal': send({ type: 'stranger', op: 'deal' }); break;
+      case 'strangerName': { var sp = $('strangerPick'); if (sp && sp.value) send({ type: 'stranger', op: 'name', charId: sp.value }); break; }
       case 'newAdventure': {   /* asked twice, like Reset */
         clearTimeout(UI.advTimer);
         if (!UI.advAsk) { UI.advAsk = true; renderPanel(); UI.advTimer = setTimeout(function () { UI.advAsk = false; if (S) renderPanel(); }, 5000); break; }
@@ -1284,6 +1412,7 @@
     }
     else if (t.dataset.char) { var pt = {}; if (t.dataset.stat) pt.stats = (function () { var o = {}; o[t.dataset.stat] = +t.value; return o; })(); else if (t.dataset.eff) pt.effort = (function () { var o = {}; o[t.dataset.eff] = +t.value; return o; })(); else pt.armour = +t.value; send({ type: 'charUpdate', id: t.dataset.char, patch: pt }); }
     else if (t.hasAttribute('data-diceanim')) D.setOff(!t.checked);
+    else if (t.hasAttribute('data-cues')) { UI.cuesOn = t.checked; try { localStorage.setItem(KEY + 'cues', UI.cuesOn ? '1' : '0'); } catch {} if (UI.cuesOn && !audio) { try { var AC2 = window.AudioContext || window.webkitAudioContext; if (AC2) { audio = new AC2(); if (audio.resume) audio.resume(); } } catch { audio = null; } } }
     else if (t.hasAttribute('data-sound')) { UI.soundOff = !t.checked; try { localStorage.setItem(KEY + 'sound', UI.soundOff ? '0' : '1'); } catch {} }
     else if (t.dataset.setting) { var p = {}; p[t.dataset.setting] = t.checked; send({ type: 'settings', patch: p }); }
     else if (t.dataset.die) { send({ type: 'settings', patch: { dice: (function () { var o = {}; o[t.dataset.die] = +t.value; return o; })() } }); }
@@ -1307,7 +1436,20 @@
       clearTimeout(UI.nudge); var id = cEl.dataset.id; UI.nudge = setTimeout(function () { send({ type: 'move', id: id, x: l.x, y: l.y }); }, 350);
     }
     if (e.key === 'Escape') { UI.sel = null; render(); }
+    shortcut(e);
   });
+  /* Keys for the common jobs (the owner's choice, 2026-11-11). Players: 1 to 6 roll STR to CHA, R rolls what is ready in the bottom strip, D says the turn is done.
+     The GM: N for Next turn. Never while typing, with a modifier held, or with the sheet or the loot designer open; a key only presses a button that is on screen. */
+  function writing(el) { return !!el && (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit)$/i.test(el.type))); }
+  var KEYS = { '1': 'STR', '2': 'DEX', '3': 'CON', '4': 'INT', '5': 'WIS', '6': 'CHA' };
+  function shortcut(e) {
+    if (!S || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.repeat || writing(e.target)) return;
+    if (UI.sheet || ($('lootOverlay') && !$('lootOverlay').hidden) || $('app').hidden) return;
+    var k = e.key.toLowerCase(), sel = gm() ? (k === 'n' ? '#strip [data-do=endTurn]' : '') :
+      KEYS[k] ? '#strip [data-do=check][data-stat=' + KEYS[k] + ']' : k === 'r' ? '#strip .btn.main' : k === 'd' ? '#strip [data-do=turnDone]' : '';
+    var all = sel ? document.querySelectorAll(sel) : [], b = all.length === 1 && all[0]; if (!b || b.disabled) return;   /* R presses the one main button, never a guess among several */
+    e.preventDefault(); b.click();
+  }
 
   /* ---------- the table: selecting, dragging, pointing, drawing ---------- */
   function tablePoint(ev) { var r = $('table').getBoundingClientRect(); return [Math.max(0, Math.min(100, 100 * (ev.clientX - r.left) / r.width)), Math.max(0, Math.min(100, 100 * (ev.clientY - r.top) / r.height))]; }
@@ -1462,5 +1604,5 @@
   window.addEventListener('storage', function (e) { if (window.SacramentHeroes && (e.key === window.SacramentHeroes.KEY || e.key === null)) refreshLocalHeroes(); });
   window.addEventListener('focus', refreshLocalHeroes);
   window.addEventListener('online', function () { poll(true); });
-  window.__vtt = { state: function () { return S; }, ui: UI, net: function () { return UI.netlog.slice(); } };
+  window.__vtt = { state: function () { return S; }, ui: UI, net: function () { return UI.netlog.slice(); }, send: function (cmd) { return send(cmd); } };   /* for tests and the console: the same queue the buttons use, with this browser's own key */
 })();

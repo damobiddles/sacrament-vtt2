@@ -3,7 +3,7 @@
    R.horrorMove with the natural-1 rule (R.nat1Tempts) and paying in blood past the top, finds come from the real d100 (C.rollLoot), and rests are R.REST.
    In solo play the game is the GM: where the rules say "the GM decides" (how dark a room is, what a failed check costs) the adventure decides.
    Nothing here touches the page, a clock or a random source: `die(sides)` is passed in, so a test can play the whole scene with fixed dice.
-   Needs rules.js, gear.js and sheet-core.js loaded first. */
+   Needs rules.js, gear.js, sheet-core.js and tally.js loaded first. */
 (function (root) {
   'use strict';
   var R = root.SacramentRules, C = root.SacramentSheetCore;
@@ -107,18 +107,9 @@
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
       note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
   }
-  /* What a roll adds up to, for the numbers that rise off the die on screen (display only: every number here is one the rules already worked out).
-     A part is [amount, what it is]; parts of 0 are left out, and if the parts do not add up to the rules' modifier (it is capped) the modifier is shown whole. */
-  function sum(mod, parts, total, word, good) {
-    parts = parts.filter(function (x) { return x[0]; }).map(function (x) { return { n: x[0], t: x[1] }; });
-    if (parts.reduce(function (a, x) { return a + x.n; }, 0) !== mod) parts = mod ? [{ n: mod, t: 'bonus' }] : [];
-    return { parts: parts, total: total, word: word, good: !!good };
-  }
-  function effortTally(e, word) {
-    var parts = [{ n: e.bonus, t: R.CAT_NAMES[e.cat] }, { n: e.weaponBonus || 0, t: 'two hands' }];
-    if (e.critical) parts.push({ n: e.critical.rolled, t: 'critical d' + e.critical.die }, { n: e.critical.bonus, t: 'Ultimate' });
-    return { parts: parts.filter(function (x) { return x.n; }), total: e.total, word: word, good: true };
-  }
+  /* What a roll adds up to, for the numbers that rise off the die on screen: the table's own tally.js builds it (display only), so solo and the table match. */
+  function sum(mod, parts, total, word, good) { return root.SacramentTally.sum(mod, parts, total, word, good); }
+  function effortTally(e, word) { return root.SacramentTally.effort(e, word); }
   /* Magic, for a natural 1 (as at the table, vtt-core isMagic): a spell, or an item that tempts the Horror. */
   function magicOf(u) { return !!(u && (u.spell || (u.source || u.item || {}).temptsHorror || (u.item && u.item.temptsHorror))); }
   /* Why a natural 1 did or did not raise the Horror, in the Rules page's terms, so the player learns the rule by seeing it (the owner's ask, 2026-11-07). */

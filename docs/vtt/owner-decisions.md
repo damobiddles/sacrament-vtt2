@@ -4,7 +4,26 @@ Moved here from `CLAUDE.md` (word for word) to keep that file short. These are t
 
 ## No limit on relics and grimoires (owner, 2026-11-12)
 
-The owner asked to remove the rule "a hero can carry at most three Horror-tempting things (relics, grimoires and other uncanny finds), packed ones included" across the board. `R.BUILD.magicItems` is gone from `site/vtt/rules.js`, and `site/sheet/sheet-core.js` no longer refuses a fourth such item or reports it as a problem, so the sheet, the table's Bring a hero check and the solo game (which adds finds through the same `C.edit`) all allow any number. Slots, the one-grimoire-a-player-picks rule and relics being the GM's to give are unchanged. The `temptsHorror` flag stays: it still marks what costs Horror and what makes a natural 1 count. Pages, cheat sheet, hero sheet and print kit updated; errata entry added. The older rules engine in `site/game/` and the legacy migration tests keep their own old three-item check for converting earlier characters; it is not used in play. No stored key names changed.
+The owner asked to remove the rule "a hero can carry at most three Horror-tempting things (relics, grimoires and other uncanny finds), packed ones included" across the board. `R.BUILD.magicItems` is gone from `site/vtt/rules.js`, and `site/sheet/sheet-core.js` no longer refuses a fourth such item or reports it as a problem, so the sheet, the table's Bring a hero check and the solo game (which adds finds through the same `C.edit`) all allow any number. Slots, the one-grimoire-a-player-picks rule and relics being the GM's to give are unchanged. The `temptsHorror` flag stays: it still marks what costs Horror and what makes a natural 1 count. Pages, cheat sheet, hero sheet and print kit updated; errata entry added. The older rules engine in `site/game/` lost its three-item check too (`startingKitOk`, used only by tests). No stored key names changed.
+
+## Six follow-ups from the table audit (owner, 2026-11-11)
+
+After the audit (`docs/audits/vtt-audit-2026-11-11.md`) the owner said "all six are good ideas so lets do them". No rule, number or stored key name changed; the good idea uses the existing `R.OBSTACLE.idea` numbers.
+
+- **I'm done:** on their turn a player can press I'm done (key D). It writes one line and lights the GM's Next turn; only the GM moves the turn on (the 24 Oct decision stands). `turnDone` command, `table.done` while the turn is unchanged.
+- **Next turn from any GM tab:** a second Next turn in the GM's footer (key N), as well as the one beside the turn order in Play. This replaces the 25 Oct rule that Next turn lives only in Play; it is still not in the top bar.
+- **Sample heroes follow paths:** Thorne Mercenary, Wisp Scholar, Brother Anselm Priest, Tilda Hunter.
+- **Good idea:** on the GM's obstacle card (a card with an Effort bar and no HP), fills half of what is left, once a card (`progress.idea`), one Undo.
+- **Push on the MISS card** as well as in the panel (the reveal card may now carry two buttons).
+- **Keys for players:** 1 to 6 roll STR to CHA, R presses the one main button in the bottom strip, D says done; never while typing in a field.
+
+## Rising numbers at the table, as in solo (owner, 2026-11-11)
+
+The owner asked for the solo game's floating modifiers and totals on the table too ("can we apply it to the VTT?"). Display only: no rule, number or stored key name changed.
+
+- **One shared file:** `site/vtt/tally.js` and `site/vtt/tally.css` draw the numbers for both solo and the table. Change them there, not in `solo.js`/`solo.css`.
+- **The server builds the numbers** (`tally` on a log line, next to `dice`), so every screen shown the dice is shown the same parts and total as the dice land. Hero checks (stat, an item's accuracy, a waiting bonus), item and weapon attacks, Effort and damage (bonus, two hands, the critical die), monster attacks (attack bonus, scene danger, against Defence), monster damage, healing amounts and several GM dice. A monster with hidden numbers shows its tally to the GM only (the same rule as its dice).
+- **A blow on a token** floats its HP change (−5, +3) above the token on every screen that can see that HP, after the totals have shown. Cards with hidden HP never float a number.
 
 ## Keep or pull back the solo game's rules (owner, 2026-11-11)
 

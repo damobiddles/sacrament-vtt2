@@ -112,6 +112,17 @@
     var left = clamp(int(st.left, 0) + int(d, 0), 0, DYING.maxLeft); return { left: left, stable: left > 0 && !!st.stable, dead: left === 0 };
   }
 
+  /* The Stranger (an optional rule, the owner's go-ahead, 2026-11-11): the first time the Horror reaches `at` in an adventure, one player in secret becomes
+     the Stranger and rolls a d6 for one of `wants`. Once an adventure the living players may name them together: right, the Horror falls by one d`rightDie`;
+     wrong, it rises by `wrong`. A Stranger never named whose want came true earns `mark` extra mark. */
+  var STRANGER = { at: 14, rightDie: 6, wrong: 2, mark: 1, minPlayers: 3,
+    wants: ['The Horror reaches 21.', 'You keep one relic or grimoire the party finds, and tell no one.', 'Another hero is left alone, out of sight of the rest, for a whole scene.',
+      'A foe the party could have finished off gets away.', 'The party takes the longer or darker way, once, because you said so.', 'Another hero spends Horror they did not need to.'] };
+
+  /* Graves and bequests (the owner's go-ahead, 2026-11-11): a hero who dies may say last words and leave `items` thing they carried to the next hero
+     who joins the party (at the table, the GM hands it over; alone, the next road's hero carries it). Words cost nothing and change nothing. */
+  var BEQUEST = { items: 1 };
+
   /* Party rest heals a Heart and lowers the Horror by one d6, whatever the size of the party (the owner's decision, 2026-11-11; it was a d10 per two heroes),
      so the meter keeps climbing across an adventure. Once the Horror has arrived there is no rest until the adventure ends. */
   var REST = { heal: HEART, horrorDie: 6 };
@@ -212,6 +223,6 @@
   }
 
   return { RANGES: RANGES, rangeText: rangeText, rangeBand: rangeBand, STATS: STATS, CATS: CATS, BONUS_CATS: BONUS_CATS, CAT_NAMES: CAT_NAMES, DEFAULT_DICE: DEFAULT_DICE, HEART: HEART, BUILD: BUILD, ADVANCE: ADVANCE, ADJ: ADJ, MAX_BONUS: MAX_BONUS, DEFENCE_BASE: DEFENCE_BASE, ARMOUR_CAP: ARMOUR_CAP, DEFENCE_MAX: DEFENCE_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, GUNS: GUNS, misfireOf: misfireOf, OBSTACLE: OBSTACLE, obstacleCat: obstacleCat, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
+    HORROR: HORROR, DYING: DYING, PATH: PATH, easier: easier, GUNS: GUNS, misfireOf: misfireOf, OBSTACLE: OBSTACLE, obstacleCat: obstacleCat, BREAK_AWAY: BREAK_AWAY, dyingFall: dyingFall, dyingTick: dyingTick, dyingAdjust: dyingAdjust, REST: REST, restDice: restDice, BEQUEST: BEQUEST, STRANGER: STRANGER, horrorSpec: horrorSpec, horrorValid: horrorValid, sayHorrorAmount: sayHorrorAmount, rollHorror: rollHorror, horrorMove: horrorMove, nat1Tempts: nat1Tempts,
     sceneDanger: sceneDanger, settingsOf: settingsOf, targetFor: targetFor, check: check, defence: defence, attack: attack, sayAttack: sayAttack, criticalEffort: criticalEffort, effort: effort, sayCheck: sayCheck, sayEffort: sayEffort, hearts: hearts, change: change, nextTurn: nextTurn, previousTurn: previousTurn, tickTimers: tickTimers };
 });

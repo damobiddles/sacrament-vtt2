@@ -20,6 +20,10 @@ The [Rules](/rules/) are the whole game. This page is only about the software: w
 
 **The Horror.** Thresholds announce themselves. The GM's **New adventure** button in the Table tab lets each one fire again. Horror has its own Undo.
 
+**The Stranger.** In the Table tab the GM presses **Deal the slips** when the Horror first reaches 14. The table picks the Stranger in secret and rolls their want: only that player (in their panel) and the GM are told. When the players agree on a name, the GM picks it and presses **Name them**; the table moves the Horror.
+
+**Last words.** When a hero has died, their player can type their last words in their panel, once, for the whole table to read. If the hero leaves something to the next hero, the GM gives it to them.
+
 **Limits the table keeps.** A single check bonus is capped at +10, and a two-handed weapon's +2 damage counts once.
 
 **What the GM still decides.** Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, a weapon's listed manoeuvres, and anything a spell or relic does without a die. Item and spell notes say which steps the table takes for you.
@@ -36,4 +40,5 @@ The solo game is your GM. It uses the same rules and makes the GM's calls itself
 - **Falling alone.** You are dying as at the table: 3 rounds; crawl away free, or pay 1 Horror to act anyway. A crawl that succeeds leaves the scene at 1 HP and leaves behind what you found in it; a failed crawl costs a round. Bandages cannot tend yourself.
 - **Paths.** Each path names one score (a Knight's STR, a Scholar's INT). The first check on it in a scene is Easy.
 - **Marks.** A road won is an adventure lived through: a hero from My heroes who comes home gets its mark ticked for them.
+- **Graves.** A hero who falls is laid to rest at the end of the road: give their last words, and choose one thing they carried to leave. The next hero to take the road carries it from the start. Graves are kept in this browser, in the Chronicle.
 - Spells and items that protect **an ally**, such as Ward, have no use alone.

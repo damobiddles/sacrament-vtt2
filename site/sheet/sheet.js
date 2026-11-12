@@ -59,7 +59,7 @@
   }
 
   /* the line saying what happens when it is used: only an item with an Effort kind rolls */
-  function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 heavy weapon' : '') + '</b> for damage.</p>' : ''; }
+  function effortLine(src, dice) { return src.cat ? '<p class="sh-eff">Used, it makes a ' + esc(src.roll || '') + ' check; on a success you roll <b>' + esc(R.CAT_NAMES[src.cat]) + ' Effort (d' + ((dice && dice[src.cat]) || R.DEFAULT_DICE[src.cat]) + ')' + (C.damageBonus(src) ? ' +2 two hands' : '') + '</b> for damage.</p>' : ''; }
   function useBtn(a, spellId, word, quick) { return a ? '<button type="button" class="sh-b use' + (a.ok ? '' : ' dim') + '" data-sh="' + (quick ? 'quickUse' : 'use') + '" data-i="' + a.index + '" data-gear="' + esc(a.gearKey || '') + '"' + (a.mode ? ' data-mode="' + esc(a.mode) + '"' : '') + (spellId ? ' data-spell="' + esc(spellId) + '"' : '') + '>' + (word || 'Use') + '</button>' : ''; }
   /* What a story spell or item is good for when its words leave it to the GM (its tags in the gear list). */
   /* What a spell or item with no Effort die does when used: a check with its stat, or nothing to roll at all. */

@@ -1,0 +1,17 @@
+/* The Horror you can feel (see dread.js). The veil lies over the picture only, never over text or buttons, and catches no clicks.
+   --dread runs from 0 (no Horror) to 1 (the Horror has arrived). */
+.dread-veil{position:absolute;inset:0;z-index:2;pointer-events:none;--d:var(--dread,0);
+  background:radial-gradient(ellipse 72% 68% at 50% 48%,transparent calc(58% - var(--d) * 40%),rgb(6 3 2 / calc(var(--d) * 1.05)) 92%,rgb(3 1 1 / calc(var(--d) * 1.2)) 100%);
+  transition:background 1.5s}
+/* the warm edge of the light, which wavers more as the Horror grows */
+.dread-veil::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 90% 85% at 50% 55%,transparent 45%,rgb(140 44 16 / calc(var(--d) * .45)) 100%);
+  animation:dread-waver calc(3.4s - var(--d) * 2s) ease-in-out infinite alternate;opacity:calc(var(--d) * 1.4)}
+@keyframes dread-waver{0%{transform:scale(1)}30%{transform:scale(1.015) translate(.4%,-.3%)}60%{transform:scale(.99) translate(-.5%,.2%)}100%{transform:scale(1.02)}}
+/* the light dies for a moment, now and then, once the Horror has arrived */
+.dread-veil::after{content:"";position:absolute;inset:0;background:#030201;opacity:0}
+[data-dread-step="3"] > .dread-veil::after{animation:dread-die 11s linear infinite}
+@keyframes dread-die{0%,86%,100%{opacity:0}87%{opacity:.82}88%{opacity:.25}89.5%{opacity:.9}92%{opacity:0}}
+/* a threshold passed: the candles gutter */
+.dread-veil.gutter::after{animation:dread-snuff 1.5s ease-out}
+@keyframes dread-snuff{0%{opacity:0}12%{opacity:.7}22%{opacity:.1}34%{opacity:.8}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.dread-veil::before,.dread-veil::after,.dread-veil.gutter::after,[data-dread-step="3"] > .dread-veil::after{animation:none}}

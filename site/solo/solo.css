@@ -247,11 +247,7 @@
 .card.obstacle{box-shadow:inset 3px 0 0 #86b3a1}
 .card.timer{box-shadow:inset 3px 0 0 var(--candle)}
 
-/* ---------- feeling it ---------- */
-.float{position:absolute;z-index:4;transform:translate(-50%,0);font:700 1.7rem/1 var(--display);pointer-events:none;text-shadow:0 2px 0 #000,0 0 8px #000;animation:solo-float 1.2s ease-out forwards}
-.float.dmg{color:#ffe2a0}
-.float.hurt{color:#ff8f7e}
-@keyframes solo-float{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-34px) scale(1)}}
+/* ---------- feeling it (the rising numbers and the numbers off the dice are in /vtt/tally.css, shared with the table) ---------- */
 .art .who.foe.flinch{animation:solo-flinch .45s ease-out}
 @keyframes solo-flinch{0%{transform-origin:center;filter:none}15%{filter:brightness(2.2) sepia(1) hue-rotate(-20deg)}30%{translate:6px 0}55%{translate:-3px 0;filter:none}100%{translate:0 0}}
 .frame .art{transition:filter 1.2s}
@@ -269,7 +265,7 @@
 .sheet.won .label{margin:0 0 4px}
 .sheet.won h2{font-size:2rem}
 .sheet.won .next{font:italic 1.15rem/1.4 var(--display);color:var(--fg)}
-@media (prefers-reduced-motion:reduce){.float,.toast,.art .who.foe.flinch,.pips.pulse{animation:none}.frame .art{transition:none}}
+@media (prefers-reduced-motion:reduce){.toast,.art .who.foe.flinch,.pips.pulse{animation:none}.frame .art{transition:none}}
 /* step 3: the foe's next move on its card, and a dying hero's countdown */
 .card .next{display:block;margin-top:2px;color:var(--candle,#d9a441);font-size:.78rem}
 #hpText.dying{color:#ff8a7a;font-weight:700}
@@ -280,6 +276,17 @@
 .end-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .end-btns form{margin:0}
 .chronicle ol{list-style:none;margin:0;padding:0}
+/* graves and bequests */
+.grave{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.grave h3{font:600 1.1rem var(--display);color:var(--candle);margin:0 0 2px}
+.grave label{font:600 .85rem var(--label);letter-spacing:.04em;color:var(--fg)}
+.grave input,.grave select{font:inherit;font-size:1rem;padding:8px 10px;background:#0f0d0b;color:var(--fg);border:1px solid var(--edge);border-radius:6px}
+.grave input::placeholder{color:var(--dim)}
+.grave .btn{justify-self:start;margin-top:4px}
+.chronicle .graves li{display:block;padding:8px 0}
+.chronicle .graves li .where{color:var(--dim);font:400 .95rem var(--body,inherit);letter-spacing:normal;text-transform:none;white-space:normal}
+.chronicle .graves q{display:block;font-style:italic;color:var(--fg);margin-top:2px}
+.chronicle .graves small{display:block;color:var(--dim);font-size:.88rem;margin-top:2px}
 .chronicle li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:1rem;line-height:1.35}
 .chronicle li span{color:var(--dim);font-size:.9rem;white-space:nowrap}
 .chronicle li b{font-weight:600}
@@ -412,26 +419,3 @@
 .hard{margin:8px 0}.hard:empty{display:none}
 .pick.hardroad{width:100%;border-color:#c4786a}
 .pick.hardroad[aria-pressed="true"]{background:#3a1712;box-shadow:inset 0 0 0 1px #eca99a}
-
-/* ---------- the numbers that rise off the dice (2026-11-10) ---------- */
-.tally{position:absolute;z-index:7;width:0;height:0;pointer-events:none;transition:opacity .4s}
-.tally.gone{opacity:0}
-.tally-part,.tally-total{position:absolute;left:0;top:0;white-space:nowrap;text-shadow:0 2px 0 #000,0 0 6px #000,0 0 12px #000}
-.tally-part{left:calc(var(--half,0px) + 10px);padding:3px 10px;border-radius:8px;background:#120f0be6;box-shadow:0 0 0 1px #b8955a99,0 4px 12px #000a;font:700 1.15rem/1.1 var(--label);text-shadow:none;transform:translate(0,-50%);animation:tally-rise 1.6s ease-out forwards}
-.tally-part.plus{color:#bfe8a4}
-.tally-part.minus{color:#ff9d8c}
-.tally-total{display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);animation:tally-pop .35s cubic-bezier(.2,.8,.3,1.4) both}
-.tally-total b{min-width:1.4em;padding:4px 10px 2px;border-radius:10px;background:#120f0bf2;box-shadow:0 0 0 2px #b8955a,0 6px 18px #000c;text-align:center;font:700 2.6rem/1 var(--display);color:#ffe2a0}
-.tally-total.bad b{box-shadow:0 0 0 2px #c4786a,0 6px 18px #000c}
-.tally-total.bad b{color:#ff9d8c}
-.tally-total small{margin-top:2px;padding:1px 8px;border-radius:9px;background:#120f0bd9;font:600 .78rem var(--label);letter-spacing:.08em;text-transform:uppercase;color:#f1e3c2;text-shadow:none}
-@keyframes tally-rise{0%{opacity:0;transform:translate(-14px,-50%) scale(.7)}12%{opacity:1;transform:translate(0,-50%) scale(1.08)}22%{transform:translate(0,-50%) scale(1)}70%{opacity:1}100%{opacity:0;transform:translate(0,-230%)}}
-@keyframes tally-pop{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes tally-still{0%{opacity:0}15%,75%{opacity:1}100%{opacity:0}}
-@media (max-width:600px){.tally-part{font-size:1rem}.tally-total b{font-size:2.1rem}}
-/* without movement: each number shows in place, above the die, and fades; nothing travels */
-@media (prefers-reduced-motion:reduce){
-  .tally-part{animation:tally-still 1.6s linear forwards;transform:translate(0,calc(-50% - var(--k,0) * 1.8em))}
-  .tally-total{animation:none}
-  .tally{transition:none}
-}

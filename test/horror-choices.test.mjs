@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { table, d20, find, charNamed } from './vtt-helpers.mjs';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
-for (const f of ['vtt/rules.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js']) require('../site/' + f);
+for (const f of ['vtt/rules.js', 'vtt/tally.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'sheet/heroes.js', 'sheet/hero-tools.js', 'solo/engine.js', 'solo/adventure-silent-bell.js', 'solo/road.js', 'solo/road-wilds.js', 'solo/road-far.js']) require('../site/' + f);
 const R = globalThis.SacramentRules, S = globalThis.SacramentSolo, A = globalThis.SacramentSoloAdventures['silent-bell'], T = globalThis.SacramentHeroTools;
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 const fixed = (list) => { let i = 0; return (sides) => Math.min(sides, list[i++ % list.length]); };

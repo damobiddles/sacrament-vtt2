@@ -41,7 +41,7 @@ test('changing between GM and player sessions in one page replaces the role and 
 test('returning from spectator to GM replaces the waiting message with GM dice',async({browser})=>{
  const page=await newPage(browser),other=await newPage(browser);await makeTable(page);const code=await makeTable(other);
  await page.locator('[data-do=gmtab][data-t=table]').click();await page.locator('#panel [data-do=leave]').click();await expect(page.locator('#entry')).toBeVisible();
- await joinTable(page,code,'Spectator');await expect(page.locator('#strip')).toContainText('Choose your hero in Play');
+ await joinTable(page,code,'Spectator');await expect(page.locator('#strip')).toContainText('Choose your hero on the right');
  await page.locator('#top [data-do=leave]').click();await page.locator('#top [data-do=leave]').click();await page.locator('#makeForm button[type=submit]').click();
  await expect(page.locator('#tRole')).toHaveText('GM view');await expect(page.locator('[data-do=gmDiceRoll]')).toBeVisible();expect(page.errors).toEqual([]);
 });

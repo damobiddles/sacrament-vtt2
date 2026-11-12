@@ -28,8 +28,8 @@
   /* a run that has just ended goes into the Chronicle, once */
   function remember() {
     if (!state || !state.over || !state.run || state.run.logged) return;
-    var sum = S.summary(state); state.run.logged = today() || true;
-    var l = chronicle(); l.unshift({ hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
+    var sum = S.summary(state); state.run.logged = today() || true; state.run.key = state.run.key || String(Date.now());
+    var l = chronicle(); l.unshift({ key: state.run.key, fell: sum.end === 'dead' ? sum.places[sum.places.length - 1] || '' : undefined, hero: sum.hero, to: sum.to, end: sum.end, at: sum.places.length, of: sum.total, peak: sum.peak, date: state.run.logged === true ? '' : state.run.logged,
       places: sum.placeIds, beaten: sum.beaten, met: sum.met, used: sum.used, escapes: sum.escapes, hard: sum.hard, ending: sum.ending });
     state.run.deeds = DEEDS ? DEEDS.fresh(l, world()) : [];
     try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); } catch { /* private window: the run is not kept */ }
@@ -69,9 +69,52 @@
     });
   }
   var HOW = { won: 'came home', dead: 'fell', fled: 'got away' };
+  /* ---------- graves and bequests (rules.js BEQUEST, 2026-11-11) ----------
+     A hero who falls gets a grave in the Chronicle, with last words if the player gives some, and may leave one thing they carried. The next road's hero
+     carries it, once. The words stay in this browser and are never counted or sent anywhere. */
+  function writeChronicle(l) { try { localStorage.setItem(CHRONICLE, JSON.stringify(l.slice(0, CHRONICLE_MAX))); return true; } catch { return false; } }
+  function graveOf(key) { var l = chronicle(); return { l: l, e: l.filter(function (e) { return key && e.key === key; })[0] || null }; }
+  /* the oldest bequest no hero has taken yet */
+  function waitingBequest() { return chronicle().filter(function (e) { return e.end === 'dead' && e.left && !e.taken; }).pop() || null; }
+  function claimBequest() {
+    var b = waitingBequest(), it = b && C.item(b.left); if (!it) return;
+    var r = C.edit(state.hero, { op: 'add', id: it.id }, { gm: true }, state.hp);
+    if (!r.ok) { state.log.push({ t: b.hero + ' left you ' + it.name + ', but you cannot carry it: ' + r.why + ' It waits on the grave.', k: 'note' }); return; }
+    var g = graveOf(b.key); if (g.e) { g.e.taken = state.hero.name; writeChronicle(g.l); }
+    state.log.push({ t: 'Taken from the grave of ' + b.hero + ': ' + it.name + '.' + (b.words ? ' “' + b.words + '”' : ''), k: 'loot' });
+  }
+  function showGrave() {
+    var dead = state && state.over === 'dead' && state.run && state.run.key, box = $('grave'); box.hidden = !dead; if (!dead) return;
+    var e = graveOf(state.run.key).e || {}, sel = $('leave'); sel.textContent = '';
+    var none = document.createElement('option'); none.value = ''; none.textContent = 'Nothing'; sel.appendChild(none);
+    var seen = {};
+    (state.hero.gear || []).forEach(function (g) { var it = C.itemOf(g); if (!it || seen[it.id]) return; seen[it.id] = true; var o = document.createElement('option'); o.value = it.id; o.textContent = it.name; sel.appendChild(o); });
+    sel.value = e.left || ''; $('lastWords').value = e.words || '';
+    var done = !!e.laid; $('lastWords').disabled = done; sel.disabled = done; $('layToRest').hidden = done;
+    $('graveSaid').hidden = !done; $('graveSaid').textContent = done ? (e.left ? 'Laid to rest. The next hero on the road will carry ' + (C.item(e.left) || { name: 'it' }).name + '.' : 'Laid to rest.') : '';
+  }
+  function layToRest() {
+    var g = graveOf(state.run.key); if (!g.e || g.e.laid) return;
+    var words = $('lastWords').value.replace(/\s+/g, ' ').trim().slice(0, 120), left = $('leave').value;
+    g.e.laid = true; if (words) g.e.words = words; if (left && C.item(left)) { g.e.left = left; g.e.leftName = C.item(left).name; }
+    if (!writeChronicle(g.l)) { $('graveSaid').textContent = 'The grave could not be kept in this browser.'; $('graveSaid').hidden = false; return; }
+    showEnd(); $('graveSaid').setAttribute('tabindex', '-1'); $('graveSaid').focus();
+  }
+  function showGraves(l) {
+    var graves = l.filter(function (e) { return e.end === 'dead' && e.laid; }), box = $('graveList'); box.textContent = ''; $('graves').hidden = !graves.length;
+    graves.slice(0, 8).forEach(function (e) {
+      var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span');
+      b.textContent = e.hero; w.className = 'where'; w.textContent = ' fell' + (e.fell ? ' at ' + e.fell : '') + (e.date ? ', ' + e.date : '') + '.';
+      li.append(b, w);
+      if (e.words) { var q = document.createElement('q'); q.textContent = e.words; li.appendChild(q); }
+      if (e.left) { var s = document.createElement('small'); s.textContent = 'Left ' + (e.leftName || (C.item(e.left) || { name: 'something' }).name) + (e.taken ? ', taken up by ' + e.taken + '.' : ' for the next hero.'); li.appendChild(s); }
+      box.appendChild(li);
+    });
+  }
   function showChronicle() {
     var l = chronicle(), box = $('chronicleList'); box.textContent = ''; $('chronicle').hidden = !l.length;
     if (l.length) showDeeds(l);
+    showGraves(l);
     l.slice(0, 12).forEach(function (e) {
       var li = document.createElement('li'), b = document.createElement('b'), w = document.createElement('span'), d = document.createElement('span');
       li.className = e.end || ''; b.textContent = e.hero;
@@ -135,7 +178,7 @@
   $('takeHero').addEventListener('click', function () { begin(T.generate($('pathPick').value)); });
 
   function begin(hero) {
-    D.clear(); tallyClear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); save();
+    D.clear(); tallyClear(); state = S.startRun(hero, CAMP.id, die, { hard: hardOn() }); state.origin = JSON.parse(JSON.stringify(hero)); claimBequest(); save();
     count('solo-start', { path: hero.path || '', hard: !!state.run.hard, scene: state.adventure });
     showGame(true);
   }
@@ -197,6 +240,9 @@
     renderHud(); renderTurns(); renderCards(); renderChoices(); paint();
     /* the Horror darkens the picture a little at each threshold passed */
     document.querySelector('.frame').dataset.dread = String(R.HORROR.thresholds.filter(function (n) { return state.horror >= n; }).length);
+    /* and the candles at its edges gutter as the meter climbs (shared with the table: /vtt/dread.js); the low drone grows with it when the music is on */
+    if (window.SacramentDread) window.SacramentDread.set(document.querySelector('.frame'), state.horror, R.HORROR.max);
+    if (M && M.drone) M.drone(state.over ? 0 : state.horror / R.HORROR.max);
     var r = ADV().rooms[state.room]; $('art').setAttribute('aria-label', 'A picture of ' + r.short + (state.fight ? ', with ' + state.fight.name : '') + '.');
   }
   function heartRow(box, cur, max) {
@@ -366,10 +412,7 @@
   function sfx(name) { if (M && M.sfx) M.sfx(name); }
   function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch { /* not on this device */ } }
   /* a number that rises from where the blow landed and fades: x and y in hundredths of the picture */
-  function float(text, x, y, cls) {
-    var f = document.createElement('span'); f.className = 'float ' + cls; f.textContent = text; f.style.left = x + '%'; f.style.top = y + '%';
-    document.querySelector('.frame').appendChild(f); setTimeout(function () { f.remove(); }, 1300);
-  }
+  function float(text, x, y, cls) { window.SacramentTally.float(text, x, y, cls, document.querySelector('.frame'), true); }
   function feel(o) {
     var frame = document.querySelector('.frame'), checks = o.fresh.filter(function (l) { return l.outcome; }), last = checks[checks.length - 1];
     frame.classList.remove('hit', 'good'); void frame.offsetWidth;
@@ -384,7 +427,7 @@
     if (state.horror > o.horror) {
       setTimeout(function () { sfx('horror'); }, 250);
       var pips = $('pips'); pips.classList.remove('pulse'); void pips.offsetWidth; pips.classList.add('pulse');
-      if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) buzz([40, 60, 40]);
+      if (R.HORROR.thresholds.some(function (n) { return o.horror < n && state.horror >= n; })) { buzz([40, 60, 40]); if (window.SacramentDread) window.SacramentDread.gutter(document.querySelector('.frame')); }
     } else if (state.horror >= 14 && !state.over) setTimeout(function () { sfx('heart'); }, 400);
     if (o.fresh.some(function (l) { return l.k === 'npc' && NPC_NAMES.some(function (n) { return l.t.indexOf(n) >= 0; }); })) setTimeout(function () { sfx('friend'); }, 150);
     var finds = o.fresh.filter(function (l) { return l.k === 'loot'; });
@@ -465,10 +508,11 @@
   function showEnd() {
     if (!state || !state.over || !state.run) return;
     var sum = S.summary(state); sum.deeds = (state.run.deeds || []).map(function (id) { var d = DEEDS.byId(id); return d ? d.name : ''; }).filter(Boolean);
+    var grave = graveOf(state.run.key).e; if (grave && grave.laid) { sum.words = grave.words || ''; sum.left = grave.leftName || ''; }
     var svg = ART.endCard(sum, state, state.run.logged === true ? '' : state.run.logged);
     $('endCard').innerHTML = svg;
     $('endCard').setAttribute('aria-label', sum.hero + ': ' + (HOW[sum.end] || sum.end) + '. ' + sum.places.join(', ') + '. ' + sum.line);
-    $('endSaved').hidden = true;
+    $('endSaved').hidden = true; showGrave();
     var d = $('end'); clearOverlays(); if (!d.open) d.showModal();
     squeeze($('endCard').querySelector('svg'));
   }
@@ -503,6 +547,7 @@
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(el));
   }
   $('endSave').addEventListener('click', saveCard);
+  $('layToRest').addEventListener('click', layToRest);
 
   /* The dice, as at the table: the latest check or attack gets the result card; otherwise the latest dice just tumble and land. A hit waits for Roll damage on the card. */
   function roll(fresh) {
@@ -521,38 +566,11 @@
   /* The numbers that rise off the dice, as in a video game (the owner's ask, 2026-11-10): once a die lands, each modifier floats up from it in turn
      ("+3 STR", "+2 Crossbow"), then the total pops over the die ("15 against 13", "8 damage") and fades. Display only: the numbers are the ones the rules
      worked out, and the words are in the story too. Without moving dice (dice off, or reduced motion) the same numbers appear and fade where the dice would be. */
-  var TALLY_STEP = 420, TALLY_HOLD = 1500, tallyTimers = [], tallyEnd = 0;
-  function tallyClear() { tallyTimers.forEach(clearTimeout); tallyTimers = []; document.querySelectorAll('.frame .tally').forEach(function (t) { t.remove(); }); }
-  function tally(entry) {
-    tallyClear(); tallyEnd = 0;
-    var list = entry && entry.tally; if (!list || !list.length) return;
-    var frame = document.querySelector('.frame'); if (!frame) return;
-    var moving = !D.off() && !reduceMotion(), t = moving ? 950 : 0;
-    var later = function (fn, ms) { tallyTimers.push(setTimeout(fn, ms)); };
-    list.forEach(function (one) {
-      var at = t;
-      later(function () {
-        var box = frame.getBoundingClientRect(), dice = document.querySelectorAll('#dice .die'), die = dice[Math.min(one.at || 0, dice.length - 1)];
-        var r = die && die.offsetParent ? die.getBoundingClientRect() : (document.querySelector('#dice .reveal-result, #dice .dice-roll') || frame).getBoundingClientRect();
-        var x = r.left + r.width / 2 - box.left, y = die && die.offsetParent ? r.top + r.height / 2 - box.top : Math.min(r.top - box.top + 40, box.height / 2);
-        var t2 = document.createElement('div'); t2.className = 'tally'; t2.setAttribute('aria-hidden', 'true'); t2.style.left = x + 'px'; t2.style.top = y + 'px'; t2.style.setProperty('--half', (die && die.offsetParent ? r.width / 2 : 0) + 'px'); frame.appendChild(t2);
-        one.parts.forEach(function (p, k) {
-          later(function () { var c = document.createElement('span'); c.className = 'tally-part ' + (p.n < 0 ? 'minus' : 'plus'); c.textContent = (p.n < 0 ? '\u2212' + Math.abs(p.n) : '+' + p.n) + ' ' + p.t; c.style.setProperty('--k', k); t2.appendChild(c); }, k * TALLY_STEP);
-        });
-        later(function () {
-          var c = document.createElement('span'); c.className = 'tally-total ' + (one.good ? 'good' : 'bad');
-          var b = document.createElement('b'); b.textContent = one.total; c.appendChild(b);
-          if (one.word) { var w = document.createElement('small'); w.textContent = one.word; c.appendChild(w); }
-          t2.appendChild(c);
-        }, one.parts.length * TALLY_STEP);
-        later(function () { t2.classList.add('gone'); later(function () { t2.remove(); }, 400); }, one.parts.length * TALLY_STEP + TALLY_HOLD);
-      }, at);
-      t += one.parts.length * TALLY_STEP + (list.length > 1 ? TALLY_HOLD : 0);
-    });
-    tallyEnd = Date.now() + t + 200;
-  }
+  var TL = window.SacramentTally;   /* the drawing is shared with the table: /vtt/tally.js */
+  function tallyClear() { TL.clear(); }
+  function tally(entry) { TL.show(entry && entry.tally, document.querySelector('.frame'), document.getElementById('dice'), !D.off() && !reduceMotion()); }
   /* how long until the totals have shown, so the number over the foe or the hero waits for them */
-  function afterTally() { return Math.max(0, tallyEnd - Date.now()); }
+  function afterTally() { return TL.after(); }
 
   /* In solo the result card blocks nothing (the buttons below still work and the foe moves by itself), so its button only closes it, and it fades
      by itself once it has been read. It waits while the pointer is on it or its button has focus. */
@@ -634,6 +652,6 @@
   $('restartBtn').addEventListener('click', function () { $('menu').close(); begin(state.origin); });
   $('newHeroBtn').addEventListener('click', function () { $('menu').close(); forget(); showStart(); });
 
-  window.__solo = { state: function () { return state; }, run: run, render: function () { render(); }, victory: function () { victory(); }, end: function () { showEnd(); } };
+  window.__solo = { state: function () { return state; }, run: run, remember: function () { remember(); save(); }, render: function () { render(); }, victory: function () { victory(); }, end: function () { showEnd(); } };
   showStart();
 })();

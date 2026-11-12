@@ -819,6 +819,8 @@
     lines(sum.finds.length ? fit(sum.finds.join(', ') + '.', 14, 300) : ['Nothing found on the road.'], 14);
     if (sum.deeds && sum.deeds.length) { head('Deeds earned'); lines(fit(sum.deeds.join(', ') + '.', 14, 300, true), 14, { bold: true }); }
     if (sum.used && sum.used.length) { head('Put to use'); lines(fit(sum.used.join(', ') + '.', 14, 300), 14); }
+    if (sum.words) { head('Last words'); lines(fit('“' + sum.words + '”', 15, 300), 15, { italic: true }); }
+    if (sum.left) { head('Left for the next hero'); lines(fit(sum.left + '.', 14, 300), 14); }
     if (sum.line) { y += 18; lines(fit(sum.line, 15, 290), 15, { anchor: 'middle', x: CW / 2, italic: true, fill: P.umber }); }
     y += 30; body += text(CW / 2, y, 'Sacrament RPG · Solo' + (when ? ' · ' + when : ''), 10, { anchor: 'middle', fill: P.earth, spacing: 1 });
     var CH = y + 26;

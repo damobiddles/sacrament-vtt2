@@ -41,7 +41,7 @@ test('ten slots: every item has a slot size, the four ready characters fit, and 
   const env = mk(), { E, D } = env;
   for (const it of D.ITEMS) assert.ok(it.slots >= 1 && it.slots <= 3, it.id);
   for (const def of D.CHARACTERS) {
-    const c = hero(env, def.id); assert.ok(E.slotsUsed(c) <= 10, def.name); assert.ok(E.startingKitOk(c), def.name + ' keeps to three relics and grimoires'); assert.equal(c.pack.length, def.kit.length, def.name + ' kit fits'); assert.ok(E.validSpread(def.scores), def.name + ' spread');
+    const c = hero(env, def.id); assert.ok(E.slotsUsed(c) <= 10, def.name); assert.ok(E.slotsUsed(c, 'eq') <= 10 && E.slotsUsed(c, 'carry') <= 10, def.name + ' kit fits its slots'); assert.equal(c.pack.length, def.kit.length, def.name + ' kit fits'); assert.ok(E.validSpread(def.scores), def.name + ' spread');
   }
   const c = hero(env, 'aldric'); assert.equal(E.slotsUsed(c), 7); assert.equal(E.slotsUsed(c, 'eq') + E.slotsUsed(c, 'carry'), 7);
   assert.equal(E.addItem(c, 'harness'), true); assert.equal(E.slotsUsed(c, 'eq'), 8, 'armour is equipped');

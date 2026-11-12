@@ -16,9 +16,9 @@ test('a hit tumbles over the scene and waits for damage instead of a dismissal t
  await reveal.getByRole('button',{name:'Roll damage',exact:true}).dblclick();await saved(p);await expect(reveal).toHaveCount(0);
  const s=await state(p),r=s.rolls.at(-1);expect(r.applied).toBeTruthy();expect(Object.values(s.cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(Math.max(0,20-r.effort.total));expect(p.errors.concat(gm.errors)).toEqual([]);
 });
-test('reduced motion keeps a readable miss until Continue; Push stays in Play',async({browser})=>{
+test('reduced motion keeps a readable miss until Continue; Push is offered on the card as well as in Play',async({browser})=>{
  const {p}=await setup(browser);await p.emulateMedia({reducedMotion:'reduce'});await attack(p,2);
  await expect(p.locator('#dice .reveal-result')).toContainText('MISS');await expect(p.locator('#dice .die')).toHaveCount(0);
- await expect(p.locator('#dice button')).toHaveText('Continue');await p.locator('#dice button').click();await expect(p.locator('#dice .reveal-result')).toHaveCount(0);
+ await expect(p.locator('#dice .reveal-action')).toHaveText('Continue');if(await p.locator('#panel [data-do=push]:not([disabled])').count())await expect(p.locator('#dice .reveal-alt')).toContainText('Push: act again');await p.locator('#dice .reveal-action').click();await expect(p.locator('#dice .reveal-result')).toHaveCount(0);
  await expect(p.locator('#feed')).toContainText('MISS');expect(p.errors).toEqual([]);
 });
