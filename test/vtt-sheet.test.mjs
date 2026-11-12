@@ -100,7 +100,7 @@ test('BRINGING A HERO: a player brings one from My heroes; it is checked against
   assert.equal(st.cards[ch.cardId].hp.max, 10); assert.ok((await t.state()).order === undefined || true);
   assert.equal((await ann.cmd({ type: 'bringHero', hero })).status, 400, 'one hero each: you already have one');
   const cheat = await bob.cmd({ type: 'bringHero', hero: Object.assign({}, hero, { name: 'Cheat', stats: { STR: 6, DEX: 6, CON: 6, INT: 6, WIS: 6, CHA: 6 }, gear: [{ id: 'chain', eq: true }, { id: 'bell', eq: true }, { id: 'censer', eq: true }, { id: 'candle', eq: true }] }) });
-  assert.equal(cheat.status, 400); assert.match(cheat.body.error.message, /points/); assert.match(cheat.body.error.message, /no more than three/i);
+  assert.equal(cheat.status, 400); assert.match(cheat.body.error.message, /points/); assert.doesNotMatch(cheat.body.error.message, /no more than three/i, 'no limit on relics (owner, 2026-11-12)');
   assert.equal(charNamed((await t.state()), 'Cheat'), undefined);
   const gm = await t.gm.cmd({ type: 'bringHero', hero: Object.assign({}, hero, { name: 'Free Wren' }) }); assert.equal(gm.status, 200);
   assert.equal(charNamed(await t.state(), 'Free Wren').owner, null, 'a hero the GM brings is free to claim');

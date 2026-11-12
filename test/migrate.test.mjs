@@ -31,11 +31,11 @@ test('scores by rank: the best old score becomes +2, then +1, then +0; ties keep
   assert.deepEqual(J(M.spread({ Body: 1, Mind: 1, Spirit: 1 })), { Body: 2, Mind: 1, Spirit: 0 });
   assert.deepEqual(J(M.spread({ Body: -1, Mind: 4, Spirit: 4 })), { Body: 0, Mind: 2, Spirit: 1 });
 });
-test('each saved character becomes a valid hero: spread, 1 Heart, ten slots, three relics and grimoires at most, nothing duplicated', () => {
+test('each saved character becomes a valid hero: spread, 1 Heart, ten slots, nothing duplicated', () => {
   for (const raw of chars) {
     const r = M.convert(raw, {}), h = r.hero;
     assert.ok(E.validSpread(h.scores), raw.name + ' spread'); const hv = h.pack.filter((x) => x.id === 'harness').length * 10; assert.equal(h.max, 10 + hv); assert.equal(h.hp, 10 + hv);
-    assert.ok(E.slotsUsed(h) <= 10, raw.name + ' slots'); assert.ok(E.startingKitOk(h), raw.name + ' relics');
+    assert.ok(E.slotsUsed(h) <= 10, raw.name + ' slots'); assert.ok(E.slotsUsed(h, 'eq') <= 10 && E.slotsUsed(h, 'carry') <= 10, raw.name + ' slots in each set');
     const ids = h.pack.map((p) => p.id); assert.equal(new Set(ids).size, ids.length, raw.name + ' no duplicates');
     assert.match(h.notes, new RegExp('Converted from ' + raw.name)); assert.equal(h.from, 'legacy:' + raw.id);
   }

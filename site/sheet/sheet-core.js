@@ -309,7 +309,6 @@
   /* The words for a roll's steps: "87 → Relics d8: 4". */
   function sayLoot(steps) { return steps.map(function (st, i) { return i ? st.name + ' d' + st.die + ': ' + st.n : String(st.n); }).join(' → '); }
 
-  var magicCount = function (h) { return (h.gear || []).filter(function (g) { var it = itemOf(g); return it && it.temptsHorror; }).length; };
   var grimoireCount = function (h) { return (h.gear || []).filter(function (g) { var it = itemOf(g); return it && it.kind === 'grimoire'; }).length; };
 
   var setName = function (set) { return set === 'eq' ? 'equipped slots are' : 'pack is'; };
@@ -388,7 +387,6 @@
       if (it.kind === 'relic' && !gm) return no('The ' + it.name + ' is a relic. Relics are finds: ask your GM to give you one.');
       if (isFind(it) && !gm) return no('The ' + it.name + ' is a find. Finds are given out by the GM: ask your GM for it.');
       if (it.kind === 'grimoire' && !gm && grimoireCount(h) >= B.playerGrimoires) return no('You can pick one grimoire yourself. Ask your GM for another.');
-      if (it.temptsHorror && magicCount(h) >= B.magicItems) return no('A hero carries no more than three relics and grimoires.');
       if (!canEquip(it)) { /* a supply goes to the pack, and only the pack: never into the equipped set to make room */
         if (!room(h, 'pack', it)) return no(full(h, 'pack') + ' and the ' + it.name + ' needs ' + plural(it.slots, 'slot', 'slots') + '. Drop something first.');
         var gp = { id: it.id, eq: false }; if (it.uses) gp.uses = it.uses; if (it.custom) gp.def = defOf(it); h.gear.push(gp); return { ok: true };
@@ -436,7 +434,6 @@
       else if (isFind(it) && !keep) out.push('The ' + it.name + ' is a find; finds are given out by the GM.');
     });
     if (!keep && grimoireCount(h) > B.playerGrimoires) out.push('A player may pick only ' + B.playerGrimoires + ' grimoire themselves.');
-    if (magicCount(h) > B.magicItems) out.push('A hero carries no more than three relics and grimoires.');
     ['eq', 'pack'].forEach(function (set) { if (slotsUsed(h, set) > B.slots) out.push('The ' + (set === 'eq' ? 'equipped set' : 'pack') + ' uses ' + slotsUsed(h, set) + ' of ' + B.slots + ' slots.'); });
     return out.concat(equipmentProblems(h).filter(function (msg) { return /Only one/.test(msg); }));
   }

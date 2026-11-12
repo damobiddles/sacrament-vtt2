@@ -104,7 +104,7 @@
 
     var cols = magic.slice(0, Math.max(3, magic.length));
     while (cols.length < 3) cols.push(null);
-    s += '<section class="ps-frame ps-magic"><h2 class="ps-black">Relics and grimoires · at most ' + B.magicItems + ' that tempt the Horror, packed ones too</h2><div class="ps-cols">' + cols.map(function (x) {
+    s += '<section class="ps-frame ps-magic"><h2 class="ps-black">Relics and grimoires</h2><div class="ps-cols">' + cols.map(function (x) {
       if (!x) return '<div class="ps-col">' + line('Item', '') + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><div class="ps-blank"></div><div class="ps-blank"></div></div>';
       var list = x.it.kind === 'grimoire' ? C.spellsOf(x.it) : [x.it];
       return '<div class="ps-col">' + line('Item', x.it.name) + '<p class="ps-cap">Spell or power · roll · die · range · Horror</p><ul>' + list.map(power).join('') + '</ul></div>';

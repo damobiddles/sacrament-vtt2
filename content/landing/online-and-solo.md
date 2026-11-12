@@ -24,7 +24,7 @@ The [Rules](/rules/) are the whole game. This page is only about the software: w
 
 **Last words.** When a hero has died, their player can type their last words in their panel, once, for the whole table to read. If the hero leaves something to the next hero, the GM gives it to them.
 
-**Limits the table keeps.** A single check bonus is capped at +10, and a two-handed weapon's +2 damage counts once. The table also counts the three Horror-tempting things a hero may carry, packed ones included.
+**Limits the table keeps.** A single check bonus is capped at +10, and a two-handed weapon's +2 damage counts once.
 
 **What the GM still decides.** Range, sight, cover, ammunition, reloads, Guard, Assist, Dazed, a weapon's listed manoeuvres, and anything a spell or relic does without a die. Item and spell notes say which steps the table takes for you.
 

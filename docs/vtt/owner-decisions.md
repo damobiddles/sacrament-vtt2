@@ -2,6 +2,10 @@
 
 Moved here from `CLAUDE.md` (word for word) to keep that file short. These are the owner's dated decisions and the reasons behind how the table behaves. **Read the relevant entry before changing anything it mentions.** The hard rules that must never be broken are repeated in `CLAUDE.md` under "Standing rules from owner decisions".
 
+## No limit on relics and grimoires (owner, 2026-11-12)
+
+The owner asked to remove the rule "a hero can carry at most three Horror-tempting things (relics, grimoires and other uncanny finds), packed ones included" across the board. `R.BUILD.magicItems` is gone from `site/vtt/rules.js`, and `site/sheet/sheet-core.js` no longer refuses a fourth such item or reports it as a problem, so the sheet, the table's Bring a hero check and the solo game (which adds finds through the same `C.edit`) all allow any number. Slots, the one-grimoire-a-player-picks rule and relics being the GM's to give are unchanged. The `temptsHorror` flag stays: it still marks what costs Horror and what makes a natural 1 count. Pages, cheat sheet, hero sheet and print kit updated; errata entry added. The older rules engine in `site/game/` lost its three-item check too (`startingKitOk`, used only by tests). No stored key names changed.
+
 ## Six follow-ups from the table audit (owner, 2026-11-11)
 
 After the audit (`docs/audits/vtt-audit-2026-11-11.md`) the owner said "all six are good ideas so lets do them". No rule, number or stored key name changed; the good idea uses the existing `R.OBSTACLE.idea` numbers.

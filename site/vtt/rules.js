@@ -24,8 +24,8 @@
   var ADJ = { easy: -3, normal: 0, hard: 3 }; /* applied to the Target, so Easy makes it lower */
   var MAX_BONUS = 10; /* a single stat or Effort bonus never passes +10 */
   /* Building a hero: what the character sheet enforces. Six points among the six scores (none above 6), four Effort points, ten slots for what is equipped and ten for the pack,
-     no more than three relics and grimoires in all, and a player may pick one grimoire themselves (relics and further books are finds the GM gives). */
-  var BUILD = { points: 6, scoreMax: 6, effortPoints: 4, slots: 10, magicItems: 3, playerGrimoires: 1 };
+     and a player may pick one grimoire themselves (relics and further books are finds the GM gives). */
+  var BUILD = { points: 6, scoreMax: 6, effortPoints: 4, slots: 10, playerGrimoires: 1 };
   /* Advancement (the owner's rule, 2026-11-07): each adventure a hero lives through to its end earns 1 mark (the player ticks it on the sheet; a won solo road ticks it itself).
      At 3 marks the hero takes one advance: +1 to one score (up to the usual 6) or +1 to one Effort bonus (up to +10). The marks then start again. */
   var ADVANCE = { marks: 3, scoreMax: BUILD.scoreMax, effortMax: MAX_BONUS };

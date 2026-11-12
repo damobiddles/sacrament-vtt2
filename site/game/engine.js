@@ -90,8 +90,6 @@
       o = o || {}; var r = o.d20 || d(20), bonus = E.foeBonus(scene, o.dazed), need = 10 + E.defence(hero, defend), total = r + bonus;
       return { d: r, bonus: bonus, total: total, need: need, nat20: r === 20, nat1: r === 1, hit: r === 20 || (r !== 1 && total >= need) };
     };
-    /* A starting kit holds no more than three relics and grimoires between them. */
-    E.startingKitOk = function (c) { return E.slotsUsed(c, 'eq') <= SLOTS && E.slotsUsed(c, 'carry') <= SLOTS && c.pack.filter(function (p) { var it = ITEM[p.id]; return it && (it.kind === 'relic' || it.kind === 'grimoire'); }).length <= 3; };
     /* The Defence bonus of the Guard Action: +2, or +3 holding an arming sword. */
     E.guardBonus = function (c) { var n = 2; c.pack.forEach(function (p) { if (!E.isEq(p)) return; fxOf(ITEM[p.id]).forEach(function (e) { if (e.on === 'always' && e.do === 'buff' && e.to === 'guard') n += e.n || 0; }); }); return n; };
     /* Has it to hand: a supply in either set, anything else only if equipped. */
