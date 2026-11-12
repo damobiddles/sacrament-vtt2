@@ -153,7 +153,7 @@ export function project(s, a, opt = {}) {
     const mask = !gm && numbersHidden(c);
     const o = { id, kind: c.kind, name: c.name, img: c.img, desc: c.desc, visible: c.visible, owner: c.owner || null, charId: c.charId || null, sceneId: c.sceneId,
       hp: mask ? (c.hp ? { hidden: true } : null) : c.hp, progress: mask ? (c.progress ? { hidden: true, label: c.progress.label } : null) : c.progress, timer: mask ? (c.timer ? { hidden: true, label: c.timer.label } : null) : c.timer };
-    if (c.kind === 'pc') o.dying = c.dying || null;   /* a hero's countdown is plain at the table, like their HP */
+    if (c.kind === 'pc') { o.dying = c.dying || null; if (c.lastWords) o.lastWords = c.lastWords; }   /* a hero's countdown is plain at the table, like their HP */
     if (gm) { o.gmNotes = c.gmNotes || ''; o.hideNumbers = !!c.hideNumbers; o.attack = c.attack == null ? null : c.attack; o.loot = c.loot || null; } else if (mask) o.numbersHidden = true;
     cards[id] = o; if (s.layout[id] && (!c.owner || gm)) layout[id] = s.layout[id];
   }
@@ -189,6 +189,12 @@ export function project(s, a, opt = {}) {
     horror: Object.assign({ cur: horrorOf(s).cur, max: R.HORROR.max, thresholds: R.HORROR.thresholds, fired: horrorOf(s).fired.slice() }, gm ? { alert: horrorOf(s).alert } : {})
   };
   if (opt.dv == null || opt.dv === '' || +opt.dv !== out.drawV) out.draw = (s.draw || []).filter((line) => gm || (line.sceneId || s.table.scene) === s.table.scene);
+  /* the Stranger: who it is and what they want reaches the GM and that one player only */
+  if (s.stranger && (gm || s.stranger.pid === a.pid)) {
+    const st = s.stranger, ch = s.chars[st.charId];
+    out.stranger = { want: R.STRANGER.wants[st.want - 1] || '', found: !!(st.named && st.named.right) };
+    if (gm) Object.assign(out.stranger, { charId: st.charId, name: ch ? ch.name : '', named: st.named ? { charId: st.named.charId, right: st.named.right } : null });
+  } else if (s.stranger) out.stranger = { dealt: true, named: s.stranger.named ? { charId: s.stranger.named.charId, right: s.stranger.named.right } : null };
   if (gm) {
     out.scenes = Object.values(s.scenes).map((x) => ({ id: x.id, name: x.name, bg: x.bg }));
     out.lootLib = s.lootLib || [];
@@ -246,7 +252,7 @@ export function addCharacter(s, p) {
 }
 
 /* ---------- commands ---------- */
-const GM_ONLY = new Set(['goodIdea', 'setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
+const GM_ONLY = new Set(['goodIdea', 'setTarget', 'settings', 'cardCreate', 'cardUpdate', 'cardDuplicate', 'cardDelete', 'track', 'trackerAdd', 'trackerRemove', 'giveCard', 'sceneImport', 'sceneCreate', 'sceneUpdate', 'sceneReveal', 'sceneDelete', 'endTurn', 'orderSet', 'turnSet', 'nextRound', 'charCreate', 'charUpdate', 'assign', 'draw', 'drawUndo', 'drawClear', 'ack', 'monsterAttack', 'monsterEffort', 'lootRoll', 'lootSave', 'lootDelete', 'lootPlace', 'lootGive', 'lootCardEdit', 'horror', 'horrorAck', 'newAdventure', 'stranger', 'dying', 'rest', 'recapReset', 'nextSession', 'playerRemove', 'gmDice', 'pushOverride', 'scenePowerReset']);
 
 /* An action id is a client id and a counter: "k3j9x0ab2fg.17". A page has three lanes, each its own client id (the page's id plus g, d or t) and its own counter:
    g, the gameplay commands, sent one at a time in order; d, drawing; t, the pointer, which only ever matters in its latest position. Because they are separate clients
@@ -1007,10 +1013,52 @@ const HANDLERS = {
     return { cur: r.cur, applied: r.applied, crossed: r.crossed };
   },
   horrorAck(s) { horrorOf(s).alert = 0; return {}; },
+  /* Graves and bequests (rules.js BEQUEST, 2026-11-11): the player of a hero who has died may say their last words, once, for the whole table to read.
+     The GM is reminded that the hero may leave one thing they carried to the next hero. */
+  lastWords(s, c, a, ctx) {
+    const ch = s.chars[c.charId] || fail('not_found', 'That hero is not at the table.'), card = s.cards[ch.cardId] || fail('not_found', 'That hero is not at the table.');
+    if (!isGM(a) && ch.owner !== a.pid) fail('forbidden', 'Only ' + ch.name + '\'s player can say their last words.');
+    if (!card.dying || !card.dying.dead) fail('invalid', ch.name + ' has not died.');
+    if (card.lastWords) fail('conflict', ch.name + ' has said their last words.');
+    const words = str(c.text, 120).replace(/\s+/g, ' ').trim(); if (!words) fail('invalid', 'Type their last words.');
+    card.lastWords = words;
+    L(s, a, ctx, 'The last words of ' + ch.name + ': “' + words + '”', { kind: 'info', gmText: 'The last words of ' + ch.name + ': “' + words + '” They may leave one thing they carried to the next hero who joins: give it with Give in their sheet or the loot tab.' });
+    return {};
+  },
+  /* The Stranger (an optional rule, the owner's go-ahead 2026-11-11; rules.js STRANGER). The GM deals the slips (the rule says: the first time the Horror reaches 14):
+     the table picks one player who has a hero, in secret, and rolls their want. Only that player and the GM ever learn who it is or what they want; every other player
+     is told only that they are themselves. Once an adventure the table names a hero (the GM enters the name the players agree on): right, the Stranger is themselves
+     again and the Horror falls by one d6; wrong, it rises by 2 (Horror the GM adds, so no blood). Each step has one Undo. */
+  stranger(s, c, a, ctx) {
+    const X = R.STRANGER, before = s.stranger ? clone(s.stranger) : null;
+    if (c.op === 'deal') {
+      if (s.stranger) fail('conflict', 'The slips have already been dealt this adventure.');
+      const seats = [...new Set(Object.values(s.chars).filter((ch) => ch.owner && s.players[ch.owner] && s.cards[ch.cardId]).map((ch) => ch.owner))];
+      if (seats.length < X.minPlayers) fail('invalid', 'The Stranger needs at least ' + X.minPlayers + ' players with heroes at the table.');
+      const pid = seats[d(ctx, seats.length) - 1], hero = Object.values(s.chars).find((ch) => ch.owner === pid), w = d(ctx, X.wants.length);
+      s.stranger = { pid, charId: hero.id, want: w, named: null };
+      const e = L(s, a, ctx, 'The Horror wears a familiar face. Every player has drawn a slip, and read it in secret.', { kind: 'horror', effects: [{ t: 'stranger', before }],
+        gmText: 'The slips are dealt. The Stranger is ' + hero.name + ' (' + (s.players[pid] || {}).name + '). Their want (d6: ' + w + '): ' + X.wants[w - 1] });
+      seats.forEach((p) => L(s, { role: 'gm', name: 'GM' }, ctx, p === pid ? 'Your slip: you are the Stranger. Your want (d6: ' + w + '): ' + X.wants[w - 1] + ' Play your hero as usual. Tell no one.' : 'Your slip: you are yourself. Someone at this table is not.',
+        { only: p, kind: 'info', gmText: p === pid ? 'The Stranger\'s slip went to ' + hero.name + '.' : 'A plain slip went to ' + (s.players[p] || {}).name + '.' }));
+      return { log: e.id };
+    }
+    if (c.op === 'name') {
+      const st = s.stranger || fail('invalid', 'Deal the slips first.'); if (st.named) fail('conflict', 'The table has already named someone this adventure.');
+      const ch = s.chars[c.charId] || fail('not_found', 'Choose a hero.'), right = ch.id === st.charId, truth = s.chars[st.charId];
+      st.named = { charId: ch.id, right };
+      const e = L(s, a, ctx, 'The table names ' + ch.name + ' as the Stranger. ' + (right ? 'They are right.' : 'They are wrong.'), { kind: 'horror', effects: [{ t: 'stranger', before }],
+        gmText: 'The table names ' + ch.name + ' as the Stranger. ' + (right ? 'They are right.' : 'They are wrong: the Stranger is ' + (truth ? truth.name : 'someone else') + '.') });
+      if (right) { L(s, { role: 'gm', name: 'GM' }, ctx, 'You are found out, and you are yourself again.', { only: st.pid }); const n = d(ctx, X.rightDie); moveHorror(s, a, ctx, -n, (applied, now) => 'Horror d' + X.rightDie + ': ' + n + '. Found out, the Horror falls by ' + Math.abs(applied) + ' (now ' + now + ' of ' + R.HORROR.max + ').', diceOf(false, X.rightDie, n)); }
+      else moveHorror(s, a, ctx, X.wrong, (applied, now) => 'A wrong name: the Horror rises by ' + applied + ' (now ' + now + ' of ' + R.HORROR.max + ').');
+      return { log: e.id, right };
+    }
+    fail('invalid', 'Deal the slips, or name a hero.');
+  },
   newAdventure(s, c, a, ctx) { /* a new adventure begins: each threshold may fire again, the hunt ends and no hero is still shaken. The meter itself stays where it is. One Undo. */
     const h = horrorOf(s), shaken = Object.values(s.chars).filter((ch) => ch.shaken).map((ch) => ch.id);
-    const fx = { t: 'adventure', fired: h.fired.slice(), hunted: !!h.hunted, alert: h.alert || 0, shaken };
-    h.fired = []; h.hunted = false; h.alert = 0; shaken.forEach((id) => { s.chars[id].shaken = false; });
+    const fx = { t: 'adventure', fired: h.fired.slice(), hunted: !!h.hunted, alert: h.alert || 0, shaken, stranger: s.stranger ? clone(s.stranger) : null };
+    h.fired = []; h.hunted = false; h.alert = 0; shaken.forEach((id) => { s.chars[id].shaken = false; }); s.stranger = null;   /* the Stranger is one adventure's */
     const e = L(s, a, ctx, 'A new adventure begins. The Horror stays at ' + h.cur + ' of ' + R.HORROR.max + '; 7, 14 and 21 can each fire again.', { kind: 'horror', effects: [fx] });
     return { log: e.id };
   },
@@ -1239,7 +1287,8 @@ const HANDLERS = {
       else if (fx.t === 'horror') { const h = horrorOf(s), m = R.horrorMove(h.cur, -fx.d); h.cur = m.to; if (m.applied !== -fx.d) short = true; if (h.alert && h.cur < h.alert) h.alert = 0; }
       else if (fx.t === 'threshold') { const h = horrorOf(s); h.fired = h.fired.filter((t) => t !== fx.at); if (fx.at === R.HORROR.dread.hunted) h.hunted = false; (fx.shaken || []).forEach((id) => { if (s.chars[id]) s.chars[id].shaken = false; }); }
       else if (fx.t === 'idea') { const card = s.cards[fx.card]; if (card && card.progress) delete card.progress.idea; }
-      else if (fx.t === 'adventure') { const h = horrorOf(s); h.fired = fx.fired.slice(); h.hunted = fx.hunted; h.alert = fx.alert; fx.shaken.forEach((id) => { if (s.chars[id]) s.chars[id].shaken = true; }); }
+      else if (fx.t === 'adventure') { const h = horrorOf(s); h.fired = fx.fired.slice(); h.hunted = fx.hunted; h.alert = fx.alert; fx.shaken.forEach((id) => { if (s.chars[id]) s.chars[id].shaken = true; }); if (fx.stranger !== undefined) s.stranger = fx.stranger ? clone(fx.stranger) : null; }
+      else if (fx.t === 'stranger') s.stranger = fx.before ? clone(fx.before) : null;
     }
     /* a hero put back above 0 is not dying, whatever the countdown was */
     e.effects.forEach((fx) => { const card = (fx.t === 'delta' || fx.t === 'dying') && s.cards[fx.card]; if (isHero(card) && card.hp.cur > 0) card.dying = null; });

@@ -113,9 +113,11 @@
   }
 
   /* The Stranger (an optional rule, the owner's go-ahead, 2026-11-11): the first time the Horror reaches `at` in an adventure, one player in secret becomes
-     the Stranger and rolls a d`wants` for a want. Once an adventure the living players may name them together: right, the Horror falls by one d`rightDie`;
+     the Stranger and rolls a d6 for one of `wants`. Once an adventure the living players may name them together: right, the Horror falls by one d`rightDie`;
      wrong, it rises by `wrong`. A Stranger never named whose want came true earns `mark` extra mark. */
-  var STRANGER = { at: 14, wants: 6, rightDie: 6, wrong: 2, mark: 1, minPlayers: 3 };
+  var STRANGER = { at: 14, rightDie: 6, wrong: 2, mark: 1, minPlayers: 3,
+    wants: ['The Horror reaches 21.', 'You keep one relic or grimoire the party finds, and tell no one.', 'Another hero is left alone, out of sight of the rest, for a whole scene.',
+      'A foe the party could have finished off gets away.', 'The party takes the longer or darker way, once, because you said so.', 'Another hero spends Horror they did not need to.'] };
 
   /* Graves and bequests (the owner's go-ahead, 2026-11-11): a hero who dies may say last words and leave `items` thing they carried to the next hero
      who joins the party (at the table, the GM hands it over; alone, the next road's hero carries it). Words cost nothing and change nothing. */

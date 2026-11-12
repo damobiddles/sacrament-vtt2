@@ -21,3 +21,20 @@ test('solo: the picture darkens as the Horror climbs, and the veil never blocks 
   await page.locator('#choices button.go').first().click();
   expect(page.errors).toEqual([]);
 });
+
+test('table: the map darkens for the GM and the players as the Horror climbs, under the cards', async ({ browser }) => {
+  test.setTimeout(90000);
+  const { makeTable, joinTable, saved } = await import('./helpers.mjs');
+  const gm = await newPage(browser), ann = await newPage(browser);
+  const code = await makeTable(gm); await joinTable(ann, code, 'Ann');
+  const level = (page) => page.locator('#table').evaluate((t) => ({ d: Number(getComputedStyle(t).getPropertyValue('--dread')), step: t.dataset.dreadStep, veil: t.querySelectorAll(':scope > .dread-veil').length, under: getComputedStyle(t.querySelector('.dread-veil')).zIndex }));
+  await expect.poll(async () => (await level(gm)).step).toBe('0');
+  expect(await level(gm)).toEqual({ d: 0, step: '0', veil: 1, under: 'auto' });
+  await gm.locator('[data-do=gmtab][data-t=table]').click();
+  await gm.locator('#hzSet').fill('21'); await gm.locator('[data-do=horrorSet]').click(); await saved(gm);
+  await expect.poll(async () => (await level(gm)).step).toBe('3');
+  await expect.poll(async () => (await level(ann)).step, { timeout: 15000 }).toBe('3');
+  expect((await level(ann)).d).toBe(1);
+  if (process.env.DREAD_SHOTS) { await ann.waitForTimeout(1600); await ann.screenshot({ path: `${process.env.DREAD_SHOTS}/table-horror-21.png` }); }
+  expect(gm.errors).toEqual([]); expect(ann.errors).toEqual([]);
+});
