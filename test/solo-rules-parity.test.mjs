@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-import { table, charNamed, find, d20 as d20f, die as dief } from './vtt-helpers.mjs';
+import { table, charNamed, find, die as dief } from './vtt-helpers.mjs';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
 for (const f of ['vtt/rules.js', 'vtt/tally.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);

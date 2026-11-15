@@ -692,7 +692,7 @@
   function odds(s, adv, cmd) { adv = sceneOf(s) || adv;
     if (!cmd || s.over) return null;
     var copy = JSON.parse(JSON.stringify(s)), from = s.log.length;
-    try { act(copy, adv, cmd, function (n) { return n === 20 ? 2 : 1; }); } catch (e) { return null; }
+    try { act(copy, adv, cmd, function (n) { return n === 20 ? 2 : 1; }); } catch { return null; }
     var first = copy.log.slice(from).filter(function (l) { return l.outcome; })[0];
     if (!first) return null;
     var o = first.outcome, need = Math.max(1, o.target - o.mod), chance = Math.max(0, Math.min(20, 21 - need)) * 5;

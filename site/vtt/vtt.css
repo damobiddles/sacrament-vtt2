@@ -536,3 +536,7 @@ label.phys{align-items:flex-start}
 #strip .done-btn{margin-left:auto}
 /* Push on the missed result card, beside Continue */
 .reveal-alt{pointer-events:auto;flex-shrink:0;max-width:100%;white-space:normal}
+/* A hero's weapons, spells and items are their main actions: solid buttons, like the others in the panel, not dashed like something switched off.
+   One that cannot be used now keeps the dashed look (15 Nov 2026 bug hunt). */
+.player-actions .ef:not(.dim){border-style:solid;color:var(--fg);min-height:var(--ui-control-height);padding:6px 12px;text-align:left}
+.player-actions .ef:not(.dim):hover,.player-actions .ef:not(.dim):focus-visible{border-color:var(--candle)}
