@@ -26,3 +26,9 @@ test('a scene change does not reveal an old scene check from a delayed activity 
  const {t,ann,h}=await setup();await ann.cmd({type:'roll',charId:h.id,stat:'STR',d20:15});const s=await t.state(),next=s.scenes.find(sc=>sc.id!==s.table.scene.id).id;
  await t.gm.cmd({type:'sceneReveal',id:next});assert.equal(outcome(await ann.get()),undefined);
 });
+test('BUG 2026-11-15: a player\'s ordinary hit on a foe says HIT, the same word family as its MISS (it said SUCCESS)',async()=>{
+ const {ann,h,t}=await setup(),foe=find(await t.state(),'Pit Ghoul');
+ let r=await ann.cmd({type:'useItem',charId:h.id,index:0,d20:15,targetCardId:foe.id});assert.equal(outcome(r).label,'HIT');
+ r=await ann.cmd({type:'roll',charId:h.id,stat:'STR',d20:15,attack:true,targetCardId:foe.id});assert.equal(outcome(r).label,'HIT');
+ r=await ann.cmd({type:'roll',charId:h.id,stat:'WIS',d20:15});assert.equal(outcome(r).label,'SUCCESS');
+});

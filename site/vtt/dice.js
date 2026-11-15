@@ -46,7 +46,23 @@
   function textEl(tag, cls, text, parent) {
     var el = document.createElement(tag); el.className = cls; el.textContent = text; parent.appendChild(el); return el;
   }
-  function show(dice, who, own, outcome) {
+  /* The sum, said in full and kept on the card once the numbers have risen and gone (15 Nov 2026): "15 + 3 STR = 18 against Target 12". `sum` is the
+     tally the line carries (tally.js); without one, the modifier is shown whole. */
+  function sumText(o, sum) {
+    if (o.hiddenNumbers || o.total == null) return '';
+    var parts = sum && Array.isArray(sum.parts) ? sum.parts : o.mod ? [{ n: o.mod, t: '' }] : [];
+    var said = o.d20 != null && parts.length ? o.d20 + parts.map(function (p) { return (p.n < 0 ? ' − ' + Math.abs(p.n) : ' + ' + p.n) + (p.t ? ' ' + p.t : ''); }).join('') + ' = ' + o.total : String(o.total);
+    return said + ' against ' + o.versus + ' ' + o.target + (o.note ? '. ' + o.note : '');
+  }
+  /* By how much: only where the numbers decided it (not a natural 20's sure hit, nor a gun's misfire). */
+  function marginText(o) {
+    if (o.hiddenNumbers || o.total == null || o.target == null) return '';
+    var m = o.total - o.target;
+    if (o.success && m >= 0) return m ? 'Made it by ' + m : 'Made it exactly';
+    if (!o.success && m < 0) return 'Missed by ' + -m;
+    return '';
+  }
+  function show(dice, who, own, outcome, sum) {
     // Another person's roll cannot dismiss your pending hit. Damage from this
     // person replaces their own hit; all commands still use the existing UI.
     if (result && result.own && result.pendingDamage && !own) return;
@@ -62,14 +78,18 @@
     var shown = dice && dice.length ? dice : outcome.d20 != null && !outcome.hiddenNumbers ? [{die:20, n:outcome.d20}] : [];
     showDice(shown, who, own, faces, true);
     var label = textEl('strong', 'reveal-outcome', air ? 'Rolling…' : outcome.label, card); label.setAttribute('aria-live', 'polite');
-    var detail = textEl('p', 'reveal-detail', '', card);
+    var detail = textEl('p', 'reveal-detail', '', card), margin = textEl('p', 'reveal-margin', '', card); margin.hidden = true;
     var current = result;
-    function landed() {
+    function verdict() {
       if (result !== current) return;
-      label.textContent = outcome.label;
-      if (!outcome.hiddenNumbers && outcome.total != null) detail.textContent = outcome.total + ' against ' + outcome.versus + ' ' + outcome.target + (outcome.note ? '. ' + outcome.note : '');
+      label.textContent = outcome.label; label.classList.add('in');
+      if (outcome.d20 === 20 && !outcome.hiddenNumbers) card.classList.add('nat20'); else if (outcome.d20 === 1 && !outcome.hiddenNumbers) card.classList.add('nat1');
+      detail.textContent = sumText(outcome, sum);
+      var m = marginText(outcome); margin.textContent = m; margin.hidden = !m;
     }
-    if (air) later(landed, SPIN); else landed();
+    /* The verdict waits until the total has popped over the die (tally.js), so the numbers rise first and the card then says what they mean. */
+    function landed() { if (result !== current) return; var TL = window.SacramentTally, wait = TL ? Math.max(0, TL.after() - 200) : 0; if (wait) later(verdict, wait); else verdict(); }
+    if (air) later(landed, SPIN); else verdict();
     result.button = textEl('button', 'btn main reveal-action', '', card); result.button.type = 'button';
     action(null);
   }

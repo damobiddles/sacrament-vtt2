@@ -109,7 +109,7 @@
 @keyframes dice-tumble{0%{transform:translate(-120px,-60px) rotate(-540deg) scale(.6);opacity:0}15%{opacity:1}55%{transform:translate(20px,8px) rotate(-60deg) scale(1.05)}75%{transform:translate(-6px,-4px) rotate(18deg)}100%{transform:translate(0,0) rotate(0) scale(1)}}
 @keyframes dice-land{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){#dice .die{display:none}}
-@media (max-width:600px){.reveal-result{display:grid;grid-template-columns:var(--ui-die-size) minmax(0,1fr);gap:4px 10px;padding:10px;align-items:center}.reveal-who,.reveal-action{grid-column:1/-1}.reveal-dice{grid-column:1;grid-row:2/4}.reveal-outcome,.reveal-detail{grid-column:2}.reveal-outcome{font-size:1.3rem}.reveal-who,.reveal-detail{font-size:.9rem}}
+@media (max-width:600px){.reveal-result{display:grid;grid-template-columns:var(--ui-die-size) minmax(0,1fr);gap:4px 10px;padding:10px;align-items:center}.reveal-who,.reveal-action{grid-column:1/-1}.reveal-dice{grid-column:1;grid-row:2/5}.reveal-result .reveal-dice{margin-bottom:0}.reveal-outcome,.reveal-detail,.reveal-margin{grid-column:2}.reveal-margin{justify-self:start}.reveal-outcome{font-size:1.3rem}.reveal-who,.reveal-detail{font-size:.9rem}}
 .hud{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;padding:6px 2px 4px}
 .meter{display:flex;align-items:center;gap:6px;min-height:24px}
 .meter .lbl{font:600 .95rem var(--px);color:var(--dim)}

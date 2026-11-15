@@ -8,7 +8,9 @@ test('physical critical outcomes appear once in Activity; footer damage applies 
  await expect(p.locator('#feed .outcome')).toHaveText('CRITICAL HIT');await expect(p.locator('#feed')).toContainText('23 against Target 12');
  await expect(p.locator('#dice .die.landed b')).toHaveText('20');await expect(p.locator('#dice .reveal-result')).toContainText('CRITICAL HIT');await expect(p.locator('#panel .calc')).toHaveCount(0);
  await expect(gm.locator('#feed .outcome')).toHaveText('CRITICAL HIT');await expect(gm.locator('[data-do=effort]')).toHaveCount(0);
- await p.screenshot({path:info.outputPath('critical-activity.png')});expect(await axeContrast(p)).toEqual([]);
+ await p.screenshot({path:info.outputPath('critical-activity.png')});
+ /* the rising numbers fade as they go (decorative, aria-hidden): the contrast scan reads the settled card, once they have gone (the verdict now waits for them, 15 Nov 2026) */
+ await expect(p.locator('#tablewrap .tally')).toHaveCount(0,{timeout:8000});expect(await axeContrast(p)).toEqual([]);
  await p.locator('#strip [data-do=effort]').click();await saved(p);await expect(p.locator('#feed')).toContainText('HP -');await expect(p.locator('[data-do=apply]')).toHaveCount(0);
  const r=(await state(p)).rolls.at(-1);expect(r.effort.critical).toBeTruthy();expect(Object.values((await state(p)).cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(Math.max(0,20-r.effort.total));expect(gm.errors.concat(p.errors)).toEqual([]);
 });
@@ -19,7 +21,7 @@ test('miss and failed ordinary check stay distinct with reduced motion',async({b
  await expect(p.locator('#feed .outcome')).toHaveText('FAILED CHECK');await expect(p.locator('#panel .calc')).toHaveCount(0);await expect(p.locator('#dice .reveal-result')).toContainText('FAILED CHECK');expect(gm.errors.concat(p.errors)).toEqual([]);
 });
 test('reconnecting restores pending damage without replaying dice; leaving clears feedback',async({browser})=>{
- const {p}=await setup(browser);await attack(p,15);await expect(p.locator('#feed .outcome')).toHaveText('SUCCESS');await p.reload();await expect(p.locator('#app')).toBeVisible();await expect(p.locator('#dice .die,.reveal-result')).toHaveCount(0);await expect(p.locator('#strip [data-do=effort]')).toBeVisible();
+ const {p}=await setup(browser);await attack(p,15);await expect(p.locator('#feed .outcome')).toHaveText('HIT');await p.reload();await expect(p.locator('#app')).toBeVisible();await expect(p.locator('#dice .die,.reveal-result')).toHaveCount(0);await expect(p.locator('#strip [data-do=effort]')).toBeVisible();
  await p.locator('#top [data-do=leave]').click();await p.locator('#top [data-do=leave]').click();await expect(p.locator('#entry')).toBeVisible();expect(p.errors).toEqual([]);
 });
 test('a shared update cannot reset the GM dice count while it is being typed',async({browser})=>{

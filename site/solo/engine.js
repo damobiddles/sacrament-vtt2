@@ -103,7 +103,7 @@
   function heroOutcome(s, c, o) {
     var attack = !!o.attack, critical = c.success && c.offerUltimate && !o.nonDamage;
     return { who: s.hero.name, targetName: o.targetName || '', item: o.item || '', success: c.success, critical: critical,
-      label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : 'SUCCESS') : (attack ? 'MISS' : 'FAILED CHECK'),
+      label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : (attack ? 'HIT' : 'SUCCESS')) : (attack ? 'MISS' : 'FAILED CHECK'),
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
       note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
   }
@@ -692,7 +692,7 @@
   function odds(s, adv, cmd) { adv = sceneOf(s) || adv;
     if (!cmd || s.over) return null;
     var copy = JSON.parse(JSON.stringify(s)), from = s.log.length;
-    try { act(copy, adv, cmd, function (n) { return n === 20 ? 2 : 1; }); } catch (e) { return null; }
+    try { act(copy, adv, cmd, function (n) { return n === 20 ? 2 : 1; }); } catch { return null; }
     var first = copy.log.slice(from).filter(function (l) { return l.outcome; })[0];
     if (!first) return null;
     var o = first.outcome, need = Math.max(1, o.target - o.mod), chance = Math.max(0, Math.min(20, 21 - need)) * 5;

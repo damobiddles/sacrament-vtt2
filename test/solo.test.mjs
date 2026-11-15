@@ -97,7 +97,7 @@ test('combat takes turns as at the table: a hit waits for Roll damage, then the 
   S.act(s, A, attack.cmd, fixed([18]));
   assert.equal(s.fight.phase, 'damage');
   const reveal = s.log.filter((l) => l.outcome).pop().outcome;
-  assert.equal(reveal.label, 'SUCCESS'); assert.ok(reveal.pendingDamage);
+  assert.equal(reveal.label, 'HIT');   /* a hit says HIT, as its miss says MISS (15 Nov 2026) */ assert.ok(reveal.pendingDamage);
   assert.deepEqual(S.choices(s, A).map((c) => c.cmd), ['damage']);
   S.act(s, A, 'damage', fixed([2]));
   assert.equal(s.fight.phase, 'foe'); assert.ok(s.fight.hp.cur < s.fight.hp.max);
