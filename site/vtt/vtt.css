@@ -491,6 +491,8 @@ label.phys{align-items:flex-start}
 .action-options button{text-align:left;white-space:normal;overflow-wrap:anywhere}
 .roll-next{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;max-width:100%}
 .roll-next .cats{display:flex;flex-wrap:wrap;gap:8px}.roll-next .phys{margin:0}
+/* the damage button is a full button, with the same padding as Roll and I'm done beside it (15 Nov bug hunt) */
+.roll-next .cats .btn{padding:var(--ui-control-pad-y) var(--ui-control-pad-x)}
 #panel .hp{margin:10px 0}#panel .hp .stepper{display:inline-flex;align-items:center;gap:6px}
 
 #strip .phys input{height:36px;min-height:var(--ui-compact-height);padding:0 6px}
@@ -519,8 +521,12 @@ label.phys{align-items:flex-start}
 @keyframes hzRise{0%{opacity:0;transform:translate(0,-12px)}15%{opacity:1;transform:translate(0,0)}80%{opacity:1;transform:translate(0,4px)}100%{opacity:0;transform:translate(0,8px)}}
 @media (prefers-reduced-motion:reduce){#tHorror.hz-pulse .hz-meter{animation:none}.hz-delta{animation:none}}
 /* The latest-activity line keeps one height (room for two lines, more scroll), so the map does not grow and shrink as lines come and go. */
-@media(min-width:901px){#feed .latest{height:calc(2 * 1.5em + 8px);max-height:none;box-sizing:border-box}
-  #strip .phys input[data-phys]{width:9.5em}}
+@media(min-width:901px){#feed .latest{height:calc(2 * 1.5em + 14px);max-height:none;box-sizing:border-box}
+  #strip .phys input[data-phys]{width:9.5em}
+  /* the damage step's "Own die for damage" sits beside its box, as the d20 one does, so the strip (and the map above it) keeps its height */
+  #strip .phys label{display:flex;flex-direction:row;align-items:center;gap:8px}}
+/* Undo in the latest-activity line is as tall as the line (24px), so two lines and their Undo fit whole (15 Nov bug hunt) */
+#feed .latest .chip{min-height:24px;padding:0 8px;line-height:1.2}
 /* Next turn in the GM's footer, at its right; it lights when the player has said they are done. The player's I'm done sits at the end of their strip. */
 .gm-next{margin-left:auto;display:flex;align-items:center;gap:10px}
 .btn.ready{box-shadow:0 0 0 2px #e0c48c,0 0 14px #b8955a;animation:readyGlow 1.6s ease-in-out 3}

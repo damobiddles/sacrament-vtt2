@@ -139,10 +139,10 @@ function rollOutcome(s, e, a) {
   const targets = (r.area ? r.targetCardIds || [] : [r.targetCardId]).map(id => s.cards[id]).filter(c => c && cardVisibleTo(s, c, a));
   const names = r.attack ? attackerNames(s, r) : null;
   const result = { rollId: r.id, own: r.by === (gm ? 'gm' : a.pid), who: names ? gm ? names.gm : names.pub : r.charName,
-    label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : r.attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
+    label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
     success: chk.success, critical, pendingDamage: !!(attack && chk.success && !r.nonDamage && !r.effort && !r.applied), item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
   if (!hidden) Object.assign(result, { d20: chk.d20, mod: chk.mod, total: chk.total, target: r.attack ? chk.defence : chk.target, versus: r.attack ? 'Defence' : 'Target', manual: !!r.manual,
-    note: r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : '' });
+    note: [chk.adj === 'hard' ? 'Hard' : chk.adj === 'easy' ? 'Easy' : '', r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : ''].filter(Boolean).join('. ') });
   return result;
 }
 

@@ -103,7 +103,7 @@
     if (!UI.seenLog) UI.seenLog = {}; log.forEach(function (e) { UI.seenLog[e.id] = 1; });
     var checks = fresh.filter(function (e) { return e.outcome && !e.undone; });
     if (checks.length) {
-      var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome);
+      var latest = checks[checks.length - 1]; D.show(latest.dice || [], latest.outcome.who, latest.mine, latest.outcome, latest.tally && latest.tally[0]);
       if (D.resultId() === latest.outcome.rollId) tally(latest);   /* not when the roll was kept off this screen (your own hit is waiting for its damage) */
       return;
     }

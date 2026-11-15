@@ -554,7 +554,7 @@
     var checks = fresh.filter(function (l) { return l.outcome; });
     if (checks.length) {
       var last = checks[checks.length - 1], o = last.outcome;
-      D.show(last.dice || [], o.who, !last.foeAttack, o); tally(last);
+      D.show(last.dice || [], o.who, !last.foeAttack, o, last.tally && last.tally[0]); tally(last);
       if (o.pendingDamage && state.fight && state.fight.phase === 'damage' && !D.off() && !reduceMotion()) { cardDamage = true; D.action({ label: 'Roll damage', run: function () { run('damage'); } }); }
       else settle();
       return;

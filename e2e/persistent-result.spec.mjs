@@ -5,13 +5,13 @@ async function setup(browser){const gm=await newPage(browser),p=await newPage(br
 async function attack(p,n){await p.locator('#cards .c',{hasText:'Pit Ghoul'}).click();await prepareItem(p);await p.locator('#strip input[data-phys]').fill(String(n));await rollPrepared(p);await saved(p);}
 test('a hit tumbles over the scene and waits for damage instead of a dismissal timer',async({browser},info)=>{
  const {gm,p}=await setup(browser);await attack(p,15);
- const reveal=p.locator('#dice .reveal-result');await expect(reveal).toBeVisible();await expect(reveal).toContainText('SUCCESS');await expect(p.locator('#dice .die.landed b')).toHaveText('15');
+ const reveal=p.locator('#dice .reveal-result');await expect(reveal).toBeVisible();await expect(reveal).toContainText('HIT');await expect(p.locator('#dice .die.landed b')).toHaveText('15');
  expect(await bounded(p.locator('#dice').evaluate(el=>!!el.closest('#tablewrap')),3000,'dice over scene')).toBe(true);
  await expect(reveal.getByRole('button',{name:'Roll damage',exact:true})).toBeVisible();
  // Longer than the former spin/hold/fade interval: an intentional timed-behaviour assertion.
  await p.waitForTimeout(3200);await expect(reveal).toBeVisible();
  await gm.locator('#gmDie').selectOption('6');await gm.getByRole('button',{name:'Roll GM dice',exact:true}).click();await saved(gm);
- await expect.poll(async()=>(await state(p)).v).toBeGreaterThanOrEqual((await state(gm)).v);await expect(reveal).toContainText('SUCCESS');
+ await expect.poll(async()=>(await state(p)).v).toBeGreaterThanOrEqual((await state(gm)).v);await expect(reveal).toContainText('HIT');
  await p.screenshot({path:info.outputPath('persistent-hit.png')});expect(await axeContrast(p)).toEqual([]);
  await reveal.getByRole('button',{name:'Roll damage',exact:true}).dblclick();await saved(p);await expect(reveal).toHaveCount(0);
  const s=await state(p),r=s.rolls.at(-1);expect(r.applied).toBeTruthy();expect(Object.values(s.cards).find(c=>c.name==='Pit Ghoul').hp.cur).toBe(Math.max(0,20-r.effort.total));expect(p.errors.concat(gm.errors)).toEqual([]);

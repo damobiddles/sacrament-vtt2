@@ -103,7 +103,7 @@
   function heroOutcome(s, c, o) {
     var attack = !!o.attack, critical = c.success && c.offerUltimate && !o.nonDamage;
     return { who: s.hero.name, targetName: o.targetName || '', item: o.item || '', success: c.success, critical: critical,
-      label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : 'SUCCESS') : (attack ? 'MISS' : 'FAILED CHECK'),
+      label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : (attack ? 'HIT' : 'SUCCESS')) : (attack ? 'MISS' : 'FAILED CHECK'),
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
       note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
   }
