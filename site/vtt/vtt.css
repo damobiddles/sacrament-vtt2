@@ -385,7 +385,9 @@ label.phys{align-items:flex-start}
   .reveal-who,.reveal-action{grid-column:1/-1}
   .reveal-who,.reveal-detail{font-size:var(--ui-text-small);line-height:1.35}
   .reveal-dice{grid-column:1;grid-row:2/4}
-  .reveal-outcome,.reveal-detail{grid-column:2}
+  .reveal-outcome,.reveal-detail,.reveal-margin{grid-column:2}
+  .reveal-margin{justify-self:start}
+  .reveal-result .reveal-dice{grid-row:2/5;margin-bottom:0}
   .reveal-outcome{font-size:1.5rem;line-height:1.2}
 }
 /* The offer to push after a failed roll: a little light in the dark, and a button that breathes. Still for anyone who asks for less motion. */
