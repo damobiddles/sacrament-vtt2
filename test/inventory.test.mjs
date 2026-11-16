@@ -1,7 +1,7 @@
 // The private inventory page is generated from scripts/inventory/items.mjs and the generated page is committed. This makes sure the two never drift apart.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -32,4 +32,9 @@ test('the inventory is private: no noindex omission, no sitemap entry', () => {
   assert.match(html, /<meta name="robots" content="noindex, nofollow, noarchive">/);
   assert.ok(!/inventory/i.test(readFileSync(new URL('../site/sitemap.xml', import.meta.url), 'utf8')));
   assert.match(readFileSync(new URL('../netlify.toml', import.meta.url), 'utf8'), /\/inventory\/\*[\s\S]*X-Robots-Tag = "noindex/);
+});
+
+test('every shared file the inventory names still exists (bug hunt 2026-11-16: it listed a removed /app.js)', () => {
+  const shared = items.find((it) => it.name === 'Shared styling and scripts');
+  for (const f of shared.display.split(',').map((x) => x.trim())) assert.ok(existsSync(new URL('../site' + f, import.meta.url)), f + ' is listed but does not exist');
 });

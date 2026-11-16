@@ -139,7 +139,7 @@ test('darkness: one rule in the lantern, the Light tag, the Rules page and the s
   S.act(s, adv, 'do search', fixed([10])); assert.match(s.log.at(-1).t, /HARD/, 'a WIS search in the dark is Hard');
   S.act(s, adv, 'do lift', fixed([10])); assert.doesNotMatch(s.log.at(-1).t, /HARD/, 'other checks are not');
   const from = s.log.length; S.act(s, adv, 'do fight', fixed([10])); S.act(s, adv, choice(s, adv, /bare hands/).cmd, fixed([10]));
-  assert.ok(!s.log.slice(from).some((l) => l.outcome && l.outcome.note === 'Hard'), 'an attack in the dark is not Hard');
+  assert.ok(!s.log.slice(from).some((l) => l.outcome && /^Hard/.test(l.outcome.note)), 'an attack in the dark is not Hard');
 });
 
 test('tallow candles: lighting one in a dark scene spends one of its three uses, as its words say', () => {

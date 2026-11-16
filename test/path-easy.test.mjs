@@ -45,3 +45,27 @@ test('SOLO: the first check on the path\'s score in a scene is Easy, and says so
   assert.deepEqual(seen, ['normal', 'easy', 'normal', 'easy'], 'WIS is not a Knight\'s; STR is Easy once in each scene');
   assert.match(s.log.map((l) => l.t).join('\n'), /Your path \(Knight\) fits that check: it was Easy, once this scene\./);
 });
+
+test('TABLE: the result card says why a roll was Easy or Hard: the path, or shaken by the Horror (bug hunt 2026-11-16)', async () => {
+  const t = await table({ dice: [d20(10), d20(10), d20(10), d20(10)] }), ann = await t.join('Ann'), thorne = charNamed(await t.state(), 'Thorne');
+  assert.equal((await ann.cmd({ type: 'claim', charId: thorne.id })).status, 200);
+  const r = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', path: true }); assert.equal(r.status, 200);
+  assert.equal(r.body.state.log.at(-1).outcome.note, 'Easy (fits the path)');
+  const chosen = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', adj: 'easy' });
+  assert.equal(chosen.body.state.log.at(-1).outcome.note, 'Easy', 'an Easy the GM called needs no reason on the card');
+  assert.equal((await t.gm.cmd({ type: 'horror', mode: 'set', value: R.HORROR.dread.shaken })).status, 200);
+  const sh = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR' });
+  assert.equal(sh.body.state.log.at(-1).outcome.note, 'Hard (shaken)');
+});
+
+test('SOLO: the dice card says why a check was Easy, as at the table (bug hunt 2026-11-16)', () => {
+  const notes = [];
+  const adv = { id: 'p', title: 'Path test', target: 12, start: 'a', rooms: {
+    a: { name: 'A room', short: 'a', text: 'A room.', actions: [{ id: 'lift', label: 'Lift', run: (api) => { api.check('STR', { what: 'Lifting' }); } }] } } };
+  const hero = C.cleanHero({ name: 'Ser Test', path: 'Knight', stats: { STR: 2, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 }, effort: { basic: 1, weapons: 1, guns: 0, magic: 0, ultimate: 0 }, gear: [] });
+  const s = S.start(hero, adv, fixed([15]));
+  S.act(s, adv, 'do lift', fixed([15])); notes.push(s.log.filter((l) => l.outcome).pop().outcome.note);
+  S.act(s, adv, 'do lift', fixed([15])); notes.push(s.log.filter((l) => l.outcome).pop().outcome.note);
+  s.shaken = true; S.act(s, adv, 'do lift', fixed([15])); notes.push(s.log.filter((l) => l.outcome).pop().outcome.note);
+  assert.deepEqual(notes, ['Easy (fits the path)', '', 'Hard (shaken)']);
+});

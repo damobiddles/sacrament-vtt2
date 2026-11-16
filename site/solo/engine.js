@@ -50,15 +50,17 @@
       /* A check: d20 + the stat against the scene's Target. In the dark, without a light, a WIS check to search or notice is Hard (the Hooded Lantern's words,
          and the Rules page; the owner's call, 2026-11-07): that is a WIS check the scene asks for, not a spell, an item or an obstacle. A plain check's natural 1 costs nothing (2026-11-01). */
       check: function (stat, o) {
-        o = o || {}; var adj = o.adj || 'normal';
-        if (api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item) adj = adj === 'easy' ? 'normal' : 'hard';
+        o = o || {}; var adj = o.adj || 'normal', dark = api.dark() && !o.ignoreDark && stat === 'WIS' && !o.item;
+        if (dark) adj = adj === 'easy' ? 'normal' : 'hard';
         /* the hero's path: once a scene, a check on its score is Easy (not an attack, a spell, an item, a crawl or a break away; the Rules page, 2026-11-11) */
         var onPath = !o.attack && !o.item && !o.noPush && !o.pushed && C.pathScore(s.hero) === stat && s.pathRoom !== s.room;
         if (onPath) { s.pathRoom = s.room; adj = R.easier(adj); }
         var shaken = !!s.shaken; if (shaken) { s.shaken = false; adj = adj === 'easy' ? 'normal' : 'hard'; }
         var boost = int(s.boost, 0), from = s.boostFrom || ''; if (boost) { s.boost = 0; s.boostFrom = ''; }   /* the Penitent's Chain: +3 on the next check, whatever it is */
         var c = R.check({ d20: die(20), stat: s.hero.stats[stat] || 0, bonus: (o.bonus || 0) + boost, target: api.target(), adj: adj, misfire: o.misfire || 0 });
-        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, o),
+        /* why it was Easy or Hard, for the dice card (as at the table) */
+        var why = c.adj === 'easy' && onPath ? 'fits the path' : c.adj === 'hard' ? (shaken ? 'shaken' : dark ? 'in the dark' : '') : '';
+        api.say((o.what ? o.what + ': ' : '') + R.sayCheck(c, stat), c.success ? 'win' : 'miss', { dice: [{ die: 20, n: c.d20 }], outcome: heroOutcome(s, c, Object.assign({}, o, { why: why })),
           tally: [sum(c.mod, [[s.hero.stats[stat] || 0, stat], [o.bonus || 0, o.item || 'bonus'], [boost, from]], c.total, 'against Target ' + c.target, c.success)] });
         if (boost) api.say('+' + boost + ' from ' + yours(from) + ' is in that roll.', 'note');
         if (onPath) api.say('Your path (' + C.pathOf(s.hero) + ') fits that check: it was Easy, once this scene.', 'note');
@@ -105,7 +107,7 @@
     return { who: s.hero.name, targetName: o.targetName || '', item: o.item || '', success: c.success, critical: critical,
       label: c.success ? (critical ? (attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS') : (attack ? 'HIT' : 'SUCCESS')) : (attack ? 'MISS' : 'FAILED CHECK'),
       pendingDamage: !!(attack && c.success), d20: c.d20, mod: c.mod, total: c.total, target: c.target, versus: 'Target',
-      note: [c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '', c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
+      note: [(c.adj === 'hard' ? 'Hard' : c.adj === 'easy' ? 'Easy' : '') + (c.adj !== 'normal' && o.why ? ' (' + o.why + ')' : ''), c.nat1 ? nat1Note(o) : ''].filter(Boolean).join('. ') };
   }
   /* What a roll adds up to, for the numbers that rise off the die on screen: the table's own tally.js builds it (display only), so solo and the table match. */
   function sum(mod, parts, total, word, good) { return root.SacramentTally.sum(mod, parts, total, word, good); }
@@ -551,12 +553,13 @@
     var dim = int(f.dim, 0), guard = int(f.guard, 0); f.dim = 0; f.guard = 0;
     var a = R.attack({ d20: api.die(20), bonus: f.attack - dim, defence: C.defence(s.hero) + guard });
     var size = foeDie(f); if (f.ash) f.ash--;
-    var n = a.hit ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: size, n: n });
+    /* a blow on a hero already at 0 rolls no damage (as at the table, vtt-core.mjs blow): it costs a round instead */
+    var atZero = !!s.dying, n = a.hit && !atZero ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit && !atZero) dice.push({ die: size, n: n });
     var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
-      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
-    var tally = [sum(a.mod, [[f.attack, 'attack'], [-dim, 'dazed']], a.total, 'against Defence ' + a.defence, !a.hit)]; if (a.hit) tally.push({ parts: [], total: n, word: 'damage', good: false, at: 1 });
+      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? (atZero ? 'No damage at 0 HP: the blow costs a round.' : n + ' damage.') : '') };
+    var tally = [sum(a.mod, [[f.attack, 'attack'], [-dim, 'dazed']], a.total, 'against Defence ' + a.defence, !a.hit)]; if (a.hit && !atZero) tally.push({ parts: [], total: n, word: 'damage', good: false, at: 1 });
     api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true, tally: tally });
-    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (' + diceSay(1, size, [n]) + ')');
+    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + (atZero ? '' : ' (' + diceSay(1, size, [n]) + ')'));
     if (s.fight && !s.over) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); }
   }
 
