@@ -1089,8 +1089,9 @@
     if (G) { putStrip(el, gmDiceView(), 'gm'); return; }
     if (!ch) { putStrip(el, '<span class="note">Choose your hero on the right to roll.</span>', 'spectator'); return; }
     var flow = rollFlow(), ready = UI.readyAction, waiting = UI.rolling || UI.working || D.busy();
-    /* The dead cannot act (the table refuses every roll): say so, and keep only I'm done for their turn. A round back from the GM brings the rolls back. */
-    if (heroDead(ch) && !flow.dice) { putStrip(el, '<b>' + esc(ch.name) + '</b><span class="note">' + esc(ch.name) + ' has died. The dead cannot act.</span>' + (myTurn() ? (S.table.done ? '<span class="note done-note">Done. The GM moves the turn on.</span>' : '<button class="btn done-btn" data-do="turnDone"' + (UI.working === 'turnDone' ? ' disabled' : '') + '>I’m done</button>') : ''), ch.id + ':dead'); return; }
+    /* The dead cannot act (the table refuses every roll, and the Effort of a roll made before the fall): say so, and keep only I'm done for their turn.
+       A round back from the GM brings the rolls back. */
+    if (heroDead(ch)) { putStrip(el, '<b>' + esc(ch.name) + '</b><span class="note">' + esc(ch.name) + ' has died. The dead cannot act.</span>' + (myTurn() ? (S.table.done ? '<span class="note done-note">Done. The GM moves the turn on.</span>' : '<button class="btn done-btn" data-do="turnDone"' + (UI.working === 'turnDone' ? ' disabled' : '') + '>I’m done</button>') : ''), ch.id + ':dead'); return; }
     h = flow.dice ? '' : '<b>' + esc(ch.name) + '</b>';
     if (UI.attackChoice) h += '<span class="note">Choose the target in Play.</span>';
     else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>' + (ready.hasRoll === false ? 'Use ' : 'Roll ') + esc(ready.name) + '</button>';
