@@ -726,7 +726,7 @@
     /* the Stranger's own slip, kept in view for that player alone (the server sends it to nobody else) */
     var slip = S.stranger && S.stranger.want && !S.stranger.found ? '<div class="sec stranger-slip"><h3>You are the Stranger</h3><p>Your want: ' + esc(S.stranger.want) + '</p><p class="note">Play your hero as usual. Tell no one.</p></div>' : '';
     /* With a foe or obstacle chosen, the ways to deal with it come straight under it, and your own hero's HP and sheet after (15 Nov 2026: they were below the fold) */
-    var acts = playerActions(ch), aimed = !!aimFoe(), me = '<h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>';
+    var acts = heroDead(ch) ? '' : playerActions(ch), aimed = !!aimFoe(), me = '<h3>' + esc(ch.name) + ' <span class="note">(you)</span></h3>' + playerHealth(ch) + '<button class="btn" data-do="sheet" data-id="' + ch.id + '">My character</button>';
     return slip + '<div class="sec">' + (aimed ? acts + me : me + acts) + downHelp(S.cards[ch.cardId]) +
       (myTurn() ? '<p class="turnline mine"><b>Your turn.</b> ' + (S.table.done ? 'The GM moves the turn on.' : 'Press I’m done in the bottom strip when you are finished.') + '</p>' : cur ? '<p class="turnline">It is <b>' + esc(cur.name) + '</b>’s turn.</p>' : '') + (UI.hintSeen ? '' : '<p class="hint">Drag your token to move. To attack, select an enemy first, then choose a weapon under Choose an action and roll in the bottom strip.</p>') + '<details class="player-first-turn" data-detail="firstTurn"><summary data-detail="firstTurn">Your first turn</summary><ol><li>Tell the GM what you want to do.</li><li>Select an enemy before using a weapon. Choose an action on the right, then use the bottom strip to roll. My character manages your sheet.</li><li>After a successful attack, roll damage; it applies to the named target automatically.</li><li>Press I’m done when you are finished; the GM moves to the next turn.</li></ol><p class="note">Keys: 1 to 6 roll STR to CHA, R rolls what is ready, D says you are done, Esc puts a selection away.</p><p><a href="/player-guide/" target="_blank" rel="noopener">Player rules (new tab)</a> · <a href="/how-to-play/" target="_blank" rel="noopener">First game checklist (new tab)</a></p></details></div>' +
       (own.length ? '<div class="sec gear"><h3>Your gear</h3>' + own.map(function (c) { return '<p><b>' + esc(c.name) + '</b> ' + esc(c.desc || '') + '</p>'; }).join('') + '</div>' : '') + nextBox();
@@ -1089,6 +1089,8 @@
     if (G) { putStrip(el, gmDiceView(), 'gm'); return; }
     if (!ch) { putStrip(el, '<span class="note">Choose your hero on the right to roll.</span>', 'spectator'); return; }
     var flow = rollFlow(), ready = UI.readyAction, waiting = UI.rolling || UI.working || D.busy();
+    /* The dead cannot act (the table refuses every roll): say so, and keep only I'm done for their turn. A round back from the GM brings the rolls back. */
+    if (heroDead(ch) && !flow.dice) { putStrip(el, '<b>' + esc(ch.name) + '</b><span class="note">' + esc(ch.name) + ' has died. The dead cannot act.</span>' + (myTurn() ? (S.table.done ? '<span class="note done-note">Done. The GM moves the turn on.</span>' : '<button class="btn done-btn" data-do="turnDone"' + (UI.working === 'turnDone' ? ' disabled' : '') + '>I’m done</button>') : ''), ch.id + ':dead'); return; }
     h = flow.dice ? '' : '<b>' + esc(ch.name) + '</b>';
     if (UI.attackChoice) h += '<span class="note">Choose the target in Play.</span>';
     else if (ready) h += '<button class="btn main" data-do="' + (ready.kind === 'check' ? 'commitCheck' : 'commitUse') + '"' + (waiting ? ' disabled' : '') + '>' + (ready.hasRoll === false ? 'Use ' : 'Roll ') + esc(ready.name) + '</button>';
@@ -1103,6 +1105,7 @@
     var pi = el.querySelector('input[data-phys]'); if (pi) pi.oninput = function () { UI.phys = pi.value; };
   }
   /* Said beside the roll buttons before the roll, not after it: a dying hero's roll costs Horror unless it is the crawl, and a shaken hero's next roll is Hard. */
+  function heroDead(ch) { var card = ch && S.cards[ch.cardId]; return !!(card && card.dying && card.dying.dead); }
   function rollWarning(ch) {
     var card = S.cards[ch.cardId], st = card && card.dying;
     if (card && card.hp && card.hp.cur === 0 && !(st && st.dead)) return '<span class="note warn">At 0 HP: ' + R.DYING.crawl + ' to crawl away is free; any other roll costs ' + R.DYING.actHorror + ' Horror.</span>';

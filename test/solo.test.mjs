@@ -378,6 +378,23 @@ test('a dying hero whose rounds run out is dead; a blow on a dying hero takes a 
   assert.equal(s.over, 'dead');
 });
 
+test('a blow on a dying hero rolls no damage, as at the table: only the d20 is rolled, and the line says the blow costs a round (bug hunt 2026-11-16)', () => {
+  const s = cryptFight();
+  s.hp.cur = 1;
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([5, 1]));
+  S.act(s, A, 'foe', fixed([20, 6]));                    // falls: 3 rounds; one passes: 2 left
+  S.act(s, A, 'crawl', fixed([2]));                       // the crawl fails
+  const from = s.log.length, sizes = [];
+  S.act(s, A, 'foe', (n) => { sizes.push(n); return n === 20 ? 20 : 3; });
+  assert.deepEqual(sizes, [20], 'only the attack die is rolled');
+  const lines = s.log.slice(from), att = lines.find((l) => l.outcome);
+  assert.deepEqual(att.dice.map((x) => x.die), [20]);
+  assert.ok(!/damage/.test(att.outcome.note) || /no damage/i.test(att.outcome.note), att.outcome.note);
+  assert.ok(!att.tally.some((t) => t.word === 'damage'), 'no damage sum on the card');
+  const text = lines.map((l) => l.t).join('\n');
+  assert.doesNotMatch(text, /shows/); assert.match(text, /costs you a round/);
+});
+
 test('the foe card says what the foe will do next, from the real numbers, and bracing makes it harder', () => {
   const s = cryptFight();
   const card = S.cards(s, A).find((c) => c.kind === 'foe');

@@ -551,12 +551,13 @@
     var dim = int(f.dim, 0), guard = int(f.guard, 0); f.dim = 0; f.guard = 0;
     var a = R.attack({ d20: api.die(20), bonus: f.attack - dim, defence: C.defence(s.hero) + guard });
     var size = foeDie(f); if (f.ash) f.ash--;
-    var n = a.hit ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit) dice.push({ die: size, n: n });
+    /* a blow on a hero already at 0 rolls no damage (as at the table, vtt-core.mjs blow): it costs a round instead */
+    var atZero = !!s.dying, n = a.hit && !atZero ? api.die(size) : 0, dice = [{ die: 20, n: a.d20 }]; if (a.hit && !atZero) dice.push({ die: size, n: n });
     var outcome = { who: f.name, targetName: s.hero.name, success: a.hit, critical: false, label: a.hit ? 'HIT' : 'MISS', pendingDamage: false,
-      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? n + ' damage.' : '') };
-    var tally = [sum(a.mod, [[f.attack, 'attack'], [-dim, 'dazed']], a.total, 'against Defence ' + a.defence, !a.hit)]; if (a.hit) tally.push({ parts: [], total: n, word: 'damage', good: false, at: 1 });
+      d20: a.d20, mod: a.mod, total: a.total, target: a.defence, versus: 'Defence', note: (dim ? 'Rolls ' + dim + ' less. ' : '') + (size < f.damage ? 'Effort d' + size + ', not d' + f.damage + '. ' : '') + (guard ? 'Your Defence +' + guard + '. ' : '') + (a.nat20 ? 'Natural 20: always hits. ' : a.nat1 ? 'Natural 1: always misses. ' : '') + (a.hit ? (atZero ? 'No damage at 0 HP: the blow costs a round.' : n + ' damage.') : '') };
+    var tally = [sum(a.mod, [[f.attack, 'attack'], [-dim, 'dazed']], a.total, 'against Defence ' + a.defence, !a.hit)]; if (a.hit && !atZero) tally.push({ parts: [], total: n, word: 'damage', good: false, at: 1 });
     api.say(f.name + ' attacks: ' + R.sayAttack(a), a.hit ? 'hurt' : 'win', { dice: dice, outcome: outcome, foeAttack: true, tally: tally });
-    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + ' (' + diceSay(1, size, [n]) + ')');
+    if (a.hit) hurt(api, n, (def.hits || 'It hurts you') + (atZero ? '' : ' (' + diceSay(1, size, [n]) + ')'));
     if (s.fight && !s.over) { f.round++; f.phase = 'hero'; tickTimers(api, 'round'); if (s.dying) dyingTick(api, 'A round passes.'); }
   }
 
