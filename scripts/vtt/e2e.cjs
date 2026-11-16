@@ -66,7 +66,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('applied once, and the GM sees it', (await card(gm, 'The Sealed Gate')).progress.cur === 7 && /7\/20/.test(await txt(gm, '#cards .c[data-id="' + gate.id + '"]')));
   await click(gm, '#strip [data-do=endTurn]'); await settle(B, () => /Wisp/.test(document.getElementById('tTurn').innerText));
   await settle(A, () => /Wisp/.test(document.getElementById('tTurn').innerText)); await settle(gm, () => /Wisp/.test(document.getElementById('tTurn').innerText));
-  check('the turn passes: Wisp is up for everyone', /Wisp/.test(await txt(B, '#tTurn')) && /Wisp/.test(await txt(gm, '#tTurn')) && !(await B.$('#tTurn [data-do=endTurn]')) && !(await A.$('#tTurn [data-do=endTurn]')) && !(await gm.$('#top [data-do=endTurn]')) && !!(await gm.$('#panel [data-do=endTurn]')), (await txt(A, '#tTurn')) + ' | ' + (await txt(B, '#tTurn')) + ' | ' + (await txt(gm, '#tTurn')));
+  check('the turn passes: Wisp is up for everyone', /Wisp/.test(await txt(B, '#tTurn')) && /Wisp/.test(await txt(gm, '#tTurn')) && !(await B.$('#tTurn [data-do=endTurn]')) && !(await A.$('#tTurn [data-do=endTurn]')) && !(await gm.$('#top [data-do=endTurn]')) && !(await gm.$('#panel [data-do=endTurn]')) && !!(await gm.$('#strip [data-do=endTurn]')), (await txt(A, '#tTurn')) + ' | ' + (await txt(B, '#tTurn')) + ' | ' + (await txt(gm, '#tTurn')));
   check('the whole turn took five clicks including selecting the gate (typing a physical die is optional)', clicks === 5, clicks);
 
   console.log('--- 4. other people’s things are not yours');
