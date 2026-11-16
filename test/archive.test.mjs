@@ -68,3 +68,10 @@ test('the playtest sign-up is removed: no thank-you page, its address goes to th
   assert.ok(!/name="sign-up"/.test(build), 'the build still writes a sign-up form');
   assert.doesNotMatch(readFileSync(root('site/index.html'), 'utf8'), /<form\b/i, 'the home page still has a form');
 });
+
+test('retired on the owner\'s word (2026-11-16): the old Hearts page script and the October working notes are gone; git keeps them', () => {
+  assert.ok(!existsSync(root('site/game/app.js')), 'site/game/app.js is still published');
+  for (const f of ['data.js', 'engine.js', 'fx.js']) assert.ok(existsSync(root('site/game/' + f)), 'site/game/' + f + ' is still needed');
+  for (const f of ['docs/vtt/backlog-2026-10-24.md', 'docs/vtt/gm-layout-2026-10-24.md', 'docs/vtt/kofi-contrast-2026-10-24.md', 'docs/vtt/onboarding-2026-10-24.md', 'docs/vtt/table-controls-2026-10-24.md', 'docs/vtt/playtest-2026-10-23.md',
+    'docs/audits/loot-powers-and-combat-2026-10-24.md', 'docs/audits/loot-ranges-2026-10-24.csv', 'docs/audits/rules-and-loot-2026-10-24.md']) assert.ok(!existsSync(root(f)), f + ' is still here');
+});

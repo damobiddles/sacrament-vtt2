@@ -31,6 +31,12 @@ Questions the current text left open. The rules have not changed; these say how 
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 16 November 2026: an attack without an item is Basic d4
+
+**What changed.** Nothing in the rules: bare hands or wits have always been Basic d4. But on the Sacrament RPG Table, **Attack without an item** let the player roll its damage with any Effort die, Guns d8 and Magic d10 included. It now rolls Basic d4, as the rules say and as the solo game already did.
+
+**Why.** Found in the weekly bug hunt; the designer's decision.
+
 ## 12 November 2026: no limit on relics and grimoires
 
 **What changed.** A hero can now carry any number of relics, grimoires and other uncanny finds. The old limit of three Horror-tempting things, packed ones included, is gone everywhere: on the Sacrament RPG Table, on paper and in the solo game. Slots still limit what fits (a grimoire takes three), only equipped relics and grimoires work, and every use still costs its Horror.

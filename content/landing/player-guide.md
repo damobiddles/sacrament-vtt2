@@ -44,7 +44,7 @@ Example: the Target is 12. You roll 10 and add STR +3, making 13: success. A suc
 ## Attacks: target, roll, damage
 
 1. Select the enemy's card or token first.
-2. Choose your equipped weapon, spell or item in **Play**, then choose its target if asked. Roll the prepared action in the bottom strip. For an unarmed attack, choose **Attack without an item** in Play; for other tasks, choose **Ordinary check**.
+2. Choose your equipped weapon, spell or item in **Play**, then choose its target if asked. Roll the prepared action in the bottom strip. For an unarmed attack, choose **Attack without an item** in Play (bare hands: its damage is Basic d4); for other tasks, choose **Ordinary check**.
 3. The table rolls the check and compares the total with the Target.
 4. On a successful attack, check the named target, then press **Roll damage**. The result changes that target’s HP or progress automatically. **Undo** beside the damage event in **Activity** corrects it. Open Activity to see earlier outcomes.
 5. Tell the GM when you are finished; the GM advances turns. **Undo** beside an Activity event can take back your own mistaken action when it is still safe to undo.

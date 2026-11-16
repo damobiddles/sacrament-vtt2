@@ -91,3 +91,13 @@ test('SOLO: a failed roll outside a fight can be pushed once: +1 Horror and anot
   assert.equal((s.log.map((l) => l.t).join('\n').match(/Wading/g) || []).length, 2, 'tried again');
   assert.ok(!S.choices(s, F).some((c) => c.cmd === 'repush'), 'the pushed roll cannot be pushed');
 });
+
+test('TABLE: the result card says what the spell cost in Horror (the owner, 2026-11-16)', async () => {
+  const { t, ann, thorne, ghoul } = await setup([d20(14)]);
+  await t.gm.cmd({ type: 'sheet', charId: thorne.id, op: { op: 'add', id: 'embers' } });
+  const sp = await ann.cmd({ type: 'useItem', charId: thorne.id, index: 0, spellId: 'ember', targetCardId: ghoul }); assert.equal(sp.status, 200);
+  const card = sp.body.state.log.filter((e) => e.outcome).at(-1).outcome;
+  assert.match(card.note, /Horror \+1$/);
+  const plain = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR' });
+  assert.doesNotMatch(plain.body.state.log.filter((e) => e.outcome).at(-1).outcome.note || '', /Horror/, 'an ordinary check costs nothing');
+});

@@ -842,7 +842,7 @@
   function tabPlay() {
     var t = S.table, edit = !!UI.editOrder, inOrder = t.order.map(function (e) { return e.id; });
     var addable = cardList().filter(function (c) { return inOrder.indexOf(c.id) < 0 && c.kind !== 'loot' && (c.kind === 'pc' || c.sceneId == null || c.sceneId === S.table.scene.id); });
-    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + (t.order.length ? '<button class="btn small main' + (S.table.done ? ' ready' : '') + '" data-do="endTurn" title="Advance the live turn order; the last entry starts a new round">Next turn</button>' : '') + ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
+    var h = '<section class="play-section"><div class="row"><h3 class="grow">Turn order</h3>' + /* Next turn is in the footer only (the owner, 2026-11-16) */ ((t.order.length || addable.length) ? '<button type="button" class="link" data-do="editOrder" aria-pressed="' + edit + '">' + (edit ? 'Done' : 'Edit order') + '</button>' : '') + '</div>';
     h += t.order.length ? '<ul class="ol turn-order' + (edit ? ' editing' : '') + '">' + t.order.map(function (e, i) {
       var c = e.id && S.cards[e.id], now = i === t.idx;
       return '<li class="' + (now ? 'cur' : '') + '"><button type="button" class="n" data-do="inspectTurn" data-i="' + i + '" title="Inspect this character">' + esc(c ? c.name : 'Unseen') + (now ? ' <span class="pill">now</span>' : '') + '</button>' +
@@ -1012,7 +1012,10 @@
       return '<li data-event="' + esc(e.id) + '" class="' + (e.undone ? 'undone ' : '') + (o ? o.success ? 'success ' : 'failure ' : '') + esc(e.kind) + '"><span class="w">' + esc(e.who) + ': </span><span class="tx">' + label + esc(e === air ? 'Rolling…' : e.text) + '</span>' + (e.undoable ? '<button class="chip" data-do="undo" data-id="' + esc(e.id) + '" aria-label="Undo">Undo</button>' : '') + '</li>';
     }
     var h = '<div class="bar1"><button class="chip" data-do="feed" aria-expanded="' + open + '">' + (open ? 'Hide activity' : 'Activity') + '</button>';
-    if (!open) h += '<ol class="latest last" aria-live="polite" aria-atomic="true">' + (last ? L.filter(function (e) { return e.at === last.at; }).map(entry).join('') : '<li>Nothing written yet.</li>') + '</ol>';
+    /* The GM reads a Horror threshold once, in the red bar with Dealt with, not again in the latest line (the owner, 2026-11-16); the history keeps it. */
+    var H = S.horror || {}, barText = gm() && H.alert ? (R.HORROR.lines[H.alert] || '') + (R.HORROR.effects[H.alert] ? ' ' + R.HORROR.effects[H.alert] : '') : '';
+    var latest = last ? L.filter(function (e) { return e.at === last.at && !(barText && e.text === barText); }) : [];
+    if (!open) h += '<ol class="latest last" aria-live="polite" aria-atomic="true">' + (latest.length ? latest.map(entry).join('') : last ? '' : '<li>Nothing written yet.</li>') + '</ol>';
     h += '</div>';
     if (open) h += '<ol class="history" aria-live="polite">' + L.slice(-30).reverse().map(entry).join('') + '</ol>';
     h += horrorBanner();

@@ -1177,3 +1177,11 @@ test('spells and items are offered only where what they work on is there', () =>
     assert.ok(t.fight && !offer(t, name(id)).useful, name(id) + ' is no use against the Grey Mother');
   }
 });
+
+test('the dice card says what a spell cost in Horror, as at the table (the owner, 2026-11-16)', () => {
+  const s = cryptFight(); s.hero.gear.push({ id: 'embers', eq: true });
+  const ember = S.choices(s, A).find((c) => /Ember/.test(c.label)); assert.ok(ember, 'Ember is offered in the fight');
+  S.act(s, A, ember.cmd, fixed([15, 4]));
+  const card = s.log.filter((l) => l.outcome && !l.foeAttack)[0 + s.log.filter((l) => l.outcome && !l.foeAttack).length - 1].outcome;
+  assert.match(card.note, /Horror \+1$/);
+});
