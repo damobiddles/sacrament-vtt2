@@ -313,7 +313,7 @@ test('Horror 7 shakes the hero: the next check or attack is Hard, once', () => {
   S.act(s, A, push.cmd, fixed([5, 5]));                  // the push takes Horror to 7
   assert.equal(s.horror, 7);
   const rolls = s.log.filter((l) => l.outcome);
-  assert.equal(rolls[rolls.length - 1].outcome.note, 'Hard', 'the pushed attack was Hard');
+  assert.equal(rolls[rolls.length - 1].outcome.note, 'Hard (shaken)', 'the pushed attack was Hard, and the card says why');
   assert.equal(s.shaken, false, 'shaken is used up');
 });
 

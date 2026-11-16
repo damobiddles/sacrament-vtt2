@@ -142,7 +142,7 @@ function rollOutcome(s, e, a) {
     label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
     success: chk.success, critical, pendingDamage: !!(attack && chk.success && !r.nonDamage && !r.effort && !r.applied), item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
   if (!hidden) Object.assign(result, { d20: chk.d20, mod: chk.mod, total: chk.total, target: r.attack ? chk.defence : chk.target, versus: r.attack ? 'Defence' : 'Target', manual: !!r.manual,
-    note: [chk.adj === 'hard' ? 'Hard' : chk.adj === 'easy' ? 'Easy' : '', r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : ''].filter(Boolean).join('. ') });
+    note: [(chk.adj === 'hard' ? 'Hard' : chk.adj === 'easy' ? 'Easy' : '') + (chk.adj !== 'normal' && r.adjWhy ? ' (' + r.adjWhy + ')' : ''), r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : ''].filter(Boolean).join('. ') });
   return result;
 }
 
@@ -496,10 +496,12 @@ function pathEasy(s, ch, c, adj) {
   if (c.attack === true) fail('invalid', 'A path makes a check Easy, not an attack.');
   const scene = s.scenes[s.table.scene] || fail('conflict', 'There is no live scene.'); scene.powers = scene.powers || {};
   const uses = scene.powers[ch.id] || (scene.powers[ch.id] = {}); if (uses[PATH_KEY]) fail('invalid', ch.name + '\'s path has made a check Easy in this scene already.');
-  uses[PATH_KEY] = nid(s, 'u'); return { adj: R.easier(adj), text: ' (path, ' + path + ': Easy)' };
+  uses[PATH_KEY] = nid(s, 'u'); return { adj: R.easier(adj), text: ' (path, ' + path + ': Easy)', why: 'fits the path' };
 }
 const PATH_KEY = 'path:easy';
-function takeShaken(ch, adj) { if (!ch.shaken) return { adj, text: '' }; ch.shaken = false; return { adj: adj === 'easy' ? 'normal' : 'hard', text: ' (shaken: Hard)' }; }
+function takeShaken(ch, adj) { if (!ch.shaken) return { adj, text: '' }; ch.shaken = false; return { adj: adj === 'easy' ? 'normal' : 'hard', text: ' (shaken: Hard)', why: 'shaken' }; }
+/* Why a roll ended Easy or Hard, for the result card (the log line says it in full): the path made it Easy, or the Horror made it Hard. A difficulty the GM called needs no reason. */
+const adjWhy = (chk, ...steps) => { const w = steps.find((x) => x && x.why && (x.why === 'shaken' ? chk.adj === 'hard' : chk.adj === 'easy')); return w ? w.why : ''; };
 /* A hero has used something that tempts the Horror: its amount (fixed, or rolled now with the table's dice) goes on the meter, whatever the check did. No amount, no line. */
 function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
@@ -632,7 +634,7 @@ function useHealing(s, c, a, ctx, ch, u, selected) {
   if (u.stat) {
     const manual = c.d20 != null && c.d20 !== '', n = manual ? int(c.d20, 0) : d(ctx, 20);
     const tb = takeBonus(ch), sh = takeShaken(ch, tending ? 'easy' : c.adj); chk = R.check({ d20: n, stat: ch.stats[u.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += sh.text;
-    roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, manual,
+    roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, adjWhy: adjWhy(chk, sh), manual,
       targetCardId: target.id, effort: null, applied: null, void: false, at: ctx.now, item: u.name, nonDamage: true, isAttack: false,
       use: { index: c.index, gearKey: c.gearKey, spellId: c.spellId || null }, healingResolved: true, healingAttempt: true };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
@@ -932,7 +934,7 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
     const pe = pathEasy(s, ch, c, adj), tb = takeBonus(ch), sh = takeShaken(ch, pe.adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += pe.text + sh.text;
-    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
+    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, adjWhy: adjWhy(chk, pe, sh), isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
@@ -967,7 +969,7 @@ const HANDLERS = {
     if (u.stat) {
       const d20 = manual ? int(c.d20, 0) : d(ctx, 20);
       const tb = takeBonus(ch), sh = takeShaken(ch, adj), chk = R.check({ d20, stat: ch.stats[u.stat], bonus: (u.attackBonus || 0) + tb.n, target: s.table.target, adj: sh.adj, settings: s.settings, misfire: u.spell ? 0 : R.misfireOf(u.item) }); tb.text += sh.text;
-      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
+      const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: u.stat, check: chk, adjWhy: adjWhy(chk, sh), criticalRule: 'extra', pushContext: turnKey(s), accuracy: u.attackBonus || 0, isAttack: !!u.cat && !(tc && tc.progress && !tc.hp), nonDamage: !u.cat, sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now, item: u.name, weaponEffort: 1, use: { index, gearKey: c.gearKey, spellId: c.spellId || null, mode: c.mode || '' } };
       if (area) { roll.area = true; roll.targetCardIds = area.map(x => x.id); roll.targetCardId = area[0].id; }
       if (area || sceneFx) { roll.limited = !!sceneFx; roll.sceneId = s.table.scene; roll.sceneEpoch = s.scenes[s.table.scene].powerEpoch || 0; }
       if (sceneFx) sceneFx.roll = roll.id;
