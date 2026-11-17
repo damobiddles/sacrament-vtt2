@@ -167,9 +167,9 @@ for (const [w, h] of [[360, 640], [390, 780]]) {
       expect(box.x, name).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, name).toBeLessThanOrEqual(w);
     }
-    // the one main button is visible without scrolling on the smallest phone
-    const main = await page.locator('.ic-cta').getByRole('link', { name: 'Play solo now' }).boundingBox();
-    expect(main.y + main.height).toBeLessThanOrEqual(h);
+    // the question "How do you want to play?" is visible without scrolling on the smallest phone
+    const ask = await page.getByRole('heading', { name: 'How do you want to play?' }).boundingBox();
+    expect(ask.y + ask.height).toBeLessThanOrEqual(h);
   });
 }
 
