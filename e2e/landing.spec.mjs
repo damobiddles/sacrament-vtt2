@@ -183,14 +183,14 @@ test('the home page has no sign-up form and no link to one, and still has its bu
   await expect(page.locator('a[href*="#join"], a[href*="thanks"]')).toHaveCount(0);
   await expect(page.locator('.ic-cta').getByRole('link', { name: 'Join a game' })).toHaveAttribute('href', '/vtt/?join');
   await expect(page.locator('.ic-cta').getByRole('link', { name: 'Run a game' })).toHaveAttribute('href', '/vtt/?run');
-  await expect(page.locator('.ic-cta').getByRole('link', { name: 'My heroes', exact: true })).toHaveAttribute('href', '/character/');
+  await expect(page.locator('footer').getByRole('link', { name: 'My heroes', exact: true })).toHaveAttribute('href', '/character/');
 });
 
-test('the "My heroes" button opens the character sheet page, and fits a phone @phone', async ({ browser }) => {
+test('the "My heroes" footer link opens the character sheet page, and fits a phone @phone', async ({ browser }) => {
   const page = await newPage(browser, { width: 390, height: 844 });
   await page.goto('/');
   const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); expect(wide).toBeLessThanOrEqual(1);
-  await page.locator('.ic-cta').getByRole('link', { name: 'My heroes', exact: true }).click();
+  await page.locator('footer').getByRole('link', { name: 'My heroes', exact: true }).click();
   await expect(page).toHaveURL(/\/character\/$/);
   await expect(page.locator('h1')).toHaveText('My heroes');
   await expect(page.locator('#sheetHere')).toContainText('no heroes saved');   // the page's own script has started

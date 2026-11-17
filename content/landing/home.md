@@ -2,7 +2,7 @@
 title: Sacrament RPG
 summary: A dark fantasy roleplaying game with a shared virtual table. Create a hero, gather your group and play in your browser.
 hook: Magic is forbidden. Use it anyway.
-lede: A dark fantasy roleplaying game where every spell brings the Horror closer and the Church hunts those who cast. Play in your browser with nothing to install, on your own or with friends, or around a real table with dice and paper.
+lede: A dark fantasy roleplaying game where every spell brings the Horror closer, and the Church hunts those who cast. Play in your browser with nothing to install, or around a real table.
 ---
 ## Heroes with something to lose
 Generate a starting hero, give them a name and a vow, and make their kit your own. Their choices and the things they carry shape how they face the road ahead.

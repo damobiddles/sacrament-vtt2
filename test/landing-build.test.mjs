@@ -157,8 +157,8 @@ test('the home page has the two buttons and they point at the existing join and 
   const b = build();
   try {
     const html = readFileSync(join(b.out, 'index.html'), 'utf8');
-    assert.match(html, /<a class="ic-option" href="\/vtt\/\?join"><b>Join a game<\/b>/);
-    assert.match(html, /<a class="ic-option" href="\/vtt\/\?run"><b>Run a game<\/b>/);
+    assert.match(html, /<a class="btn" href="\/vtt\/\?join">Join a game<\/a>/);
+    assert.match(html, /<a class="btn" href="\/vtt\/\?run">Run a game<\/a>/);
     assert.doesNotMatch(html, /Try it now|A sample fight opens|class="ic-try"/);
     assert.match(html, /The Church keeps the world/);
   } finally { b.cleanup(); }
@@ -172,10 +172,8 @@ test('the home page leads with the hook, asks how you want to play, and shows th
     assert.match(html, /<h1><span class="ic-name">.*Sacrament RPG<\/span> <span class="ic-hook">Magic is forbidden\. Use it anyway\.<\/span><\/h1>/);
     const hero = html.slice(html.indexOf('<header class="bhead ic-hero"'), html.indexOf('</header>', html.indexOf('ic-hero')));
     assert.match(hero, /<h2 id="choose-heading">How do you want to play\?<\/h2>/);
-    const options = [...hero.matchAll(/<a class="ic-option" href="([^"]+)"><b>([^<]+)<\/b>/g)].map((m) => m[2] + ' ' + m[1]);
+    const options = [...hero.matchAll(/<a class="btn" href="([^"]+)">([^<]+)<\/a>/g)].map((m) => m[2] + ' ' + m[1]);
     assert.deepEqual(options, ['Join a game /vtt/?join', 'Run a game /vtt/?run', 'Play solo /solo/', 'Play in person /play-in-person/']);
-    assert.equal((hero.match(/<a class="btn/g) || []).length, 0, 'no single button competes with the choice');
-    assert.match(hero, /<a href="\/character\/">My heroes<\/a>/);
     assert.match(hero, /<a class="ic-video-play" href="https:\/\/www\.youtube\.com\/watch\?v=12H-EJZA8KU"/);
     assert.doesNotMatch(hero, /<iframe/, 'no YouTube frame until the visitor presses play');
     assert.match(hero, /youtube-nocookie\.com\/embed\//);
