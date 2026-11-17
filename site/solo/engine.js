@@ -444,6 +444,11 @@
     return heroActions(s).filter(function (a) { return a.index === idx && (a.spellId || '') === spell && (a.mode || '') === mode; })[0] || null;
   }
   /* The hero acts with an item or spell, in a fight or out of one. */
+  /* The Horror a use cost, said on its dice card too (as at the table; the owner, 2026-11-16): the card of the check just made, if there was one. */
+  function costOnCard(s, chk, n) {
+    if (!chk || !(n > 0)) return; var e = s.log.filter(function (l) { return l.outcome && !l.foeAttack; }).pop(); if (!e || e.outcome.d20 !== chk.d20 || e.outcome.total !== chk.total) return;
+    e.outcome.note = (e.outcome.note ? e.outcome.note + '. ' : '') + 'Horror +' + n;
+  }
   function useAction(api, a, pushed) {
     var s = api.s, u = a.u, fight = s.fight; pushed = pushed || !!s.pushing;
     if (!u || !u.ok) { api.say((u && u.why) || 'You cannot use that now.', 'note'); return; }
@@ -469,7 +474,7 @@
       chk = api.check(u.stat, { adj: adj, bonus: isDamage ? u.attackBonus || 0 : 0, misfire: isDamage && !u.spell ? R.misfireOf(u.item) : 0, attack: isDamage, nonDamage: !isDamage, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed, targetName: fight && isDamage ? fight.name : '' });   /* a crossbow's +2 to hit is in the total */
       if (chk.nat1 && R.nat1Tempts({ magic: magicOf(u), pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.');
     }
-    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
+    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) { costOnCard(s, chk, hr.amount); raiseHorror(api, hr.amount, u.spell ? 'Casting tempts the Horror.' : 'Using it tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); } }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     var ok = !chk || chk.success;
@@ -526,7 +531,7 @@
     if (h.tend && s.dying) { api.say('A dying hero cannot tend themselves.', 'note'); return; }
     api.say('You use ' + (u.spell ? u.spell.name : yours(u.item.name)) + '.', 'act');
     var chk = null; if (u.stat) { chk = api.check(u.stat, { nonDamage: true, item: u.spell ? u.spell.name : u.item.name, spell: !!u.spell, magic: magicOf(u), pushed: !!pushed }); if (chk.nat1 && R.nat1Tempts({ magic: magicOf(u), pushed: !!pushed })) raiseHorror(api, R.HORROR.nat1, 'A natural 1.'); }
-    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) raiseHorror(api, hr.amount, 'It tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); }
+    if (u.horror) { var hr = R.rollHorror(u.horror, api.die); if (hr) { costOnCard(s, chk, hr.amount); raiseHorror(api, hr.amount, 'It tempts the Horror' + (u.onPath ? ' (your own path: 1 less).' : '.')); } }
     if (u.item.uses != null && u.gear) u.gear.uses = Math.max(0, (u.gear.uses == null ? u.item.uses : u.gear.uses) - 1);
     if (s.over) return;
     if (!chk || chk.success) {

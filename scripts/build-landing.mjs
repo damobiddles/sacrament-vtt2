@@ -90,7 +90,7 @@ ${footer()}
 `;
 
 const head = (label, h1, lede) => `<header class="bhead"><div class="wrap"><div class="label">${esc(label)}</div><h1>${esc(h1)}</h1>${lede ? '<p class="lede">' + esc(lede) + '</p>' : ''}</div></header>`;
-const RULES_TABS = [['/rules/', 'Rules'], ['/rules/paths/', 'Paths'], ['/rules/online-and-solo/', 'Online and solo'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates and errata']];
+const RULES_TABS = [['/rules/', 'Rules'], ['/rules/paths/', 'Paths'], ['/rules/online-and-solo/', 'Online and solo'], ['/player-guide/', 'Player guide'], ['/gm-guide/', 'GM guide'], ['/rules/updates/', 'Updates']];
 const read = (slug) => parse(slug + '.md', SRC, { needDate: false });
 const notes = (kind, text) => `<div class="ic-note ${kind}">${text}</div>`;
 

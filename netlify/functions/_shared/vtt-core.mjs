@@ -142,7 +142,7 @@ function rollOutcome(s, e, a) {
     label: chk.success ? critical ? attack ? 'CRITICAL HIT' : 'CRITICAL SUCCESS' : attack ? 'HIT' : 'SUCCESS' : attack ? 'MISS' : 'FAILED CHECK',
     success: chk.success, critical, pendingDamage: !!(attack && chk.success && !r.nonDamage && !r.effort && !r.applied), item: r.item || '', targetName: targets.map(c => c.name).slice(0, 3).join(', '), hiddenNumbers: hidden };
   if (!hidden) Object.assign(result, { d20: chk.d20, mod: chk.mod, total: chk.total, target: r.attack ? chk.defence : chk.target, versus: r.attack ? 'Defence' : 'Target', manual: !!r.manual,
-    note: [(chk.adj === 'hard' ? 'Hard' : chk.adj === 'easy' ? 'Easy' : '') + (chk.adj !== 'normal' && r.adjWhy ? ' (' + r.adjWhy + ')' : ''), r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : ''].filter(Boolean).join('. ') });
+    note: [(chk.adj === 'hard' ? 'Hard' : chk.adj === 'easy' ? 'Easy' : '') + (chk.adj !== 'normal' && r.adjWhy ? ' (' + r.adjWhy + ')' : ''), r.attack && chk.nat20 ? 'Natural 20: always hits.' : r.attack && chk.nat1 ? 'Natural 1: always misses.' : '', r.horrorCost ? 'Horror +' + r.horrorCost : ''].filter(Boolean).join('. ') });
   return result;
 }
 
@@ -507,7 +507,7 @@ function temptHorror(s, a, ctx, ch, u, privateUse = false) {
   const r = R.rollHorror(u.horror, (sides) => d(ctx, sides)); if (!r || r.amount <= 0) return null;
   const what = privateUse ? 'A private use of magic tempts the Horror.' : u.spell ? ch.name + ' read from ' + u.item.name + '.' : ch.name + ' used ' + u.item.name + '.';
   const hr = moveHorror(s, a, ctx, r.amount, (applied, now) => what + (applied > 0 ? ' The Horror rises ' + (applied === r.amount ? r.text : applied + ' of ' + r.text) + ' (now ' + now + ' of ' + R.HORROR.max + ').' : ' The Horror can rise no further (now ' + now + ' of ' + R.HORROR.max + ').'));
-  bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return hr;   /* a private use stays private: only the GM reads who paid */
+  bleed(s, ctx, ch, r.amount - hr.applied, privateUse); return Object.assign(hr, { cost: r.amount });   /* a private use stays private: only the GM reads who paid */
 }
 
 /* Paying in blood: the Horror is full, so each point of a hero's cost that could not go on the meter takes 1 HP from that hero instead (the owner's rule after the
@@ -934,7 +934,8 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
     const pe = pathEasy(s, ch, c, adj), tb = takeBonus(ch), sh = takeShaken(ch, pe.adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += pe.text + sh.text;
-    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, adjWhy: adjWhy(chk, pe, sh), isAttack: c.attack === true, criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
+    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, adjWhy: adjWhy(chk, pe, sh), isAttack: c.attack === true, cat: c.attack === true ? 'basic' : undefined,   /* an attack without an item is bare hands or wits: Basic (the owner, 2026-11-16) */
+      criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);
     const tc = target && s.cards[target];
@@ -982,7 +983,9 @@ const HANDLERS = {
     } else L(s, a, ctx, ch.name + ' uses ' + u.name + ' (no roll).' + (tc ? ' (' + tc.name + ')' : '') + tempts, { kind: 'roll', private: priv, effects: sceneFx ? [sceneFx] : [] });
     if (selfFx) selfEffects(s, a, ctx, ch, u, fx, priv);
     if (u.gear.uses != null && u.item.uses != null) u.gear.uses = Math.max(0, u.gear.uses - 1);   /* a flask is used up whether or not the blow lands */
-    const hr = temptHorror(s, a, ctx, ch, u, priv) || nat; if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
+    const th = temptHorror(s, a, ctx, ch, u, priv), hr = th || nat;
+    if (th && out.rollId && s.rolls[out.rollId]) s.rolls[out.rollId].horrorCost = th.cost;   /* said on the result card (the owner, 2026-11-16) */
+    if (hr) out.horror = { cur: hr.cur, applied: hr.applied, crossed: hr.crossed };
     return out;
   },
   push(s, c, a, ctx) { /* after any failed roll the hero may push for a second action: the Horror rises, and their next roll is that action */

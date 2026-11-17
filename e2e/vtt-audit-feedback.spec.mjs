@@ -9,7 +9,7 @@ test('a player is told on the table: their turn, a hit, the Horror passing 7 and
   test.setTimeout(90000);
   const gm = await newPage(browser), ann = await newPage(browser);
   const code = await makeTable(gm); await joinTable(ann, code, 'Ann'); await claimHero(ann, 'Wisp');
-  await gm.locator('[data-do=gmtab][data-t=play]').click(); await gm.locator('#panel [data-do=endTurn]').click(); await saved(gm);
+  await gm.locator('#strip [data-do=endTurn]').click(); await saved(gm);
   await expect(ann.locator('#banner .notice.turn')).toHaveText('Your turn, Wisp.');
   await expect(ann.locator('#banner .notice.turn')).toHaveCount(0, { timeout: 9000 });   /* it goes by itself */
 
