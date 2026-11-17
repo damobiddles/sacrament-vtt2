@@ -165,6 +165,21 @@ test('the home page has the two buttons and they point at the existing join and 
 });
 
 
+test('the home page leads with the hook, asks how you want to play, and shows the table video, which loads nothing from YouTube until pressed', () => {
+  const b = build();
+  try {
+    const html = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(html, /<h1><span class="ic-name">.*Sacrament RPG<\/span> <span class="ic-hook">Magic is forbidden\. Use it anyway\.<\/span><\/h1>/);
+    const hero = html.slice(html.indexOf('<header class="bhead ic-hero"'), html.indexOf('</header>', html.indexOf('ic-hero')));
+    assert.match(hero, /<h2 id="choose-heading">How do you want to play\?<\/h2>/);
+    const options = [...hero.matchAll(/<a class="btn" href="([^"]+)">([^<]+)<\/a>/g)].map((m) => m[2] + ' ' + m[1]);
+    assert.deepEqual(options, ['Join a game /vtt/?join', 'Run a game /vtt/?run', 'Play solo /solo/', 'Play in person /play-in-person/']);
+    assert.match(hero, /<a class="ic-video-play" href="https:\/\/www\.youtube\.com\/watch\?v=12H-EJZA8KU"/);
+    assert.doesNotMatch(hero, /<iframe/, 'no YouTube frame until the visitor presses play');
+    assert.match(hero, /youtube-nocookie\.com\/embed\//);
+  } finally { b.cleanup(); }
+});
+
 test('rebuilding the Free Scenes page preserves reviewed downloads in their separate folder', () => {
   const b=build();
   try {

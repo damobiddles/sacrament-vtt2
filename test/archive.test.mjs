@@ -40,7 +40,7 @@ test('the earlier-characters page is merged into the hero builder: old page remo
 test('the earlier home page is retired: its script is no longer published, and the live home page is the new one (built from content/landing/)', () => {
   assert.ok(!existsSync(root('site/app.js')), 'the old home page script is still published');
   const home = readFileSync(root('site/index.html'), 'utf8');
-  assert.match(home, /<h1>Sacrament RPG<\/h1>/);
+  assert.match(home, /<h1><span class="ic-name">.*Sacrament RPG<\/span>/);
   assert.match(home, /href="\/vtt\/\?join"/);
   assert.ok(!/Looming Horror that climbs/.test(home), 'site/index.html is still the old home page');
 });

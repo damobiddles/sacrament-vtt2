@@ -181,3 +181,30 @@ blockquote.todo::first-line{font-weight:700}
 .jobs th{color:var(--candle);font:600 .8rem/1.35 var(--label);letter-spacing:.07em;text-transform:uppercase}
 /* The tag table on /rules/ has four columns: on a phone each tag becomes a small block with its labels, so it fits the screen instead of scrolling sideways. */
 @media(max-width:600px){.tag-reference thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.tag-reference,.tag-reference tbody,.tag-reference tr,.tag-reference th,.tag-reference td{display:block}.tag-reference tr{padding:12px 0;border-bottom:1px solid var(--line)}.tag-reference th,.tag-reference td{border:0;padding:2px 0}.tag-reference th[scope=row]{font-size:1.1rem}.tag-reference td::before{content:attr(data-label) ": ";font-weight:600;color:var(--fg)}}
+
+/* Home hero, 17 Nov 2026: the hook as the headline, one main button, and the table video beside the text. */
+.ic-hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:end}
+.ic-hero-text{min-width:0}
+.ic-hero h1{font-size:inherit;line-height:1.05;margin:0 0 clamp(18px,2.4vw,28px)}
+.ic-hero h1 .ic-hero-symbol{display:inline-block;width:34px;height:34px;vertical-align:middle;margin:0 14px 0 0}
+.ic-hero h1 .ic-name{display:flex;align-items:center;font-family:var(--label);font-size:clamp(.85rem,1.2vw,1rem);font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--candle);margin:4px 0 12px}
+.ic-hero h1 .ic-hook{display:block;font-size:clamp(2.4rem,4.4vw,3.9rem);line-height:1.08;text-wrap:balance}
+.ic-hero .ic-choose{display:block;margin:clamp(24px,3vw,34px) 0 0}
+.ic-choose h2{font-family:var(--label);font-size:.9rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--candle);margin:0 0 14px}
+.ic-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:520px}
+.ic-options .btn{text-align:center;padding:16px 12px}
+.ic-video{margin:0;min-width:0}
+.ic-video-play,.ic-video iframe{position:relative;display:block;width:100%;aspect-ratio:16/9;border:1px solid var(--edge);background:#0c0b0a;color:var(--fg);text-decoration:none;overflow:hidden}
+.ic-video-play img{display:block;width:100%;height:100%;object-fit:cover;filter:brightness(.72)}
+.ic-play{position:absolute;left:50%;top:50%;width:78px;height:78px;margin:-39px 0 0 -39px;border-radius:50%;background:var(--blood);box-shadow:0 0 0 2px var(--on-blood)}
+.ic-play::after{content:'';position:absolute;left:31px;top:23px;border-left:24px solid var(--on-blood);border-top:16px solid transparent;border-bottom:16px solid transparent}
+.ic-video-label{position:absolute;left:0;right:0;bottom:0;padding:12px 16px;background:rgba(10,9,8,.86);font-family:var(--label);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:.9rem;color:#f1e7d3}
+.ic-video-play:hover .ic-play,.ic-video-play:focus-visible .ic-play{background:color-mix(in srgb,var(--blood) 82%,var(--blood-hi))}
+.ic-video-play:focus-visible{outline:3px solid var(--candle);outline-offset:3px}
+.ic-video figcaption{color:var(--dim);font-size:.98rem;margin-top:12px;line-height:1.45}
+@media(max-width:900px){.ic-hero-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){
+  .ic-hero h1 .ic-hook{font-size:clamp(2.1rem,10vw,2.8rem)}
+  .ic-options{gap:10px}
+  .ic-options .btn{padding:14px 8px;font-size:.84rem}
+}
