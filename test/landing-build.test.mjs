@@ -157,13 +157,28 @@ test('the home page has the two buttons and they point at the existing join and 
   const b = build();
   try {
     const html = readFileSync(join(b.out, 'index.html'), 'utf8');
-    assert.match(html, /<a class="btn" href="\/vtt\/\?join">Join a game<\/a>/);
-    assert.match(html, /<a class="btn" href="\/vtt\/\?run">Run a game<\/a>/);
+    assert.match(html, /<a class="btn ghost" href="\/vtt\/\?join">Join a game<\/a>/);
+    assert.match(html, /<a class="btn ghost" href="\/vtt\/\?run">Run a game<\/a>/);
     assert.doesNotMatch(html, /Try it now|A sample fight opens|class="ic-try"/);
     assert.match(html, /The Church keeps the world/);
   } finally { b.cleanup(); }
 });
 
+
+test('the home page leads with the hook, one main button and the table video, which loads nothing from YouTube until pressed', () => {
+  const b = build();
+  try {
+    const html = readFileSync(join(b.out, 'index.html'), 'utf8');
+    assert.match(html, /<h1><span class="ic-name">.*Sacrament RPG<\/span> <span class="ic-hook">Magic is forbidden\. Use it anyway\.<\/span><\/h1>/);
+    assert.equal((html.match(/class="btn ic-main"/g) || []).length, 1, 'exactly one main button');
+    assert.match(html, /<a class="btn ic-main" href="\/solo\/">Play solo now<\/a>/);
+    const hero = html.slice(html.indexOf('<header class="bhead ic-hero"'), html.indexOf('</header>', html.indexOf('ic-hero')));
+    assert.equal((hero.match(/<a class="btn"/g) || []).length, 0, 'no other filled buttons compete with it in the hero');
+    assert.match(hero, /<a class="ic-video-play" href="https:\/\/www\.youtube\.com\/watch\?v=12H-EJZA8KU"/);
+    assert.doesNotMatch(hero, /<iframe/, 'no YouTube frame until the visitor presses play');
+    assert.match(hero, /youtube-nocookie\.com\/embed\//);
+  } finally { b.cleanup(); }
+});
 
 test('rebuilding the Free Scenes page preserves reviewed downloads in their separate folder', () => {
   const b=build();

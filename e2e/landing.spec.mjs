@@ -167,16 +167,16 @@ for (const [w, h] of [[360, 640], [390, 780]]) {
       expect(box.x, name).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, name).toBeLessThanOrEqual(w);
     }
-    // both buttons are visible without scrolling on the smallest phone
-    const lowest = await page.locator('.ic-cta').getByRole('link', { name: 'Run a game' }).boundingBox();
-    expect(lowest.y + lowest.height).toBeLessThanOrEqual(h);
+    // the one main button is visible without scrolling on the smallest phone
+    const main = await page.locator('.ic-cta').getByRole('link', { name: 'Play solo now' }).boundingBox();
+    expect(main.y + main.height).toBeLessThanOrEqual(h);
   });
 }
 
 test('the home page has no sign-up form and no link to one, and still has its buttons', async ({ browser }) => {
   const page = await newPage(browser);
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('Sacrament RPG');
+  await expect(page.locator('h1')).toHaveText('Sacrament RPG Magic is forbidden. Use it anyway.');
   await expect(page.locator('form')).toHaveCount(0);
   await expect(page.locator('#join')).toHaveCount(0);
   await expect(page.getByText('Sign up for playtests')).toHaveCount(0);
