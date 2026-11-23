@@ -395,6 +395,25 @@ test('a blow on a dying hero rolls no damage, as at the table: only the d20 is r
   assert.doesNotMatch(text, /shows/); assert.match(text, /costs you a round/);
 });
 
+test('a dying hero who acts anyway and hits rolls the damage, as at the table, where the Effort of an action already paid for costs nothing more (bug hunt 2026-11-23)', () => {
+  const s = cryptFight();
+  s.hp.cur = 1;
+  S.act(s, A, S.choices(s, A).find((c) => c.kind === 'attack').cmd, fixed([5, 1]));
+  S.act(s, A, 'foe', fixed([20, 6]));                    // falls: 3 rounds; one passes: 2 left
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack' && /^dying /.test(c.cmd));
+  assert.ok(attack, 'a dying hero may attack, paying Horror');
+  const horror = s.horror, foeHp = s.fight.hp.cur;
+  S.act(s, A, attack.cmd, fixed([19]));                  // a hit
+  assert.equal(s.horror, horror + R.DYING.actHorror);
+  assert.equal(s.fight.phase, 'damage');
+  const dmg = S.choices(s, A);
+  assert.deepEqual(dmg.map((c) => c.cmd), ['damage'], 'the hit waits for Roll damage, and nothing else: ' + JSON.stringify(dmg.map((c) => c.label)));
+  S.act(s, A, 'damage', fixed([3]));
+  assert.ok(!s.fight || s.fight.hp.cur < foeHp, 'the damage lands');
+  assert.equal(s.horror, horror + R.DYING.actHorror, 'the damage costs no more Horror');
+  if (s.fight) assert.equal(s.fight.phase, 'foe', 'then the foe moves');
+});
+
 test('the foe card says what the foe will do next, from the real numbers, and bracing makes it harder', () => {
   const s = cryptFight();
   const card = S.cards(s, A).find((c) => c.kind === 'foe');

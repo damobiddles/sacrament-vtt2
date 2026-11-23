@@ -593,12 +593,15 @@
 
   /* ---------- what can be done now: the buttons ---------- */
   /* two of the same thing in the pack (two rolls of bandages) make one button, not two the same */
+  /* A dying hero chooses between crawling away and acting anyway, except while the foe moves, and while a hit they already paid for waits for its damage:
+     at the table the Effort of an action already paid for costs nothing more (bug hunt 2026-11-23: the hit was lost, and only Crawl away was offered). */
+  function dyingChoosing(s) { return !!s.dying && !(s.fight && (s.fight.phase === 'foe' || s.fight.phase === 'damage')); }
   function choices(s, adv) { var seen = {}; return choicesAll(s, adv).filter(function (c) { var k = c.kind + '|' + c.label; if (seen[k]) return false; seen[k] = true; return true; }); }
   function choicesAll(s, adv) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];
-    if (s.dying && !(s.fight && s.fight.phase === 'foe')) {   /* dying: crawl away for nothing, or act anyway for R.DYING.actHorror (the rules, 2026-11-11) */
+    if (dyingChoosing(s)) {   /* dying: crawl away for nothing, or act anyway for R.DYING.actHorror (the rules, 2026-11-11) */
       out.push({ label: 'Crawl away (' + R.DYING.crawl + ')', cmd: 'crawl', kind: 'do' });
       var acts = s.fight && s.fight.phase === 'hero' ? fightOptions(api, s, s.fight).filter(function (c) { return !c.idle && !c.flee && !c.free && !(c.heal && !canHeal(s, findAction(s, c.cmd.split(' ')) || {})); })
         : heroActions(s).filter(function (a) { return canHeal(s, a); }).map(function (a) { return { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: true }; });
@@ -799,7 +802,7 @@
       if (!s.over) { s.pushing = true; act(s, adv, pc, die); s.pushing = false; }
       return s.log.slice(before);
     }
-    else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
+    else if (dyingChoosing(s)) {
       if (c === 'crawl') crawl(api);
       else if (p[0] === 'dying' && choices(s, adv).some(function (x) { return x.cmd === c; })) {
         raiseHorror(api, R.DYING.actHorror, 'You are dying, and act anyway.');
