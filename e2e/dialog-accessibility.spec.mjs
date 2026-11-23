@@ -9,6 +9,8 @@ test('sheet and loot dialogs keep keyboard focus inside and restore it when clos
   const id=kind==='sheet'?'sheetOverlay':'lootOverlay',dialog=gm.locator('#'+id);await expect(dialog).toBeVisible();
   await expect(gm.locator('#app')).toHaveAttribute('inert','');
   const controls=dialog.locator('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]');
+  /* each dialog puts focus on its Close button just after it opens: wait for that, or it can land after the test's own focus on a busy machine */
+  await expect(controls.first()).toBeFocused();
   await controls.last().focus();await gm.keyboard.press('Tab');await expect(controls.first()).toBeFocused();
   await gm.keyboard.press('Shift+Tab');await expect(controls.last()).toBeFocused();
   await gm.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(gm.locator('#app')).not.toHaveAttribute('inert','');
