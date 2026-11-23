@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-import { table, charNamed, find, die as dief } from './vtt-helpers.mjs';
+import { table, charNamed, find, die as dief, d20 as d20h } from './vtt-helpers.mjs';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis;
 for (const f of ['vtt/rules.js', 'vtt/tally.js', 'sheet/gear.js', 'sheet/sheet-core.js', 'solo/engine.js']) require('../site/' + f);
@@ -183,4 +183,29 @@ test('a relic of the hero\'s own path costs 1 less Horror (never below 1), the s
     assert.equal(/your own path: 1 less/.test(told), onPath, 'solo says the path discount only when it applies: ' + k.gear + ' / ' + (k.path || 'no path'));
     assert.equal(/own path: 1 less Horror/.test(r.body.state.log.map((e) => e.text).join(' | ')), onPath, 'the table says it only when it applies');
   }
+});
+
+test('a dying hero who acts anyway pays the same Horror in both: nothing more for the damage of a hit, and a push after a miss costs the push and acting while dying again for the second action (bug hunt 2026-11-23)', async () => {
+  /* the table */
+  const t = await table({ dice: [d20h(15), d20h(2), d20h(15)] }), st = await t.state(), h = charNamed(st, 'Thorne'), ghoul = find(st, 'Pit Ghoul').id;
+  const p = await t.join('Parity'); await p.cmd({ type: 'claim', charId: h.id });
+  const card = find(await t.state(), 'Thorne'); await t.gm.cmd({ type: 'adjust', cardId: card.id, field: 'hp', delta: -card.hp.cur });
+  const hit = await p.cmd({ type: 'roll', charId: h.id, stat: 'STR', attack: true, targetCardId: ghoul });
+  const tableAct = hit.body.state.horror.cur;
+  const eff = await p.cmd({ type: 'effort', rollId: hit.body.result.rollId, cat: 'basic', rolled: 2 }); assert.equal(eff.status, 200, JSON.stringify(eff.body));
+  const tableDamage = eff.body.state.horror.cur - tableAct;
+  const miss = await p.cmd({ type: 'roll', charId: h.id, stat: 'STR', attack: true, targetCardId: ghoul }), beforePush = miss.body.state.horror.cur;
+  const pu = await p.cmd({ type: 'push', rollId: miss.body.state.rolls.at(-1).id }); assert.equal(pu.status, 200, JSON.stringify(pu.body));
+  const second = await p.cmd({ type: 'roll', charId: h.id, stat: 'STR', attack: true, targetCardId: ghoul }); assert.equal(second.status, 200);   /* the pushed second action, paid for as acting while dying */
+  const tablePush = second.body.state.horror.cur - beforePush;
+  /* the solo game */
+  const { s, adv } = dyingGame([]);
+  const attack = S.choices(s, adv).find((c) => c.kind === 'attack' && /^dying /.test(c.cmd));
+  S.act(s, adv, attack.cmd, fixed([15])); const soloAct = s.horror;
+  assert.equal(s.fight.phase, 'damage'); S.act(s, adv, 'damage', fixed([2])); const soloDamage = s.horror - soloAct;
+  s.fight.phase = 'hero';
+  S.act(s, adv, S.choices(s, adv).find((c) => c.kind === 'attack' && /^dying /.test(c.cmd)).cmd, fixed([2]));
+  const pushC = S.choices(s, adv).find((c) => c.kind === 'push'); assert.ok(pushC, 'a push is offered after the miss');
+  const beforeSoloPush = s.horror; S.act(s, adv, pushC.cmd, fixed([15, 2]));
+  assert.deepEqual({ act: soloAct, damage: soloDamage, push: s.horror - beforeSoloPush }, { act: tableAct, damage: tableDamage, push: tablePush });
 });

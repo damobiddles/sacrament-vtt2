@@ -593,12 +593,16 @@
 
   /* ---------- what can be done now: the buttons ---------- */
   /* two of the same thing in the pack (two rolls of bandages) make one button, not two the same */
+  /* A dying hero chooses between crawling away and acting anyway, except while the foe moves, and while a hit they already paid for waits for its damage:
+     at the table the Effort of an action already paid for costs nothing more (bug hunt 2026-11-23: the hit was lost, and only Crawl away was offered).
+     After a miss, a dying hero may push (paying for acting while dying as well, as the table does) or end the turn. */
+  function dyingChoosing(s) { return !!s.dying && !(s.fight && (s.fight.phase === 'foe' || s.fight.phase === 'damage' || s.fight.phase === 'push')); }
   function choices(s, adv) { var seen = {}; return choicesAll(s, adv).filter(function (c) { var k = c.kind + '|' + c.label; if (seen[k]) return false; seen[k] = true; return true; }); }
   function choicesAll(s, adv) { adv = sceneOf(s) || adv;
     var api = apiFor(s, adv, function () { return 1; });
     if (s.over) return [];
     var out = [];
-    if (s.dying && !(s.fight && s.fight.phase === 'foe')) {   /* dying: crawl away for nothing, or act anyway for R.DYING.actHorror (the rules, 2026-11-11) */
+    if (dyingChoosing(s)) {   /* dying: crawl away for nothing, or act anyway for R.DYING.actHorror (the rules, 2026-11-11) */
       out.push({ label: 'Crawl away (' + R.DYING.crawl + ')', cmd: 'crawl', kind: 'do' });
       var acts = s.fight && s.fight.phase === 'hero' ? fightOptions(api, s, s.fight).filter(function (c) { return !c.idle && !c.flee && !c.free && !(c.heal && !canHeal(s, findAction(s, c.cmd.split(' ')) || {})); })
         : heroActions(s).filter(function (a) { return canHeal(s, a); }).map(function (a) { return { label: (a.spellId ? 'Cast ' : 'Use ') + shortName(a), cmd: actionKey(a), kind: a.spellId ? 'spell' : 'use', horror: a.horror || 0, about: aboutOf(a), heal: true }; });
@@ -618,7 +622,8 @@
       if (f.phase === 'damage') { var p = f.pending; return [{ label: 'Roll damage: d' + R.DEFAULT_DICE[p.cat] + (s.hero.effort[p.cat] ? ' + ' + s.hero.effort[p.cat] : '') + (p.damageBonus ? ' + ' + p.damageBonus : '') + (p.critical ? ' + d' + R.DEFAULT_DICE.ultimate : ''), cmd: 'damage', kind: 'attack' }]; }
       if (f.phase === 'foe') return [{ label: 'End your turn', cmd: 'foe', kind: 'plain' }];
       /* A push gives a second action of any kind, as at the table (the Rules page: "Push ... makes the next action the second action"): the same list, each one pushed. */
-      if (f.phase === 'push') { fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max); }).forEach(function (c) { if (c.free) { out.push(c); return; } var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
+      if (f.phase === 'push') { var dy = s.dying ? R.DYING.actHorror : 0;   /* dying: a push is acting anyway as well, and nothing is free */
+        fightOptions(api, s, f).filter(function (c) { return !c.idle && !c.flee && !(c.heal && s.hp.cur >= s.hp.max) && !(dy && c.free); }).forEach(function (c) { if (c.free) { out.push(c); return; } var o = Object.assign({}, c); delete o.heal; out.push(Object.assign(o, { label: 'Push: ' + (c.cmd === 'brace' ? 'brace (+2 Defence)' : c.label.replace(/^Attack: /, '').replace(/^(Cast|Use) /, '')) + (dy ? ' (dying: +' + dy + ' Horror)' : ''), cmd: 'push ' + c.cmd.replace(/^use /, ''), kind: 'push', horror: R.HORROR.push + dy })); }); out.push({ label: 'End your turn', cmd: 'foe', kind: 'plain' }); return out; }
       out = fightOptions(api, s, f);
       return out;
     }
@@ -799,7 +804,7 @@
       if (!s.over) { s.pushing = true; act(s, adv, pc, die); s.pushing = false; }
       return s.log.slice(before);
     }
-    else if (s.dying && !(s.fight && s.fight.phase === 'foe')) {
+    else if (dyingChoosing(s)) {
       if (c === 'crawl') crawl(api);
       else if (p[0] === 'dying' && choices(s, adv).some(function (x) { return x.cmd === c; })) {
         raiseHorror(api, R.DYING.actHorror, 'You are dying, and act anyway.');
@@ -823,11 +828,12 @@
         if (c === 'foe' || c === 'wait') f.phase = 'foe', foeTurn(api);
         else if (p[0] === 'push') {
           var pa = p[1] === 'punch' ? bareHands() : p[1] === 'brace' ? 'brace' : p[1] === 'anoint' ? 'anoint' : findAction(s, ['use'].concat(p.slice(1))); if (!pa) { api.say('You cannot push with that.', 'note'); return s.log.slice(before); }
-          f.phase = 'hero'; raiseHorror(api, R.HORROR.push, 'You push for a second action.');
+          f.phase = 'hero'; if (s.dying) raiseHorror(api, R.DYING.actHorror, 'You are dying, and act anyway.');
+          if (!s.over) raiseHorror(api, R.HORROR.push, 'You push for a second action.');
           if (!s.over && pa === 'brace') { f.guard = 2; f.phase = 'foe'; api.say('You brace yourself: +2 Defence until your next turn.', 'act'); }
           else if (!s.over && pa === 'anoint') { if (!anoint(api)) f.phase = 'foe'; }
           else if (!s.over) { useAction(api, pa, true); if (s.fight && f.phase === 'hero') f.phase = 'foe'; }   /* the second action cannot itself be pushed */
-        } else if (p[0] === 'use' && findAction(s, p) && freeFx(findAction(s, p))) useAction(api, findAction(s, p), false);   /* a Free use (the Chain) before the pushed roll costs no push */
+        } else if (p[0] === 'use' && !s.dying && findAction(s, p) && freeFx(findAction(s, p))) useAction(api, findAction(s, p), false);   /* a Free use (the Chain) before the pushed roll costs no push */
         else api.say('You missed: push, or end your turn.', 'note');
       }
       else if (p[0] === 'use') { var a = findAction(s, p); if (a) useAction(api, a, false); else api.say('You cannot use that now.', 'note'); }

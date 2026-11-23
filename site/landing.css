@@ -182,7 +182,7 @@ blockquote.todo::first-line{font-weight:700}
 /* The tag table on /rules/ has four columns: on a phone each tag becomes a small block with its labels, so it fits the screen instead of scrolling sideways. */
 @media(max-width:600px){.tag-reference thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.tag-reference,.tag-reference tbody,.tag-reference tr,.tag-reference th,.tag-reference td{display:block}.tag-reference tr{padding:12px 0;border-bottom:1px solid var(--line)}.tag-reference th,.tag-reference td{border:0;padding:2px 0}.tag-reference th[scope=row]{font-size:1.1rem}.tag-reference td::before{content:attr(data-label) ": ";font-weight:600;color:var(--fg)}}
 
-/* Home hero, 17 Nov 2026: the hook as the headline, one main button, and the table video beside the text. */
+/* Home hero, 17 Nov 2026: the hook as the headline, "How do you want to play?" with four even buttons, and the table video beside the text. */
 .ic-hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:end}
 .ic-hero-text{min-width:0}
 .ic-hero h1{font-size:inherit;line-height:1.05;margin:0 0 clamp(18px,2.4vw,28px)}
