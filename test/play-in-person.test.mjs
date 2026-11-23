@@ -42,7 +42,7 @@ test('Play in person is in the navigation, on the home page and in the sitemap, 
   const b = built();
   try {
     assert.match(b.read('index.html'), /<a href="\/play-in-person\/"[^>]*>Play in person<\/a>/);
-    assert.match(b.read('index.html'), /class="site-paths"[\s\S]*href="\/play-in-person\/"/);
+    assert.match(b.read('index.html'), /class="ic-options"[\s\S]*href="\/play-in-person\/"/);   /* one of the four ways to play in the hero (the block below keeps the two guides: the owner, 2026-11-23) */
     const map = b.read('sitemap.xml');
     assert.ok(map.includes('/play-in-person/') && map.includes('/adventures/the-guest-at-greave/'));
   } finally { b.cleanup(); }

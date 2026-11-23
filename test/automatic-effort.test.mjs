@@ -21,6 +21,6 @@ test('missing targets refuse damage before a roll is saved and clients cannot re
 });
 test('task Effort advances the selected obstacle and old manual callers remain compatible',async()=>{
  const {t,p,h}=await setup(),gate=find(await t.state(),'The Sealed Gate');const r=await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15,targetCardId:gate.id});
- const done=await p.cmd({type:'effort',rollId:r.body.result.rollId,cat:'weapons',rolled:4,autoApply:true});assert.equal(done.status,200);assert.equal(done.body.state.cards[gate.id].progress.cur,7);
- const legacy=await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15,targetCardId:gate.id});await p.cmd({type:'effort',rollId:legacy.body.result.rollId,cat:'weapons',rolled:2});assert.equal(find(await t.state(),'The Sealed Gate').progress.cur,7);assert.equal((await t.state()).rolls.at(-1).applied,null);
+ const done=await p.cmd({type:'effort',rollId:r.body.result.rollId,cat:'weapons',rolled:4,autoApply:true});assert.equal(done.status,200);assert.equal(done.body.state.cards[gate.id].progress.cur,5);   /* a plain check at an obstacle is Basic whatever the page asks: 4 + 1 Basic (the owner, 2026-11-23; it was 4 + 3 Weapons) */
+ const legacy=await p.cmd({type:'roll',charId:h.id,stat:'STR',d20:15,targetCardId:gate.id});await p.cmd({type:'effort',rollId:legacy.body.result.rollId,cat:'weapons',rolled:2});assert.equal(find(await t.state(),'The Sealed Gate').progress.cur,5);assert.equal((await t.state()).rolls.at(-1).applied,null);
 });

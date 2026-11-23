@@ -180,6 +180,19 @@ test('the home page leads with the hook, asks how you want to play, and shows th
   } finally { b.cleanup(); }
 });
 
+test('home page (the owner, 2026-11-23): the ways to play are only in the hero; the block below keeps the two guides; the intro says magic brings the Horror closer', () => {
+  const b = build();
+  try {
+    assert.equal(b.r.status, 0, b.r.stderr);
+    const html = readFileSync(join(b.out, 'index.html'), 'utf8');
+    const start = html.slice(html.indexOf('<section class="site-start"'), html.indexOf('</section>', html.indexOf('site-start')));
+    const links = [...start.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => m[2] + ' ' + m[1]);
+    assert.deepEqual(links, ['Meet Sacrament RPG /the-game/', 'Start here /how-to-play/']);
+    assert.match(html, /<p class="lede">A dark fantasy roleplaying game where magic brings the Horror closer, and the Church hunts those who cast\./);
+    assert.doesNotMatch(html, /every spell brings the Horror closer/);
+  } finally { b.cleanup(); }
+});
+
 test('rebuilding the Free Scenes page preserves reviewed downloads in their separate folder', () => {
   const b=build();
   try {

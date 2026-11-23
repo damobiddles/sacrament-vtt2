@@ -52,15 +52,15 @@ test('a player owns one character: claiming, no stealing, no second one; only th
 });
 
 test('forcing the gate: select, roll STR, see the sum, roll Effort, apply to the gate, end the turn', async () => {
-  const t = await table({ dice: [d20(12), die(4, 6)] }), ann = await t.join('Ann'); const st = await t.state(), thorne = charNamed(st, 'Thorne'), gate = find(st, 'The Sealed Gate');
+  const t = await table({ dice: [d20(12), die(4, 4)] }), ann = await t.join('Ann'); const st = await t.state(), thorne = charNamed(st, 'Thorne'), gate = find(st, 'The Sealed Gate'); /* a plain check at an obstacle is Basic d4 (the owner, 2026-11-23) */
   await ann.cmd({ type: 'claim', charId: thorne.id });
   const r = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', adj: 'normal', targetCardId: gate.id }); assert.equal(r.status, 200);
   const roll = r.body.state.rolls.find((x) => x.id === r.body.result.rollId); assert.equal(roll.check.total, 15); assert.equal(roll.check.target, 12); assert.equal(roll.check.success, true);
   assert.match(r.body.state.log.at(-1).text, /12 \+ 3 STR = 15 against Target 12\. Success\. \(The Sealed Gate\)/);
-  const e = await ann.cmd({ type: 'effort', rollId: roll.id, cat: 'weapons' }); assert.equal(e.body.state.rolls.at(-1).effort.total, 7); assert.match(e.body.state.log.at(-1).text, /d6 4 \+ 3 Weapons = 7 Effort\./);
+  const e = await ann.cmd({ type: 'effort', rollId: roll.id, cat: 'weapons' }); assert.equal(e.body.state.rolls.at(-1).effort.total, 5); assert.match(e.body.state.log.at(-1).text, /d4 4 \+ 1 Basic = 5 Effort\./);
   const before = find(await t.state(), 'The Sealed Gate').progress.cur; assert.equal(before, 0, 'nothing changes until Apply');
-  const ap = await ann.cmd({ type: 'apply', rollId: roll.id, cardId: gate.id, field: 'progress' }); assert.equal(ap.body.result.applied, 7);
-  assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 7);
+  const ap = await ann.cmd({ type: 'apply', rollId: roll.id, cardId: gate.id, field: 'progress' }); assert.equal(ap.body.result.applied, 5);
+  assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 5);
   assert.equal((await ann.cmd({ type: 'apply', rollId: roll.id, cardId: gate.id, field: 'progress' })).status, 409, 'once only');
   const turn = await t.gm.cmd({ type: 'endTurn' }); assert.equal(turn.status, 200); assert.equal(turn.body.state.table.idx, 1);
 });
@@ -99,14 +99,14 @@ test('many people acting at once: every change lands exactly once and none overw
 });
 
 test('undo takes back one action and leaves later, unrelated ones alone', async () => {
-  const t = await table({ dice: [d20(15), die(5, 6)] }), ann = await t.join('Ann'), st = await t.state(), thorne = charNamed(st, 'Thorne'), gate = find(st, 'The Sealed Gate'), ghoul = find(st, 'Pit Ghoul'); await ann.cmd({ type: 'claim', charId: thorne.id });
+  const t = await table({ dice: [d20(15), die(4, 4)] }), ann = await t.join('Ann'), st = await t.state(), thorne = charNamed(st, 'Thorne'), gate = find(st, 'The Sealed Gate'), ghoul = find(st, 'Pit Ghoul'); await ann.cmd({ type: 'claim', charId: thorne.id });
   const id = (await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: gate.id })).body.state.rolls.at(-1).id; await ann.cmd({ type: 'effort', rollId: id, cat: 'weapons' });
-  const ap = await ann.cmd({ type: 'apply', rollId: id, cardId: gate.id, field: 'progress' }); assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 8);
+  const ap = await ann.cmd({ type: 'apply', rollId: id, cardId: gate.id, field: 'progress' }); assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 5); /* a plain check at an obstacle is Basic d4 (the owner, 2026-11-23) */
   await t.gm.cmd({ type: 'track', id: gate.id, field: 'progress', mode: 'delta', value: 3 });         /* a later change by the GM to the same number */
   await t.gm.cmd({ type: 'track', id: ghoul.id, field: 'hp', mode: 'delta', value: -5 });            /* and one elsewhere */
   const entry = ap.body.state.log.at(-1); assert.equal(entry.undoable, true);
   const u = await ann.cmd({ type: 'undo', logId: entry.id }); assert.equal(u.status, 200);
-  const after = await t.state(); assert.equal(find(after, 'The Sealed Gate').progress.cur, 3, 'only Ann’s 8 came off; the GM’s 3 stayed'); assert.equal(find(after, 'Pit Ghoul').hp.cur, 15);
+  const after = await t.state(); assert.equal(find(after, 'The Sealed Gate').progress.cur, 3, 'only Ann’s 5 came off; the GM’s 3 stayed'); assert.equal(find(after, 'Pit Ghoul').hp.cur, 15);
   assert.equal((await ann.cmd({ type: 'undo', logId: entry.id })).status, 409, 'once only');
   const again = await ann.cmd({ type: 'apply', rollId: id, cardId: gate.id, field: 'progress' }); assert.equal(again.status, 200, 'after an undo the Effort can be applied again, perhaps to somewhere else');
 });

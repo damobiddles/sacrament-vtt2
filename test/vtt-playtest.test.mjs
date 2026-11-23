@@ -29,7 +29,7 @@ test('REVERSED ARRIVAL: a whole run of HP edits in reverse order, concurrently, 
 });
 
 test('REVERSED ARRIVAL: a roll then its Effort then its Apply, reversed in the network, still resolve as one roll, one Effort, one hit', async () => {
-  const t = await table({ dice: [d20(15), die(4, 6)] }), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne'), gate = find(await t.state(), 'The Sealed Gate');
+  const t = await table({ dice: [d20(15), die(4, 4)] }), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne'), gate = find(await t.state(), 'The Sealed Gate'); /* a plain check at an obstacle is Basic d4 (the owner, 2026-11-23) */
   /* The page would not send the second until the first was answered; this is what happens if something between us and the server reorders them anyway. The later
      two cannot work without the first (they name its roll), so they fail cleanly and can be sent again once the roll exists. */
   const roll = { type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: gate.id };
@@ -37,7 +37,7 @@ test('REVERSED ARRIVAL: a roll then its Effort then its Apply, reversed in the n
   const r = await ann.cmd(roll, { client: 'annclient02g', n: 1 }); assert.equal(r.status, 200); const id = lastRoll(r).id;
   const e = await ann.cmd({ type: 'effort', rollId: id, cat: 'weapons' }, { client: 'annclient02g', n: 3 }); assert.equal(e.status, 200);
   const a = await ann.cmd({ type: 'apply', rollId: id, cardId: gate.id, field: 'progress' }, { client: 'annclient02g', n: 4 }); assert.equal(a.status, 200);
-  assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 7);
+  assert.equal(find(await t.state(), 'The Sealed Gate').progress.cur, 5);
   assert.equal((await ann.cmd(roll, { client: 'annclient02g', n: 1 })).body.result.duplicate, true, 'the roll sent again is the same roll'); assert.equal((await t.state()).rolls.length, 1, 'one roll exists');
 });
 
