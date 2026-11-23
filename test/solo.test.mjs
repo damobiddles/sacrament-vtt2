@@ -414,6 +414,28 @@ test('a dying hero who acts anyway and hits rolls the damage, as at the table, w
   if (s.fight) assert.equal(s.fight.phase, 'foe', 'then the foe moves');
 });
 
+test('a dying hero who acts anyway and misses may push (paying for acting while dying too, as at the table) or end the turn (bug hunt 2026-11-23)', () => {
+  const s = cryptFight();
+  s.hp.cur = 0; s.dying = R.dyingFall(3);
+  const attack = S.choices(s, A).find((c) => c.kind === 'attack' && /^dying /.test(c.cmd));
+  const said = S.act(s, A, attack.cmd, fixed([2])).map((l) => l.t).join(' ');   // a miss
+  assert.equal(s.fight.phase, 'push'); assert.match(said, /push for a second action/);
+  const ch = S.choices(s, A);
+  assert.ok(ch.some((c) => c.cmd === 'foe'), 'End your turn is offered: ' + JSON.stringify(ch.map((c) => c.label)));
+  const push = ch.find((c) => c.kind === 'push');
+  assert.ok(push, 'a push is offered');
+  assert.equal(push.horror, R.HORROR.push + R.DYING.actHorror, 'the push costs its Horror and the Horror of acting while dying');
+  assert.match(push.label, /dying/);
+  assert.ok(!ch.some((c) => c.free), 'nothing free: a dying hero pays to act');
+  const horror = s.horror;
+  S.act(s, A, push.cmd, fixed([19, 3]));
+  assert.equal(s.horror, horror + R.HORROR.push + R.DYING.actHorror);
+  const s2 = cryptFight(); s2.hp.cur = 0; s2.dying = R.dyingFall(3);
+  S.act(s2, A, S.choices(s2, A).find((c) => c.kind === 'attack' && /^dying /.test(c.cmd)).cmd, fixed([2]));
+  S.act(s2, A, 'foe', fixed([2]));                        // the turn ends; the foe misses; a round passes
+  assert.equal(s2.fight.phase, 'hero'); assert.equal(s2.dying.left, 2);
+});
+
 test('the foe card says what the foe will do next, from the real numbers, and bracing makes it harder', () => {
   const s = cryptFight();
   const card = S.cards(s, A).find((c) => c.kind === 'foe');
