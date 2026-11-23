@@ -46,7 +46,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   /* a press that lasts as long as a person's does */
   const press = async (p, sel, ms = 90) => { let bx = null; for (let k = 0; k < 20 && !bx; k++) { const el = await p.waitForSelector(sel); await el.scrollIntoViewIfNeeded().catch(() => {}); bx = await el.boundingBox().catch(() => null); }   /* a person scrolls to a button before pressing it (15 Nov 2026: with a card chosen, the hero's HP sits below the actions) */ await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await T(ms); await p.mouse.up(); };
   /* a successful non-critical physical 15 on a stat, and wait until THAT roll is the one on show (not the one before it) */
-  const roll = async (p, stat = 'STR') => { const prev = await p.evaluate(() => window.__vtt.ui.roll); if (!(await p.$('#strip input[data-phys]'))) await diceOn(p); await p.fill('#strip input[data-phys]', '15'); await p.click('.stat[data-stat=' + stat + ']'); await p.waitForFunction((pv) => !window.__vtt.ui.rolling && window.__vtt.ui.roll !== pv && !!document.querySelector('[data-do=effort][data-cat=weapons]'), prev, { timeout: WAIT }); };
+  const roll = async (p, stat = 'STR') => { const prev = await p.evaluate(() => window.__vtt.ui.roll); if (!(await p.$('#strip input[data-phys]'))) await diceOn(p); await p.fill('#strip input[data-phys]', '15'); await p.click('.stat[data-stat=' + stat + ']'); await p.waitForFunction((pv) => !window.__vtt.ui.rolling && window.__vtt.ui.roll !== pv && !!document.querySelector('[data-do=effort]'), prev, { timeout: WAIT }); };   /* at an obstacle only Basic is offered (the owner, 2026-11-23) */
+  const unselect = async (p) => { if (await p.$('#panel [data-do=deselect]')) await p.click('#panel [data-do=deselect]'); await p.waitForFunction(() => !window.__vtt.ui.sel); };
   const slow = async (p, ms) => { p.net.delay = ms; }, unslow = async (p) => { p.net.delay = 0; };
   const heal = async (p) => { const id = (await card(p, 'Thorne')).id; for (let i = (await card(p, 'Thorne')).hp.cur; i < 10; i++) await p.click('#panel [data-do=hpAdj][data-d="1"]'); await idle(p); await until(p, ([i2]) => window.__vtt.state().cards[i2].hp.cur === 10, [id]); };
 
@@ -69,9 +70,9 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   let lost = 0;
   for (let i = 0; i < 6; i++) {
     const before = (await rolls(A)).length;
-    await A.waitForSelector('[data-do=effort][data-cat=weapons]');
+    await A.waitForSelector('[data-do=effort]');
     await A.fill('#physE', '3');                       /* typing in the box: the panel is not redrawn under the cursor */
-    await press(A, '[data-do=effort][data-cat=weapons]', 40 + 40 * i);
+    await press(A, '[data-do=effort]', 40 + 40 * i);
     const got = await A.waitForFunction(() => { const s = window.__vtt.state(), r = s.rolls.filter((x) => x.id === window.__vtt.ui.roll)[0]; return r && r.effort ? true : false; }, null, { timeout: 6000 }).then(() => true, () => false);
     if (!got) lost++;
     /* start again with a fresh check: Done, then roll */
@@ -79,6 +80,7 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   check('six Effort clicks, each typed-into and pressed for a human’s time while the table changes, all produced an Effort', lost === 0, lost + ' lost');
   churn = false; await idle(A);
+  await gm.evaluate((id) => window.__vtt.send({ type: 'track', id, field: 'progress', mode: 'set', value: 0 }), gate.id); await idle(gm);   /* those Efforts went onto the gate by itself (a check at a chosen obstacle applies itself): empty it for the steps below */
 
   console.log('--- 2. rapid −1 clicks while the table keeps changing');
   await heal(A); churn = true;
@@ -119,9 +121,11 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
 
   console.log('--- 6. Effort and Apply on a slow line: processing is shown, extra clicks do nothing');
   await slow(A, 1500);
-  await A.click('[data-do=ordinaryCheck]'); await A.click('#cards .c[data-id="' + gate.id + '"]'); A.reqs.length = 0; await roll(A);
+  /* a check with nothing chosen keeps Apply (a check at a chosen obstacle applies by itself): roll with no card selected, then choose the gate */
+  await A.click('[data-do=ordinaryCheck]'); await unselect(A); A.reqs.length = 0; await roll(A);
   await A.fill('#physE', '4'); await A.evaluate(() => { const b = document.querySelector('[data-do=effort][data-cat=weapons]'); b.click(); b.click(); b.click(); });
   check('while the Effort is on its way the panel says so and the Effort buttons are off', /Rolling (Effort|damage)/i.test(await A.innerText('#strip')) && (await A.$$('[data-do=effort]:not([disabled])')).length === 0);
+  await A.waitForFunction(() => { const r = window.__vtt.state().rolls.find((x) => x.id === window.__vtt.ui.roll); return r && r.effort; }, null, { timeout: WAIT }); await A.click('#cards .c[data-id="' + gate.id + '"]');   /* choose where it goes */
   await A.waitForSelector('[data-do=apply]').catch(async (e) => { console.log('PANEL: ' + (await A.innerText('#panel')).slice(0, 300) + ' | ' + JSON.stringify(A.reqs.map((c) => c.type + ':' + c.actionId.split('.')[1])) + ' | ' + await A.innerText('#feed') + ' | ' + JSON.stringify(await A.evaluate(() => { const S = window.__vtt.state(), u = window.__vtt.ui; return { v: S.v, roll: u.roll, rolls: S.rolls.slice(-2), work: u.working, pend: u.pending, press: u.pressing }; })).slice(0, 900)); throw e; }); const efforts = A.reqs.filter((c) => c.type === 'effort');
   const effortIds = new Set(efforts.map((c) => c.actionId));   /* a resend of the SAME action (after a transient answer) is one action, by design */
   check('triple-clicking made one Effort action (a resend of it keeps its id)', effortIds.size === 1, efforts.length + ' requests, ids: ' + [...effortIds].join());
@@ -136,8 +140,8 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('--- 7. the target of a pending Effort is stable, can be changed on purpose, and the mark, the label and the recipient agree');
   const aimed = () => A.evaluate(() => ({ mark: [...document.querySelectorAll('.c.aim')].map((e) => e.dataset.id), btn: [...document.querySelectorAll('[data-do=apply]')].map((e) => e.dataset.card + '|' + e.textContent) }));
   churn = true;
-  await A.click('#cards .c[data-id="' + gate.id + '"]'); await roll(A);
-  await A.fill('#physE', '4'); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]');
+  await unselect(A); await roll(A);
+  await A.fill('#physE', '4'); await A.click('[data-do=effort][data-cat=weapons]'); await A.click('#cards .c[data-id="' + gate.id + '"]'); await A.waitForSelector('[data-do=apply]');
   let a1 = await aimed(); check('the gate is the target: marked, named on the button', a1.mark.join() === gate.id && a1.btn.length === 1 && a1.btn[0].startsWith(gate.id + '|') && /Sealed Gate/.test(a1.btn[0]), JSON.stringify(a1));
   await A.click('#cards .c[data-id="' + ghoul.id + '"]'); await T(1500);   /* looking at the ghoul, for longer than a poll */
   let a2 = await aimed(); check('looking at the ghoul does not move the target; the panel offers to change it', a2.mark.join() === gate.id && a2.btn[0].startsWith(gate.id + '|') && /Change target to Pit Ghoul/i.test(await A.innerText('#panel')), JSON.stringify(a2));

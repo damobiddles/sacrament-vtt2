@@ -51,23 +51,24 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('nothing secret has reached a player: no GM notes, no unrevealed card, no scene plans', !/SECRET|rusted bar|bone whistle|Warden|Beyond the Gate|gmNotes/.test(all), (all.match(/SECRET|rusted bar|bone whistle|Warden|Beyond the Gate|gmNotes/) || [])[0]);
   check('the GM sees them', /SECRET/.test(JSON.stringify(await st(gm))));
 
-  console.log('--- 3. forcing the gate: select, STR, Effort, apply, end turn');
+  console.log('--- 3. forcing the gate: select, STR, Effort (it goes onto the gate by itself), end turn');
   clicks = 0;
   const gate = await card(A, 'The Sealed Gate');
   await click(A, '.c[data-id="' + gate.id + '"]'); check('selecting the gate keeps the table visible and shows the gate in the panel', /Sealed Gate/.test(await txt(A, '#panel')) && (await A.$eval('#table', (e) => e.offsetWidth)) > 600);
   await diceOn(A); await A.fill('#strip input[data-phys]', '12'); await click(A, '.stat[data-stat=STR]');
   await A.waitForSelector('#feed .outcome');
   check('the calculation is shown: dice, bonus, total, Target', /12 \+ 3 STR = 15 against Target 12\. Success\./.test(await txt(A, '#feed .tx')), await txt(A, '#feed .tx'));
-  await A.fill('#physE', '4'); await click(A, '[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]');
-  check('Effort is rolled in the same panel, with the character’s bonus', /d6 4 \+ 3 Weapons = 7 Effort\./.test(await txt(A, '#feed')), await txt(A, '#feed'));
-  check('the button names the object it will change before anything is applied', /Apply to The Sealed Gate: \+7 Effort/i.test(await txt(A, '[data-do=apply]')), await txt(A, '[data-do=apply]'));
-  check('nothing has changed yet', (await card(gm, 'The Sealed Gate')).progress.cur === 0);
-  await click(A, '[data-do=apply][data-field=progress]'); await settle(gm, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'The Sealed Gate').progress.cur === 7);
-  check('applied once, and the GM sees it', (await card(gm, 'The Sealed Gate')).progress.cur === 7 && /7\/20/.test(await txt(gm, '#cards .c[data-id="' + gate.id + '"]')));
+  /* a plain check at an obstacle is bare hands or wits: Basic d4 only, and it goes onto the obstacle by itself (the owner, 2026-11-23) */
+  await A.waitForSelector('[data-do=effort]');
+  check('a plain check at the gate offers only Basic d4 for its Effort', (await A.$$('[data-do=effort]')).length === 1 && !!(await A.$('[data-do=effort][data-cat=basic]')), await txt(A, '#strip'));
+  await A.fill('#physE', '4'); await click(A, '[data-do=effort][data-cat=basic]');
+  await settle(gm, () => Object.values(window.__vtt.state().cards).find((c) => c.name === 'The Sealed Gate').progress.cur === 5);
+  check('Effort is rolled in the same panel, with the character’s bonus', /d4 4 \+ 1 Basic = 5 Effort\./.test(await txt(A, '#feed')), await txt(A, '#feed'));
+  check('it went onto the gate by itself, once, and the GM sees it', (await card(gm, 'The Sealed Gate')).progress.cur === 5 && /5\/20/.test(await txt(gm, '#cards .c[data-id="' + gate.id + '"]')) && !(await A.$('[data-do=apply]')));
   await click(gm, '#strip [data-do=endTurn]'); await settle(B, () => /Wisp/.test(document.getElementById('tTurn').innerText));
   await settle(A, () => /Wisp/.test(document.getElementById('tTurn').innerText)); await settle(gm, () => /Wisp/.test(document.getElementById('tTurn').innerText));
   check('the turn passes: Wisp is up for everyone', /Wisp/.test(await txt(B, '#tTurn')) && /Wisp/.test(await txt(gm, '#tTurn')) && !(await B.$('#tTurn [data-do=endTurn]')) && !(await A.$('#tTurn [data-do=endTurn]')) && !(await gm.$('#top [data-do=endTurn]')) && !(await gm.$('#panel [data-do=endTurn]')) && !!(await gm.$('#strip [data-do=endTurn]')), (await txt(A, '#tTurn')) + ' | ' + (await txt(B, '#tTurn')) + ' | ' + (await txt(gm, '#tTurn')));
-  check('the whole turn took five clicks including selecting the gate (typing a physical die is optional)', clicks === 5, clicks);
+  check('the whole turn took four clicks including selecting the gate (typing a physical die is optional)', clicks === 4, clicks);
 
   console.log('--- 4. other people’s things are not yours');
   const thorne = await card(B, 'Thorne'), before = await B.evaluate((id) => window.__vtt.state().layout[id], thorne.id);
@@ -215,11 +216,12 @@ const T = (ms) => new Promise((r) => setTimeout(r, ms));
   check('and a second click on a stat while the first is on its way makes one roll', await (async () => { const n0 = (await st(A)).rolls.length; await A.waitForSelector('.stat[data-stat=CON]'); await A.evaluate(() => { const b = document.querySelector('.stat[data-stat=CON]'); b.click(); b.click(); b.click(); }); await T(1500); return (await st(A)).rolls.length === n0 + 1; })());
 
   console.log('--- 15. attacking the ghoul: what is marked is what is applied to, and the HP changes once');
-  /* Regression: a roll made with the GATE selected, then the GHOUL clicked before Apply. The table used to mark the ghoul as the target while the button still said "Apply to The Sealed Gate". */
+  /* Regression: a roll aimed at the GATE, then the GHOUL clicked before Apply. The table used to mark the ghoul as the target while the button still said "Apply to The Sealed Gate".
+     A check at a chosen obstacle now applies by itself (the owner, 2026-11-23), so this roll is made with nothing chosen and the gate is chosen before Apply. */
   const ghoulC = await card(gm, 'Pit Ghoul'), gateC = await card(gm, 'The Sealed Gate'); const ghoulHp0 = ghoulC.hp.cur, gateProg0 = gateC.progress.cur;
-  await A.keyboard.press('Escape'); await A.click('#cards .c[data-id="' + gateC.id + '"]');
+  await A.keyboard.press('Escape'); if (await A.$('#panel [data-do=deselect]')) await A.click('#panel [data-do=deselect]'); await A.waitForFunction(() => !window.__vtt.ui.sel);
   if (!(await A.$('#strip input[data-phys]'))) await diceOn(A); await A.fill('#strip input[data-phys]', '15'); await A.click('.stat[data-stat=STR]'); await A.waitForSelector('[data-do=effort][data-cat=weapons]');
-  await A.fill('#physE', '4'); await A.click('[data-do=effort][data-cat=weapons]'); await A.waitForSelector('[data-do=apply]', { timeout: LIVE ? 20000 : 6000 }).catch(async (e) => { console.log('PANEL: ' + (await txt(A, '#panel')).slice(0, 200) + ' | TOP: ' + await txt(A, '#top') + ' | FEED: ' + await txt(A, '#feed') + ' | ROLLS: ' + JSON.stringify((await st(A)).rolls.slice(-3)).slice(0, 900) + ' | v ' + JSON.stringify(await A.evaluate(() => ({ roll: window.__vtt.ui.roll, sel: window.__vtt.ui.sel }))).slice(0, 200)); throw e; });
+  await A.fill('#physE', '4'); await A.click('[data-do=effort][data-cat=weapons]'); await A.click('#cards .c[data-id="' + gateC.id + '"]'); await A.waitForSelector('[data-do=apply]', { timeout: LIVE ? 20000 : 6000 }).catch(async (e) => { console.log('PANEL: ' + (await txt(A, '#panel')).slice(0, 200) + ' | TOP: ' + await txt(A, '#top') + ' | FEED: ' + await txt(A, '#feed') + ' | ROLLS: ' + JSON.stringify((await st(A)).rolls.slice(-3)).slice(0, 900) + ' | v ' + JSON.stringify(await A.evaluate(() => ({ roll: window.__vtt.ui.roll, sel: window.__vtt.ui.sel }))).slice(0, 200)); throw e; });
   check('with the gate selected the gate is the marked target and the button names it', (await A.$$eval('.c.aim', (e) => e.map((x) => x.dataset.id))).join() === gateC.id && /Sealed Gate/i.test(await txt(A, '[data-do=apply]')), await txt(A, '[data-do=apply]'));
   await A.click('#cards .c[data-id="' + ghoulC.id + '"]');
   await A.waitForSelector('[data-do=aim]');

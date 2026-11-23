@@ -572,6 +572,9 @@ function grantPush(s, r, ch, a, ctx) {
   return { horror: { cur: hr.cur, applied: hr.applied, crossed: hr.crossed } };
 }
 
+/* An obstacle: a card with an Effort bar and no HP (a hero is never one). */
+const isObstacle = (card) => !!(card && card.progress && !card.hp && card.kind !== 'pc');
+
 /* Validate the attack's recorded target before rolling. The client cannot
    redirect automatic damage by clicking a different card. */
 function automaticEffortTarget(s, roll, a) {
@@ -934,7 +937,7 @@ const HANDLERS = {
     let target = null; if (c.targetCardId) { const tc = cardOf(s, c.targetCardId); if (!cardVisibleTo(s, tc, a)) fail('not_found', 'No such card.'); target = tc.id; }
     if (c.attack === true && !(target && s.cards[target].hp && s.cards[target].kind !== 'pc')) fail('invalid', 'Choose a target with HP for the attack.');
     const pe = pathEasy(s, ch, c, adj), tb = takeBonus(ch), sh = takeShaken(ch, pe.adj), chk = R.check({ d20, stat: ch.stats[c.stat], bonus: tb.n, target: s.table.target, adj: sh.adj, settings: s.settings }); tb.text += pe.text + sh.text;
-    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, adjWhy: adjWhy(chk, pe, sh), isAttack: c.attack === true, cat: c.attack === true ? 'basic' : undefined,   /* an attack without an item is bare hands or wits: Basic (the owner, 2026-11-16) */
+    const roll = { id: nid(s, 'r'), by: isGM(a) ? 'gm' : a.pid, charId: ch.id, charName: ch.name, stat: c.stat, check: chk, adjWhy: adjWhy(chk, pe, sh), isAttack: c.attack === true, cat: c.attack === true || isObstacle(s.cards[target]) ? 'basic' : undefined,   /* an attack without an item, or a plain check at an obstacle, is bare hands or wits: Basic (the owner, 2026-11-16 and 2026-11-23) */
       criticalRule: 'extra', pushContext: turnKey(s), sceneId: s.table.scene, manual, targetCardId: target, effort: null, applied: null, void: false, at: ctx.now };
     takeAction(ch, roll); s.rolls[roll.id] = roll; s.rollOrder.push(roll.id); while (s.rollOrder.length > LIMITS.rolls) delete s.rolls[s.rollOrder.shift()];
     recapCheck(s, ctx, ch, chk);

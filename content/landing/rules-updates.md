@@ -31,6 +31,10 @@ Questions the current text left open. The rules have not changed; these say how 
 - **A relic's natural 1 when pushed (9 November 2026).** The Paths page and the 8 November entry below said a relic's natural 1 adds Horror only when it is used to attack. A relic used as a pushed second action counts too, like any roll made as a push. The table and the solo game already worked this way; only the words were short.
 - **The GM's own Horror controls cost no blood.** Raising the meter by hand in the Table tab never charges a hero. **Lower by d6** in the same place is a manual adjustment, separate from Party rest.
 
+## 23 November 2026: a plain check at an obstacle is Basic d4
+
+**What changed.** Nothing in the rules: bare hands or wits have always been Basic d4, and how you tackle an obstacle sets the die. But on the Sacrament RPG Table, a plain check at an obstacle let the player roll its Effort with any die, Guns d8 and Magic d10 included, and then press **Apply**. It now rolls Basic d4 and the Effort goes onto the obstacle by itself. To use a tool, a gun or a spell on an obstacle, use that item from your actions, as before.
+
 ## 16 November 2026: an attack without an item is Basic d4
 
 **What changed.** Nothing in the rules: bare hands or wits have always been Basic d4. But on the Sacrament RPG Table, **Attack without an item** let the player roll its damage with any Effort die, Guns d8 and Magic d10 included. It now rolls Basic d4, as the rules say and as the solo game already did.

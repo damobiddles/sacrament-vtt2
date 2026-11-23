@@ -64,14 +64,14 @@ test('CLAIM: taking up a hero reads "Ann: Now playing Thorne."', async () => {
 });
 
 test('WORDS: what comes off HP is called damage; what fills an Effort bar is still Effort', async () => {
-  const t = await table({ dice: [d20(15), die(4, 6), d20(15), die(4, 6), d20(15), die(3, 6)] }), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne');
+  const t = await table({ dice: [d20(15), die(4, 6), d20(15), die(4, 4), d20(15), die(3, 6)] }), ann = await t.join('Ann'), thorne = await claim(t, ann, 'Thorne');
   const st = await t.state(), ghoul = find(st, 'Pit Ghoul'), gate = find(st, 'The Sealed Gate');
   const hit = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: ghoul.id }); assert.equal(hit.status, 200);
   await ann.cmd({ type: 'effort', rollId: hit.body.state.rolls.at(-1).id, cat: 'weapons' });
   assert.match(texts(await t.state()).at(-1), /= 7 damage\.$/);
   const push = await ann.cmd({ type: 'roll', charId: thorne.id, stat: 'STR', targetCardId: gate.id }); assert.equal(push.status, 200);
   await ann.cmd({ type: 'effort', rollId: push.body.state.rolls.at(-1).id, cat: 'weapons' });
-  assert.match(texts(await t.state()).at(-1), /= 7 Effort\.$/);
+  assert.match(texts(await t.state()).at(-1), /= 5 Effort\.$/); /* a plain check at an obstacle is Basic d4 (the owner, 2026-11-23) */
   const a = await t.gm.cmd({ type: 'monsterAttack', cardId: ghoul.id, targetCardId: find(st, 'Thorne').id }); assert.equal(a.status, 200);
   await t.gm.cmd({ type: 'monsterEffort', rollId: a.body.state.rolls.at(-1).id, cat: 'weapons' });
   assert.ok(texts(await t.state()).some((x) => /^Pit Ghoul · d6 3 = 3 damage\.$/.test(x)), texts(await t.state()).join(' | '));

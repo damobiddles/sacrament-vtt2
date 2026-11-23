@@ -608,7 +608,7 @@
         if (r.attack) h += '<div class="row"><span class="note">Another die:</span>' + R.CATS.filter(function (k) { return k !== cat; }).map(function (k) { return '<button class="chip" data-do="monCat" data-cat="' + k + '">' + R.CAT_NAMES[k] + ' d' + S.settings.dice[k] + (r.weaponBonus ? ' +2 two hands' : '') + '</button>'; }).join('') + '</div>';
         else if (cat && ch && ch.offerUltimate && r.criticalRule !== 'extra' && cat !== 'ultimate') h += '<button class="btn" data-do="effort" data-cat="ultimate" data-roll="' + r.id + '"' + busy + '>Roll Ultimate instead</button>';
         h += physical('physE', 'Own die for ' + word) + criticalPrompt(r);
-        if (!cat && !r.attack && target && target.progress && !target.hp) out.tray += '<p class="hint ways">How you tackle it sets the die: bare hands or wits ' + dieName(R.obstacleCat('hands')) + ', a weapon or tool that fits and you carry ' + dieName(R.obstacleCat('tool')) + ', a gun ' + dieName(R.obstacleCat('gun')) + ' (loud), a spell that fits ' + dieName(R.obstacleCat('spell')) + '. A good idea may be Easy: the GM says.</p>';
+        if (!r.attack && !r.isAttack && !r.item && target && target.progress && !target.hp) out.tray += '<p class="hint ways">A plain check is bare hands or wits: ' + dieName(R.obstacleCat('hands')) + '. A weapon or tool that fits and you carry (' + dieName(R.obstacleCat('tool')) + '), a gun (' + dieName(R.obstacleCat('gun')) + ', loud) or a spell that fits (' + dieName(R.obstacleCat('spell')) + ') is used from your actions instead. A good idea may be Easy: the GM says.</p>';   /* the owner, 2026-11-23 */
       }
       h += '</div>';
       if (gm()) out.tray += h; else out.dice = h;
